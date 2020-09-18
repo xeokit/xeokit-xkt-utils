@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/XKTPrimitive.js | xeokit-xkt-tools</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="JavaScript tools to generate .XKT files"><meta property="og:type" content="website"><meta property="og:url" content="http://xeokit.io"><meta property="og:site_name" content="xeokit-xkt-tools"><meta property="og:title" content="xeokit-xkt-tools"><meta property="og:image" content="./images/logo.jpg"><meta property="og:description" content="JavaScript tools to generate .XKT files"><meta property="og:author" content="http://xeolabs.com"><meta property="twitter:card" content="summary"><meta property="twitter:title" content="xeokit-xkt-tools"><meta property="twitter:description" content="JavaScript tools to generate .XKT files"><meta property="twitter:image" content="./images/logo.jpg"></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./" style="display: flex; align-items: center;"><img src="./image/brand_logo.jpg" style="width:34px;"></a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/xeokit/xeokit-xkt-tools"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/XKTPrimitive.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
+ * An element of reusable geometry within an {@link XKTModel}.
+ *
+ * * Created by {@link XKTModel#createPrimitive}
+ * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}
+ * * Referenced by {@link XKTPrimitiveInstance}s, which belong to {@link XKTEntity}s
+ *
+ * @class XKTPrimitive
+ */
+class XKTPrimitive {
+
+    /**
+     * @private
+     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.
+     * @param {String} primitiveType Type of this primitive - &quot;triangles&quot; so far.
+     * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.
+     * @param {Uint8Array} color RGB color of this XKTPrimitive.
+     * @param {Number} opacity Opacity of this XKTPrimitive.
+     * @param {Float32Array} positions Non-quantized 3D vertex positions.
+     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.
+     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.
+     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.
+     */
+    constructor(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices) {
+
+        /**
+         * Unique ID of this XKTPrimitive in {@link XKTModel#primitives}.
+         *
+         * @type {Number}
+         */
+        this.primitiveId = primitiveId;
+
+        /**
+         * The type of primitive - &quot;triangles&quot; | &quot;points&quot; | &quot;lines&quot;.
+         *
+         * @type {String}
+         */
+        this.primitiveType = primitiveType;
+
+        /**
+         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.
+         *
+         * @type {Number}
+         */
+        this.primitiveIndex = primitiveIndex;
+
+        /**
+         * RGB color of this XKTPrimitive.
+         *
+         * @type {Uint8Array}
+         */
+        this.color = color;
+
+        /**
+         * Opacity of this XKTPrimitive.
+         *
+         * @type {Number}
+         */
+        this.opacity = opacity;
+
+        /**
+         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.
+         *
+         * @type {Number}
+         */
+        this.numInstances = 0;
+
+        /**
+         * Non-quantized 3D vertex positions.
+         *
+         * @type {Float32Array}
+         */
+        this.positions = positions;
+
+        /**
+         * Quantized vertex positions.
+         *
+         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.
+         *
+         * @type {Uint16Array}
+         */
+        this.positionsQuantized = new Uint16Array(positions.length);
+
+        /**
+         * Oct-encoded vertex normals.
+         *
+         * @type {Int8Array}
+         */
+        this.normalsOctEncoded = normalsOctEncoded;
+
+        /**
+         * Indices that organize the vertex positions and normals as triangles.
+         *
+         * @type {Uint32Array}
+         */
+        this.indices = indices;
+
+        /**
+         * Indices that organize the vertex positions as edges.
+         *
+         * @type {Uint32Array}
+         */
+        this.edgeIndices = edgeIndices;
+    }
+
+    /**
+     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.
+     * @returns {boolean}
+     */
+    get reused() {
+        return (this.numInstances &gt; 1);
+    }
+}
+
+export {XKTPrimitive};</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

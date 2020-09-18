@@ -1,0 +1,17 @@
+{
+  "name": "xeokit-xkt-tools-demos",
+  "version": "1.0.0",
+  "description": "xeokit examples to test xeokit-gltf-to-xkt",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "author": "Lindsay Kay",
+  "license": "ISC",
+  "dependencies": {
+    "@xeokit/xeokit-sdk": "^1.4.1",
+    "rollup": "^1.32.1",
+    "rollup-plugin-minify-es": "^1.1.1",
+    "rollup-plugin-node-resolve": "^5.2.0"
+  }
+}

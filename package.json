@@ -1,0 +1,42 @@
+{
+  "name": "xeokit-xkt-tools",
+  "version": "1.0.0",
+  "description": "JavaScript tools to generate .XKT files",
+  "main": "index.js",
+  "directories": {
+
+  },
+  "scripts": {
+    "test": "mocha",
+    "build": " rollup -c",
+    "docs": "./node_modules/.bin/esdoc",
+    "publish": "npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xeokit/xeokit-xkt-tools.git"
+  },
+  "keywords": [
+    "xeokit",
+    "bim",
+    "xkt",
+    "gltf"
+  ],
+  "author": "Lindsay Kay",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xeokit/xeokit-xkt-tools/issues"
+  },
+  "homepage": "https://github.com/xeokit/xeokit-xkt-tools#readme",
+  "dependencies": {
+    "autoprefixer": "^9.8.5",
+    "esdoc": "^1.1.0",
+    "esdoc-standard-plugin": "^1.0.0",
+    "rollup": "^1.32.1",
+    "rollup-plugin-minify-es": "^1.1.1",
+    "rollup-plugin-node-resolve": "^5.2.0"
+  },
+  "devDependencies": {
+    "mocha": "^8.1.3"
+  }
+}
