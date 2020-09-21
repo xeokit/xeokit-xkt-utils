@@ -172,9 +172,9 @@ class XKTModel {
         this.entities = {};
 
         /**
-         * {@link XKTEntity}s within this XKTModel, in the order they were created.
+         * {@link XKTEntity}s within this XKTModel.
          *
-         * Created by {@link XKTModel#createEntity}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTEntity[]}
          */
@@ -344,7 +344,6 @@ class XKTModel {
         }
 
         const entityId = params.entityId;
-        const entityIndex = this.entitiesList.length;
         let matrix = params.matrix;
         const position = params.position;
         const scale = params.scale;
@@ -382,7 +381,7 @@ class XKTModel {
             this.primitiveInstancesList.push(primitiveInstance);
         }
 
-        const entity = new XKTEntity(entityId, entityIndex, matrix, primitiveInstances);
+        const entity = new XKTEntity(entityId, matrix, primitiveInstances);
 
         for (let i = 0, len = primitiveInstances.length; i < len; i++) {
             const primitiveInstance = primitiveInstances[i];
@@ -390,7 +389,6 @@ class XKTModel {
         }
 
         this.entities[entityId] = entity;
-        this.entitiesList.push(entity);
 
         return entity;
     }
@@ -431,18 +429,20 @@ class XKTModel {
 
     _flagEntitiesThatReusePrimitives() {
 
-        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+        for (let entityId in this.entities) {
+            if (this.entities.hasOwnProperty(entityId)) {
 
-            const entity = this.entitiesList[i];
-            const primitiveInstances = entity.primitiveInstances;
+                const entity = this.entities[entityId];
+                const primitiveInstances = entity.primitiveInstances;
 
-            for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
 
-                const primitiveInstance = primitiveInstances[j];
-                const primitive = primitiveInstance.primitive;
+                    const primitiveInstance = primitiveInstances[j];
+                    const primitive = primitiveInstance.primitive;
 
-                if (primitive.numInstances > 1) {
-                    entity.hasReusedPrimitives = true;
+                    if (primitive.numInstances > 1) {
+                        entity.hasReusedPrimitives = true;
+                    }
                 }
             }
         }
@@ -450,37 +450,39 @@ class XKTModel {
 
     _createEntityAABBs() {
 
-        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+        for (let entityId in this.entities) {
+            if (this.entities.hasOwnProperty(entityId)) {
 
-            const entity = this.entitiesList[i];
-            const primitiveInstances = entity.primitiveInstances;
+                const entity = this.entities[entityId];
+                const primitiveInstances = entity.primitiveInstances;
 
-            math.collapseAABB3(entity.aabb);
+                math.collapseAABB3(entity.aabb);
 
-            for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
 
-                const primitiveInstance = primitiveInstances[j];
-                const primitive = primitiveInstance.primitive;
+                    const primitiveInstance = primitiveInstances[j];
+                    const primitive = primitiveInstance.primitive;
 
-                if (primitive.numInstances > 1) {
+                    if (primitive.numInstances > 1) {
 
-                    const positions = primitive.positions;
-                    for (let i = 0, len = positions.length; i < len; i += 3) {
-                        tempVec4a[0] = positions[i + 0];
-                        tempVec4a[1] = positions[i + 1];
-                        tempVec4a[2] = positions[i + 2];
-                        math.transformPoint4(entity.matrix, tempVec4a, tempVec4b);
-                        math.expandAABB3Point3(entity.aabb, tempVec4b);
-                    }
+                        const positions = primitive.positions;
+                        for (let i = 0, len = positions.length; i < len; i += 3) {
+                            tempVec4a[0] = positions[i + 0];
+                            tempVec4a[1] = positions[i + 1];
+                            tempVec4a[2] = positions[i + 2];
+                            math.transformPoint4(entity.matrix, tempVec4a, tempVec4b);
+                            math.expandAABB3Point3(entity.aabb, tempVec4b);
+                        }
 
-                } else {
+                    } else {
 
-                    const positions = primitive.positions;
-                    for (let i = 0, len = positions.length; i < len; i += 3) {
-                        tempVec4a[0] = positions[i + 0];
-                        tempVec4a[1] = positions[i + 1];
-                        tempVec4a[2] = positions[i + 2];
-                        math.expandAABB3Point3(entity.aabb, tempVec4a);
+                        const positions = primitive.positions;
+                        for (let i = 0, len = positions.length; i < len; i += 3) {
+                            tempVec4a[0] = positions[i + 0];
+                            tempVec4a[1] = positions[i + 1];
+                            tempVec4a[2] = positions[i + 2];
+                            math.expandAABB3Point3(entity.aabb, tempVec4a);
+                        }
                     }
                 }
             }
@@ -662,6 +664,10 @@ class XKTModel {
 
                 }
             }
+
+            entity.entityIndex = this.entitiesList.length;
+
+            this.entitiesList.push(entity);
         }
 
         const decodeMatrix = math.mat4();

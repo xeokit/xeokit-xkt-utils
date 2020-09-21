@@ -15,11 +15,10 @@ class XKTEntity {
     /**
      * @private
      * @param entityId
-     * @param entityIndex
      * @param matrix
      * @param primitiveInstances
      */
-    constructor(entityId, entityIndex, matrix, primitiveInstances) {
+    constructor(entityId, matrix, primitiveInstances) {
 
         /**
          * Unique ID of this ````XKTEntity```` in {@link XKTModel#entities}.
@@ -31,11 +30,13 @@ class XKTEntity {
         this.entityId = entityId;
 
         /**
-         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList};
+         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.
+         *
+         * Set by {@link XKTModel#finalize}.
          *
          * @type {Number}
          */
-        this.entityIndex = entityIndex;
+        this.entityIndex = 0;
 
         /**
          * The 4x4 modeling transform matrix.

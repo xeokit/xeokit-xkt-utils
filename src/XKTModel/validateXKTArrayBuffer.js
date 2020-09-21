@@ -114,6 +114,13 @@ function validateData(inflatedData, xktModel) {
     const numEntities = eachEntityId.length;
     const numTiles = eachTileEntitiesPortion.length;
 
+    // ASSERTIONS
+
+    if (numTiles !== xktModel.tilesList.length) {
+        console.error("Unexpected number of tiles; found " + numTiles + ", but expected " + xktModel.tilesList.length);
+        return false;
+    }
+
     // Count instances of each primitive
 
     const primitiveReuseCounts = new Uint32Array(numPrimitives);
@@ -152,13 +159,19 @@ function validateData(inflatedData, xktModel) {
             return false;
         }
 
+        if (!compareArrays(tileAABB, xktTile.aabb)) {
+            console.error("compareArrays(tileAABB, xktTile.aabb) === false");
+            return false;
+        }
+
         if (!compareArrays(tileDecodeMatrix, xktTile.decodeMatrix)) {
             console.error("compareArrays(tileDecodeMatrix, xktTile.decodeMatrix) === false");
             return false;
         }
 
-        if (!compareArrays(tileAABB, xktTile.aabb)) {
-            console.error("compareArrays(tileAABB, xktTile.aabb) === false");
+        const numTileEntities = (lastTileEntityIndex - firstTileEntityIndex);
+        if (numTileEntities !== xktTile.entities.length) {
+            console.error("Unexpected number of entities in tile");
             return false;
         }
 
@@ -215,16 +228,6 @@ function validateData(inflatedData, xktModel) {
 
                 // ASSERTIONS
 
-                if (!compareArrays(color, xktEntity.color)) {
-                    console.error("compareArrays(color, xktEntity.color) === false");
-                    return false;
-                }
-
-                if (opacity !== xktEntity.opacity) {
-                    console.error("opacity !== xktEntity.opacity");
-                    return false;
-                }
-
                 const xktPrimitiveInstance = xktModel.primitiveInstancesList[primitiveInstancesIndex];
                 const xktPrimitive = xktModel.primitivesList[primitiveIndex];
 
@@ -248,7 +251,7 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                if (!compareArrays(primitiveNormals, xktPrimitive.normals)) {
+                if (!compareArrays(primitiveNormals, xktPrimitive.normalsOctEncoded)) {
                     console.error("compareArrays(primitiveNormals, xktPrimitive.normals) === false");
                     return false;
                 }
@@ -263,8 +266,18 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                if (primitiveReuseCount !== xktEntity.numInstances) {
-                    console.error("primitiveReuseCount !== xktEntity.numInstances");
+                // if (!compareArrays(color, xktPrimitive.color)) {
+                //     console.error("compareArrays(color, xktPrimitive.color) === false");
+                //     return false;
+                // }
+                //
+                // if (opacity !== xktPrimitive.opacity) {
+                //     console.error("opacity !== xktPrimitive.opacity");
+                //     return false;
+                // }
+
+                if (primitiveReuseCount !== xktPrimitive.numInstances) {
+                    console.error("primitiveReuseCount !== xktPrimitive.numInstances");
                     return false;
                 }
             }

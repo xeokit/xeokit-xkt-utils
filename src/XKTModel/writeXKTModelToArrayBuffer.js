@@ -1,6 +1,3 @@
-//const pako = require('pako');
-
-
 import * as p from "./lib/pako.js";
 
 let pako = window.pako || p;
@@ -67,8 +64,6 @@ function getModelData(xktModel) {
     }
 
     const data = {
-
-        // Note for documentation: positions belonging to non-shared primitives (primitives that have only one primitive instance) are pre-transformed into World-space, and are relative to the center of the tile that contains their entities.
 
        //   positions: new Uint16Array(lenPositions), // All geometry arrays
         positions: new Float32Array(lenPositions), // All geometry arrays
@@ -146,6 +141,13 @@ function getModelData(xktModel) {
         const tile = tilesList [tileIndex];
         const tileEntities = tile.entities;
         const numTileEntities = tileEntities.length;
+
+        if (numTileEntities === 0) {
+            continue;
+        }
+
+        data.eachTileEntitiesPortion[tileIndex] = entityIndex;
+
         const tileAABB = tile.aabb;
         const tileDecodeMatrix = tile.decodeMatrix;
 
@@ -188,6 +190,7 @@ function getModelData(xktModel) {
 
         data.eachTileAABB.set(tileAABB, tileAABBIndex);
         data.eachTileDecodeMatrix.set(tileDecodeMatrix, tileDecodeMatrixIndex);
+
     }
 
     return data;
