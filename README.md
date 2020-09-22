@@ -3,6 +3,9 @@ JavaScript tools to generate .XKT files
 
 ## Usage
 
+![Class diagram](./images/classes.png)
+
+
 #### Procedurally Generating an XKTModel
 
 Procedurally building a simple table model within an [````XKTModel````](./docs/class/src/XKTModel.js~XKTModel.html):
