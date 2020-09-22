@@ -5,7 +5,7 @@ JavaScript tools to generate .XKT files
 
 #### Procedurally Generating an XKTModel
 
-Procedurally building a simple table model within an [````XKTModel````](../docs/class/src/XKTModel.js~XKTModel.html):
+Procedurally building a simple table model within an [````XKTModel````](./docs/class/src/XKTModel.js~XKTModel.html):
 
 ````javascript
 const xktModel = new XKTModel();
@@ -76,7 +76,7 @@ xktModel.finalize();
 
 #### Serializing the XKTModel to an ArrayBuffer
 
-Use [````writeXKTModelToArrayBuffer````](../docs/function/index.html#static-function-writeXKTModelToArrayBuffer) to serialize the [````XKTModel````](../docs/class/src/XKTModel.js~XKTModel.html) to an ````ArrayBuffer````:
+Use [````writeXKTModelToArrayBuffer````](./docs/function/index.html#static-function-writeXKTModelToArrayBuffer) to serialize the [````XKTModel````](../docs/class/src/XKTModel.js~XKTModel.html) to an ````ArrayBuffer````:
 
 ````javascript
 const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
@@ -84,7 +84,7 @@ const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
 #### Validating the ArrayBuffer
 
-Use [````validateXKTArrayBuffer````](docs/function/index.html#static-function-validateXKTArrayBuffer) to validate the ````ArrayBuffer```` against the [````XKTModel````](../docs/class/src/XKTModel.js~XKTModel.html):
+Use [````validateXKTArrayBuffer````](./docs/function/index.html#static-function-validateXKTArrayBuffer) to validate the ````ArrayBuffer```` against the [````XKTModel````](../docs/class/src/XKTModel.js~XKTModel.html):
 
 ````javascript
 const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
