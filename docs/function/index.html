@@ -29,12 +29,11 @@
 <nav class="navigation" data-ice="nav"><div>
   <ul>
     
-  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span></li>
+  <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
@@ -61,13 +60,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span><span class="code" data-ice="signature">(scene: <span>*</span>, model: <span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span><span class="code" data-ice="signature">(gltf: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>, model: <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>, options: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Creates <span>Mesh</span>es and <span>Geometry</span>s to visually test the given <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
+        <div data-ice="description"><p>Parses glTF JSON into an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
 </div>
       </div>
     </td>
@@ -90,13 +89,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span><span class="code" data-ice="signature">(gltf: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>, model: <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>, options: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span></span>
+          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span><span class="code" data-ice="signature">(arrayBuffer: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>, xktModel: <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Parses glTF JSON into an <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
+        <div data-ice="description"><p>Validates an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span> against the <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span> it was written from.</p>
 </div>
       </div>
     </td>
@@ -119,42 +118,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span><span class="code" data-ice="signature">(arrayBuffer: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>, xktModel: <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
+          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span><span class="code" data-ice="signature">(xktModel: <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Validates an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span> against the <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span> it was written from.</p>
-</div>
-      </div>
-    </td>
-    <td>
-      
-      
-    </td>
-  </tr>
-<tr data-ice="target">
-    <td>
-      <span class="access" data-ice="access">public</span>
-      
-      
-      
-      <span class="override" data-ice="override"></span>
-    </td>
-    <td>
-      <div>
-        <p>
-          
-          
-          
-          <span class="code" data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span><span class="code" data-ice="signature">(xktModel: <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span></span>
-        </p>
-      </div>
-      <div>
-        
-        
-        <div data-ice="description"><p>Writes an <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span> to an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>.</p>
+        <div data-ice="description"><p>Writes an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span> to an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>.</p>
 </div>
       </div>
     </td>
@@ -169,73 +139,6 @@
 <div data-ice="details"><h2 data-ice="title">Static Public </h2>
 
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="static-function-createMeshesFromXKTModel">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">createMeshesFromXKTModel</span><span class="code" data-ice="signature">(scene: <span>*</span>, model: <span>*</span>)</span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/src/createMeshesFromXKTModel.js.html#lineNumber11">source</a></span></span>
-    </span>
-  </h3>
-
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {createMeshesFromXKTModel} from &apos;<span><a href="file/src/createMeshesFromXKTModel.js.html#lineNumber11">xeokit-xkt-tools/src/createMeshesFromXKTModel.js</a></span>&apos;</code></pre></div>
-  
-  
-  <div data-ice="description"><p>Creates <span>Mesh</span>es and <span>Geometry</span>s to visually test the given <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
-<p>Only works in a browser that supports WebGL (1).</p>
-</div>
-
-  
-
-  <div data-ice="properties"><div data-ice="properties">
-  <h4 data-ice="title">Params:</h4>
-  <table class="params">
-    <thead>
-    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-    
-    <tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">scene</td>
-      <td data-ice="type" class="code"><span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
-    </tr>
-<tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">model</td>
-      <td data-ice="type" class="code"><span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
-    </tr>
-</tbody>
-  </table>
-</div>
-</div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
-<div class="detail" data-ice="detail">
   <h3 data-ice="anchor" id="static-function-loadXKTModelFromGLTF">
     <span class="access" data-ice="access">public</span>
     
@@ -243,19 +146,19 @@
     
     
     
-    <span class="code" data-ice="name">loadXKTModelFromGLTF</span><span class="code" data-ice="signature">(gltf: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>, model: <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>, options: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span></span>
+    <span class="code" data-ice="name">loadXKTModelFromGLTF</span><span class="code" data-ice="signature">(gltf: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>, model: <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>, options: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/loadXKTModelFromGLTF.js.html#lineNumber40">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/loadXKTModelFromGLTF.js.html#lineNumber35">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {loadXKTModelFromGLTF} from &apos;<span><a href="file/src/loadXKTModelFromGLTF.js.html#lineNumber40">xeokit-xkt-tools/src/loadXKTModelFromGLTF.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {loadXKTModelFromGLTF} from &apos;<span><a href="file/src/XKTModel/loadXKTModelFromGLTF.js.html#lineNumber35">xeokit-xkt-tools/src/XKTModel/loadXKTModelFromGLTF.js</a></span>&apos;</code></pre></div>
   
   
-  <div data-ice="description"><p>Parses glTF JSON into an <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
-<p>Expects the XKTModel to be freshly instantiated, and calls <span><a href="class/src/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span> on the XKTModel before returning.</p>
+  <div data-ice="description"><p>Parses glTF JSON into an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
+<p>Expects the XKTModel to be freshly instantiated, and calls <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span> on the XKTModel before returning.</p>
 </div>
 
   
@@ -277,7 +180,7 @@
     </tr>
 <tr data-ice="property" data-depth="0">
       <td data-ice="name" class="code" data-depth="0">model</td>
-      <td data-ice="type" class="code"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></td>
+      <td data-ice="type" class="code"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></td>
       <td data-ice="appendix"></td>
       <td data-ice="description"><p>XKTModel to parse into</p>
 </td>
@@ -338,18 +241,18 @@
     
     
     
-    <span class="code" data-ice="name">validateXKTArrayBuffer</span><span class="code" data-ice="signature">(arrayBuffer: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>, xktModel: <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
+    <span class="code" data-ice="name">validateXKTArrayBuffer</span><span class="code" data-ice="signature">(arrayBuffer: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>, xktModel: <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/validateXKTArrayBuffer.js.html#lineNumber8">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/validateXKTArrayBuffer.js.html#lineNumber8">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {validateXKTArrayBuffer} from &apos;<span><a href="file/src/validateXKTArrayBuffer.js.html#lineNumber8">xeokit-xkt-tools/src/validateXKTArrayBuffer.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {validateXKTArrayBuffer} from &apos;<span><a href="file/src/XKTModel/validateXKTArrayBuffer.js.html#lineNumber8">xeokit-xkt-tools/src/XKTModel/validateXKTArrayBuffer.js</a></span>&apos;</code></pre></div>
   
   
-  <div data-ice="description"><p>Validates an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span> against the <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span> it was written from.</p>
+  <div data-ice="description"><p>Validates an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span> against the <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span> it was written from.</p>
 </div>
 
   
@@ -371,9 +274,9 @@
     </tr>
 <tr data-ice="property" data-depth="0">
       <td data-ice="name" class="code" data-depth="0">xktModel</td>
-      <td data-ice="type" class="code"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></td>
+      <td data-ice="type" class="code"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></td>
       <td data-ice="appendix"></td>
-      <td data-ice="description"><p>The <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span> that the <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span> was written from.</p>
+      <td data-ice="description"><p>The <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span> that the <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span> was written from.</p>
 </td>
     </tr>
 </tbody>
@@ -419,18 +322,18 @@
     
     
     
-    <span class="code" data-ice="name">writeXKTModelToArrayBuffer</span><span class="code" data-ice="signature">(xktModel: <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span></span>
+    <span class="code" data-ice="name">writeXKTModelToArrayBuffer</span><span class="code" data-ice="signature">(xktModel: <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>): <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/writeXKTModelToArrayBuffer.js.html#lineNumber19">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/writeXKTModelToArrayBuffer.js.html#lineNumber16">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {writeXKTModelToArrayBuffer} from &apos;<span><a href="file/src/writeXKTModelToArrayBuffer.js.html#lineNumber19">xeokit-xkt-tools/src/writeXKTModelToArrayBuffer.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {writeXKTModelToArrayBuffer} from &apos;<span><a href="file/src/XKTModel/writeXKTModelToArrayBuffer.js.html#lineNumber16">xeokit-xkt-tools/src/XKTModel/writeXKTModelToArrayBuffer.js</a></span>&apos;</code></pre></div>
   
   
-  <div data-ice="description"><p>Writes an <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span> to an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>.</p>
+  <div data-ice="description"><p>Writes an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span> to an <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer">ArrayBuffer</a></span>.</p>
 </div>
 
   
@@ -445,9 +348,9 @@
     
     <tr data-ice="property" data-depth="0">
       <td data-ice="name" class="code" data-depth="0">xktModel</td>
-      <td data-ice="type" class="code"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></td>
+      <td data-ice="type" class="code"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></td>
       <td data-ice="appendix"></td>
-      <td data-ice="description"><p>The <span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
+      <td data-ice="description"><p>The <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
 </td>
     </tr>
 </tbody>

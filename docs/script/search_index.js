@@ -1,56 +1,50 @@
 window.esdocSearchIndex = [
   [
-    "xeokit-xkt-tools/src/xktentity.js~xktentity",
-    "class/src/XKTEntity.js~XKTEntity.html",
-    "<span>XKTEntity</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTEntity.js</span>",
+    "xeokit-xkt-tools/src/xktmodel/xktentity.js~xktentity",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html",
+    "<span>XKTEntity</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTEntity.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel.js~xktmodel",
-    "class/src/XKTModel.js~XKTModel.html",
-    "<span>XKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel.js</span>",
+    "xeokit-xkt-tools/src/xktmodel/xktmodel.js~xktmodel",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html",
+    "<span>XKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTModel.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktprimitive.js~xktprimitive",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html",
-    "<span>XKTPrimitive</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTPrimitive.js</span>",
+    "xeokit-xkt-tools/src/xktmodel/xktprimitive.js~xktprimitive",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html",
+    "<span>XKTPrimitive</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTPrimitive.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktprimitiveinstance.js~xktprimitiveinstance",
-    "class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html",
-    "<span>XKTPrimitiveInstance</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTPrimitiveInstance.js</span>",
+    "xeokit-xkt-tools/src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance",
+    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html",
+    "<span>XKTPrimitiveInstance</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTPrimitiveInstance.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xkttile.js~xkttile",
-    "class/src/XKTTile.js~XKTTile.html",
-    "<span>XKTTile</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTTile.js</span>",
+    "xeokit-xkt-tools/src/xktmodel/xkttile.js~xkttile",
+    "class/src/XKTModel/XKTTile.js~XKTTile.html",
+    "<span>XKTTile</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTTile.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/createmeshesfromxktmodel.js~createmeshesfromxktmodel",
-    "function/index.html#static-function-createMeshesFromXKTModel",
-    "<span>createMeshesFromXKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/createMeshesFromXKTModel.js</span>",
-    "function"
-  ],
-  [
-    "xeokit-xkt-tools/src/loadxktmodelfromgltf.js~loadxktmodelfromgltf",
+    "xeokit-xkt-tools/src/xktmodel/loadxktmodelfromgltf.js~loadxktmodelfromgltf",
     "function/index.html#static-function-loadXKTModelFromGLTF",
-    "<span>loadXKTModelFromGLTF</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/loadXKTModelFromGLTF.js</span>",
+    "<span>loadXKTModelFromGLTF</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/loadXKTModelFromGLTF.js</span>",
     "function"
   ],
   [
-    "xeokit-xkt-tools/src/validatexktarraybuffer.js~validatexktarraybuffer",
+    "xeokit-xkt-tools/src/xktmodel/validatexktarraybuffer.js~validatexktarraybuffer",
     "function/index.html#static-function-validateXKTArrayBuffer",
-    "<span>validateXKTArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/validateXKTArrayBuffer.js</span>",
+    "<span>validateXKTArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/validateXKTArrayBuffer.js</span>",
     "function"
   ],
   [
-    "xeokit-xkt-tools/src/writexktmodeltoarraybuffer.js~writexktmodeltoarraybuffer",
+    "xeokit-xkt-tools/src/xktmodel/writexktmodeltoarraybuffer.js~writexktmodeltoarraybuffer",
     "function/index.html#static-function-writeXKTModelToArrayBuffer",
-    "<span>writeXKTModelToArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/writeXKTModelToArrayBuffer.js</span>",
+    "<span>writeXKTModelToArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/writeXKTModelToArrayBuffer.js</span>",
     "function"
   ],
   [
@@ -336,315 +330,309 @@ window.esdocSearchIndex = [
     "external"
   ],
   [
-    "src/kdnode.js",
-    "file/src/KDNode.js.html",
-    "src/KDNode.js",
+    "src/xktmodel/kdnode.js",
+    "file/src/XKTModel/KDNode.js.html",
+    "src/XKTModel/KDNode.js",
     "file"
   ],
   [
-    "src/mockxktmodel.js",
-    "file/src/MockXKTModel.js.html",
-    "src/MockXKTModel.js",
+    "src/xktmodel/mockxktmodel.js",
+    "file/src/XKTModel/MockXKTModel.js.html",
+    "src/XKTModel/MockXKTModel.js",
     "file"
   ],
   [
-    "src/xktentity.js",
-    "file/src/XKTEntity.js.html",
-    "src/XKTEntity.js",
+    "src/xktmodel/xktentity.js",
+    "file/src/XKTModel/XKTEntity.js.html",
+    "src/XKTModel/XKTEntity.js",
     "file"
   ],
   [
-    "src/xktentity.js~xktentity#aabb",
-    "class/src/XKTEntity.js~XKTEntity.html#instance-member-aabb",
-    "src/XKTEntity.js~XKTEntity#aabb",
+    "src/xktmodel/xktentity.js~xktentity#aabb",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-aabb",
+    "src/XKTModel/XKTEntity.js~XKTEntity#aabb",
     "member"
   ],
   [
-    "src/xktentity.js~xktentity#entityid",
-    "class/src/XKTEntity.js~XKTEntity.html#instance-member-entityId",
-    "src/XKTEntity.js~XKTEntity#entityId",
+    "src/xktmodel/xktentity.js~xktentity#entityid",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-entityId",
+    "src/XKTModel/XKTEntity.js~XKTEntity#entityId",
     "member"
   ],
   [
-    "src/xktentity.js~xktentity#entityindex",
-    "class/src/XKTEntity.js~XKTEntity.html#instance-member-entityIndex",
-    "src/XKTEntity.js~XKTEntity#entityIndex",
+    "src/xktmodel/xktentity.js~xktentity#entityindex",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-entityIndex",
+    "src/XKTModel/XKTEntity.js~XKTEntity#entityIndex",
     "member"
   ],
   [
-    "src/xktentity.js~xktentity#hasreusedprimitives",
-    "class/src/XKTEntity.js~XKTEntity.html#instance-member-hasReusedPrimitives",
-    "src/XKTEntity.js~XKTEntity#hasReusedPrimitives",
+    "src/xktmodel/xktentity.js~xktentity#hasreusedprimitives",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-hasReusedPrimitives",
+    "src/XKTModel/XKTEntity.js~XKTEntity#hasReusedPrimitives",
     "member"
   ],
   [
-    "src/xktentity.js~xktentity#matrix",
-    "class/src/XKTEntity.js~XKTEntity.html#instance-member-matrix",
-    "src/XKTEntity.js~XKTEntity#matrix",
+    "src/xktmodel/xktentity.js~xktentity#matrix",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-matrix",
+    "src/XKTModel/XKTEntity.js~XKTEntity#matrix",
     "member"
   ],
   [
-    "src/xktentity.js~xktentity#primitiveinstances",
-    "class/src/XKTEntity.js~XKTEntity.html#instance-member-primitiveInstances",
-    "src/XKTEntity.js~XKTEntity#primitiveInstances",
+    "src/xktmodel/xktentity.js~xktentity#primitiveinstances",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-primitiveInstances",
+    "src/XKTModel/XKTEntity.js~XKTEntity#primitiveInstances",
     "member"
   ],
   [
-    "src/xktmodel.js",
-    "file/src/XKTModel.js.html",
-    "src/XKTModel.js",
+    "src/xktmodel/xktmodel.js",
+    "file/src/XKTModel/XKTModel.js.html",
+    "src/XKTModel/XKTModel.js",
     "file"
   ],
   [
-    "src/xktmodel.js~xktmodel#constructor",
-    "class/src/XKTModel.js~XKTModel.html#instance-constructor-constructor",
-    "src/XKTModel.js~XKTModel#constructor",
+    "src/xktmodel/xktmodel.js~xktmodel#constructor",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-constructor-constructor",
+    "src/XKTModel/XKTModel.js~XKTModel#constructor",
     "method"
   ],
   [
-    "src/xktmodel.js~xktmodel#createentity",
-    "class/src/XKTModel.js~XKTModel.html#instance-method-createEntity",
-    "src/XKTModel.js~XKTModel#createEntity",
+    "src/xktmodel/xktmodel.js~xktmodel#createentity",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createEntity",
+    "src/XKTModel/XKTModel.js~XKTModel#createEntity",
     "method"
   ],
   [
-    "src/xktmodel.js~xktmodel#createprimitive",
-    "class/src/XKTModel.js~XKTModel.html#instance-method-createPrimitive",
-    "src/XKTModel.js~XKTModel#createPrimitive",
+    "src/xktmodel/xktmodel.js~xktmodel#createprimitive",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createPrimitive",
+    "src/XKTModel/XKTModel.js~XKTModel#createPrimitive",
     "method"
   ],
   [
-    "src/xktmodel.js~xktmodel#entities",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-entities",
-    "src/XKTModel.js~XKTModel#entities",
+    "src/xktmodel/xktmodel.js~xktmodel#entities",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entities",
+    "src/XKTModel/XKTModel.js~XKTModel#entities",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#entitieslist",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-entitiesList",
-    "src/XKTModel.js~XKTModel#entitiesList",
+    "src/xktmodel/xktmodel.js~xktmodel#entitieslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entitiesList",
+    "src/XKTModel/XKTModel.js~XKTModel#entitiesList",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#finalize",
-    "class/src/XKTModel.js~XKTModel.html#instance-method-finalize",
-    "src/XKTModel.js~XKTModel#finalize",
+    "src/xktmodel/xktmodel.js~xktmodel#finalize",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize",
+    "src/XKTModel/XKTModel.js~XKTModel#finalize",
     "method"
   ],
   [
-    "src/xktmodel.js~xktmodel#finalized",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-finalized",
-    "src/XKTModel.js~XKTModel#finalized",
+    "src/xktmodel/xktmodel.js~xktmodel#finalized",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-finalized",
+    "src/XKTModel/XKTModel.js~XKTModel#finalized",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#primitiveinstanceslist",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-primitiveInstancesList",
-    "src/XKTModel.js~XKTModel#primitiveInstancesList",
+    "src/xktmodel/xktmodel.js~xktmodel#primitiveinstanceslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitiveInstancesList",
+    "src/XKTModel/XKTModel.js~XKTModel#primitiveInstancesList",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#primitives",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-primitives",
-    "src/XKTModel.js~XKTModel#primitives",
+    "src/xktmodel/xktmodel.js~xktmodel#primitives",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives",
+    "src/XKTModel/XKTModel.js~XKTModel#primitives",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#primitiveslist",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-primitivesList",
-    "src/XKTModel.js~XKTModel#primitivesList",
+    "src/xktmodel/xktmodel.js~xktmodel#primitiveslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList",
+    "src/XKTModel/XKTModel.js~XKTModel#primitivesList",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#reusedprimitivesdecodematrix",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-reusedPrimitivesDecodeMatrix",
-    "src/XKTModel.js~XKTModel#reusedPrimitivesDecodeMatrix",
+    "src/xktmodel/xktmodel.js~xktmodel#reusedprimitivesdecodematrix",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-reusedPrimitivesDecodeMatrix",
+    "src/XKTModel/XKTModel.js~XKTModel#reusedPrimitivesDecodeMatrix",
     "member"
   ],
   [
-    "src/xktmodel.js~xktmodel#tileslist",
-    "class/src/XKTModel.js~XKTModel.html#instance-member-tilesList",
-    "src/XKTModel.js~XKTModel#tilesList",
+    "src/xktmodel/xktmodel.js~xktmodel#tileslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-tilesList",
+    "src/XKTModel/XKTModel.js~XKTModel#tilesList",
     "member"
   ],
   [
-    "src/xktprimitive.js",
-    "file/src/XKTPrimitive.js.html",
-    "src/XKTPrimitive.js",
+    "src/xktmodel/xktprimitive.js",
+    "file/src/XKTModel/XKTPrimitive.js.html",
+    "src/XKTModel/XKTPrimitive.js",
     "file"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#color",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-color",
-    "src/XKTPrimitive.js~XKTPrimitive#color",
+    "src/xktmodel/xktprimitive.js~xktprimitive#color",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-color",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#color",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#edgeindices",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-edgeIndices",
-    "src/XKTPrimitive.js~XKTPrimitive#edgeIndices",
+    "src/xktmodel/xktprimitive.js~xktprimitive#edgeindices",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-edgeIndices",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#edgeIndices",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#indices",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-indices",
-    "src/XKTPrimitive.js~XKTPrimitive#indices",
+    "src/xktmodel/xktprimitive.js~xktprimitive#indices",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-indices",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#indices",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#normalsoctencoded",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-normalsOctEncoded",
-    "src/XKTPrimitive.js~XKTPrimitive#normalsOctEncoded",
+    "src/xktmodel/xktprimitive.js~xktprimitive#normalsoctencoded",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-normalsOctEncoded",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#normalsOctEncoded",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#numinstances",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-numInstances",
-    "src/XKTPrimitive.js~XKTPrimitive#numInstances",
+    "src/xktmodel/xktprimitive.js~xktprimitive#numinstances",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-numInstances",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#numInstances",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#opacity",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-opacity",
-    "src/XKTPrimitive.js~XKTPrimitive#opacity",
+    "src/xktmodel/xktprimitive.js~xktprimitive#opacity",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-opacity",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#opacity",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#positions",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-positions",
-    "src/XKTPrimitive.js~XKTPrimitive#positions",
+    "src/xktmodel/xktprimitive.js~xktprimitive#positions",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positions",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#positions",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#positionsquantized",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-positionsQuantized",
-    "src/XKTPrimitive.js~XKTPrimitive#positionsQuantized",
+    "src/xktmodel/xktprimitive.js~xktprimitive#positionsquantized",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positionsQuantized",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#positionsQuantized",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#primitiveid",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveId",
-    "src/XKTPrimitive.js~XKTPrimitive#primitiveId",
+    "src/xktmodel/xktprimitive.js~xktprimitive#primitiveid",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveId",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#primitiveId",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#primitiveindex",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveIndex",
-    "src/XKTPrimitive.js~XKTPrimitive#primitiveIndex",
+    "src/xktmodel/xktprimitive.js~xktprimitive#primitiveindex",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveIndex",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#primitiveIndex",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#primitivetype",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveType",
-    "src/XKTPrimitive.js~XKTPrimitive#primitiveType",
+    "src/xktmodel/xktprimitive.js~xktprimitive#primitivetype",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveType",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#primitiveType",
     "member"
   ],
   [
-    "src/xktprimitive.js~xktprimitive#reused",
-    "class/src/XKTPrimitive.js~XKTPrimitive.html#instance-get-reused",
-    "src/XKTPrimitive.js~XKTPrimitive#reused",
+    "src/xktmodel/xktprimitive.js~xktprimitive#reused",
+    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-get-reused",
+    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#reused",
     "member"
   ],
   [
-    "src/xktprimitiveinstance.js",
-    "file/src/XKTPrimitiveInstance.js.html",
-    "src/XKTPrimitiveInstance.js",
+    "src/xktmodel/xktprimitiveinstance.js",
+    "file/src/XKTModel/XKTPrimitiveInstance.js.html",
+    "src/XKTModel/XKTPrimitiveInstance.js",
     "file"
   ],
   [
-    "src/xktprimitiveinstance.js~xktprimitiveinstance#entity",
-    "class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-entity",
-    "src/XKTPrimitiveInstance.js~XKTPrimitiveInstance#entity",
+    "src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance#entity",
+    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-entity",
+    "src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance#entity",
     "member"
   ],
   [
-    "src/xktprimitiveinstance.js~xktprimitiveinstance#primitive",
-    "class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-primitive",
-    "src/XKTPrimitiveInstance.js~XKTPrimitiveInstance#primitive",
+    "src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance#primitive",
+    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-primitive",
+    "src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance#primitive",
     "member"
   ],
   [
-    "src/xktprimitiveinstance.js~xktprimitiveinstance#primitiveinstanceindex",
-    "class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-primitiveInstanceIndex",
-    "src/XKTPrimitiveInstance.js~XKTPrimitiveInstance#primitiveInstanceIndex",
+    "src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance#primitiveinstanceindex",
+    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-primitiveInstanceIndex",
+    "src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance#primitiveInstanceIndex",
     "member"
   ],
   [
-    "src/xkttile.js",
-    "file/src/XKTTile.js.html",
-    "src/XKTTile.js",
+    "src/xktmodel/xkttile.js",
+    "file/src/XKTModel/XKTTile.js.html",
+    "src/XKTModel/XKTTile.js",
     "file"
   ],
   [
-    "src/xkttile.js~xkttile#aabb",
-    "class/src/XKTTile.js~XKTTile.html#instance-member-aabb",
-    "src/XKTTile.js~XKTTile#aabb",
+    "src/xktmodel/xkttile.js~xkttile#aabb",
+    "class/src/XKTModel/XKTTile.js~XKTTile.html#instance-member-aabb",
+    "src/XKTModel/XKTTile.js~XKTTile#aabb",
     "member"
   ],
   [
-    "src/xkttile.js~xkttile#decodematrix",
-    "class/src/XKTTile.js~XKTTile.html#instance-member-decodeMatrix",
-    "src/XKTTile.js~XKTTile#decodeMatrix",
+    "src/xktmodel/xkttile.js~xkttile#decodematrix",
+    "class/src/XKTModel/XKTTile.js~XKTTile.html#instance-member-decodeMatrix",
+    "src/XKTModel/XKTTile.js~XKTTile#decodeMatrix",
     "member"
   ],
   [
-    "src/xkttile.js~xkttile#entities",
-    "class/src/XKTTile.js~XKTTile.html#instance-member-entities",
-    "src/XKTTile.js~XKTTile#entities",
+    "src/xktmodel/xkttile.js~xkttile#entities",
+    "class/src/XKTModel/XKTTile.js~XKTTile.html#instance-member-entities",
+    "src/XKTModel/XKTTile.js~XKTTile#entities",
     "member"
   ],
   [
-    "src/createmeshesfromxktmodel.js",
-    "file/src/createMeshesFromXKTModel.js.html",
-    "src/createMeshesFromXKTModel.js",
+    "src/xktmodel/lib/buildedgeindices.js",
+    "file/src/XKTModel/lib/buildEdgeIndices.js.html",
+    "src/XKTModel/lib/buildEdgeIndices.js",
     "file"
   ],
   [
-    "src/lib/buildedgeindices.js",
-    "file/src/lib/buildEdgeIndices.js.html",
-    "src/lib/buildEdgeIndices.js",
+    "src/xktmodel/lib/geometrycompression.js",
+    "file/src/XKTModel/lib/geometryCompression.js.html",
+    "src/XKTModel/lib/geometryCompression.js",
     "file"
   ],
   [
-    "src/lib/geometrycompression.js",
-    "file/src/lib/geometryCompression.js.html",
-    "src/lib/geometryCompression.js",
+    "src/xktmodel/lib/math.js",
+    "file/src/XKTModel/lib/math.js.html",
+    "src/XKTModel/lib/math.js",
     "file"
   ],
   [
-    "src/lib/math.js",
-    "file/src/lib/math.js.html",
-    "src/lib/math.js",
+    "src/xktmodel/lib/pako.js",
+    "file/src/XKTModel/lib/pako.js.html",
+    "src/XKTModel/lib/pako.js",
     "file"
   ],
   [
-    "src/lib/pako.js",
-    "file/src/lib/pako.js.html",
-    "src/lib/pako.js",
+    "src/xktmodel/lib/utils.js",
+    "file/src/XKTModel/lib/utils.js.html",
+    "src/XKTModel/lib/utils.js",
     "file"
   ],
   [
-    "src/lib/utils.js",
-    "file/src/lib/utils.js.html",
-    "src/lib/utils.js",
+    "src/xktmodel/loadxktmodelfromgltf.js",
+    "file/src/XKTModel/loadXKTModelFromGLTF.js.html",
+    "src/XKTModel/loadXKTModelFromGLTF.js",
     "file"
   ],
   [
-    "src/loadxktmodelfromgltf.js",
-    "file/src/loadXKTModelFromGLTF.js.html",
-    "src/loadXKTModelFromGLTF.js",
+    "src/xktmodel/validatexktarraybuffer.js",
+    "file/src/XKTModel/validateXKTArrayBuffer.js.html",
+    "src/XKTModel/validateXKTArrayBuffer.js",
     "file"
   ],
   [
-    "src/validatexktarraybuffer.js",
-    "file/src/validateXKTArrayBuffer.js.html",
-    "src/validateXKTArrayBuffer.js",
-    "file"
-  ],
-  [
-    "src/writexktmodeltoarraybuffer.js",
-    "file/src/writeXKTModelToArrayBuffer.js.html",
-    "src/writeXKTModelToArrayBuffer.js",
+    "src/xktmodel/writexktmodeltoarraybuffer.js",
+    "file/src/XKTModel/writeXKTModelToArrayBuffer.js.html",
+    "src/XKTModel/writeXKTModelToArrayBuffer.js",
     "file"
   ]
 ]

@@ -1,14 +1,14 @@
 {
-  "coverage": "50%",
-  "expectCount": 130,
-  "actualCount": 65,
+  "coverage": "50.39%",
+  "expectCount": 127,
+  "actualCount": 64,
   "files": {
-    "src/KDNode.js": {
+    "src/XKTModel/KDNode.js": {
       "expectCount": 6,
       "actualCount": 6,
       "undocumentLines": []
     },
-    "src/MockXKTModel.js": {
+    "src/XKTModel/MockXKTModel.js": {
       "expectCount": 12,
       "actualCount": 2,
       "undocumentLines": [
@@ -24,12 +24,12 @@
         113
       ]
     },
-    "src/XKTEntity.js": {
+    "src/XKTModel/XKTEntity.js": {
       "expectCount": 8,
       "actualCount": 8,
       "undocumentLines": []
     },
-    "src/XKTModel.js": {
+    "src/XKTModel/XKTModel.js": {
       "expectCount": 27,
       "actualCount": 14,
       "undocumentLines": [
@@ -40,43 +40,35 @@
         15,
         16,
         430,
-        449,
-        488,
-        513,
-        579,
+        451,
+        492,
+        517,
         583,
-        674
+        587,
+        682
       ]
     },
-    "src/XKTPrimitive.js": {
+    "src/XKTModel/XKTPrimitive.js": {
       "expectCount": 14,
       "actualCount": 14,
       "undocumentLines": []
     },
-    "src/XKTPrimitiveInstance.js": {
+    "src/XKTModel/XKTPrimitiveInstance.js": {
       "expectCount": 5,
       "actualCount": 5,
       "undocumentLines": []
     },
-    "src/XKTTile.js": {
+    "src/XKTModel/XKTTile.js": {
       "expectCount": 5,
       "actualCount": 5,
       "undocumentLines": []
     },
-    "src/createMeshesFromXKTModel.js": {
-      "expectCount": 3,
-      "actualCount": 1,
-      "undocumentLines": [
-        72,
-        117
-      ]
-    },
-    "src/lib/buildEdgeIndices.js": {
+    "src/XKTModel/lib/buildEdgeIndices.js": {
       "expectCount": 1,
       "actualCount": 1,
       "undocumentLines": []
     },
-    "src/lib/geometryCompression.js": {
+    "src/XKTModel/lib/geometryCompression.js": {
       "expectCount": 8,
       "actualCount": 4,
       "undocumentLines": [
@@ -86,7 +78,7 @@
         90
       ]
     },
-    "src/lib/math.js": {
+    "src/XKTModel/lib/math.js": {
       "expectCount": 6,
       "actualCount": 1,
       "undocumentLines": [
@@ -97,39 +89,39 @@
         8
       ]
     },
-    "src/lib/utils.js": {
+    "src/XKTModel/lib/utils.js": {
       "expectCount": 2,
       "actualCount": 1,
       "undocumentLines": [
         1
       ]
     },
-    "src/loadXKTModelFromGLTF.js": {
+    "src/XKTModel/loadXKTModelFromGLTF.js": {
       "expectCount": 20,
       "actualCount": 1,
       "undocumentLines": [
-        10,
-        19,
-        69,
-        92,
-        104,
-        143,
-        152,
-        161,
-        169,
-        178,
-        191,
-        236,
-        247,
-        260,
-        287,
-        300,
-        443,
-        467,
-        480
+        5,
+        14,
+        64,
+        87,
+        99,
+        138,
+        147,
+        156,
+        164,
+        173,
+        186,
+        231,
+        242,
+        255,
+        282,
+        295,
+        438,
+        462,
+        475
       ]
     },
-    "src/validateXKTArrayBuffer.js": {
+    "src/XKTModel/validateXKTArrayBuffer.js": {
       "expectCount": 6,
       "actualCount": 1,
       "undocumentLines": [
@@ -137,19 +129,19 @@
         53,
         76,
         86,
-        277
+        290
       ]
     },
-    "src/writeXKTModelToArrayBuffer.js": {
+    "src/XKTModel/writeXKTModelToArrayBuffer.js": {
       "expectCount": 7,
       "actualCount": 1,
       "undocumentLines": [
-        6,
-        11,
-        30,
-        196,
-        229,
-        259
+        3,
+        8,
+        27,
+        199,
+        232,
+        262
       ]
     }
   }
