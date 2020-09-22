@@ -1,7 +1,5 @@
 /**
- * Creates {@link Mesh}es and {@link Geometry}s to visually test the given {@link XKTModel}.
- *
- * Only works in a browser that supports WebGL (1).
+ * Creates xeokit {@link Mesh}es and {@link Geometry}s to visually test the given {@link XKTModel}.
  */
 import {buildSphereGeometry, Mesh, PhongMaterial, VBOGeometry} from "../build/main.js";
 

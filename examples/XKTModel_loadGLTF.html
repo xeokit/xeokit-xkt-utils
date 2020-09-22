@@ -37,6 +37,9 @@
     import {XKTModel} from "./../src/XKTModel/XKTModel.js";
     import {loadXKTModelFromGLTF} from "./../src/XKTModel/loadXKTModelFromGLTF.js";
     import {writeXKTModelToArrayBuffer} from "./../src/XKTModel/writeXKTModelToArrayBuffer.js";
+    import {createMeshesFromXKTModel} from "./js/createMeshesFromXKTModel.js";
+    import {validateXKTArrayBuffer} from "../dist/xeokit-xkt-tools.es.js";
+    import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
 
     //------------------------------------------------------------------------------------------------------------------
     // Create a Viewer, arrange the camera
@@ -63,7 +66,7 @@
 
     log("Loading glTF file..");
 
-    utils.loadJSON("./models/gltf/duplex/scene.gltf", (json) => {
+    utils.loadJSON("./models/gltf/gearbox/GearboxAssy.gltf", (json) => {
 
             log("Parsing glTF into XKTModel..");
 
@@ -79,18 +82,11 @@
 
                 log("Loading array buffer into Viewer..");
 
-                const model = xktLoader.load({
-                    id: "myModel",
-                    xkt: arrayBuffer,
-                    edges: true
-                });
+                const xktArrayBufferValid = validateXKTArrayBuffer(arrayBuffer, xktModel);
 
-                model.on("loaded", () => {
+                createMeshesFromXKTModel(viewer.scene, xktModel);
 
-                    log("Model loaded.");
-
-                    viewer.cameraFlight.flyTo(viewer.scene);
-                });
+                visualizeXKTModelTileAABBs(viewer.scene, xktModel);
             });
         },
         function (errMsg) {

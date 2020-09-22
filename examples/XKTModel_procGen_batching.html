@@ -205,6 +205,8 @@
 
     const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
+    log(xktArrayBufferValid ? "VALID" : "ERRORS FOUND (see JS console for log)");
+
     createMeshesFromXKTModel(viewer.scene, xktModel);
 
     viewer.cameraFlight.flyTo(viewer.scene);
