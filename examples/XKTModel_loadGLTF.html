@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>XKTLoaderPlugin - Loading a Model from the File System</title>
+    <title>XKTModel - Converting a model to XKT from glTF</title>
     <link href="css/styles.css" type="text/css" rel="stylesheet"/>
 
     <style>
@@ -18,24 +18,10 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1>XKTLoaderPlugin - Loading an IFC Model from the File System</h1><br>
-    <ul>
-        <li>
-            <div id="time">Loading JavaScript modules...</div>
-        </li>
-        <li>
-            <a target="_other"
-               href="./../docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html">XKTLoaderPlugin</a>
-            - Loads xeokit XKT model from the file system
-        </li>
-        <li>
-            <a target="_other"
-               href="http://openifcmodel.cs.auckland.ac.nz/Model/Details/274">Model source</a>
-        </li>
-        <li>
-            <a target="_other" href="https://github.com/xeokit/xeokit-sdk/wiki/Importing-Models">User Guide</a>
-        </li>
-    </ul>
+    <h1><a  target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a model to XKT from glTF</h1><br>
+
+    <div id="log">Loading JavaScript modules...</div>
+
 </div>
 </body>
 <script type="module">
@@ -72,7 +58,7 @@
     const xktLoader = new XKTLoaderPlugin(viewer);
 
     function log(msg) {
-        document.getElementById("time").innerHTML = msg;
+        document.getElementById("log").innerHTML = msg;
     }
 
     log("Loading glTF file..");

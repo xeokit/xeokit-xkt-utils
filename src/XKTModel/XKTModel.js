@@ -645,9 +645,9 @@ class XKTModel {
 
                     for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
 
-                        positions[k + 0] -= tileCenter[0];
-                        positions[k + 1] -= tileCenter[1];
-                        positions[k + 2] -= tileCenter[2];
+                        // positions[k + 0] -= tileCenter[0];
+                        // positions[k + 1] -= tileCenter[1];
+                        // positions[k + 2] -= tileCenter[2];
 
                         // positions[k + 0] -= 15;
                         // positions[k + 1] -= 15;

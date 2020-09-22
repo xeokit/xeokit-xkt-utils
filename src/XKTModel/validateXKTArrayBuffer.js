@@ -266,15 +266,15 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                // if (!compareArrays(color, xktPrimitive.color)) {
-                //     console.error("compareArrays(color, xktPrimitive.color) === false");
-                //     return false;
-                // }
-                //
-                // if (opacity !== xktPrimitive.opacity) {
-                //     console.error("opacity !== xktPrimitive.opacity");
-                //     return false;
-                // }
+                if (!compareArrays(color, xktPrimitive.color)) {
+                    console.error("compareArrays(color, xktPrimitive.color) === false");
+                    return false;
+                }
+
+                if (opacity !== xktPrimitive.opacity) {
+                    console.error("opacity !== xktPrimitive.opacity");
+                    return false;
+                }
 
                 if (primitiveReuseCount !== xktPrimitive.numInstances) {
                     console.error("primitiveReuseCount !== xktPrimitive.numInstances");

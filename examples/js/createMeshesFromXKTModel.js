@@ -44,7 +44,7 @@ function createMeshesFromXKTModel(scene, model) {
             const entityPrimitiveInstances = entity.primitiveInstances;
             const numEntityPrimitiveInstances = entityPrimitiveInstances.length;
 
-            createAABBHelper(scene, entity.aabb, [0, 0, 1]);
+            //createAABBHelper(scene, entity.aabb, [0, 0, 1]);
 
             for (let k = 0; k < numEntityPrimitiveInstances; k++) {
 
@@ -57,7 +57,8 @@ function createMeshesFromXKTModel(scene, model) {
                     geometry: geometry,
                     matrix: entity.matrix,
                     edges: true,
-                    visible: true
+                    visible: true,
+                    opacity: 0.2
                 });
 
                 //createAABBHelper(scene, mesh.aabb, [0, 1, 0]);
@@ -120,7 +121,8 @@ function createPosHelper(scene, rtcCenter) {
         })),
         material: new PhongMaterial(scene, {
             emissive: [1, 0, 0],
-            diffuse: [0, 0, 0]
+            diffuse: [0, 0, 0],
+            alpha: 0.3
         }),
         position: rtcCenter
     });

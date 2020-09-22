@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>XKTModel - Generating a model programmatically</title>
+    <title>xeokit-xkt-tools validateXKTArrayBuffer</title>
     <link href="css/styles.css" type="text/css" rel="stylesheet"/>
 
     <style>
@@ -18,10 +18,9 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1>XKTModel - Generating a model programmatically</h1><br>
+    <h1>xeokit-xkt-tools validateXKTArrayBuffer</h1><br>
 
-    <div id="log">Loading JavaScript modules...</div>
-
+    <div id="log">Loading JavaScript modules</div>
 </div>
 </body>
 <script type="module">
@@ -126,6 +125,8 @@
     createMeshesFromXKTModel(viewer.scene, xktModel);
 
     viewer.cameraFlight.flyTo(viewer.scene);
+
+    window.viewer = viewer;
 
 </script>
 </html>
