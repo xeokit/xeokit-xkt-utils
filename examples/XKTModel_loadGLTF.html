@@ -30,9 +30,9 @@
     // Import the modules we need for this example
     //------------------------------------------------------------------------------------------------------------------
 
-    import {utils} from "./build/main.js";
-    import {Viewer} from "./build/main.js";
-    import {XKTLoaderPlugin} from "./build/main.js";
+    import {utils} from "./build/xeokit-components.js";
+    import {Viewer} from "./build/xeokit-components.js";
+    import {XKTLoaderPlugin} from "./build/xeokit-components.js";
 
     import {XKTModel} from "./../src/XKTModel/XKTModel.js";
     import {loadXKTModelFromGLTF} from "./../src/XKTModel/loadXKTModelFromGLTF.js";
@@ -50,9 +50,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [-5.13, 16.83, 39.46];
-    viewer.camera.look = [22.20, 1.86, 4.44];
-    viewer.camera.up = [0.19, 0.94, -0.25];
+    viewer.camera.eye =  [136.27810668945312, 29.578109741210938, 32.587806701660156];
+    viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
+    viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
 
     //----------------------------------------------------------------------------------------------------------------------
     // Create a xeokit loader plugin, load a model, fit to view
@@ -61,7 +61,7 @@
     const xktLoader = new XKTLoaderPlugin(viewer);
 
     function log(msg) {
-        document.getElementById("log").innerHTML = msg;
+        document.getElementById("log").innerHTML += "<br>" + msg;
     }
 
     log("Loading glTF file..");

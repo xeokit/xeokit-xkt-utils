@@ -1,7 +1,7 @@
 /**
  * Creates xeokit {@link Mesh}es and {@link Geometry}s to visually test the given {@link XKTModel}.
  */
-import {buildSphereGeometry, Mesh, PhongMaterial, VBOGeometry} from "../build/main.js";
+import {buildSphereGeometry, Mesh, PhongMaterial, VBOGeometry} from "../build/xeokit-components.js";
 
 function createMeshesFromXKTModel(scene, model) {
 

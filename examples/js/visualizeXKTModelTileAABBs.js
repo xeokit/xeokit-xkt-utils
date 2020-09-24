@@ -1,7 +1,7 @@
 /**
  * Creates xeokit {@link Mesh}es and {@link Geometry}s to visualize the boundaries of the {@link XKTTile}s within an {@link XKTModel}.
  */
-import {Mesh, PhongMaterial, VBOGeometry} from "../build/main.js";
+import {Mesh, PhongMaterial, VBOGeometry} from "../build/xeokit-components.js";
 
 function visualizeXKTModelTileAABBs(scene, model) {
     const tilesList = model.tilesList;
