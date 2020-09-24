@@ -1,6 +1,9 @@
 # xeokit-xkt-tools
 JavaScript tools to generate .XKT files
 
+
+![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
+
 ## Usage
 
 ![Class diagram](./images/classes.png)
