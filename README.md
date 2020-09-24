@@ -23,7 +23,7 @@ in-memory "document-object model" that represents the contents of an ````.xkt```
 * [**````XKTTile````**](https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTTile.js~XKTTile.html) represents a spatial, box-shaped region within the ````XKTModel````. An ````XKTTile```` has one or more ````XKTEntitys````, a World-space axis-aligned bounding 
 box (AABB) that encloses the ````XKTEntitys````, and a decoding matrix to de-quantize the vertex positions belonging to the primitives instanced by the entities. 
 
-<br>
+<br><br>
 
 ![Class diagram](https://xeokit.github.io/xeokit-xkt-tools/images/classes.png)
 
