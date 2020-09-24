@@ -1,13 +1,14 @@
 ## XKT Format Specification (V6)
 
-The ````.xkt```` format is xeokit's native binary format, optimized to allow large IFC and CAD models to be efficiently loaded into 
+The ````.xkt```` format is xeokit's native binary format, optimized to load large models quickly, while preserving double-precision accuracy for geographically-large models.
+ 
 xeokit using the [XKTLoaderPlugin](https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html). 
 
-At present, the ````.xkt```` only supports triangle meshes.
+At present, the ````.xkt```` format only supports triangle meshes.
 
 See the tutorial [Creating Files for Offline BIM](https://github.com/xeokit/xeokit-sdk/wiki/Creating-Files-for-Offline-BIM) for how to use existing tools to convert IFC, OBJ, and glTF files to ````.xkt```` format.
 
-As described in that tutorial, we currently have [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt), a nodejs-based CLI tool that converts ````glTF```` files to *````.xkt````*. That tool performs well and should be enough for your needs.
+As described in that tutorial, we currently have [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt), a nodejs-based CLI tool that converts ````glTF```` files to *````.xkt````*. 
 
 This specification page describes the ````.xkt```` V6.0 format, in case you need to develop own custom conversion tool, for example on [IFC Engine](http://rdf.bg/product-list/ifc-engine/). 
  
@@ -58,11 +59,11 @@ the primitives used by tile's entities are relative to the center of their tile,
 
 ## Concepts
 
-* [**````XKTModel````**]()
+* [**````XKTModel````**]() represents a single model.
 * [**````XKTPrimitive````**]() represents an individual mesh, which has vertex positions, vertex normals, triangle indices, edge indices, an RGB color, and an opacity. 
 * [**````XKTPrimitiveInstance````**]() is an association class that represents the use of an ````XKTPrimitive```` by an ````XKTEntity````. 
 * [**````XKTEntity````**]() represents a 3D object, which has a unique ID, and one or more ````PrimitiveInstances````.
-* [**````XKTTile````**]() represents a spatial region within the ````XKTModel````. An ````XKTTile```` has one or more ````XKTEntitys````, a World-space axis-aligned bounding 
+* [**````XKTTile````**]() represents a spatial, box-shaped region within the ````XKTModel````. An ````XKTTile```` has one or more ````XKTEntitys````, a World-space axis-aligned bounding 
 box (AABB) that encloses the ````XKTEntitys````, and a decoding matrix to de-quantize the vertex positions belonging to the primitives instanced by the entities. 
 
 When a primitive is used only once (ie. it is associated with exactly one primitive instance), then the primitive's positions are in World-space. Otherwise, the primitive's positions are in Local-space.
