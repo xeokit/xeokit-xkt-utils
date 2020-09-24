@@ -42,8 +42,29 @@
 </nav>
 
 <div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-tools">xeokit-xkt-tools</h1><p>JavaScript tools to generate .XKT files</p>
-<h2 id="usage">Usage</h2><p><img src="./images/classes.png" alt="Class diagram"></p>
-<h4 id="procedurally-generating-an-xktmodel">Procedurally Generating an XKTModel</h4><p>Procedurally building a simple table model within an <a href="./docs/class/src/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>:</p>
+<ul>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs">API documentation</a></li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/examples">Live examples</a></li>
+</ul>
+<p><img src="http://xeokit.io/img/kdtree.jpeg" alt="Spatial partitioning"></p>
+<h2 id="contents">Contents</h2><h2 id="usage">Usage</h2><h4 id="classes">Classes</h4><p><code>xeokit-xkt-tools</code> provides five javaScript classes that enable us to programmatically build an 
+in-memory &quot;document-object model&quot; that represents the contents of an <code>.xkt</code> file:</p>
+<ul>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a> represents a single model, and provides methods through which we can build the model. </li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html"><strong><code>XKTPrimitive</code></strong></a> represents an individual mesh, which has vertex positions, vertex normals, triangle indices, edge indices, an RGB color, and an opacity. </li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html"><strong><code>XKTPrimitiveInstance</code></strong></a> is an association class that represents the use of an <code>XKTPrimitive</code> by an <code>XKTEntity</code>. </li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTEntity.js~XKTEntity.html"><strong><code>XKTEntity</code></strong></a> represents a 3D object, which has a unique ID, and one or more <code>PrimitiveInstances</code>.</li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTTile.js~XKTTile.html"><strong><code>XKTTile</code></strong></a> represents a spatial, box-shaped region within the <code>XKTModel</code>. An <code>XKTTile</code> has one or more <code>XKTEntitys</code>, a World-space axis-aligned bounding 
+box (AABB) that encloses the <code>XKTEntitys</code>, and a decoding matrix to de-quantize the vertex positions belonging to the primitives instanced by the entities. </li>
+</ul>
+<p><img src="./images/classes.png" alt="Class diagram"></p>
+<h4 id="functions">Functions</h4><p><code>xeokit-xkt-tools</code> also provides three functions for loading, serializing and testing <code>XKTModels</code>:</p>
+<ul>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/function/index.html#static-function-loadXKTModelFromGLTF"><strong><code>loadXKTModelFromGLTF</code></strong></a> load glTF JSON into an <code>XKTModel</code>.</li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><strong><code>writeXKTModelToArrayBuffer</code></strong></a> serializes an <code>XKTModel</code> to an <code>ArrayBuffer</code>.</li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-tools/docs/function/index.html#static-function-validateXKTArrayBuffer"><strong><code>validateXKTArrayBuffer</code></strong></a> verifies the correctness of an <code>ArrayBuffer</code> against the <code>XKTModel</code> it was serialized from. </li>
+</ul>
+<h4 id="procedurally-generating-an-xktmodel">Procedurally Generating an XKTModel</h4><p>In the example below, we&apos;ll programmatically build a simple model within an <a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const xktModel = new XKTModel();
 
 xktModel.createPrimitive({
@@ -109,10 +130,12 @@ xktModel.createEntity({
 
 xktModel.finalize();</code>
 </code></pre>
-<h4 id="serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</h4><p>Use <a href="./docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><code>writeXKTModelToArrayBuffer</code></a> to serialize the <a href="../docs/class/src/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to an <code>ArrayBuffer</code>:</p>
+<h4 id="serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</h4><p>Next, we&apos;ll use  <a href="https://xeokit.github.io/xeokit-xkt-tools/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><code>writeXKTModelToArrayBuffer</code></a>  to serialize our <a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to an <code>ArrayBuffer</code>:</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);</code>
 </code></pre>
-<h4 id="validating-the-arraybuffer">Validating the ArrayBuffer</h4><p>Use <a href="./docs/function/index.html#static-function-validateXKTArrayBuffer"><code>validateXKTArrayBuffer</code></a> to validate the <code>ArrayBuffer</code> against the <a href="../docs/class/src/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>:</p>
+<h4 id="validating-the-arraybuffer">Validating the ArrayBuffer</h4><p>Now we&apos;ll use <a href="https://xeokit.github.io/xeokit-xkt-tools/docs/function/index.html#static-function-validateXKTArrayBuffer"><code>validateXKTArrayBuffer</code></a> to validate 
+the <code>ArrayBuffer</code> against our <a href="https://xeokit.github.io/xeokit-xkt-tools/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>. If this function 
+finds any errors, it will log them to the console and return <code>false</code>. Otherwise, it will return <code>true</code> to indicate that the <code>ArrayBuffer</code> is correct. </p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
 if (!xktArrayValid) {
