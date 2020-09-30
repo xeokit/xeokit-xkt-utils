@@ -213,7 +213,7 @@ class XKTModel {
      * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTPrimitive} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
      * @param {Uint8Array} params.color RGB color for the {@link XKTPrimitive}, with each color component in range [0..1].
      * @param {Number} params.opacity Opacity factor for the {@link XKTPrimitive}, in range [0..1].
-     * @param {Float32Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
+     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
      * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTPrimitive}.
      * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTPrimitive}.
      * @returns {XKTPrimitive} The new {@link XKTPrimitive}.
@@ -617,6 +617,8 @@ class XKTModel {
         }
 
         const tileCenter = math.getAABB3Center(tileAABB);
+        const tileCenterNeg = math.mulVec3Scalar(tileCenter, -1, math.vec3());
+
         const rtcAABB = math.AABB3(); // AABB centered at the RTC origin
 
         rtcAABB[0] = tileAABB[0] - tileCenter[0];
@@ -632,32 +634,43 @@ class XKTModel {
 
             const primitiveInstances = entity.primitiveInstances;
 
-            for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+            if (entity.hasReusedPrimitives) {
 
-                const primitiveInstance = primitiveInstances[j];
-                const primitive = primitiveInstance.primitive;
+                // Post-multiply a translation to the entity's modeling matrix
+                // to center the entity's primitive instances to the tile RTC center
 
-                if (!primitive.reused) {
+                math.translateMat4v(tileCenterNeg, entity.matrix);
 
-                    const positions = primitive.positions;
+            } else {
 
-                    // Center positions relative to their tile's World-space center
+                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
 
-                    for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
+                    const primitiveInstance = primitiveInstances[j];
+                    const primitive = primitiveInstance.primitive;
 
-                        positions[k + 0] -= tileCenter[0];
-                        positions[k + 1] -= tileCenter[1];
-                        positions[k + 2] -= tileCenter[2];
+                    if (!primitive.reused) {
+
+                        const positions = primitive.positions;
+
+                        // Center positions relative to their tile's World-space center
+
+                        for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
+
+                            positions[k + 0] -= tileCenter[0];
+                            positions[k + 1] -= tileCenter[1];
+                            positions[k + 2] -= tileCenter[2];
+                        }
+
+                        // Quantize positions relative to tile's RTC-space boundary
+
+                        geometryCompression.quantizePositions(positions, positions.length, rtcAABB, primitive.positionsQuantized);
+
+                        numBatchingEntities++;
+
+                    } else {
+
+
                     }
-
-                    // Quantize positions relative to tile's RTC-space boundary
-
-                    geometryCompression.quantizePositions(positions, positions.length, rtcAABB, primitive.positionsQuantized);
-
-                    numBatchingEntities++;
-                } else {
-
-
                 }
             }
 
