@@ -17,9 +17,15 @@
 
 <body>
 <canvas id="myCanvas"></canvas>
-<div id="info" style="visibility:hidden;">
-    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a model to XKT
-        from glTF</h1><br>
+<div id="info">
+    <h1>Example of Rounding Jitter</h1><br>
+    <p>Demonstrates jittering by loading a glTF model with GLTFLoaderPlugin, which does not support
+        double-precision coordinates.</p><br>
+    <p>This model is centered at [1842022, 10, -5173301], so its geometry coordinates are too large for WebGL to represent without jitter. </p><br>
+
+    <p>Jitter is solved by the latest versions of XKTLoaderPlugin and .XKT format.</p><br>
+
+    <p>Model curtesy of <a href="https://bimdata.io">BIMData</a></p><br>
 
     <div id="log">Loading JavaScript modules...</div>
 
