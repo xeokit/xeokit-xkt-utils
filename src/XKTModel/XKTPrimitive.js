@@ -16,7 +16,7 @@ class XKTPrimitive {
      * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.
      * @param {Uint8Array} color RGB color of this XKTPrimitive.
      * @param {Number} opacity Opacity of this XKTPrimitive.
-     * @param {Float32Array} positions Non-quantized 3D vertex positions.
+     * @param {Float64Array} positions Non-quantized 3D vertex positions.
      * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.
      * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.
      * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.
@@ -68,7 +68,7 @@ class XKTPrimitive {
         /**
          * Non-quantized 3D vertex positions.
          *
-         * @type {Float32Array}
+         * @type {Float64Array}
          */
         this.positions = positions;
 

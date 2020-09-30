@@ -21,7 +21,7 @@ class XKTTile {
         /**
          * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.
          *
-         * @type {Float32Array}
+         * @type {Float64Array}
          */
         this.aabb = aabb;
 
