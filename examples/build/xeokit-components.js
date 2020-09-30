@@ -820,10 +820,11 @@ function renderScenes() {
 window.requestAnimationFrame(frame);
 
 // Some temporary vars to help avoid garbage collection
+const FloatArrayType =  Float64Array ;
 
-const tempMat1 = new Float32Array(16);
-const tempMat2 = new Float32Array(16);
-const tempVec4 = new Float32Array(4);
+const tempMat1 = new FloatArrayType(16);
+const tempMat2 = new FloatArrayType(16);
+const tempVec4 = new FloatArrayType(4);
 
 
 /**
@@ -856,7 +857,7 @@ const math = {
      * @returns {Number[]}
      */
     vec2(values) {
-        return new Float32Array(values || 2);
+        return new FloatArrayType(values || 2);
     },
 
     /**
@@ -867,7 +868,7 @@ const math = {
      * @returns {Number[]}
      */
     vec3(values) {
-        return new Float32Array(values || 3);
+        return new FloatArrayType(values || 3);
     },
 
     /**
@@ -878,7 +879,7 @@ const math = {
      * @returns {Number[]}
      */
     vec4(values) {
-        return new Float32Array(values || 4);
+        return new FloatArrayType(values || 4);
     },
 
     /**
@@ -889,7 +890,7 @@ const math = {
      * @returns {Number[]}
      */
     mat3(values) {
-        return new Float32Array(values || 9);
+        return new FloatArrayType(values || 9);
     },
 
     /**
@@ -900,7 +901,7 @@ const math = {
      * @static
      * @returns {Number[]}
      */
-    mat3ToMat4(mat3, mat4 = new Float32Array(16)) {
+    mat3ToMat4(mat3, mat4 = new FloatArrayType(16)) {
         mat4[0] = mat3[0];
         mat4[1] = mat3[1];
         mat4[2] = mat3[2];
@@ -928,7 +929,7 @@ const math = {
      * @returns {Number[]}
      */
     mat4(values) {
-        return new Float32Array(values || 16);
+        return new FloatArrayType(values || 16);
     },
 
     /**
@@ -940,7 +941,7 @@ const math = {
      * @returns {Number[]}
      */
     mat4ToMat3(mat4, mat3) { // TODO
-        //return new Float32Array(values || 9);
+        //return new FloatArrayType(values || 9);
     },
 
     /**
@@ -1016,6 +1017,16 @@ const math = {
             a -= b;
         }
         return a;
+    },
+
+    /**
+     * Returns true if the two 3-element vectors are the same.
+     * @param v1
+     * @param v2
+     * @returns {boolean}
+     */
+    compareVec3(v1, v2) {
+        return (v1[0] === v2[0] && v1[1] === v2[1] && v1[2] === v2[2]);
     },
 
     /**
@@ -1563,7 +1574,7 @@ const math = {
     },
 
     distVec3: ((() => {
-        const vec = new Float32Array(3);
+        const vec = new FloatArrayType(3);
         return (v, w) => math.lenVec3(math.subVec3(v, w, vec));
     }))(),
 
@@ -1579,7 +1590,7 @@ const math = {
     },
 
     distVec2: ((() => {
-        const vec = new Float32Array(2);
+        const vec = new FloatArrayType(2);
         return (v, w) => math.lenVec2(math.subVec2(v, w, vec));
     }))(),
 
@@ -1649,7 +1660,7 @@ const math = {
      */
     vec3FromMat4Scale: ((() => {
 
-        const tempVec3 = new Float32Array(3);
+        const tempVec3 = new FloatArrayType(3);
 
         return (m, dest) => {
 
@@ -1709,7 +1720,7 @@ const math = {
      * @returns {*[]}
      */
     xyzObjectToArray(xyz, arry) {
-        arry = arry || new Float32Array(3);
+        arry = arry || new FloatArrayType(3);
         arry[0] = xyz.x;
         arry[1] = xyz.y;
         arry[2] = xyz.z;
@@ -1776,7 +1787,7 @@ const math = {
      * @static
      */
     diagonalMat4v(v) {
-        return new Float32Array([
+        return new FloatArrayType([
             v[0], 0.0, 0.0, 0.0,
             0.0, v[1], 0.0, 0.0,
             0.0, 0.0, v[2], 0.0,
@@ -1807,7 +1818,7 @@ const math = {
      * @method identityMat4
      * @static
      */
-    identityMat4(mat = new Float32Array(16)) {
+    identityMat4(mat = new FloatArrayType(16)) {
         mat[0] = 1.0;
         mat[1] = 0.0;
         mat[2] = 0.0;
@@ -1836,7 +1847,7 @@ const math = {
      * @method identityMat3
      * @static
      */
-    identityMat3(mat = new Float32Array(9)) {
+    identityMat3(mat = new FloatArrayType(9)) {
         mat[0] = 1.0;
         mat[1] = 0.0;
         mat[2] = 0.0;
@@ -2116,7 +2127,7 @@ const math = {
      */
     mulMat3(a, b, dest) {
         if (!dest) {
-            dest = new Float32Array(9);
+            dest = new FloatArrayType(9);
         }
 
         const a11 = a[0];
@@ -2419,7 +2430,7 @@ const math = {
      * @static
      */
     translationMat4c: ((() => {
-        const xyz = new Float32Array(3);
+        const xyz = new FloatArrayType(3);
         return (x, y, z, dest) => {
             xyz[0] = x;
             xyz[1] = y;
@@ -2502,6 +2513,40 @@ const math = {
 
         return m;
     },
+
+    /**
+     * Creates a new matrix that replaces the translation in the rightmost column of the given
+     * affine matrix with the given translation.
+     * @param m
+     * @param translation
+     * @param dest
+     * @returns {*}
+     */
+    setMat4Translation(m, translation, dest) {
+
+        dest[0] = m[0];
+        dest[1] = m[1];
+        dest[2] = m[2];
+        dest[3] = m[3];
+
+        dest[4] = m[4];
+        dest[5] = m[5];
+        dest[6] = m[6];
+        dest[7] = m[7];
+
+        dest[8] = m[8];
+        dest[9] = m[9];
+        dest[10] = m[10];
+        dest[11] = m[11];
+
+        dest[12] = translation[0];
+        dest[13] = translation[1];
+        dest[14] = translation[2];
+        dest[15] = m[15];
+
+        return dest;
+    },
+
     /**
      * Returns 4x4 rotation matrix.
      * @method rotationMat4v
@@ -2597,7 +2642,7 @@ const math = {
      * @static
      */
     scalingMat4c: ((() => {
-        const xyz = new Float32Array(3);
+        const xyz = new FloatArrayType(3);
         return (x, y, z, dest) => {
             xyz[0] = x;
             xyz[1] = y;
@@ -2829,8 +2874,8 @@ const math = {
 
     decomposeMat4: (() => {
 
-        const vec = new Float32Array(3);
-        const matrix = new Float32Array(16);
+        const vec = new FloatArrayType(3);
+        const matrix = new FloatArrayType(16);
 
         return function decompose(mat, position, quaternion, scale) {
 
@@ -3518,9 +3563,9 @@ const math = {
      * @static
      */
     unprojectVec3: ((() => {
-        const mat = new Float32Array(16);
-        const mat2 = new Float32Array(16);
-        const mat3 = new Float32Array(16);
+        const mat = new FloatArrayType(16);
+        const mat2 = new FloatArrayType(16);
+        const mat3 = new FloatArrayType(16);
         return function (p, viewMat, projMat, q) {
             return this.transformVec3(this.mulMat4(this.inverseMat4(viewMat, mat), this.inverseMat4(projMat, mat2), mat3), p, q)
         };
@@ -3779,7 +3824,7 @@ const math = {
     },
 
     quaternionToEuler: ((() => {
-        const mat = new Float32Array(16);
+        const mat = new FloatArrayType(16);
         return (q, order, dest) => {
             dest = dest || math.vec3();
             math.quaternionToRotationMat4(q, mat);
@@ -3965,7 +4010,7 @@ const math = {
      * @private
      */
     AABB3(values) {
-        return new Float32Array(values || 6);
+        return new FloatArrayType(values || 6);
     },
 
     /**
@@ -3974,7 +4019,7 @@ const math = {
      * @private
      */
     AABB2(values) {
-        return new Float32Array(values || 4);
+        return new FloatArrayType(values || 4);
     },
 
     /**
@@ -3983,7 +4028,7 @@ const math = {
      * @private
      */
     OBB3(values) {
-        return new Float32Array(values || 32);
+        return new FloatArrayType(values || 32);
     },
 
     /**
@@ -3992,12 +4037,12 @@ const math = {
      * @private
      */
     OBB2(values) {
-        return new Float32Array(values || 16);
+        return new FloatArrayType(values || 16);
     },
 
     /** Returns a new 3D bounding sphere */
     Sphere3(x, y, z, r) {
-        return new Float32Array([x, y, z, r]);
+        return new FloatArrayType([x, y, z, r]);
     },
 
     /**
@@ -4066,9 +4111,9 @@ const math = {
      */
     getAABB3Diag: ((() => {
 
-        const min = new Float32Array(3);
-        const max = new Float32Array(3);
-        const tempVec3 = new Float32Array(3);
+        const min = new FloatArrayType(3);
+        const max = new FloatArrayType(3);
+        const tempVec3 = new FloatArrayType(3);
 
         return aabb => {
 
@@ -4093,9 +4138,9 @@ const math = {
      */
     getAABB3DiagPoint: ((() => {
 
-        const min = new Float32Array(3);
-        const max = new Float32Array(3);
-        const tempVec3 = new Float32Array(3);
+        const min = new FloatArrayType(3);
+        const max = new FloatArrayType(3);
+        const tempVec3 = new FloatArrayType(3);
 
         return (aabb, p) => {
 
@@ -14468,7 +14513,7 @@ class Camera extends Component {
     set worldAxis(axis) {
         axis = axis || [1, 0, 0, 0, 1, 0, 0, 0, 1];
         if (!this._worldAxis) {
-            this._worldAxis = new Float32Array(axis);
+            this._worldAxis = math.vec3(axis);
         } else {
             this._worldAxis.set(axis);
         }
@@ -16431,7 +16476,7 @@ class ReadableGeometry extends Geometry {
     /**
      * Local-space axis-aligned 3D boundary (AABB) of this geometry.
      *
-     * The AABB is represented by a six-element Float32Array containing the min/max extents of the
+     * The AABB is represented by a six-element Float64Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @property aabb
@@ -16452,7 +16497,7 @@ class ReadableGeometry extends Geometry {
     /**
      * Local-space oriented 3D boundary (OBB) of this geometry.
      *
-     * The OBB is represented by a 32-element Float32Array containing the eight vertices of the box,
+     * The OBB is represented by a 32-element Float64Array containing the eight vertices of the box,
      * where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
      *
      * @property obb
@@ -18835,7 +18880,7 @@ class Metrics extends Component {
      * @param {Number[]} [realPos] Destination for Real-space 3D position.
      * @returns {Number[]} Real-space 3D position, in units indicated by {@link Metrics#units}.
      */
-    worldToRealPos(worldPos, realPos = new Float32Array(3)) {
+    worldToRealPos(worldPos, realPos = math.vec3(3)) {
         realPos[0] = this._origin[0] + (this._scale * worldPos[0]);
         realPos[1] = this._origin[1] + (this._scale * worldPos[1]);
         realPos[2] = this._origin[2] + (this._scale * worldPos[2]);
@@ -18850,7 +18895,7 @@ class Metrics extends Component {
      * @param {Number[]} [worldPos] Destination for World-space 3D position.
      * @returns {Number[]} World-space 3D position.
      */
-    realToWorldPos(realPos, worldPos = new Float32Array(3)) {
+    realToWorldPos(realPos, worldPos = math.vec3(3)) {
         worldPos[0] = (realPos[0] - this._origin[0]) / this._scale;
         worldPos[1] = (realPos[1] - this._origin[1]) / this._scale;
         worldPos[2] = (realPos[2] - this._origin[2]) / this._scale;
@@ -24260,13 +24305,14 @@ class TouchPanRotateAndDollyHandler {
         const pickController = controllers.pickController;
         const pivotController = controllers.pivotController;
 
-        const tapStartPos = new Float32Array(2);
+        const tapStartPos = math.vec2();
         let tapStartTime = -1;
 
         const lastTouches = [];
         let numTouches = 0;
 
-        const touch0Vec = new Float32Array(2);
+        const touch0Vec = math.vec2();
+        const touch1Vec = math.vec2();
 
         const canvas = this._scene.canvas.canvas;
 
@@ -24327,7 +24373,7 @@ class TouchPanRotateAndDollyHandler {
             }
 
             while (lastTouches.length < touches.length) {
-                lastTouches.push(new Float32Array(2));
+                lastTouches.push(math.vec2());
             }
 
             for (let i = 0, len = touches.length; i < len; ++i) {
@@ -24409,7 +24455,7 @@ class TouchPanRotateAndDollyHandler {
                 const lastMiddleTouch = math.geometricMeanVec2(lastTouches[0], lastTouches[1]);
                 const currentMiddleTouch = math.geometricMeanVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
 
-                const touchDelta = new Float32Array(2);
+                const touchDelta = math.vec2();
 
                 math.subVec2(lastMiddleTouch, currentMiddleTouch, touchDelta);
 
@@ -25115,7 +25161,7 @@ class CameraControl extends Component {
         // Current runtime state of the CameraControl
 
         this._states = {
-            pointerCanvasPos: new Float32Array(2),
+            pointerCanvasPos: math.vec2(),
             mouseover: false,
             inputFromMouse: false, // TODO: Is this needed?
             followPointerDirty: true,
@@ -25125,7 +25171,7 @@ class CameraControl extends Component {
             mouseDownCursorY: 0,
             touchStartTime: null,
             activeTouches: [],
-            tapStartPos: new Float32Array(2),
+            tapStartPos: math.vec2(),
             tapStartTime: -1,
             lastTapTime: -1
         };
@@ -27096,7 +27142,7 @@ class PerformanceMesh {
         /**
          * World-space 3D axis-aligned bounding box (AABB).
          *
-         * Represented by a six-element Float32Array containing the min/max extents of the
+         * Represented by a six-element Float64Array containing the min/max extents of the
          * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
          *
          * @property aabb
@@ -27399,7 +27445,7 @@ class PerformanceNode {
     /**
      * World-space 3D axis-aligned bounding box (AABB) of this PerformanceNode.
      *
-     * Represented by a six-element Float32Array containing the min/max extents of the
+     * Represented by a six-element Float64Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
@@ -28055,6 +28101,14 @@ function buildVertex(scene) {
 
     src.push("// Batched geometry drawing vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
@@ -28250,7 +28304,33 @@ function buildFragment(scene, withSAO) {
     return src;
 }
 
+/**
+ * Given a view matrix and a relative-to-center (RTC) coordinate origin, returns a view matrix
+ * to transform RTC coordinates to View-space.
+ *
+ * The returned view matrix is
+ *
+ * @private
+ */
+const createRTCViewMat = (function () {
+
+    const tempMat = new Float32Array(16);
+    const rtcCenterWorld = new Float64Array(4);
+    const rtcCenterView = new Float64Array(4);
+
+    return function (viewMat, rtcCenter, rtcViewMat = tempMat) {
+        rtcCenterWorld[0] = rtcCenter[0];
+        rtcCenterWorld[1] = rtcCenter[1];
+        rtcCenterWorld[2] = rtcCenter[2];
+        rtcCenterWorld[3] = 1;
+        math.transformVec4(viewMat, rtcCenterWorld, rtcCenterView);
+        math.setMat4Translation(viewMat, rtcCenterView, rtcViewMat);
+        return rtcViewMat;
+    }
+}());
+
 const tempVec4$1 = math.vec4();
+const viewNormalMatrix = math.mat4();
 
 /**
  * @private
@@ -28274,11 +28354,11 @@ class BatchingDrawRenderer {
         return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
     }
 
-    drawLayer(frameCtx, layer, renderPass) {
+    drawLayer(frameCtx, batchingLayer, renderPass) {
         const scene = this._scene;
-        const model = layer.model;
+        const model = batchingLayer.model;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
             this._allocate();
         }
@@ -28286,9 +28366,25 @@ class BatchingDrawRenderer {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
+        if (rtcCenter) {
+
+            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
+            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+
+            math.inverseMat4(viewMatrix, viewNormalMatrix);
+            math.transposeMat4(viewNormalMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix);
+
+        } else {
+
+            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        }
+
         gl.uniform1i(this._uRenderPass, renderPass);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         if (this._aNormal) {
@@ -28602,11 +28698,11 @@ class BatchingFillRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer, renderPass) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer, renderPass) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
             this._allocate();
             if (this.errors) {
@@ -28617,9 +28713,9 @@ class BatchingFillRenderer {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniform1i(this._uRenderPass, renderPass);
         gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, model.worldMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
@@ -28879,11 +28975,11 @@ class BatchingEdgesRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer, renderPass) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer, renderPass) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
             this._allocate();
             if (this.errors) {
@@ -28911,8 +29007,9 @@ class BatchingEdgesRenderer {
             gl.lineWidth(material.edgeWidth);
             frameCtx.lineWidth = material.edgeWidth;
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniform1i(this._uRenderPass, renderPass);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
@@ -29018,6 +29115,14 @@ function buildVertex$3(scene) {
 
     src.push("// Batched geometry picking vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
@@ -29120,20 +29225,26 @@ class BatchingPickMeshRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(batchingLayer);
         }
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const viewMatrix = batchingLayer._state.rtcCenter ? createRTCViewMat(pickViewMatrix, batchingLayer._state.rtcCenter) : pickViewMatrix;
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         if (this._aFlags) {
@@ -29241,6 +29352,14 @@ function buildVertex$4(scene) {
     const src = [];
 
     src.push("// Batched geometry depth vertex shader");
+
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
 
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
@@ -29350,11 +29469,11 @@ class BatchingPickDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         const projectState = scene.camera.project._state;
         if (!this._program) {
             this._allocate();
@@ -29364,11 +29483,15 @@ class BatchingPickDepthRenderer {
             this._bindProgram();
         }
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
+
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const viewMatrix = batchingLayer._state.rtcCenter ? createRTCViewMat(pickViewMatrix, batchingLayer._state.rtcCenter) : pickViewMatrix;
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
         gl.uniform1f(this._uZNear, projectState.near);
         gl.uniform1f(this._uZFar, projectState.far);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         if (this._aFlags) {
@@ -29476,6 +29599,13 @@ function buildVertex$5(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry normals vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
@@ -29581,13 +29711,13 @@ class BatchingPickNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(batchingLayer);
         }
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
@@ -29596,9 +29726,11 @@ class BatchingPickNormalsRenderer {
         // In practice, these binds will only happen once per frame
         // because we pick normals on a single previously-picked mesh
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const viewMatrix = batchingLayer._state.rtcCenter ? createRTCViewMat(pickViewMatrix, batchingLayer._state.rtcCenter) : pickViewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         if (this._aNormal) {
@@ -29708,6 +29840,13 @@ function buildVertex$6(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched occlusion vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -29801,22 +29940,23 @@ class BatchingOcclusionRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         const camera = scene.camera;
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(batchingLayer);
         }
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
         }
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         if (this._aColor) {
@@ -29917,6 +30057,15 @@ function buildVertex$7(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry depth vertex shader");
+
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -30022,11 +30171,11 @@ class BatchingDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
             this._allocate();
         }
@@ -30034,8 +30183,9 @@ class BatchingDepthRenderer {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         if (this._aColor) { // Needed for masking out transparent entities using alpha channel
@@ -30142,6 +30292,15 @@ function buildVertex$8(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry normals vertex shader");
+
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
@@ -30253,20 +30412,21 @@ class BatchingNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, batchingLayer) {
+        const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(batchingLayer);
         }
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
@@ -30478,10 +30638,10 @@ class BatchingShadowRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
+    drawLayer(frameCtx, batchingLayer) {
         const scene = this._scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = batchingLayer._state;
         if (!this._program) {
             this._allocate();
         }
@@ -30489,7 +30649,7 @@ class BatchingShadowRenderer {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         if (this._aColor) { // Needed for masking out transparent entities using alpha channel
             this._aColor.bindArrayBuffer(state.colorsBuf);
@@ -30772,6 +30932,8 @@ class BatchingLayer {
     /**
      * @param model
      * @param cfg
+     * @param cfg.positionsDecodeMatrix
+     * @param cfg.rtcCenter
      * @param cfg.buffer
      * @param cfg.scratchMemory
      * @param cfg.primitive
@@ -30823,7 +30985,8 @@ class BatchingLayer {
             flags2Buf: null,
             indicesBuf: null,
             edgeIndicesBuf: null,
-            positionsDecodeMatrix: math.mat4()
+            positionsDecodeMatrix: math.mat4(),
+            rtcCenter : null
         });
 
         // These counts are used to avoid unnecessary render passes
@@ -30843,6 +31006,10 @@ class BatchingLayer {
         this._finalized = false;
         this._positionsDecodeMatrix = cfg.positionsDecodeMatrix;
         this._preCompressed = (!!this._positionsDecodeMatrix);
+
+        if (cfg.rtcCenter) {
+            this._state.rtcCenter = math.vec3(cfg.rtcCenter);
+        }
     }
 
     /**
@@ -30964,6 +31131,16 @@ class BatchingLayer {
                     }
                 }
             }
+        }
+
+        if (this._state.rtcCenter) {
+            const rtcCenter = this._state.rtcCenter;
+            worldAABB[0] += rtcCenter[0];
+            worldAABB[1] += rtcCenter[1];
+            worldAABB[2] += rtcCenter[2];
+            worldAABB[3] += rtcCenter[0];
+            worldAABB[4] += rtcCenter[1];
+            worldAABB[5] += rtcCenter[2];
         }
 
         if (normals) {
@@ -32038,6 +32215,7 @@ function buildFragment$a(scene, withSAO) {
 }
 
 const tempVec4$2 = math.vec4();
+const viewNormalMatrix$1 = math.mat4();
 
 /**
  * @private
@@ -32061,11 +32239,11 @@ class InstancingDrawRenderer {
         return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this.withSAO ? "sao" : "nosao")].join(";");
     }
 
-    drawLayer(frameCtx, layer, renderPass) {
-        const model = layer.model;
+    drawLayer(frameCtx, instancingLayer, renderPass) {
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
@@ -32082,10 +32260,24 @@ class InstancingDrawRenderer {
 
         gl.uniform1i(this._uRenderPass, renderPass);
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        const rtcCenter = instancingLayer._state.rtcCenter;
+
+        if (rtcCenter) {
+
+            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
+            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+
+            math.inverseMat4(viewMatrix, viewNormalMatrix$1);
+            math.transposeMat4(viewNormalMatrix$1);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix$1);
+
+        } else {
+
+            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        }
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -32451,16 +32643,16 @@ class InstancingFillRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer, renderPass) {
+    drawLayer(frameCtx, instancingLayer, renderPass) {
 
-        const model = layer.model;
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
-            this._allocate(layer.model.scene);
+            this._allocate(instancingLayer.model.scene);
             if (this.errors) {
                 return;
             }
@@ -32473,8 +32665,10 @@ class InstancingFillRenderer {
 
         gl.uniform1i(this._uRenderPass, renderPass);
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+
+        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -32754,15 +32948,15 @@ class InstancingEdgesRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer, renderPass) {
-        const model = layer.model;
+    drawLayer(frameCtx, instancingLayer, renderPass) {
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(instancingLayer);
             if (this.errors) {
                 return;
             }
@@ -32794,9 +32988,10 @@ class InstancingEdgesRenderer {
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -32933,6 +33128,14 @@ function buildVertex$d(scene) {
 
     src.push("// Instancing geometry picking vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
@@ -33041,12 +33244,12 @@ class InstancingPickMeshRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
+    drawLayer(frameCtx, instancingLayer) {
 
-        const model = layer.model;
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
@@ -33061,8 +33264,12 @@ class InstancingPickMeshRenderer {
             this._bindProgram(frameCtx);
         }
 
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const rtcPickViewMatrix = (instancingLayer._state.rtcCenter) ? createRTCViewMat(pickViewMatrix, instancingLayer._state.rtcCenter) : pickViewMatrix;
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -33201,6 +33408,13 @@ function buildVertex$e(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
@@ -33311,16 +33525,16 @@ class InstancingPickDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
+    drawLayer(frameCtx, instancingLayer) {
 
-        const model = layer.model;
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(instancingLayer);
             if (this.errors) {
                 return;
             }
@@ -33336,12 +33550,17 @@ class InstancingPickDepthRenderer {
 
         // In practice, these binds will only happen once per frame because we pick normals on a single previously-picked mesh
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
+
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const rtcPickViewMatrix = (instancingLayer._state.rtcCenter) ? createRTCViewMat(pickViewMatrix, instancingLayer._state.rtcCenter) : pickViewMatrix;
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
+
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
         gl.uniform1f(this._uZNear, projectState.near);
         gl.uniform1f(this._uZFar, projectState.far);
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -33473,6 +33692,13 @@ function buildVertex$f(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry normals vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec2 normal;");
@@ -33585,15 +33811,15 @@ class InstancingPickNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, instancingLayer) {
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(instancingLayer);
             if (this.errors) {
                 return;
             }
@@ -33608,10 +33834,14 @@ class InstancingPickNormalsRenderer {
         // because we pick normals on a single previously-picked mesh
 
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
+
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const rtcPickViewMatrix = (instancingLayer._state.rtcCenter) ? createRTCViewMat(pickViewMatrix, instancingLayer._state.rtcCenter) : pickViewMatrix;
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -33764,6 +33994,13 @@ function buildVertex$g(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing occlusion vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -33862,12 +34099,12 @@ class InstancingOcclusionRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
+    drawLayer(frameCtx, instancingLayer) {
 
-        const model = layer.model;
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
@@ -33882,8 +34119,10 @@ class InstancingOcclusionRenderer {
             this._bindProgram();
         }
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+
+        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34023,6 +34262,15 @@ function buildVertex$h(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth drawing vertex shader");
+
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -34140,11 +34388,11 @@ class InstancingDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, instancingLayer) {
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
@@ -34159,8 +34407,10 @@ class InstancingDepthRenderer {
             this._bindProgram();
         }
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+
+        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34295,6 +34545,13 @@ function buildVertex$i(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth drawing vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
@@ -34411,14 +34668,14 @@ class InstancingNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, instancingLayer) {
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
         if (!this._program) {
-            this._allocate(layer);
+            this._allocate(instancingLayer);
             if (this.errors) {
                 return;
             }
@@ -34427,8 +34684,11 @@ class InstancingNormalsRenderer {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+
+        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
@@ -34574,6 +34834,13 @@ function buildVertex$j(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry shadow drawing vertex shader");
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -34688,11 +34955,11 @@ class InstancingShadowRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, layer) {
-        const model = layer.model;
+    drawLayer(frameCtx, instancingLayer) {
+        const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = layer._state;
+        const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
 
         if (!this._program) {
@@ -34707,7 +34974,7 @@ class InstancingShadowRenderer {
             this._bindProgram(frameCtx);
         }
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -35005,6 +35272,7 @@ class InstancingLayer {
      * @param cfg.indices Flat int indices array.
      * @param cfg.edgeIndices Flat int edges indices array.
      * @param cfg.edgeThreshold
+     * @param cfg.rtcCenter
      */
     constructor(model, cfg) {
         this._instancingRenderers = getInstancingRenderers(model.scene);
@@ -35045,7 +35313,8 @@ class InstancingLayer {
             primitive: primitive,
             positionsDecodeMatrix: math.mat4(),
             numInstances: 0,
-            obb: math.OBB3()
+            obb: math.OBB3(),
+            rtcCenter : null
         };
 
         const preCompressed = (!!cfg.positionsDecodeMatrix);
@@ -35134,6 +35403,10 @@ class InstancingLayer {
         this._modelNormalMatrixCol2 = [];
 
         this._portions = [];
+
+        if (cfg.rtcCenter) {
+            this._state.rtcCenter = math.vec3(cfg.rtcCenter);
+        }
 
         this._finalized = false;
     }
@@ -35285,6 +35558,16 @@ class InstancingLayer {
             } else {
                 math.expandAABB3Point3(worldAABB, tempVec4b$1);
             }
+        }
+
+        if (this._state.rtcCenter) {
+            const rtcCenter = this._state.rtcCenter;
+            worldAABB[0] += rtcCenter[0];
+            worldAABB[1] += rtcCenter[1];
+            worldAABB[2] += rtcCenter[2];
+            worldAABB[3] += rtcCenter[0];
+            worldAABB[4] += rtcCenter[1];
+            worldAABB[5] += rtcCenter[2];
         }
 
         this._state.numInstances++;
@@ -36001,14 +36284,783 @@ const defaultQuaternion = math.identityQuaternion();
 /**
  * @desc A high-performance model representation for efficient rendering and low memory usage.
  *
- * ## Examples
+ * # Examples
  *
  * * [PerformanceModel using geometry batching](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
+ * * [PerformanceModel using geometry batching and RTC coordinates](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching_rtcCenter)
  * * [PerformanceModel using geometry instancing](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)
+ * * [PerformanceModel using geometry instancing and RTC coordinates](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing_rtcCenter)
  *
- * ## User Guide
+ * # Overview
  *
- * * [High Performance Model Representation](https://github.com/xeokit/xeokit-sdk/wiki/High-Performance-Model-Representation)
+ * While xeokit's standard [scene graph](https://github.com/xeokit/xeokit-sdk/wiki/Scene-Graphs) is great for gizmos and medium-sized models, it doesn't scale up to millions of objects in terms of memory and rendering efficiency.
+ *
+ * For huge models, we have the ````PerformanceModel```` representation, which is optimized to pack large amounts of geometry into memory and render it efficiently using WebGL.
+ *
+ * ````PerformanceModel```` is the default model representation loaded by {@link GLTFLoaderPlugin}, {@link XKTLoaderPlugin} and {@link BIMServerLoaderPlugin}.
+ *
+ * In this tutorial you'll learn how to use ````PerformanceModel```` to create high-detail content programmatically. Ordinarily you'd be learning about ````PerformanceModel```` if you were writing your own model loader plugins.
+ *
+ * # Contents
+ *
+ * - [PerformanceModel](#performancemodel)
+ * - [GPU-Resident Geometry](#gpu-resident-geometry)
+ * - [Picking](#picking)
+ * - [Example 1: Geometry Instancing](#example-1--geometry-instancing)
+ * - [Finalizing a PerformanceModel](#finalizing-a-performancemodel)
+ * - [Finding Entities](#finding-entities)
+ * - [Example 2: Geometry Batching](#example-2--geometry-batching)
+ * - [Classifying with Metadata](#classifying-with-metadata)
+ * - [Querying Metadata](#querying-metadata)
+ * - [Metadata Structure](#metadata-structure)
+ * - [RTC Coordinates](#rtc-coordinates)
+ *   - [Example 3: RTC Coordinates with Geometry Instancing](#example-2--rtc-coordinates-with-geometry-instancing)
+ *   - [Example 4: RTC Coordinates with Geometry Batching](#example-2--rtc-coordinates-with-geometry-batching)
+ *
+ * ## PerformanceModel
+ *
+ * ````PerformanceModel```` uses two rendering techniques internally:
+ *
+ * 1. ***Geometry batching*** for unique geometries, combining those into a single WebGL geometry buffer, to render in one draw call, and
+ * 2. ***geometry instancing*** for geometries that are shared by multiple meshes, rendering all instances of each shared geometry in one draw call.
+ *
+ * <br>
+ * These techniques come with certain limitations:
+ *
+ * * Non-realistic rendering - while scene graphs can use xeokit's full set of material workflows, ````PerformanceModel```` uses simple Lambertian shading without textures.
+ * * Static transforms - transforms within a ````PerformanceModel```` are static and cannot be dynamically translated, rotated and scaled the way {@link Node}s and {@link Mesh}es in scene graphs can.
+ * * Immutable model representation - while scene graph {@link Node}s and
+ * {@link Mesh}es can be dynamically plugged together, ````PerformanceModel```` is immutable,
+ * since it packs its geometries into buffers and instanced arrays.
+ *
+ * ````PerformanceModel````'s API allows us to exploit batching and instancing, while exposing its elements as
+ * abstract {@link Entity} types.
+ *
+ * {@link Entity} is the abstract base class for
+ * the various xeokit components that represent models, objects, or anonymous visible elements. An Entity has a unique ID and can be
+ * individually shown, hidden, selected, highlighted, ghosted, culled, picked and clipped, and has its own World-space boundary.
+ *
+ * * A ````PerformanceModel```` is an {@link Entity} that represents a model.
+ * * A ````PerformanceModel```` represents each of its objects with an {@link Entity}.
+ * * Each {@link Entity} has one or more meshes that define its shape.
+ * * Each mesh has either its own unique geometry, or shares a geometry with other meshes.
+ *
+ * ## GPU-Resident Geometry
+ *
+ * For a low memory footprint, ````PerformanceModel```` stores its geometries in GPU memory only, compressed (quantized) as integers. Unfortunately, GPU-resident geometry is
+ * not readable by JavaScript.
+ *
+ *
+ * ## Example 1: Geometry Instancing
+ *
+ * In the example below, we'll use a ````PerformanceModel````
+ * to build a simple table model using geometry instancing.
+ *
+ * We'll start by adding a reusable box-shaped geometry to our ````PerformanceModel````.
+ *
+ * Then, for each object in our model we'll add an {@link Entity}
+ * that has a mesh that instances our box geometry, transforming and coloring the instance.
+ *
+ * [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)
+ *
+ * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)]
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {PerformanceModel} from "../src/viewer/scene/PerformanceModels/PerformanceModel.js";
+ *
+ * const viewer = new Viewer({
+ *     canvasId: "myCanvas",
+ *     transparent: true
+ * });
+ *
+ * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
+ * viewer.scene.camera.look = [0, -5.75, 0];
+ * viewer.scene.camera.up = [0.37, 0.91, -0.11];
+ *
+ * // Build a PerformanceModel representing a table
+ * // with four legs, using geometry instancing
+ *
+ * const performanceModel = new PerformanceModel(viewer.scene, {
+ *     id: "table",
+ *     isModel: true, // <--- Registers PerformanceModel in viewer.scene.models
+ *     position: [0, 0, 0],
+ *     scale: [1, 1, 1],
+ *     rotation: [0, 0, 0]
+ * });
+ *
+ * // Create a reusable geometry within the PerformanceModel
+ * // We'll instance this geometry by five meshes
+ *
+ * performanceModel.createGeometry({
+ *
+ *     id: "myBoxGeometry",
+ *
+ *     // The primitive type - allowed values are "points", "lines",
+ *     // "line-loop", "line-strip", "triangles", "triangle-strip"
+ *     // and "triangle-fan".  See the OpenGL/WebGL specification docs
+ *     // for how the coordinate arrays are supposed to be laid out.
+ *     primitive: "triangles",
+ *
+ *     // The vertices - eight for our cube, each
+ *     // one spanning three array elements for X,Y and Z
+ *     positions: [
+ *          1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, // v0-v1-v2-v3 front
+ *          1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, // v0-v3-v4-v1 right
+ *          1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 1, 1, // v0-v1-v6-v1 top
+ *          -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, // v1-v6-v7-v2 left
+ *          -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, // v7-v4-v3-v2 bottom
+ *          1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1 // v4-v7-v6-v1 back
+ *     ],
+ *
+ *     // Normal vectors, one for each vertex
+ *     normals: [
+ *         0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, // v0-v1-v2-v3 front
+ *         1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, // v0-v3-v4-v5 right
+ *         0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, // v0-v5-v6-v1 top
+ *         -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, // v1-v6-v7-v2 left
+ *         0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, // v7-v4-v3-v2 bottom
+ *         0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1 // v4-v7-v6-v5 back
+ *     ],
+ *
+ *     // Indices - these organise the positions and and normals
+ *     // into geometric primitives in accordance with the "primitive" parameter,
+ *     // in this case a set of three indices for each triangle.
+ *     //
+ *     // Note that each triangle is specified in counter-clockwise winding order.
+ *     //
+ *     indices: [
+ *         0, 1, 2, 0, 2, 3, // front
+ *         4, 5, 6, 4, 6, 7, // right
+ *         8, 9, 10, 8, 10, 11, // top
+ *         12, 13, 14, 12, 14, 15, // left
+ *         16, 17, 18, 16, 18, 19, // bottom
+ *         20, 21, 22, 20, 22, 23
+ *     ]
+ * });
+ *
+ * // Red table leg
+ *
+ * performanceModel.createMesh({
+ *     id: "redLegMesh",
+ *     geometryId: "myBoxGeometry",
+ *     position: [-4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1, 0.3, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "redLeg",
+ *     meshIds: ["redLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Green table leg
+ *
+ * performanceModel.createMesh({
+ *     id: "greenLegMesh",
+ *     geometryId: "myBoxGeometry",
+ *     position: [4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 1.0, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "greenLeg",
+ *     meshIds: ["greenLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Blue table leg
+ *
+ * performanceModel.createMesh({
+ *     id: "blueLegMesh",
+ *     geometryId: "myBoxGeometry",
+ *     position: [4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "blueLeg",
+ *     meshIds: ["blueLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Yellow table leg
+ *
+ * performanceModel.createMesh({
+ *      id: "yellowLegMesh",
+ *      geometryId: "myBoxGeometry",
+ *      position: [-4, -6, 4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1.0, 1.0, 0.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "yellowLeg",
+ *     meshIds: ["yellowLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Purple table top
+ *
+ * performanceModel.createMesh({
+ *     id: "purpleTableTopMesh",
+ *     geometryId: "myBoxGeometry",
+ *     position: [0, -3, 0],
+ *     scale: [6, 0.5, 6],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "purpleTableTop",
+ *     meshIds: ["purpleTableTopMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *  ````
+ *
+ * ## Finalizing a PerformanceModel
+ *
+ * Before we can view and interact with our ````PerformanceModel````, we need to **finalize** it. Internally, this causes the ````PerformanceModel```` to build the
+ * vertex buffer objects (VBOs) that support our geometry instances. When using geometry batching (see next example),
+ * this causes ````PerformanceModel```` to build the VBOs that combine the batched geometries. Note that you can do both instancing and
+ * batching within the same ````PerformanceModel````.
+ *
+ * Once finalized, we can't add anything more to our ````PerformanceModel````.
+ *
+ * ```` javascript
+ * performanceModel.finalize();
+ * ````
+ *
+ * ## Finding Entities
+ *
+ * As mentioned earlier, {@link Entity} is
+ * the abstract base class for components that represent models, objects, or just
+ * anonymous visible elements.
+ *
+ * Since we created configured our ````PerformanceModel```` with ````isModel: true````,
+ * we're able to find it as an Entity by ID in ````viewer.scene.models````. Likewise, since
+ * we configured each of its Entities with ````isObject: true````, we're able to
+ * find them in  ````viewer.scene.objects````.
+ *
+ *
+ * ````javascript
+ * // Get the whole table model Entity
+ * const table = viewer.scene.models["table"];
+ *
+ *  // Get some leg object Entities
+ * const redLeg = viewer.scene.objects["redLeg"];
+ * const greenLeg = viewer.scene.objects["greenLeg"];
+ * const blueLeg = viewer.scene.objects["blueLeg"];
+ * ````
+ *
+ * ## Example 2: Geometry Batching
+ *
+ * Let's once more use a ````PerformanceModel````
+ * to build the simple table model, this time exploiting geometry batching.
+ *
+ *  [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
+ *
+ * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)]
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {PerformanceModel} from "../src/viewer/scene/PerformanceModel/PerformanceModel.js";
+ *
+ * const viewer = new Viewer({
+ *     canvasId: "myCanvas",
+ *     transparent: true
+ * });
+ *
+ * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
+ * viewer.scene.camera.look = [0, -5.75, 0];
+ * viewer.scene.camera.up = [0.37, 0.91, -0.11];
+ *
+ * // Create a PerformanceModel representing a table with four legs, using geometry batching
+ * const performanceModel = new PerformanceModel(viewer.scene, {
+ *     id: "table",
+ *     isModel: true,  // <--- Registers PerformanceModel in viewer.scene.models
+ *     position: [0, 0, 0],
+ *     scale: [1, 1, 1],
+ *     rotation: [0, 0, 0]
+ * });
+ *
+ * // Red table leg
+ *
+ * performanceModel.createMesh({
+ *     id: "redLegMesh",
+ *
+ *     // Geometry arrays are same as for the earlier batching example
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [-4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1, 0.3, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "redLeg",
+ *     meshIds: ["redLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Green table leg
+ *
+ * performanceModel.createMesh({
+ *     id: "greenLegMesh",
+ *     primitive: "triangles",
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 1.0, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "greenLeg",
+ *     meshIds: ["greenLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Blue table leg
+ *
+ * performanceModel.createMesh({
+ *     id: "blueLegMesh",
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "blueLeg",
+ *     meshIds: ["blueLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Yellow table leg object
+ *
+ * performanceModel.createMesh({
+ *     id: "yellowLegMesh",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [-4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 1.0, 0.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "yellowLeg",
+ *     meshIds: ["yellowLegMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Purple table top
+ *
+ * performanceModel.createMesh({
+ *     id: "purpleTableTopMesh",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [0, -3, 0],
+ *     scale: [6, 0.5, 6],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     id: "purpleTableTop",
+ *     meshIds: ["purpleTableTopMesh"],
+ *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
+ * });
+ *
+ * // Finalize the PerformanceModel.
+ *
+ * performanceModel.finalize();
+ *
+ * // Find BigModelNodes by their model and object IDs
+ *
+ * // Get the whole table model
+ * const table = viewer.scene.models["table"];
+ *
+ * // Get some leg objects
+ * const redLeg = viewer.scene.objects["redLeg"];
+ * const greenLeg = viewer.scene.objects["greenLeg"];
+ * const blueLeg = viewer.scene.objects["blueLeg"];
+ * ````
+ *
+ * ## Classifying with Metadata
+ *
+ * In the previous examples, we used ````PerformanceModel```` to build
+ * two versions of the same table model, to demonstrate geometry batching and geometry instancing.
+ *
+ * We'll now classify our {@link Entity}s with metadata. This metadata
+ * will work the same for both our examples, since they create the exact same structure of {@link Entity}s
+ * to represent their models and objects. The abstract Entity type is, after all, intended to provide an abstract interface through which differently-implemented scene content can be accessed uniformly.
+ *
+ * To create the metadata, we'll create a {@link MetaModel} for our model,
+ * with a {@link MetaObject} for each of it's objects. The MetaModel and MetaObjects
+ * get the same IDs as the {@link Entity}s that represent their model and objects within our scene.
+ *
+ * ```` javascript
+ * const furnitureMetaModel = viewer.metaScene.createMetaModel("furniture", {         // Creates a MetaModel in the MetaScene
+ *
+ *      "projectId": "myTableProject",
+ *      "revisionId": "V1.0",
+ *
+ *      "metaObjects": [
+ *          {                               // Creates a MetaObject in the MetaModel
+ *              "id": "table",
+ *              "name": "Table",            // Same ID as an object Entity
+ *              "type": "furniture",        // Arbitrary type, could be IFC type
+ *              "properties": {             // Arbitrary properties, could be IfcPropertySet
+ *                  "cost": "200"
+ *              }
+ *          },
+ *          {
+ *              "id": "redLeg",
+ *              "name": "Red table Leg",
+ *              "type": "leg",
+ *              "parent": "table",           // References first MetaObject as parent
+ *              "properties": {
+ *                  "material": "wood"
+ *              }
+ *          },
+ *          {
+ *              "id": "greenLeg",           // Node with corresponding id does not need to exist
+ *              "name": "Green table leg",  // and MetaObject does not need to exist for Node with an id
+ *              "type": "leg",
+ *              "parent": "table",
+ *              "properties": {
+ *                  "material": "wood"
+ *              }
+ *          },
+ *          {
+ *              "id": "blueLeg",
+ *              "name": "Blue table leg",
+ *              "type": "leg",
+ *              "parent": "table",
+ *              "properties": {
+ *                  "material": "wood"
+ *              }
+ *          },
+ *          {
+ *              "id": "yellowLeg",
+ *              "name": "Yellow table leg",
+ *              "type": "leg",
+ *              "parent": "table",
+ *              "properties": {
+ *                  "material": "wood"
+ *              }
+ *          },
+ *          {
+ *              "id": "tableTop",
+ *              "name": "Purple table top",
+ *              "type": "surface",
+ *              "parent": "table",
+ *              "properties": {
+ *                  "material": "formica",
+ *                  "width": "60",
+ *                  "depth": "60",
+ *                  "thickness": "5"
+ *              }
+ *          }
+ *      ]
+ *  });
+ * ````
+ *
+ * ## Querying Metadata
+ *
+ * Having created and classified our model (either the instancing or batching example), we can now find the {@link MetaModel}
+ * and {@link MetaObject}s using the IDs of their
+ * corresponding {@link Entity}s.
+ *
+ * ````JavaScript
+ * const furnitureMetaModel = scene.metaScene.metaModels["furniture"];
+ *
+ * const redLegMetaObject = scene.metaScene.metaObjects["redLeg"];
+ * ````
+ *
+ * In the snippet below, we'll log metadata on each {@link Entity} we click on:
+ *
+ * ````JavaScript
+ * viewer.scene.input.on("mouseclicked", function (coords) {
+ *
+ *      const hit = viewer.scene.pick({
+ *          canvasPos: coords
+ *      });
+ *
+ *      if (hit) {
+ *          const entity = hit.entity;
+ *          const metaObject = viewer.metaScene.metaObjects[entity.id];
+ *          if (metaObject) {
+ *              console.log(JSON.stringify(metaObject.getJSON(), null, "\t"));
+ *          }
+ *      }
+ *  });
+ * ````
+ *
+ * ## Metadata Structure
+ *
+ * The {@link MetaModel}
+ * organizes its {@link MetaObject}s in
+ * a tree that describes their structural composition:
+ *
+ * ````JavaScript
+ * // Get metadata on the root object
+ * const tableMetaObject = furnitureMetaModel.rootMetaObject;
+ *
+ * // Get metadata on the leg objects
+ * const redLegMetaObject = tableMetaObject.children[0];
+ * const greenLegMetaObject = tableMetaObject.children[1];
+ * const blueLegMetaObject = tableMetaObject.children[2];
+ * const yellowLegMetaObject = tableMetaObject.children[3];
+ * ````
+ *
+ * Given an {@link Entity}, we can find the object or model of which it is a part, or the objects that comprise it. We can also generate UI
+ * components from the metadata, such as the tree view demonstrated in [this demo](https://xeokit.github.io/xeokit-sdk/examples/#BIMOffline_glTF_OTCConferenceCenter).
+ *
+ * This hierarchy allows us to express the hierarchical structure of a model while representing it in
+ * various ways in the 3D scene (such as with ````PerformanceModel````, which
+ * has a non-hierarchical scene representation).
+ *
+ * Note also that a {@link MetaObject} does not need to have a corresponding
+ * {@link Entity} and vice-versa.
+ *
+ * # RTC Coordinates for 64-Bit Precision
+ *
+ * ````PerformanceModel```` can emulate 64-bit precision on GPUs using relative-to-center (RTC) coordinates.
+ *
+ * Consider a model that contains many small objects, but with such large spatial extents that 32 bits of GPU precision (accurate to ~7 digits) will not be sufficient to render all of the the objects without jittering.
+ *
+ * To prevent jittering, we could spatially subdivide the objects into "tiles". Each tile would have a center position, and the positions of the objects within the tile would be relative to that center ("RTC coordinates").
+ *
+ * While the center positions of the tiles would be 64-bit values, the object positions only need to be 32-bit.
+ *
+ * Internally, when rendering an object with RTC coordinates, xeokit first temporarily translates the camera viewing matrix by the object's tile's RTC center, on the CPU, using 64-bit math.
+ *
+ * Then xeokit loads the viewing matrix into its WebGL shaders, where math happens at 32-bit precision. Within the shaders, the matrix is effectively down-cast to 32-bit precision, and the object's 32-bit vertex positions are transformed by the matrix.
+ *
+ * We see no jittering, because with RTC a detectable loss of GPU accuracy only starts happening to objects as they become very distant from the camera viewpoint, at which point they are too small to be discernible anyway.
+ *
+ * ## RTC Coordinates with Geometry Instancing
+ *
+ * To use RTC with ````PerformanceModel```` geometry instancing, we specify an RTC center for the geometry. Then ````PerformanceModel```` assumes that all meshes that instance that geometry are within the same RTC coordinate system, ie. the meshes ````position```` and ````rotation```` properties are assumed to be relative to the geometry's ````rtcCenter````.
+ *
+ * For simplicity, our example's meshes all instance the same geometry. Therefore, our example model has only one RTC center.
+ *
+ * Note that the axis-aligned World-space boundary (AABB) of our model is ````[ -6, -9, -6, 1000000006, -2.5, 1000000006]````.
+ *
+ * [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
+ *
+ * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing_rtcCenter)]
+ *
+ * ````javascript
+ * const rtcCenter = [100000000, 0, 100000000];
+ *
+ * performanceModel.createGeometry({
+ *     id: "box",
+ *     rtcCenter: rtcCenter, // This geometry's positions, and the transforms of all meshes that instance the geometry, are relative to the RTC center
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg1",
+ *     geometryId: "box",
+ *     position: [-4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1, 0.3, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg1"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg2",
+ *     geometryId: "box",
+ *     position: [4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 1.0, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg2"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg3",
+ *     geometryId: "box",
+ *     position: [4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg3"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg4",
+ *     geometryId: "box",
+ *     position: [-4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 1.0, 0.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg4"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "top",
+ *     geometryId: "box",
+ *     position: [0, -3, 0],
+ *     scale: [6, 0.5, 6],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["top"],
+ *     isObject: true
+ * });
+ * ````
+ *
+ * ## RTC Coordinates with Geometry Batching
+ *
+ * To use RTC with ````PerformanceModel```` geometry batching, we specify an RTC center (````rtcCenter````) for each mesh. For performance, we try to have as many meshes share the same value for ````rtcCenter```` as possible. Each mesh's ````positions````, ````position```` and ````rotation```` properties are assumed to be relative to ````rtcCenter````.
+ *
+ * For simplicity, the meshes in our example all share the same RTC center.
+ *
+ * The axis-aligned World-space boundary (AABB) of our model is ````[ -6, -9, -6, 1000000006, -2.5, 1000000006]````.
+ *
+ * [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
+ *
+ * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching_rtcCenter)]
+ *
+ * ````javascript
+ * const rtcCenter = [100000000, 0, 100000000];
+ *
+ * performanceModel.createMesh({
+ *     id: "leg1",
+ *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [-4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1, 0.3, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg1"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg2",
+ *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [4, -6, -4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 1.0, 0.3]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg2"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg3",
+ *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [0.3, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg3"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "leg4",
+ *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [-4, -6, 4],
+ *     scale: [1, 3, 1],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 1.0, 0.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["leg4"],
+ *     isObject: true
+ * });
+ *
+ * performanceModel.createMesh({
+ *     id: "top",
+ *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
+ *     primitive: "triangles",
+ *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
+ *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
+ *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
+ *     position: [0, -3, 0],
+ *     scale: [6, 0.5, 6],
+ *     rotation: [0, 0, 0],
+ *     color: [1.0, 0.3, 1.0]
+ * });
+ *
+ * performanceModel.createEntity({
+ *     meshIds: ["top"],
+ *     isObject: true
+ * });
+ ````
  *
  * @implements {Drawable}
  * @implements {Entity}
@@ -36324,6 +37376,7 @@ class PerformanceModel extends Component {
      * @param {Number[]} cfg.indices Array of triangle indices.
      * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. These are automatically generated internally if not supplied, using the ````edgeThreshold```` given to the ````PerformanceModel```` constructor.
      * @param {Number[]} [cfg.positionsDecodeMatrix] A 4x4 matrix for decompressing ````positions````.
+     * @param {Number[]} [cfg.rtcCenter] When the positions are relative-to-center (RTC) coordinates, this is the origin of their RTC coordinate system.
      */
     createGeometry(cfg) {
         if (!instancedArraysSupported) {
@@ -36363,9 +37416,14 @@ class PerformanceModel extends Component {
      * that the ````positions```` and ````normals```` arrays are compressed. When compressed, ````positions```` will be
      * quantized and in World-space, and ````normals```` will be oct-encoded and in World-space.
      *
-     * When creating compressed batches, ````createMesh()```` will start a new batch each time ````positionsDecodeMatrix````
-     * changes. Therefore, to combine arrays into the minimum number of batches, it's best for performance to create
-     * your shared meshes in runs that have the value for ````positionsDecodeMatrix````.
+     * If you accompany the arrays with an  ````rtcCenter````, then ````createMesh()```` will assume
+     * that the ````positions```` are in relative-to-center (RTC) coordinates, with ````rtcCenter```` being the origin of their
+     * RTC coordinate system.
+     *
+     * When providing either ````positionsDecodeMatrix```` or ````rtcCenter````, ````createMesh()```` will start a new
+     * batch each time either of those two parameters change since the last call. Therefore, to combine arrays into the
+     * minimum number of batches, it's best for performance to create your shared meshes in runs that have the same value
+     * for ````positionsDecodeMatrix```` and ````rtcCenter````.
      *
      * Note that ````positions````, ````normals```` and ````indices```` are all required together.
      *
@@ -36376,6 +37434,7 @@ class PerformanceModel extends Component {
      * @param {Number[]} [cfg.positions] Flat array of geometry positions. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.normals] Flat array of normal vectors. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.positionsDecodeMatrix] A 4x4 matrix for decompressing ````positions````.
+     * @param {Number[]} [cfg.rtcCenter] When ````positions```` are given and they are in relative-to-center (RTC) coordinates, this is the origin of their RTC coordinate system.
      * @param {Number[]} [cfg.indices] Array of triangle indices. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. If ````geometryId```` is not given, edge line indices are
      * automatically generated internally if not given, using the ````edgeThreshold```` given to the ````PerformanceModel````
@@ -36452,7 +37511,7 @@ class PerformanceModel extends Component {
                 meshMatrix = math.composeMat4(position, defaultQuaternion, scale, tempMat4$1);
             }
 
-            var instancingLayer = this._instancingLayers[geometryId];
+            const instancingLayer = this._instancingLayers[geometryId];
             layer = instancingLayer;
             portionId = instancingLayer.createPortion(flags, color, opacity, meshMatrix, worldMatrix, aabb, pickColor);
             math.expandAABB3(this._aabb, aabb);
@@ -36492,17 +37551,36 @@ class PerformanceModel extends Component {
                 return null;
             }
 
+            let needNewBatchingLayer = false;
+
+            if (cfg.rtcCenter) {
+                if (!this._lastRTCCenter) {
+                    needNewBatchingLayer = true;
+                    this._lastRTCCenter = math.vec3(cfg.rtcCenter);
+                } else {
+                    if (!math.compareVec3(this._lastRTCCenter, cfg.rtcCenter)) {
+                        needNewBatchingLayer = true;
+                        this._lastRTCCenter.set(cfg.rtcCenter);
+                    }
+                }
+            }
             if (cfg.positionsDecodeMatrix) {
                 if (!this._lastDecodeMatrix) {
+                    needNewBatchingLayer = true;
                     this._lastDecodeMatrix = math.mat4(cfg.positionsDecodeMatrix);
+
                 } else {
                     if (!math.compareMat4(this._lastDecodeMatrix, cfg.positionsDecodeMatrix)) {
-                        if (this._currentBatchingLayer) {
-                            this._currentBatchingLayer.finalize();
-                            this._currentBatchingLayer = null;
-                        }
+                        needNewBatchingLayer = true;
                         this._lastDecodeMatrix.set(cfg.positionsDecodeMatrix);
                     }
+                }
+            }
+
+            if (needNewBatchingLayer) {
+                if (this._currentBatchingLayer) {
+                    this._currentBatchingLayer.finalize();
+                    this._currentBatchingLayer = null;
                 }
             }
 
@@ -36518,7 +37596,8 @@ class PerformanceModel extends Component {
                 this._currentBatchingLayer = new BatchingLayer(this, {
                     primitive: "triangles",
                     scratchMemory: this._batchingScratchMemory,
-                    positionsDecodeMatrix: cfg.positionsDecodeMatrix,
+                    positionsDecodeMatrix: cfg.positionsDecodeMatrix,  // Can be undefined
+                    rtcCenter: cfg.rtcCenter // Can be undefined
                 });
                 this._layerList.push(this._currentBatchingLayer);
             }
@@ -36766,7 +37845,7 @@ class PerformanceModel extends Component {
     /**
      * Gets the PerformanceModel's World-space 3D axis-aligned bounding box.
      *
-     * Represented by a six-element Float32Array containing the min/max extents of the
+     * Represented by a six-element Float64Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
@@ -45812,6 +46891,268 @@ const ParserV5 = {
     }
 };
 
+/*
+
+ Parser for .XKT Format V6
+
+ */
+
+let pako$5 = window.pako || p;
+if (!pako$5.inflate) {  // See https://github.com/nodeca/pako/issues/97
+    pako$5 = pako$5.default;
+}
+
+function extract$5(elements) {
+
+    return {
+
+        positions: elements[0],
+        normals: elements[1],
+        indices: elements[2],
+        edgeIndices: elements[3],
+
+        matrices: elements[4],
+
+        reusedPrimitivesDecodeMatrix: elements[5],
+
+        eachPrimitivePositionsAndNormalsPortion: elements[6],
+        eachPrimitiveIndicesPortion: elements[7],
+        eachPrimitiveEdgeIndicesPortion: elements[8],
+        eachPrimitiveColorAndOpacity: elements[9],
+
+        primitiveInstances: elements[10],
+
+        eachEntityId: elements[11],
+        eachEntityPrimitiveInstancesPortion: elements[12],
+        eachEntityMatricesPortion: elements[13],
+
+        eachTileAABB: elements[14],
+        eachTileDecodeMatrix: elements[15],
+        eachTileEntitiesPortion: elements[16]
+    };
+}
+
+function inflate$5(deflatedData) {
+
+    return {
+
+        //positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
+        positions: new Float32Array(pako$5.inflate(deflatedData.positions).buffer),
+        normals: new Int8Array(pako$5.inflate(deflatedData.normals).buffer),
+        indices: new Uint32Array(pako$5.inflate(deflatedData.indices).buffer),
+        edgeIndices: new Uint32Array(pako$5.inflate(deflatedData.edgeIndices).buffer),
+
+        matrices: new Float32Array(pako$5.inflate(deflatedData.matrices).buffer),
+
+        reusedPrimitivesDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.reusedPrimitivesDecodeMatrix).buffer),
+
+        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
+        eachPrimitiveIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
+        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
+        eachPrimitiveColorAndOpacity: new Uint8Array(pako$5.inflate(deflatedData.eachPrimitiveColorAndOpacity).buffer),
+
+        primitiveInstances: new Uint32Array(pako$5.inflate(deflatedData.primitiveInstances).buffer),
+
+        eachEntityId: pako$5.inflate(deflatedData.eachEntityId, {to: 'string'}),
+        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
+        eachEntityMatricesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityMatricesPortion).buffer),
+
+        eachTileAABB: new Float64Array(pako$5.inflate(deflatedData.eachTileAABB).buffer),
+        eachTileDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.eachTileDecodeMatrix).buffer),
+        eachTileEntitiesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachTileEntitiesPortion).buffer),
+    };
+}
+
+const decompressColor$5 = (function () {
+    const floatColor = new Float32Array(3);
+    return function (intColor) {
+        floatColor[0] = intColor[0] / 255.0;
+        floatColor[1] = intColor[1] / 255.0;
+        floatColor[2] = intColor[2] / 255.0;
+        return floatColor;
+    };
+})();
+
+function load$5(viewer, options, inflatedData, performanceModel) {
+
+    const positions = inflatedData.positions;
+    const normals = inflatedData.normals;
+    const indices = inflatedData.indices;
+    const edgeIndices = inflatedData.edgeIndices;
+
+    const matrices = inflatedData.matrices;
+
+    const reusedPrimitivesDecodeMatrix = inflatedData.reusedPrimitivesDecodeMatrix;
+
+    const eachPrimitivePositionsAndNormalsPortion = inflatedData.eachPrimitivePositionsAndNormalsPortion;
+    const eachPrimitiveIndicesPortion = inflatedData.eachPrimitiveIndicesPortion;
+    const eachPrimitiveEdgeIndicesPortion = inflatedData.eachPrimitiveEdgeIndicesPortion;
+    const eachPrimitiveColorAndOpacity = inflatedData.eachPrimitiveColorAndOpacity;
+
+    const primitiveInstances = inflatedData.primitiveInstances;
+
+    const eachEntityId = JSON.parse(inflatedData.eachEntityId);
+    const eachEntityPrimitiveInstancesPortion = inflatedData.eachEntityPrimitiveInstancesPortion;
+    const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
+
+    const eachTileAABB = inflatedData.eachTileAABB;
+    const eachTileDecodeMatrix = inflatedData.eachTileDecodeMatrix;
+    const eachTileEntitiesPortion = inflatedData.eachTileEntitiesPortion;
+
+    const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
+    const numPrimitiveInstances = primitiveInstances.length;
+    const numEntities = eachEntityId.length;
+    const numTiles = eachTileEntitiesPortion.length;
+
+    const geometryCreated = {};
+    let nextMeshId = 0;
+
+    // Count instances of each primitive
+
+    const primitiveReuseCounts = new Uint32Array(numPrimitives);
+
+    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
+        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
+        if (primitiveReuseCounts[primitiveIndex] !== undefined) {
+            primitiveReuseCounts[primitiveIndex]++;
+        } else {
+            primitiveReuseCounts[primitiveIndex] = 1;
+        }
+    }
+
+    // Iterate over tiles
+
+    const tileCenter = math.vec3();
+
+    for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
+
+        const lastTileIndex = (numTiles - 1);
+        const atLastTile = (tileIndex === lastTileIndex);
+
+        const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
+        const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
+
+        const tileDecodeMatrixIndex = tileIndex * 16;
+        const tileAABBIndex = tileIndex * 6;
+
+        const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
+        const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
+
+        math.getAABB3Center(tileAABB, tileCenter);
+
+        // Iterate over each tile's entities
+
+        for (let tileEntityIndex = firstTileEntityIndex; tileEntityIndex < lastTileEntityIndex; tileEntityIndex++) {
+
+            const entityId = eachEntityId[tileEntityIndex];
+
+            const entityMatrixIndex = eachEntityMatricesPortion[tileEntityIndex];
+            const entityMatrix = matrices.slice(entityMatrixIndex, entityMatrixIndex + 16);
+
+            const lastTileEntityIndex = (numEntities - 1);
+            const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
+            const firstPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
+            const lastPrimitiveInstanceIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
+
+            const meshIds = [];
+
+            // Iterate each entity's primitive instances
+
+            for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex < lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
+
+                const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
+                const primitiveReuseCount = primitiveReuseCounts[primitiveIndex];
+                const isReusedPrimitive = (primitiveReuseCount > 1);
+
+                const atLastPrimitive = (primitiveIndex === (numPrimitives - 1));
+
+                const primitivePositions = positions.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? positions.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
+                const primitiveNormals = normals.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? normals.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
+                const primitiveIndices = indices.subarray(eachPrimitiveIndicesPortion [primitiveIndex], atLastPrimitive ? indices.length : eachPrimitiveIndicesPortion [primitiveIndex + 1]);
+                const primitiveEdgeIndices = edgeIndices.subarray(eachPrimitiveEdgeIndicesPortion [primitiveIndex], atLastPrimitive ? edgeIndices.length : eachPrimitiveEdgeIndicesPortion [primitiveIndex + 1]);
+
+                const color = decompressColor$5(eachPrimitiveColorAndOpacity.subarray((primitiveIndex * 4), (primitiveIndex * 4) + 3));
+                const opacity = eachPrimitiveColorAndOpacity[(primitiveIndex * 4) + 3] / 255.0;
+
+                const meshId = nextMeshId++;
+
+                const meshDefaults = {}; // TODO: get from lookup from entity IDs
+
+                if (isReusedPrimitive) {
+
+                    // Create mesh for multi-use primitive - create (or reuse) geometry, create mesh using that geometry
+
+                    const geometryId = "geometry" + primitiveIndex; // These IDs are local to the PerformanceModel
+
+                    if (!geometryCreated[geometryId]) {
+
+                        performanceModel.createGeometry({
+                            id: geometryId,
+                            rtcCenter: tileCenter,
+                            primitive: "triangles",
+                            positions: primitivePositions,
+                            normals: primitiveNormals,
+                            indices: primitiveIndices,
+                            edgeIndices: primitiveEdgeIndices,
+                            // positionsDecodeMatrix: reusedPrimitivesDecodeMatrix
+                        });
+
+                        geometryCreated[geometryId] = true;
+                    }
+
+                    performanceModel.createMesh(utils.apply(meshDefaults, {
+                        id: meshId,
+                        geometryId: geometryId,
+                        matrix: entityMatrix,
+                        // color: color,
+                        // opacity: opacity
+                    }));
+
+                    meshIds.push(meshId);
+
+                } else {
+
+                    performanceModel.createMesh(utils.apply(meshDefaults, {
+                        id: meshId,
+                        rtcCenter: tileCenter,
+                        primitive: "triangles",
+                        positions: primitivePositions,
+                        normals: primitiveNormals,
+                        indices: primitiveIndices,
+                        edgeIndices: primitiveEdgeIndices,
+                        //            positionsDecodeMatrix: tileDecodeMatrix,
+                        // color: color,
+                        // opacity: opacity
+                    }));
+
+                    meshIds.push(meshId);
+                }
+            }
+
+            if (meshIds.length > 0) {
+
+                const entityDefaults = {}; // TODO: get from lookup from entity IDs
+
+                performanceModel.createEntity(utils.apply(entityDefaults, {
+                    id: entityId,
+                    isObject: true, // TODO: If metaobject exists
+                    meshIds: meshIds
+                }));
+            }
+        }
+    }
+}
+
+/** @private */
+const ParserV6 = {
+    version: 6,
+    parse: function (viewer, options, elements, performanceModel) {
+        const deflatedData = extract$5(elements);
+        const inflatedData = inflate$5(deflatedData);
+        load$5(viewer, options, inflatedData, performanceModel);
+    }
+};
+
 const parsers = {};
 
 parsers[ParserV1.version] = ParserV1;
@@ -45819,6 +47160,7 @@ parsers[ParserV2.version] = ParserV2;
 parsers[ParserV3.version] = ParserV3;
 parsers[ParserV4.version] = ParserV4;
 parsers[ParserV5.version] = ParserV5;
+parsers[ParserV6.version] = ParserV6;
 
 /**
  * {@link Viewer} plugin that loads models from xeokit's optimized *````.xkt````* format.
@@ -45837,6 +47179,7 @@ parsers[ParserV5.version] = ParserV5;
  * * Configure initial default appearances for IFC types.
  * * Set a custom data source for *````.xkt````* and IFC metadata files.
  * * Does not support textures or physically-based materials.
+ * * Supports 64-bit coordinate precision.
  *
  * ## Credits
  *
@@ -46714,7 +48057,7 @@ class VBOGeometry extends Geometry {
     /**
      * Gets the local-space axis-aligned 3D boundary (AABB).
      *
-     * The AABB is represented by a six-element Float32Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
+     * The AABB is represented by a six-element Float64Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
      */
@@ -46725,7 +48068,7 @@ class VBOGeometry extends Geometry {
     /**
      * Gets the local-space oriented 3D boundary (OBB).
      *
-     * The OBB is represented by a 32-element Float32Array containing the eight vertices of the box, where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
+     * The OBB is represented by a 32-element Float64Array containing the eight vertices of the box, where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
      *
      * @type {Number[]}
      */
@@ -52162,7 +53505,7 @@ class Mesh extends Component {
     /**
      * Gets the Mesh's World-space 3D axis-aligned bounding box.
      *
-     * Represented by a six-element Float32Array containing the min/max extents of the
+     * Represented by a six-element Float64Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
