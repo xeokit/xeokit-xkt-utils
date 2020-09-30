@@ -47004,7 +47004,6 @@ function load$5(viewer, options, inflatedData, performanceModel) {
     const numEntities = eachEntityId.length;
     const numTiles = eachTileEntitiesPortion.length;
 
-    const geometryCreated = {};
     let nextMeshId = 0;
 
     // Count instances of each primitive
@@ -47039,6 +47038,8 @@ function load$5(viewer, options, inflatedData, performanceModel) {
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
 
         math.getAABB3Center(tileAABB, tileCenter);
+
+        const geometryCreated = {};
 
         // Iterate over each tile's entities
 
@@ -47082,7 +47083,7 @@ function load$5(viewer, options, inflatedData, performanceModel) {
 
                     // Create mesh for multi-use primitive - create (or reuse) geometry, create mesh using that geometry
 
-                    const geometryId = "geometry" + primitiveIndex; // These IDs are local to the PerformanceModel
+                    const geometryId = "geometry." + tileIndex + "." + primitiveIndex; // These IDs are local to the PerformanceModel
 
                     if (!geometryCreated[geometryId]) {
 
@@ -47804,282 +47805,322 @@ class XKTLoaderPlugin extends Plugin {
     }
 }
 
-const memoryStats$1 = stats.memory;
-const bigIndicesSupported$3 = WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"];
-const IndexArrayType$1 = bigIndicesSupported$3 ? Uint32Array : Uint16Array;
-const tempAABB$1 = math.AABB3();
+const angleAxis = new Float32Array(4);
+const q1 = new Float32Array(4);
+const q2 = new Float32Array(4);
+const xAxis = new Float32Array([1, 0, 0]);
+const yAxis = new Float32Array([0, 1, 0]);
+const zAxis = new Float32Array([0, 0, 1]);
+
+const veca = new Float32Array(3);
+const vecb = new Float32Array(3);
+
+const identityMat = math.identityMat4();
 
 /**
- * @desc A {@link Geometry} that keeps its geometry data solely in GPU memory, without retaining it in browser memory.
- *
- * VBOGeometry uses less memory than {@link ReadableGeometry}, which keeps its geometry data in both browser and GPU memory.
+ * @desc An {@link Entity} that is a scene graph node that can have child Nodes and {@link Mesh}es.
  *
  * ## Usage
  *
- * Creating a {@link Mesh} with a VBOGeometry that defines a single triangle, plus a {@link PhongMaterial} with diffuse {@link Texture}:
+ * The example below is the same as the one given for {@link Mesh}, since the two classes work together. In this example,
+ * we'll create a scene graph in which a root Node represents a group and the {@link Mesh}s are leaves. Since Node
+ * implements {@link Entity}, we can designate the root Node as a model, causing it to be registered by its ID in {@link Scene#models}.
  *
- * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_VBOGeometry)]
+ * Since {@link Mesh} also implements {@link Entity}, we can designate the leaf {@link Mesh}es as objects, causing them to
+ * be registered by their IDs in {@link Scene#objects}.
+ *
+ * We can then find those {@link Entity} types in {@link Scene#models} and {@link Scene#objects}.
+ *
+ * We can also update properties of our object-Meshes via calls to {@link Scene#setObjectsHighlighted} etc.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_SceneGraph)]
  *
  * ````javascript
  * import {Viewer} from "../src/viewer/Viewer.js";
  * import {Mesh} from "../src/scene/mesh/Mesh.js";
- * import {VBOGeometry} from "../src/scene/geometry/VBOGeometry.js"
+ * import {Node} from "../src/scene/nodes/Node.js";
  * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {Texture} from "../src/scene/materials/Texture.js";
  *
  * const viewer = new Viewer({
- *         canvasId: "myCanvas"
- *     });
+ *     canvasId: "myCanvas"
+ * });
  *
- * new Mesh(viewer.scene, {
- *         geometry: new VBOGeometry(viewer.scene, {
- *             primitive: "triangles",
- *             positions: [0.0, 3, 0.0, -3, -3, 0.0, 3, -3, 0.0],
- *             normals: [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
- *             uv: [0.0, 0.0, 0.5, 1.0, 1.0, 0.0],
- *             indices: [0, 1, 2]
- *         }),
- *         material: new PhongMaterial(viewer.scene, {
- *             diffuseMap: new Texture(viewer.scene, {
- *                 src: "textures/diffuse/uvGrid2.jpg"
- *             }),
- *             backfaces: true
- *         })
- *     });
+ * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
+ * viewer.scene.camera.look = [0, -5.75, 0];
+ * viewer.scene.camera.up = [0.37, 0.91, -0.11];
+ *
+ * new Node(viewer.scene, {
+ *      id: "table",
+ *      isModel: true, // <---------- Node represents a model, so is registered by ID in viewer.scene.models
+ *      rotation: [0, 50, 0],
+ *      position: [0, 0, 0],
+ *      scale: [1, 1, 1],
+ *
+ *      children: [
+ *
+ *          new Mesh(viewer.scene, { // Red table leg
+ *              id: "redLeg",
+ *              isObject: true, // <------ Node represents an object, so is registered by ID in viewer.scene.objects
+ *              position: [-4, -6, -4],
+ *              scale: [1, 3, 1],
+ *              rotation: [0, 0, 0],
+ *              material: new PhongMaterial(viewer.scene, {
+ *                  diffuse: [1, 0.3, 0.3]
+ *              })
+ *          }),
+ *
+ *          new Mesh(viewer.scene, { // Green table leg
+ *              id: "greenLeg",
+ *              isObject: true, // <------ Node represents an object, so is registered by ID in viewer.scene.objects
+ *              position: [4, -6, -4],
+ *              scale: [1, 3, 1],
+ *              rotation: [0, 0, 0],
+ *              material: new PhongMaterial(viewer.scene, {
+ *                  diffuse: [0.3, 1.0, 0.3]
+ *              })
+ *          }),
+ *
+ *          new Mesh(viewer.scene, {// Blue table leg
+ *              id: "blueLeg",
+ *              isObject: true, // <------ Node represents an object, so is registered by ID in viewer.scene.objects
+ *              position: [4, -6, 4],
+ *              scale: [1, 3, 1],
+ *              rotation: [0, 0, 0],
+ *              material: new PhongMaterial(viewer.scene, {
+ *                  diffuse: [0.3, 0.3, 1.0]
+ *              })
+ *          }),
+ *
+ *          new Mesh(viewer.scene, {  // Yellow table leg
+ *              id: "yellowLeg",
+ *              isObject: true, // <------ Node represents an object, so is registered by ID in viewer.scene.objects
+ *              position: [-4, -6, 4],
+ *              scale: [1, 3, 1],
+ *              rotation: [0, 0, 0],
+ *              material: new PhongMaterial(viewer.scene, {
+ *                   diffuse: [1.0, 1.0, 0.0]
+ *              })
+ *          }),
+ *
+ *          new Mesh(viewer.scene, { // Purple table top
+ *              id: "tableTop",
+ *              isObject: true, // <------ Node represents an object, so is registered by ID in viewer.scene.objects
+ *              position: [0, -3, 0],
+ *              scale: [6, 0.5, 6],
+ *              rotation: [0, 0, 0],
+ *              material: new PhongMaterial(viewer.scene, {
+ *                  diffuse: [1.0, 0.3, 1.0]
+ *              })
+ *          })
+ *      ]
+ *  });
+ *
+ * // Find Nodes and Meshes by their IDs
+ *
+ * var table = viewer.scene.models["table"];                // Since table Node has isModel == true
+ *
+ * var redLeg = viewer.scene.objects["redLeg"];             // Since the Meshes have isObject == true
+ * var greenLeg = viewer.scene.objects["greenLeg"];
+ * var blueLeg = viewer.scene.objects["blueLeg"];
+ *
+ * // Highlight one of the table leg Meshes
+ *
+ * viewer.scene.setObjectsHighlighted(["redLeg"], true);    // Since the Meshes have isObject == true
+ *
+ * // Periodically update transforms on our Nodes and Meshes
+ *
+ * viewer.scene.on("tick", function () {
+ *
+ *       // Rotate legs
+ *       redLeg.rotateY(0.5);
+ *       greenLeg.rotateY(0.5);
+ *       blueLeg.rotateY(0.5);
+ *
+ *       // Rotate table
+ *       table.rotateY(0.5);
+ *       table.rotateX(0.3);
+ *   });
  * ````
+ *
+ * ## Metadata
+ *
+ * As mentioned, we can also associate {@link MetaModel}s and {@link MetaObject}s with our Nodes and {@link Mesh}es,
+ * within a {@link MetaScene}. See {@link MetaScene} for an example.
+ *
+ * @implements {Entity}
  */
-class VBOGeometry extends Geometry {
-
-    /**
-     @private
-     */
-    get type() {
-        return "VBOGeometry";
-    }
-
-    /**
-     * @private
-     * @returns {boolean}
-     */
-    get isVBOGeometry() {
-        return true;
-    }
+class Node extends Component {
 
     /**
      * @constructor
      * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
      * @param {*} [cfg] Configs
-     * @param {String} [cfg.id] Optional ID, unique among all components in the parent {@link Scene}, generated automatically when omitted.
-     * @param {String} [cfg.primitive="triangles"]  The primitive type. Accepted values are 'points', 'lines', 'line-loop', 'line-strip', 'triangles', 'triangle-strip' and 'triangle-fan'.
-     * @param {Number[]} [cfg.positions]  Positions array.
-     * @param {Number[]} [cfg.normals]  Vertex normal vectors array.
-     * @param {Number[]} [cfg.uv]  UVs array.
-     * @param {Number[]} [cfg.colors]  Vertex colors.
-     * @param {Number[]} [cfg.indices]  Indices array.
-     * @param {Number} [cfg.edgeThreshold=10]  When autogenerating edges for supporting {@link Drawable#edges}, this indicates the threshold angle (in degrees) between the face normals of adjacent triangles below which the edge is discarded.
+     * @param {String} [cfg.id] Optional ID, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {Boolean} [cfg.isModel] Specify ````true```` if this Mesh represents a model, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#models} and may also have a corresponding {@link MetaModel} with matching {@link MetaModel#id}, registered by that ID in {@link MetaScene#metaModels}.
+     * @param {Boolean} [cfg.isObject] Specify ````true```` if this Mesh represents an object, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#objects} and may also have a corresponding {@link MetaObject} with matching {@link MetaObject#id}, registered by that ID in {@link MetaScene#metaObjects}.
+     * @param {Node} [cfg.parent] The parent Node.
+     * @param {Number[]} [cfg.position=[0,0,0]] Local 3D position.
+     * @param {Number[]} [cfg.scale=[1,1,1]] Local scale.
+     * @param {Number[]} [cfg.rotation=[0,0,0]] Local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
+     * @param {Number[]} [cfg.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] Local modelling transform matrix. Overrides the position, scale and rotation parameters.
+     * @param {Number[]} [cfg.offset=[0,0,0]] World-space 3D translation offset. Translates the Node in World space, after modelling transforms.
+     * @param {Boolean} [cfg.visible=true] Indicates if the Node is initially visible.
+     * @param {Boolean} [cfg.culled=false] Indicates if the Node is initially culled from view.
+     * @param {Boolean} [cfg.pickable=true] Indicates if the Node is initially pickable.
+     * @param {Boolean} [cfg.clippable=true] Indicates if the Node is initially clippable.
+     * @param {Boolean} [cfg.collidable=true] Indicates if the Node is initially included in boundary calculations.
+     * @param {Boolean} [cfg.castsShadow=true] Indicates if the Node initially casts shadows.
+     * @param {Boolean} [cfg.receivesShadow=true]  Indicates if the Node initially receives shadows.
+     * @param {Boolean} [cfg.xrayed=false] Indicates if the Node is initially xrayed.
+     * @param {Boolean} [cfg.highlighted=false] Indicates if the Node is initially highlighted.
+     * @param {Boolean} [cfg.selected=false] Indicates if the Mesh is initially selected.
+     * @param {Boolean} [cfg.edges=false] Indicates if the Node's edges are initially emphasized.
+     * @param {Number[]} [cfg.colorize=[1.0,1.0,1.0]] Node's initial RGB colorize color, multiplies by the rendered fragment colors.
+     * @param {Number} [cfg.opacity=1.0] Node's initial opacity factor, multiplies by the rendered fragment alpha.
+     * @param {Array} [cfg.children] Child Nodes or {@link Mesh}es to add initially. Children must be in the same {@link Scene} and will be removed first from whatever parents they may already have.
+     * @param {Boolean} [cfg.inheritStates=true] Indicates if children given to this constructor should inherit rendering state from this parent as they are added. Rendering state includes {@link Node#visible}, {@link Node#culled}, {@link Node#pickable}, {@link Node#clippable}, {@link Node#castsShadow}, {@link Node#receivesShadow}, {@link Node#selected}, {@link Node#highlighted}, {@link Node#colorize} and {@link Node#opacity}.
      */
     constructor(owner, cfg = {}) {
 
         super(owner, cfg);
 
-        this._state = new RenderState({ // Arrays for emphasis effects are got from xeokit.GeometryLite friend methods
-            compressGeometry: true,
-            primitive: null, // WebGL enum
-            primitiveName: null, // String
-            positionsDecodeMatrix: null, // Set when compressGeometry == true
-            uvDecodeMatrix: null, // Set when compressGeometry == true
-            positionsBuf: null,
-            normalsBuf: null,
-            colorsbuf: null,
-            uvBuf: null,
-            indicesBuf: null,
-            hash: ""
-        });
+        this._parentNode = null;
+        this._children = [];
+
+        this._aabb = null;
+        this._aabbDirty = true;
+
+        this.scene._aabbDirty = true;
 
         this._numTriangles = 0;
 
-        this._edgeThreshold = cfg.edgeThreshold || 10.0;
-        this._aabb = null;
-        this._obb = math.OBB3();
+        this._scale = math.vec3();
+        this._quaternion = math.identityQuaternion();
+        this._rotation = math.vec3();
+        this._position = math.vec3();
+        this._offset = math.vec3();
 
-        const state = this._state;
-        const gl = this.scene.canvas.gl;
+        this._localMatrix = math.identityMat4();
+        this._worldMatrix = math.identityMat4();
 
-        cfg.primitive = cfg.primitive || "triangles";
-        switch (cfg.primitive) {
-            case "points":
-                state.primitive = gl.POINTS;
-                state.primitiveName = cfg.primitive;
-                break;
-            case "lines":
-                state.primitive = gl.LINES;
-                state.primitiveName = cfg.primitive;
-                break;
-            case "line-loop":
-                state.primitive = gl.LINE_LOOP;
-                state.primitiveName = cfg.primitive;
-                break;
-            case "line-strip":
-                state.primitive = gl.LINE_STRIP;
-                state.primitiveName = cfg.primitive;
-                break;
-            case "triangles":
-                state.primitive = gl.TRIANGLES;
-                state.primitiveName = cfg.primitive;
-                break;
-            case "triangle-strip":
-                state.primitive = gl.TRIANGLE_STRIP;
-                state.primitiveName = cfg.primitive;
-                break;
-            case "triangle-fan":
-                state.primitive = gl.TRIANGLE_FAN;
-                state.primitiveName = cfg.primitive;
-                break;
-            default:
-                this.error("Unsupported value for 'primitive': '" + cfg.primitive +
-                    "' - supported values are 'points', 'lines', 'line-loop', 'line-strip', 'triangles', " +
-                    "'triangle-strip' and 'triangle-fan'. Defaulting to 'triangles'.");
-                state.primitive = gl.TRIANGLES;
-                state.primitiveName = cfg.primitive;
-        }
+        this._localMatrixDirty = true;
+        this._worldMatrixDirty = true;
 
-        if (!cfg.positions) {
-            this.error("Config expected: positions");
-            return; // TODO: Recover?
-        }
-
-        if (!cfg.indices) {
-            this.error("Config expected: indices");
-            return; // TODO: Recover?
-        }
-
-        var positions;
-
-        {
-            const positionsDecodeMatrix = cfg.positionsDecodeMatrix;
-
-            if (positionsDecodeMatrix) ; else {
-
-                // Uncompressed positions
-
-                const bounds = geometryCompressionUtils.getPositionsBounds(cfg.positions);
-                const result = geometryCompressionUtils.compressPositions(cfg.positions, bounds.min, bounds.max);
-                positions = result.quantized;
-                state.positionsDecodeMatrix = result.decodeMatrix;
-                state.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, positions, positions.length, 3, gl.STATIC_DRAW);
-                memoryStats$1.positions += state.positionsBuf.numItems;
-                math.positions3ToAABB3(cfg.positions, this._aabb);
-                math.positions3ToAABB3(positions, tempAABB$1, state.positionsDecodeMatrix);
-                math.AABB3ToOBB3(tempAABB$1, this._obb);
+        if (cfg.matrix) {
+            this.matrix = cfg.matrix;
+        } else {
+            this.scale = cfg.scale;
+            this.position = cfg.position;
+            if (cfg.quaternion) ; else {
+                this.rotation = cfg.rotation;
             }
         }
 
-        if (cfg.colors) {
-            const colors = cfg.colors.constructor === Float32Array ? cfg.colors : new Float32Array(cfg.colors);
-            state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, colors, colors.length, 4, gl.STATIC_DRAW);
-            memoryStats$1.colors += state.colorsBuf.numItems;
+        this._isModel = cfg.isModel;
+        if (this._isModel) {
+            this.scene._registerModel(this);
         }
 
-        if (cfg.uv) {
-            const bounds = geometryCompressionUtils.getUVBounds(cfg.uv);
-            const result = geometryCompressionUtils.compressUVs(cfg.uv, bounds.min, bounds.max);
-            const uv = result.quantized;
-            state.uvDecodeMatrix = result.decodeMatrix;
-            state.uvBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, uv, uv.length, 2, gl.STATIC_DRAW);
-            memoryStats$1.uvs += state.uvBuf.numItems;
+        this._isObject = cfg.isObject;
+        if (this._isObject) {
+            this.scene._registerObject(this);
         }
 
-        if (cfg.normals) {
-            const normals = geometryCompressionUtils.compressNormals(cfg.normals);
-            let normalized = state.compressGeometry;
-            state.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, normals, normals.length, 3, gl.STATIC_DRAW, normalized);
-            memoryStats$1.normals += state.normalsBuf.numItems;
-        }
+        this.visible = cfg.visible;
+        this.culled = cfg.culled;
+        this.pickable = cfg.pickable;
+        this.clippable = cfg.clippable;
+        this.collidable = cfg.collidable;
+        this.castsShadow = cfg.castsShadow;
+        this.receivesShadow = cfg.receivesShadow;
+        this.xrayed = cfg.xrayed;
+        this.highlighted = cfg.highlighted;
+        this.selected = cfg.selected;
+        this.edges = cfg.edges;
+        this.colorize = cfg.colorize;
+        this.opacity = cfg.opacity;
+        this.offset = cfg.offset;
 
-        if (!bigIndicesSupported$3 && cfg.indices.constructor === Uint32Array) {
-            this.error("This WebGL implementation does not support Uint32Array");
-            return; // TODO: Recover?
-        }
+        // Add children, which inherit state from this Node
 
-        {
-            const indices = (cfg.indices.constructor === Uint32Array || cfg.indices.constructor === Uint16Array) ? cfg.indices : new IndexArrayType$1(cfg.indices);
-            state.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, indices, indices.length, 1, gl.STATIC_DRAW);
-            memoryStats$1.indices += state.indicesBuf.numItems;
-            const edgeIndices = buildEdgeIndices(positions, indices, state.positionsDecodeMatrix, this._edgeThreshold);
-            this._edgeIndicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, edgeIndices, edgeIndices.length, 1, gl.STATIC_DRAW);
-
-            if (this._state.primitiveName === "triangles") {
-                this._numTriangles = (cfg.indices.length / 3);
+        if (cfg.children) {
+            const children = cfg.children;
+            for (let i = 0, len = children.length; i < len; i++) {
+                this.addChild(children[i], cfg.inheritStates);
             }
         }
 
-        this._buildHash();
-
-        memoryStats$1.meshes++;
+        if (cfg.parentId) {
+            const parentNode = this.scene.components[cfg.parentId];
+            if (!parentNode) {
+                this.error("Parent not found: '" + cfg.parentId + "'");
+            } else if (!parentNode.isNode) {
+                this.error("Parent is not a Node: '" + cfg.parentId + "'");
+            } else {
+                parentNode.addChild(this);
+            }
+        } else if (cfg.parent) {
+            if (!cfg.parent.isNode) {
+                this.error("Parent is not a Node");
+            }
+            cfg.parent.addChild(this);
+        }
     }
 
-    _buildHash() {
-        const state = this._state;
-        const hash = ["/g"];
-        hash.push("/" + state.primitive + ";");
-        if (state.positionsBuf) {
-            hash.push("p");
-        }
-        if (state.colorsBuf) {
-            hash.push("c");
-        }
-        if (state.normalsBuf || state.autoVertexNormals) {
-            hash.push("n");
-        }
-        if (state.uvBuf) {
-            hash.push("u");
-        }
-        hash.push("cp"); // Always compressed
-        hash.push(";");
-        state.hash = hash.join("");
-    }
-
-    _getEdgeIndices() {
-        return this._edgeIndicesBuf;
-    }
+    //------------------------------------------------------------------------------------------------------------------
+    // Entity members
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Gets the primitive type.
-     *
-     * Possible types are: 'points', 'lines', 'line-loop', 'line-strip', 'triangles', 'triangle-strip' and 'triangle-fan'.
-     *
-     * @type {String}
+     * Returns true to indicate that this Component is an Entity.
+     * @type {Boolean}
      */
-    get primitive() {
-        return this._state.primitiveName;
+    get isEntity() {
+        return true;
     }
 
     /**
-     * Gets the local-space axis-aligned 3D boundary (AABB).
+     * Returns ````true```` if this Mesh represents a model.
      *
-     * The AABB is represented by a six-element Float64Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
+     * When this returns ````true````, the Mesh will be registered by {@link Mesh#id} in {@link Scene#models} and
+     * may also have a corresponding {@link MetaModel}.
+     *
+     * @type {Boolean}
+     */
+    get isModel() {
+        return this._isModel;
+    }
+
+    /**
+     * Returns ````true```` if this Node represents an object.
+     *
+     * When ````true```` the Node will be registered by {@link Node#id} in
+     * {@link Scene#objects} and may also have a {@link MetaObject} with matching {@link MetaObject#id}.
+     *
+     * @type {Boolean}
+     * @abstract
+     */
+    get isObject() {
+        return this._isObject;
+    }
+
+    /**
+     * Gets the Node's World-space 3D axis-aligned bounding box.
+     *
+     * Represented by a six-element Float64Array containing the min/max extents of the
+     * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
      */
     get aabb() {
+        if (this._aabbDirty) {
+            this._updateAABB();
+        }
         return this._aabb;
     }
 
     /**
-     * Gets the local-space oriented 3D boundary (OBB).
-     *
-     * The OBB is represented by a 32-element Float64Array containing the eight vertices of the box, where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
-     *
-     * @type {Number[]}
-     */
-    get obb() {
-        return this._obb;
-    }
-
-    /**
-     * Approximate number of triangles in this VBOGeometry.
-     *
-     * Will be zero if {@link VBOGeometry#primitive} is not 'triangles', 'triangle-strip' or 'triangle-fan'.
+     * The number of triangles in this Node.
      *
      * @type {Number}
      */
@@ -48087,38 +48128,1002 @@ class VBOGeometry extends Geometry {
         return this._numTriangles;
     }
 
-    /** @private */
-    _getState() {
-        return this._state;
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are visible.
+     *
+     * Only rendered both {@link Node#visible} is ````true```` and {@link Node#culled} is ````false````.
+     *
+     * When {@link Node#isObject} and {@link Node#visible} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#visibleObjects}.
+     *
+     * @type {Boolean}
+     */
+    set visible(visible) {
+        visible = visible !== false;
+        this._visible = visible;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].visible = visible;
+        }
+        if (this._isObject) {
+            this.scene._objectVisibilityUpdated(this, visible);
+        }
     }
 
     /**
-     * Destroys this component.
+     * Gets if this Node is visible.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * When {@link Node#isObject} and {@link Node#visible} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#visibleObjects}.
+     *
+     * @type {Boolean}
+     */
+    get visible() {
+        return this._visible;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are xrayed.
+     *
+     * When {@link Node#isObject} and {@link Node#xrayed} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#xrayedObjects}.
+     *
+     * @type {Boolean}
+     */
+    set xrayed(xrayed) {
+        xrayed = !!xrayed;
+        this._xrayed = xrayed;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].xrayed = xrayed;
+        }
+        if (this._isObject) {
+            this.scene._objectXRayedUpdated(this, xrayed);
+        }
+    }
+
+    /**
+     * Gets if this Node is xrayed.
+     *
+     * When {@link Node#isObject} and {@link Node#xrayed} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#xrayedObjects}.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get xrayed() {
+        return this._xrayed;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are highlighted.
+     *
+     * When {@link Node#isObject} and {@link Node#highlighted} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#highlightedObjects}.
+     *
+     * @type {Boolean}
+     */
+    set highlighted(highlighted) {
+        highlighted = !!highlighted;
+        this._highlighted = highlighted;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].highlighted = highlighted;
+        }
+        if (this._isObject) {
+            this.scene._objectHighlightedUpdated(this, highlighted);
+        }
+    }
+
+    /**
+     * Gets if this Node is highlighted.
+     *
+     * When {@link Node#isObject} and {@link Node#highlighted} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#highlightedObjects}.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get highlighted() {
+        return this._highlighted;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are selected.
+     *
+     * When {@link Node#isObject} and {@link Node#selected} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#selectedObjects}.
+     *
+     * @type {Boolean}
+     */
+    set selected(selected) {
+        selected = !!selected;
+        this._selected = selected;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].selected = selected;
+        }
+        if (this._isObject) {
+            this.scene._objectSelectedUpdated(this, selected);
+        }
+    }
+
+    /**
+     * Gets if this Node is selected.
+     *
+     * When {@link Node#isObject} and {@link Node#selected} are both ````true```` the Node will be
+     * registered by {@link Node#id} in {@link Scene#selectedObjects}.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get selected() {
+        return this._selected;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are edge-enhanced.
+     *
+     * @type {Boolean}
+     */
+    set edges(edges) {
+        edges = !!edges;
+        this._edges = edges;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].edges = edges;
+        }
+    }
+
+    /**
+     * Gets if this Node's edges are enhanced.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get edges() {
+        return this._edges;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are culled.
+     *
+     * @type {Boolean}
+     */
+    set culled(culled) {
+        culled = !!culled;
+        this._culled = culled;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].culled = culled;
+        }
+    }
+
+    /**
+     * Gets if this Node is culled.
+     *
+     * @type {Boolean}
+     */
+    get culled() {
+        return this._culled;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are clippable.
+     *
+     * Clipping is done by the {@link SectionPlane}s in {@link Scene#clips}.
+     *
+     * @type {Boolean}
+     */
+    set clippable(clippable) {
+        clippable = clippable !== false;
+        this._clippable = clippable;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].clippable = clippable;
+        }
+    }
+
+    /**
+     * Gets if this Node is clippable.
+     *
+     * Clipping is done by the {@link SectionPlane}s in {@link Scene#clips}.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get clippable() {
+        return this._clippable;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are included in boundary calculations.
+     *
+     * @type {Boolean}
+     */
+    set collidable(collidable) {
+        collidable = collidable !== false;
+        this._collidable = collidable;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].collidable = collidable;
+        }
+    }
+
+    /**
+     * Gets if this Node is included in boundary calculations.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get collidable() {
+        return this._collidable;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es are pickable.
+     *
+     * Picking is done via calls to {@link Scene#pick}.
+     *
+     * @type {Boolean}
+     */
+    set pickable(pickable) {
+        pickable = pickable !== false;
+        this._pickable = pickable;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].pickable = pickable;
+        }
+    }
+
+    /**
+     * Gets if to this Node is pickable.
+     *
+     * Picking is done via calls to {@link Scene#pick}.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get pickable() {
+        return this._pickable;
+    }
+
+    /**
+     * Sets the RGB colorize color for this Node and all child Nodes and {@link Mesh}es}.
+     *
+     * Multiplies by rendered fragment colors.
+     *
+     * Each element of the color is in range ````[0..1]````.
+     *
+     * @type {Number[]}
+     */
+    set colorize(rgb) {
+        let colorize = this._colorize;
+        if (!colorize) {
+            colorize = this._colorize = new Float32Array(4);
+            colorize[3] = 1.0;
+        }
+        if (rgb) {
+            colorize[0] = rgb[0];
+            colorize[1] = rgb[1];
+            colorize[2] = rgb[2];
+        } else {
+            colorize[0] = 1;
+            colorize[1] = 1;
+            colorize[2] = 1;
+        }
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].colorize = colorize;
+        }
+        if (this._isObject) {
+            const colorized = (!!rgb);
+            this.scene._objectColorizeUpdated(this, colorized);
+        }
+    }
+
+    /**
+     * Gets the RGB colorize color for this Node.
+     *
+     * Each element of the color is in range ````[0..1]````.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Number[]}
+     */
+    get colorize() {
+        return this._colorize.slice(0, 3);
+    }
+
+    /**
+     * Sets the opacity factor for this Node and all child Nodes and {@link Mesh}es.
+     *
+     * This is a factor in range ````[0..1]```` which multiplies by the rendered fragment alphas.
+     *
+     * @type {Number}
+     */
+    set opacity(opacity) {
+        let colorize = this._colorize;
+        if (!colorize) {
+            colorize = this._colorize = new Float32Array(4);
+            colorize[0] = 1;
+            colorize[1] = 1;
+            colorize[2] = 1;
+        }
+        colorize[3] = opacity !== null && opacity !== undefined ? opacity : 1.0;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].opacity = opacity;
+        }
+        if (this._isObject) {
+            const opacityUpdated = (opacity !== null && opacity !== undefined);
+            this.scene._objectOpacityUpdated(this, opacityUpdated);
+        }
+    }
+
+    /**
+     * Gets this Node's opacity factor.
+     *
+     * This is a factor in range ````[0..1]```` which multiplies by the rendered fragment alphas.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Number}
+     */
+    get opacity() {
+        return this._colorize[3];
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es cast shadows.
+     *
+     * @type {Boolean}
+     */
+    set castsShadow(castsShadow) {
+        castsShadow = !!castsShadow;
+        this._castsShadow = castsShadow;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].castsShadow = castsShadow;
+        }
+    }
+
+    /**
+     * Gets if this Node casts shadows.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get castsShadow() {
+        return this._castsShadow;
+    }
+
+    /**
+     * Sets if this Node and all child Nodes and {@link Mesh}es can have shadows cast upon them.
+     *
+     * @type {Boolean}
+     */
+    set receivesShadow(receivesShadow) {
+        receivesShadow = !!receivesShadow;
+        this._receivesShadow = receivesShadow;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].receivesShadow = receivesShadow;
+        }
+    }
+
+    /**
+     * Whether or not to this Node can have shadows cast upon it.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Boolean}
+     */
+    get receivesShadow() {
+        return this._receivesShadow;
+    }
+
+    /**
+     * Gets if this Node can have Scalable Ambient Obscurance (SAO) applied to it.
+     *
+     * SAO is configured by {@link SAO}.
+     *
+     * @type {Boolean}
+     * @abstract
+     */
+    get saoEnabled() {
+        return false; // TODO: Support SAO on Nodes
+    }
+
+
+    /**
+     * Sets the 3D World-space offset for this Node and all child Nodes and {@link Mesh}es}.
+     *
+     * The offset dynamically translates those components in World-space.
+     *
+     * Default value is ````[0, 0, 0]````.
+     *
+     * Note that child Nodes and {@link Mesh}es may subsequently be given different values for this property.
+     *
+     * @type {Number[]}
+     */
+    set offset(offset) {
+        if (offset) {
+            this._offset[0] = offset[0];
+            this._offset[1] = offset[1];
+            this._offset[2] = offset[2];
+        } else {
+            this._offset[0] = 0;
+            this._offset[1] = 0;
+            this._offset[2] = 0;
+        }
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].offset = this._offset;
+        }
+        if (this._isObject) {
+            this.scene._objectOffsetUpdated(this, offset);
+        }
+    }
+
+    /**
+     * Gets the Node's 3D World-space offset.
+     *
+     * Default value is ````[0, 0, 0]````.
+     *
+     * Child Nodes and {@link Mesh}es may have different values for this property.
+     *
+     * @type {Number[]}
+     */
+    get offset() {
+        return this._offset;
+    }
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Node members
+    //------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Returns true to indicate that this Component is a Node.
+     * @type {Boolean}
+     */
+    get isNode() {
+        return true;
+    }
+
+    _setLocalMatrixDirty() {
+        this._localMatrixDirty = true;
+        this._setWorldMatrixDirty();
+    }
+
+    _setWorldMatrixDirty() {
+        this._worldMatrixDirty = true;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i]._setWorldMatrixDirty();
+        }
+    }
+
+    _buildWorldMatrix() {
+        const localMatrix = this.matrix;
+        if (!this._parentNode) {
+            for (let i = 0, len = localMatrix.length; i < len; i++) {
+                this._worldMatrix[i] = localMatrix[i];
+            }
+        } else {
+            math.mulMat4(this._parentNode.worldMatrix, localMatrix, this._worldMatrix);
+        }
+        this._worldMatrixDirty = false;
+    }
+
+    _setSubtreeAABBsDirty(node) {
+        node._aabbDirty = true;
+        if (node._children) {
+            for (let i = 0, len = node._children.length; i < len; i++) {
+                this._setSubtreeAABBsDirty(node._children[i]);
+            }
+        }
+    }
+
+    _setAABBDirty() {
+        this._setSubtreeAABBsDirty(this);
+        if (this.collidable) {
+            for (let node = this; node; node = node._parentNode) {
+                node._aabbDirty = true;
+            }
+        }
+    }
+
+    _updateAABB() {
+        this.scene._aabbDirty = true;
+        if (!this._aabb) {
+            this._aabb = math.AABB3();
+        }
+        if (this._buildAABB) {
+            this._buildAABB(this.worldMatrix, this._aabb); // Mesh or PerformanceModel
+        } else { // Node | Node | Model
+            math.collapseAABB3(this._aabb);
+            let node;
+            for (let i = 0, len = this._children.length; i < len; i++) {
+                node = this._children[i];
+                if (!node.collidable) {
+                    continue;
+                }
+                math.expandAABB3(this._aabb, node.aabb);
+            }
+        }
+        this._aabbDirty = false;
+    }
+
+    /**
+     * Adds a child Node or {@link Mesh}.
+     *
+     * The child must be a Node or {@link Mesh} in the same {@link Scene}.
+     *
+     * If the child already has a parent, will be removed from that parent first.
+     *
+     * Does nothing if already a child.
+     *
+     * @param {Node|Mesh|String} child Instance or ID of the child to add.
+     * @param [inheritStates=false] Indicates if the child should inherit rendering states from this parent as it is added. Rendering state includes {@link Node#visible}, {@link Node#culled}, {@link Node#pickable}, {@link Node#clippable}, {@link Node#castsShadow}, {@link Node#receivesShadow}, {@link Node#selected}, {@link Node#highlighted}, {@link Node#colorize} and {@link Node#opacity}.
+     * @returns {Node|Mesh} The child.
+     */
+    addChild(child, inheritStates) {
+        if (utils.isNumeric(child) || utils.isString(child)) {
+            const nodeId = child;
+            child = this.scene.component[nodeId];
+            if (!child) {
+                this.warn("Component not found: " + utils.inQuotes(nodeId));
+                return;
+            }
+            if (!child.isNode && !child.isMesh) {
+                this.error("Not a Node or Mesh: " + nodeId);
+                return;
+            }
+        } else {
+            if (!child.isNode && !child.isMesh) {
+                this.error("Not a Node or Mesh: " + child.id);
+                return;
+            }
+            if (child._parentNode) {
+                if (child._parentNode.id === this.id) {
+                    this.warn("Already a child: " + child.id);
+                    return;
+                }
+                child._parentNode.removeChild(child);
+            }
+        }
+        const id = child.id;
+        if (child.scene.id !== this.scene.id) {
+            this.error("Child not in same Scene: " + child.id);
+            return;
+        }
+        this._children.push(child);
+        child._parentNode = this;
+        if (!!inheritStates) {
+            child.visible = this.visible;
+            child.culled = this.culled;
+            child.xrayed = this.xrayed;
+            child.highlited = this.highlighted;
+            child.selected = this.selected;
+            child.edges = this.edges;
+            child.clippable = this.clippable;
+            child.pickable = this.pickable;
+            child.collidable = this.collidable;
+            child.castsShadow = this.castsShadow;
+            child.receivesShadow = this.receivesShadow;
+            child.colorize = this.colorize;
+            child.opacity = this.opacity;
+            child.offset = this.offset;
+        }
+        child._setWorldMatrixDirty();
+        child._setAABBDirty();
+        this._numTriangles += child.numTriangles;
+        return child;
+    }
+
+    /**
+     * Removes the given child Node or {@link Mesh}.
+     *
+     * @param {Node|Mesh} child Child to remove.
+     */
+    removeChild(child) {
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            if (this._children[i].id === child.id) {
+                child._parentNode = null;
+                this._children = this._children.splice(i, 1);
+                child._setWorldMatrixDirty();
+                child._setAABBDirty();
+                this._setAABBDirty();
+                this._numTriangles -= child.numTriangles;
+                return;
+            }
+        }
+    }
+
+    /**
+     * Removes all child Nodes and {@link Mesh}es.
+     */
+    removeChildren() {
+        let child;
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            child = this._children[i];
+            child._parentNode = null;
+            child._setWorldMatrixDirty();
+            child._setAABBDirty();
+            this._numTriangles -= child.numTriangles;
+        }
+        this._children = [];
+        this._setAABBDirty();
+    }
+
+    /**
+     * Number of child Nodes or {@link Mesh}es.
+     *
+     * @type {Number}
+     */
+    get numChildren() {
+        return this._children.length;
+    }
+
+    /**
+     * Array of child Nodes or {@link Mesh}es.
+     *
+     * @type {Array}
+     */
+    get children() {
+        return this._children;
+    }
+
+    /**
+     * The parent Node.
+     *
+     * The parent Node may also be set by passing the Node to the parent's {@link Node#addChild} method.
+     *
+     * @type {Node}
+     */
+    set parent(node) {
+        if (utils.isNumeric(node) || utils.isString(node)) {
+            const nodeId = node;
+            node = this.scene.components[nodeId];
+            if (!node) {
+                this.warn("Node not found: " + utils.inQuotes(nodeId));
+                return;
+            }
+            if (!node.isNode) {
+                this.error("Not a Node: " + node.id);
+                return;
+            }
+        }
+        if (node.scene.id !== this.scene.id) {
+            this.error("Node not in same Scene: " + node.id);
+            return;
+        }
+        if (this._parentNode && this._parentNode.id === node.id) {
+            this.warn("Already a child of Node: " + node.id);
+            return;
+        }
+        node.addChild(this);
+    }
+
+    /**
+     * The parent Node.
+     *
+     * @type {Node}
+     */
+    get parent() {
+        return this._parentNode;
+    }
+
+    /**
+     * Sets the Node's local translation.
+     *
+     * Default value is ````[0,0,0]````.
+     *
+     * @type {Number[]}
+     */
+    set position(value) {
+        this._position.set(value || [0, 0, 0]);
+        this._setLocalMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the Node's local translation.
+     *
+     * Default value is ````[0,0,0]````.
+     *
+     * @type {Number[]}
+     */
+    get position() {
+        return this._position;
+    }
+
+    /**
+     * Sets the Node's local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
+     *
+     * Default value is ````[0,0,0]````.
+     *
+     * @type {Number[]}
+     */
+    set rotation(value) {
+        this._rotation.set(value || [0, 0, 0]);
+        math.eulerToQuaternion(this._rotation, "XYZ", this._quaternion);
+        this._setLocalMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the Node's local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
+     *
+     * Default value is ````[0,0,0]````.
+     *
+     * @type {Number[]}
+     */
+    get rotation() {
+        return this._rotation;
+    }
+
+    /**
+     * Sets the Node's local rotation quaternion.
+     *
+     * Default value is ````[0,0,0,1]````.
+     *
+     * @type {Number[]}
+     */
+    set quaternion(value) {
+        this._quaternion.set(value || [0, 0, 0, 1]);
+        math.quaternionToEuler(this._quaternion, "XYZ", this._rotation);
+        this._setLocalMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the Node's local rotation quaternion.
+     *
+     * Default value is ````[0,0,0,1]````.
+     *
+     * @type {Number[]}
+     */
+    get quaternion() {
+        return this._quaternion;
+    }
+
+    /**
+     * Sets the Node's local scale.
+     *
+     * Default value is ````[1,1,1]````.
+     *
+     * @type {Number[]}
+     */
+    set scale(value) {
+        this._scale.set(value || [1, 1, 1]);
+        this._setLocalMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the Node's local scale.
+     *
+     * Default value is ````[1,1,1]````.
+     *
+     * @type {Number[]}
+     */
+    get scale() {
+        return this._scale;
+    }
+
+    /**
+     * Sets the Node's local modeling transform matrix.
+     *
+     * Default value is ````[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]````.
+     *
+     * @type {Number[]}
+     */
+    set matrix(value) {
+        if (!this._localMatrix) {
+            this._localMatrix = math.identityMat4();
+        }
+        this._localMatrix.set(value || identityMat);
+        math.decomposeMat4(this._localMatrix, this._position, this._quaternion, this._scale);
+        this._localMatrixDirty = false;
+        this._setWorldMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the Node's local modeling transform matrix.
+     *
+     * Default value is ````[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]````.
+     *
+     * @type {Number[]}
+     */
+    get matrix() {
+        if (this._localMatrixDirty) {
+            if (!this._localMatrix) {
+                this._localMatrix = math.identityMat4();
+            }
+            math.composeMat4(this._position, this._quaternion, this._scale, this._localMatrix);
+            this._localMatrixDirty = false;
+        }
+        return this._localMatrix;
+    }
+
+    /**
+     * Gets the Node's World matrix.
+     *
+     * @property worldMatrix
+     * @type {Number[]}
+     */
+    get worldMatrix() {
+        if (this._worldMatrixDirty) {
+            this._buildWorldMatrix();
+        }
+        return this._worldMatrix;
+    }
+
+    /**
+     * Rotates the Node about the given local axis by the given increment.
+     *
+     * @param {Number[]} axis Local axis about which to rotate.
+     * @param {Number} angle Angle increment in degrees.
+     */
+    rotate(axis, angle) {
+        angleAxis[0] = axis[0];
+        angleAxis[1] = axis[1];
+        angleAxis[2] = axis[2];
+        angleAxis[3] = angle * math.DEGTORAD;
+        math.angleAxisToQuaternion(angleAxis, q1);
+        math.mulQuaternions(this.quaternion, q1, q2);
+        this.quaternion = q2;
+        this._setLocalMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+        return this;
+    }
+
+    /**
+     * Rotates the Node about the given World-space axis by the given increment.
+     *
+     * @param {Number[]} axis Local axis about which to rotate.
+     * @param {Number} angle Angle increment in degrees.
+     */
+    rotateOnWorldAxis(axis, angle) {
+        angleAxis[0] = axis[0];
+        angleAxis[1] = axis[1];
+        angleAxis[2] = axis[2];
+        angleAxis[3] = angle * math.DEGTORAD;
+        math.angleAxisToQuaternion(angleAxis, q1);
+        math.mulQuaternions(q1, this.quaternion, q1);
+        //this.quaternion.premultiply(q1);
+        return this;
+    }
+
+    /**
+     * Rotates the Node about the local X-axis by the given increment.
+     *
+     * @param {Number} angle Angle increment in degrees.
+     */
+    rotateX(angle) {
+        return this.rotate(xAxis, angle);
+    }
+
+    /**
+     * Rotates the Node about the local Y-axis by the given increment.
+     *
+     * @param {Number} angle Angle increment in degrees.
+     */
+    rotateY(angle) {
+        return this.rotate(yAxis, angle);
+    }
+
+    /**
+     * Rotates the Node about the local Z-axis by the given increment.
+     *
+     * @param {Number} angle Angle increment in degrees.
+     */
+    rotateZ(angle) {
+        return this.rotate(zAxis, angle);
+    }
+
+    /**
+     * Translates the Node along local space vector by the given increment.
+     *
+     * @param {Number[]} axis Normalized local space 3D vector along which to translate.
+     * @param {Number} distance Distance to translate along  the vector.
+     */
+    translate(axis, distance) {
+        math.vec3ApplyQuaternion(this.quaternion, axis, veca);
+        math.mulVec3Scalar(veca, distance, vecb);
+        math.addVec3(this.position, vecb, this.position);
+        this._setLocalMatrixDirty();
+        this._setAABBDirty();
+        this.glRedraw();
+        return this;
+    }
+
+    /**
+     * Translates the Node along the local X-axis by the given increment.
+     *
+     * @param {Number} distance Distance to translate along  the X-axis.
+     */
+    translateX(distance) {
+        return this.translate(xAxis, distance);
+    }
+
+    /**
+     * Translates the Node along the local Y-axis by the given increment.
+     *
+     * @param {Number} distance Distance to translate along  the Y-axis.
+     */
+    translateY(distance) {
+        return this.translate(yAxis, distance);
+    }
+
+    /**
+     * Translates the Node along the local Z-axis by the given increment.
+     *
+     * @param {Number} distance Distance to translate along  the Z-axis.
+     */
+    translateZ(distance) {
+        return this.translate(zAxis, distance);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Component members
+    //------------------------------------------------------------------------------------------------------------------
+
+    /**
+     @private
+     */
+    get type() {
+        return "Node";
+    }
+
+    /**
+     * Destroys this Node.
      */
     destroy() {
         super.destroy();
-        const state = this._state;
-        if (state.indicesBuf) {
-            state.indicesBuf.destroy();
+        if (this._parentNode) {
+            this._parentNode.removeChild(this);
         }
-        if (state.positionsBuf) {
-            state.positionsBuf.destroy();
+        if (this._isObject) {
+            this.scene._deregisterObject(this);
+            if (this._visible) {
+                this.scene._objectVisibilityUpdated(this, false);
+            }
+            if (this._xrayed) {
+                this.scene._objectXRayedUpdated(this, false);
+            }
+            if (this._selected) {
+                this.scene._objectSelectedUpdated(this, false);
+            }
+            if (this._highlighted) {
+                this.scene._objectHighlightedUpdated(this, false);
+            }
+            this.scene._objectColorizeUpdated(this, false);
+            this.scene._objectOpacityUpdated(this, false);
+            this.scene._objectOffsetUpdated(this, false);
         }
-        if (state.normalsBuf) {
-            state.normalsBuf.destroy();
+        if (this._isModel) {
+            this.scene._deregisterModel(this);
         }
-        if (state.uvBuf) {
-            state.uvBuf.destroy();
+        if (this._children.length) {
+            // Clone the _children before iterating, so our children don't mess us up when calling removeChild().
+            const tempChildList = this._children.splice();
+            let child;
+            for (let i = 0, len = tempChildList.length; i < len; i++) {
+                child = tempChildList[i];
+                child.destroy();
+            }
         }
-        if (state.colorsBuf) {
-            state.colorsBuf.destroy();
-        }
-        if (this._edgeIndicesBuf) {
-            this._edgeIndicesBuf.destroy();
-        }
-        state.destroy();
-        memoryStats$1.meshes--;
+        this._children = [];
+        this._setAABBDirty();
+        this.scene._aabbDirty = true;
     }
+
 }
 
 /**
@@ -52607,17 +53612,17 @@ ShadowRenderer.prototype._bindProgram = function (frame) {
  */
 
 const obb = math.OBB3();
-const angleAxis = new Float32Array(4);
-const q1 = new Float32Array(4);
-const q2 = new Float32Array(4);
-const xAxis = new Float32Array([1, 0, 0]);
-const yAxis = new Float32Array([0, 1, 0]);
-const zAxis = new Float32Array([0, 0, 1]);
+const angleAxis$1 = new Float32Array(4);
+const q1$1 = new Float32Array(4);
+const q2$1 = new Float32Array(4);
+const xAxis$1 = new Float32Array([1, 0, 0]);
+const yAxis$1 = new Float32Array([0, 1, 0]);
+const zAxis$1 = new Float32Array([0, 0, 1]);
 
-const veca = new Float32Array(3);
-const vecb = new Float32Array(3);
+const veca$1 = new Float32Array(3);
+const vecb$1 = new Float32Array(3);
 
-const identityMat = math.identityMat4();
+const identityMat$1 = math.identityMat4();
 
 /**
  * @desc An {@link Entity} that is a drawable element, with a {@link Geometry} and a {@link Material}, that can be
@@ -53270,7 +54275,7 @@ class Mesh extends Component {
         if (!this.__localMatrix) {
             this.__localMatrix = math.identityMat4();
         }
-        this.__localMatrix.set(value || identityMat);
+        this.__localMatrix.set(value || identityMat$1);
         math.decomposeMat4(this.__localMatrix, this._position, this._quaternion, this._scale);
         this._localMatrixDirty = false;
         this._setWorldMatrixDirty();
@@ -53328,13 +54333,13 @@ class Mesh extends Component {
      * @param {Number} angle Angle increment in degrees.
      */
     rotate(axis, angle) {
-        angleAxis[0] = axis[0];
-        angleAxis[1] = axis[1];
-        angleAxis[2] = axis[2];
-        angleAxis[3] = angle * math.DEGTORAD;
-        math.angleAxisToQuaternion(angleAxis, q1);
-        math.mulQuaternions(this.quaternion, q1, q2);
-        this.quaternion = q2;
+        angleAxis$1[0] = axis[0];
+        angleAxis$1[1] = axis[1];
+        angleAxis$1[2] = axis[2];
+        angleAxis$1[3] = angle * math.DEGTORAD;
+        math.angleAxisToQuaternion(angleAxis$1, q1$1);
+        math.mulQuaternions(this.quaternion, q1$1, q2$1);
+        this.quaternion = q2$1;
         this._setLocalMatrixDirty();
         this._setAABBDirty();
         this.glRedraw();
@@ -53348,12 +54353,12 @@ class Mesh extends Component {
      * @param {Number} angle Angle increment in degrees.
      */
     rotateOnWorldAxis(axis, angle) {
-        angleAxis[0] = axis[0];
-        angleAxis[1] = axis[1];
-        angleAxis[2] = axis[2];
-        angleAxis[3] = angle * math.DEGTORAD;
-        math.angleAxisToQuaternion(angleAxis, q1);
-        math.mulQuaternions(q1, this.quaternion, q1);
+        angleAxis$1[0] = axis[0];
+        angleAxis$1[1] = axis[1];
+        angleAxis$1[2] = axis[2];
+        angleAxis$1[3] = angle * math.DEGTORAD;
+        math.angleAxisToQuaternion(angleAxis$1, q1$1);
+        math.mulQuaternions(q1$1, this.quaternion, q1$1);
         //this.quaternion.premultiply(q1);
         return this;
     }
@@ -53364,7 +54369,7 @@ class Mesh extends Component {
      * @param {Number} angle Angle increment in degrees.
      */
     rotateX(angle) {
-        return this.rotate(xAxis, angle);
+        return this.rotate(xAxis$1, angle);
     }
 
     /**
@@ -53373,7 +54378,7 @@ class Mesh extends Component {
      * @param {Number} angle Angle increment in degrees.
      */
     rotateY(angle) {
-        return this.rotate(yAxis, angle);
+        return this.rotate(yAxis$1, angle);
     }
 
     /**
@@ -53382,7 +54387,7 @@ class Mesh extends Component {
      * @param {Number} angle Angle increment in degrees.
      */
     rotateZ(angle) {
-        return this.rotate(zAxis, angle);
+        return this.rotate(zAxis$1, angle);
     }
 
     /**
@@ -53392,9 +54397,9 @@ class Mesh extends Component {
      * @param {Number} distance Distance to translate along  the vector.
      */
     translate(axis, distance) {
-        math.vec3ApplyQuaternion(this.quaternion, axis, veca);
-        math.mulVec3Scalar(veca, distance, vecb);
-        math.addVec3(this.position, vecb, this.position);
+        math.vec3ApplyQuaternion(this.quaternion, axis, veca$1);
+        math.mulVec3Scalar(veca$1, distance, vecb$1);
+        math.addVec3(this.position, vecb$1, this.position);
         this._setLocalMatrixDirty();
         this._setAABBDirty();
         this.glRedraw();
@@ -53407,7 +54412,7 @@ class Mesh extends Component {
      * @param {Number} distance Distance to translate along  the X-axis.
      */
     translateX(distance) {
-        return this.translate(xAxis, distance);
+        return this.translate(xAxis$1, distance);
     }
 
     /**
@@ -53416,7 +54421,7 @@ class Mesh extends Component {
      * @param {Number} distance Distance to translate along  the Y-axis.
      */
     translateY(distance) {
-        return this.translate(yAxis, distance);
+        return this.translate(yAxis$1, distance);
     }
 
     /**
@@ -53425,7 +54430,7 @@ class Mesh extends Component {
      * @param {Number} distance Distance to translate along  the Z-axis.
      */
     translateZ(distance) {
-        return this.translate(zAxis, distance);
+        return this.translate(zAxis$1, distance);
     }
 
     _putDrawRenderers() {
@@ -54646,6 +55651,4593 @@ const pickTriangleSurface = (function () {
     }
 })();
 
+const memoryStats$1 = stats.memory;
+const bigIndicesSupported$3 = WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"];
+const IndexArrayType$1 = bigIndicesSupported$3 ? Uint32Array : Uint16Array;
+const tempAABB$1 = math.AABB3();
+
+/**
+ * @desc A {@link Geometry} that keeps its geometry data solely in GPU memory, without retaining it in browser memory.
+ *
+ * VBOGeometry uses less memory than {@link ReadableGeometry}, which keeps its geometry data in both browser and GPU memory.
+ *
+ * ## Usage
+ *
+ * Creating a {@link Mesh} with a VBOGeometry that defines a single triangle, plus a {@link PhongMaterial} with diffuse {@link Texture}:
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_VBOGeometry)]
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {VBOGeometry} from "../src/scene/geometry/VBOGeometry.js"
+ * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
+ * import {Texture} from "../src/scene/materials/Texture.js";
+ *
+ * const viewer = new Viewer({
+ *         canvasId: "myCanvas"
+ *     });
+ *
+ * new Mesh(viewer.scene, {
+ *         geometry: new VBOGeometry(viewer.scene, {
+ *             primitive: "triangles",
+ *             positions: [0.0, 3, 0.0, -3, -3, 0.0, 3, -3, 0.0],
+ *             normals: [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+ *             uv: [0.0, 0.0, 0.5, 1.0, 1.0, 0.0],
+ *             indices: [0, 1, 2]
+ *         }),
+ *         material: new PhongMaterial(viewer.scene, {
+ *             diffuseMap: new Texture(viewer.scene, {
+ *                 src: "textures/diffuse/uvGrid2.jpg"
+ *             }),
+ *             backfaces: true
+ *         })
+ *     });
+ * ````
+ */
+class VBOGeometry extends Geometry {
+
+    /**
+     @private
+     */
+    get type() {
+        return "VBOGeometry";
+    }
+
+    /**
+     * @private
+     * @returns {boolean}
+     */
+    get isVBOGeometry() {
+        return true;
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID, unique among all components in the parent {@link Scene}, generated automatically when omitted.
+     * @param {String} [cfg.primitive="triangles"]  The primitive type. Accepted values are 'points', 'lines', 'line-loop', 'line-strip', 'triangles', 'triangle-strip' and 'triangle-fan'.
+     * @param {Number[]} [cfg.positions]  Positions array.
+     * @param {Number[]} [cfg.normals]  Vertex normal vectors array.
+     * @param {Number[]} [cfg.uv]  UVs array.
+     * @param {Number[]} [cfg.colors]  Vertex colors.
+     * @param {Number[]} [cfg.indices]  Indices array.
+     * @param {Number} [cfg.edgeThreshold=10]  When autogenerating edges for supporting {@link Drawable#edges}, this indicates the threshold angle (in degrees) between the face normals of adjacent triangles below which the edge is discarded.
+     */
+    constructor(owner, cfg = {}) {
+
+        super(owner, cfg);
+
+        this._state = new RenderState({ // Arrays for emphasis effects are got from xeokit.GeometryLite friend methods
+            compressGeometry: true,
+            primitive: null, // WebGL enum
+            primitiveName: null, // String
+            positionsDecodeMatrix: null, // Set when compressGeometry == true
+            uvDecodeMatrix: null, // Set when compressGeometry == true
+            positionsBuf: null,
+            normalsBuf: null,
+            colorsbuf: null,
+            uvBuf: null,
+            indicesBuf: null,
+            hash: ""
+        });
+
+        this._numTriangles = 0;
+
+        this._edgeThreshold = cfg.edgeThreshold || 10.0;
+        this._aabb = null;
+        this._obb = math.OBB3();
+
+        const state = this._state;
+        const gl = this.scene.canvas.gl;
+
+        cfg.primitive = cfg.primitive || "triangles";
+        switch (cfg.primitive) {
+            case "points":
+                state.primitive = gl.POINTS;
+                state.primitiveName = cfg.primitive;
+                break;
+            case "lines":
+                state.primitive = gl.LINES;
+                state.primitiveName = cfg.primitive;
+                break;
+            case "line-loop":
+                state.primitive = gl.LINE_LOOP;
+                state.primitiveName = cfg.primitive;
+                break;
+            case "line-strip":
+                state.primitive = gl.LINE_STRIP;
+                state.primitiveName = cfg.primitive;
+                break;
+            case "triangles":
+                state.primitive = gl.TRIANGLES;
+                state.primitiveName = cfg.primitive;
+                break;
+            case "triangle-strip":
+                state.primitive = gl.TRIANGLE_STRIP;
+                state.primitiveName = cfg.primitive;
+                break;
+            case "triangle-fan":
+                state.primitive = gl.TRIANGLE_FAN;
+                state.primitiveName = cfg.primitive;
+                break;
+            default:
+                this.error("Unsupported value for 'primitive': '" + cfg.primitive +
+                    "' - supported values are 'points', 'lines', 'line-loop', 'line-strip', 'triangles', " +
+                    "'triangle-strip' and 'triangle-fan'. Defaulting to 'triangles'.");
+                state.primitive = gl.TRIANGLES;
+                state.primitiveName = cfg.primitive;
+        }
+
+        if (!cfg.positions) {
+            this.error("Config expected: positions");
+            return; // TODO: Recover?
+        }
+
+        if (!cfg.indices) {
+            this.error("Config expected: indices");
+            return; // TODO: Recover?
+        }
+
+        var positions;
+
+        {
+            const positionsDecodeMatrix = cfg.positionsDecodeMatrix;
+
+            if (positionsDecodeMatrix) ; else {
+
+                // Uncompressed positions
+
+                const bounds = geometryCompressionUtils.getPositionsBounds(cfg.positions);
+                const result = geometryCompressionUtils.compressPositions(cfg.positions, bounds.min, bounds.max);
+                positions = result.quantized;
+                state.positionsDecodeMatrix = result.decodeMatrix;
+                state.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, positions, positions.length, 3, gl.STATIC_DRAW);
+                memoryStats$1.positions += state.positionsBuf.numItems;
+                math.positions3ToAABB3(cfg.positions, this._aabb);
+                math.positions3ToAABB3(positions, tempAABB$1, state.positionsDecodeMatrix);
+                math.AABB3ToOBB3(tempAABB$1, this._obb);
+            }
+        }
+
+        if (cfg.colors) {
+            const colors = cfg.colors.constructor === Float32Array ? cfg.colors : new Float32Array(cfg.colors);
+            state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, colors, colors.length, 4, gl.STATIC_DRAW);
+            memoryStats$1.colors += state.colorsBuf.numItems;
+        }
+
+        if (cfg.uv) {
+            const bounds = geometryCompressionUtils.getUVBounds(cfg.uv);
+            const result = geometryCompressionUtils.compressUVs(cfg.uv, bounds.min, bounds.max);
+            const uv = result.quantized;
+            state.uvDecodeMatrix = result.decodeMatrix;
+            state.uvBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, uv, uv.length, 2, gl.STATIC_DRAW);
+            memoryStats$1.uvs += state.uvBuf.numItems;
+        }
+
+        if (cfg.normals) {
+            const normals = geometryCompressionUtils.compressNormals(cfg.normals);
+            let normalized = state.compressGeometry;
+            state.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, normals, normals.length, 3, gl.STATIC_DRAW, normalized);
+            memoryStats$1.normals += state.normalsBuf.numItems;
+        }
+
+        if (!bigIndicesSupported$3 && cfg.indices.constructor === Uint32Array) {
+            this.error("This WebGL implementation does not support Uint32Array");
+            return; // TODO: Recover?
+        }
+
+        {
+            const indices = (cfg.indices.constructor === Uint32Array || cfg.indices.constructor === Uint16Array) ? cfg.indices : new IndexArrayType$1(cfg.indices);
+            state.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, indices, indices.length, 1, gl.STATIC_DRAW);
+            memoryStats$1.indices += state.indicesBuf.numItems;
+            const edgeIndices = buildEdgeIndices(positions, indices, state.positionsDecodeMatrix, this._edgeThreshold);
+            this._edgeIndicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, edgeIndices, edgeIndices.length, 1, gl.STATIC_DRAW);
+
+            if (this._state.primitiveName === "triangles") {
+                this._numTriangles = (cfg.indices.length / 3);
+            }
+        }
+
+        this._buildHash();
+
+        memoryStats$1.meshes++;
+    }
+
+    _buildHash() {
+        const state = this._state;
+        const hash = ["/g"];
+        hash.push("/" + state.primitive + ";");
+        if (state.positionsBuf) {
+            hash.push("p");
+        }
+        if (state.colorsBuf) {
+            hash.push("c");
+        }
+        if (state.normalsBuf || state.autoVertexNormals) {
+            hash.push("n");
+        }
+        if (state.uvBuf) {
+            hash.push("u");
+        }
+        hash.push("cp"); // Always compressed
+        hash.push(";");
+        state.hash = hash.join("");
+    }
+
+    _getEdgeIndices() {
+        return this._edgeIndicesBuf;
+    }
+
+    /**
+     * Gets the primitive type.
+     *
+     * Possible types are: 'points', 'lines', 'line-loop', 'line-strip', 'triangles', 'triangle-strip' and 'triangle-fan'.
+     *
+     * @type {String}
+     */
+    get primitive() {
+        return this._state.primitiveName;
+    }
+
+    /**
+     * Gets the local-space axis-aligned 3D boundary (AABB).
+     *
+     * The AABB is represented by a six-element Float64Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
+     *
+     * @type {Number[]}
+     */
+    get aabb() {
+        return this._aabb;
+    }
+
+    /**
+     * Gets the local-space oriented 3D boundary (OBB).
+     *
+     * The OBB is represented by a 32-element Float64Array containing the eight vertices of the box, where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
+     *
+     * @type {Number[]}
+     */
+    get obb() {
+        return this._obb;
+    }
+
+    /**
+     * Approximate number of triangles in this VBOGeometry.
+     *
+     * Will be zero if {@link VBOGeometry#primitive} is not 'triangles', 'triangle-strip' or 'triangle-fan'.
+     *
+     * @type {Number}
+     */
+    get numTriangles() {
+        return this._numTriangles;
+    }
+
+    /** @private */
+    _getState() {
+        return this._state;
+    }
+
+    /**
+     * Destroys this component.
+     */
+    destroy() {
+        super.destroy();
+        const state = this._state;
+        if (state.indicesBuf) {
+            state.indicesBuf.destroy();
+        }
+        if (state.positionsBuf) {
+            state.positionsBuf.destroy();
+        }
+        if (state.normalsBuf) {
+            state.normalsBuf.destroy();
+        }
+        if (state.uvBuf) {
+            state.uvBuf.destroy();
+        }
+        if (state.colorsBuf) {
+            state.colorsBuf.destroy();
+        }
+        if (this._edgeIndicesBuf) {
+            this._edgeIndicesBuf.destroy();
+        }
+        state.destroy();
+        memoryStats$1.meshes--;
+    }
+}
+
+const modes = {"opaque": 0, "mask": 1, "blend": 2};
+const modeNames = ["opaque", "mask", "blend"];
+
+/**
+ * @desc Configures the normal rendered appearance of {@link Mesh}es using the physically-accurate *metallic-roughness* shading model.
+ *
+ * * Useful for conductive materials, such as metal, but also appropriate for insulators.
+ * * {@link SpecularMaterial} is best for insulators, such as wood, ceramics and plastic.
+ * * {@link PhongMaterial} is appropriate for non-realistic objects.
+ * * {@link LambertMaterial} is appropriate for high-detail models that need to render as efficiently as possible.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create a {@link Mesh} with {@link MetallicMaterial} and {@link ReadableGeometry} loaded from OBJ.
+ *
+ * Note that in this example we're providing separate {@link Texture} for the {@link MetallicMaterial#metallic} and {@link MetallicMaterial#roughness}
+ * channels, which allows us a little creative flexibility. Then, in the next example further down, we'll combine those channels
+ * within the same {@link Texture} for efficiency.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_MetallicMaterial)]
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {loadOBJGeometry} from "../src/scene/geometry/loaders/loadOBJGeometry.js";
+ * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
+ * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
+ * import {Texture} from "../src/scene/materials/Texture.js";
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas"
+ * });
+ *
+ * viewer.scene.camera.eye = [0.57, 1.37, 1.14];
+ * viewer.scene.camera.look = [0.04, 0.58, 0.00];
+ * viewer.scene.camera.up = [-0.22, 0.84, -0.48];
+ *
+ * loadOBJGeometry(viewer.scene, {
+ *      src: "models/obj/fireHydrant/FireHydrantMesh.obj"
+ * })
+ * .then(function (geometry) {
+ *
+ *      // Success
+ *
+ *      new Mesh(viewer.scene, {
+ *
+ *          geometry: new ReadableGeometry(viewer.scene, geometry),
+ *
+ *          material: new MetallicMaterial(viewer.scene, {
+ *
+ *              baseColor: [1, 1, 1],
+ *              metallic: 1.0,
+ *              roughness: 1.0,
+ *
+ *              baseColorMap: new Texture(viewer.scene, {
+ *                  src: "models/obj/fireHydrant/fire_hydrant_Base_Color.png",
+ *                  encoding: "sRGB"
+ *              }),
+ *              normalMap: new Texture(viewer.scene, {
+ *                  src: "models/obj/fireHydrant/fire_hydrant_Normal_OpenGL.png"
+ *              }),
+ *              roughnessMap: new Texture(viewer.scene, {
+ *                  src: "models/obj/fireHydrant/fire_hydrant_Roughness.png"
+ *              }),
+ *              metallicMap: new Texture(viewer.scene, {
+ *                  src: "models/obj/fireHydrant/fire_hydrant_Metallic.png"
+ *              }),
+ *              occlusionMap: new Texture(viewer.scene, {
+ *                  src: "models/obj/fireHydrant/fire_hydrant_Mixed_AO.png"
+ *              }),
+ *
+ *              specularF0: 0.7
+ *          })
+ *      });
+ * }, function () {
+ *          // Error
+ *      });
+ * ````
+ *
+ * ## Background Theory
+ *
+ * For an introduction to physically-based rendering (PBR) concepts, try these articles:
+ *
+ * * Joe Wilson's [Basic Theory of Physically-Based Rendering](https://www.marmoset.co/posts/basic-theory-of-physically-based-rendering/)
+ * * Jeff Russel's [Physically-based Rendering, and you can too!](https://www.marmoset.co/posts/physically-based-rendering-and-you-can-too/)
+ * * Sebastien Legarde's [Adapting a physically-based shading model](http://seblagarde.wordpress.com/tag/physically-based-rendering/)
+ *
+ * ## MetallicMaterial Properties
+ *
+ * The following table summarizes MetallicMaterial properties:
+ *
+ * | Property | Type | Range | Default Value | Space | Description |
+ * |:--------:|:----:|:-----:|:-------------:|:-----:|:-----------:|
+ * | {@link MetallicMaterial#baseColor} | Array | [0, 1] for all components | [1,1,1,1] | linear | The RGB components of the base color of the material. |
+ * | {@link MetallicMaterial#metallic} | Number | [0, 1] | 1 | linear | The metallic-ness the material (1 for metals, 0 for non-metals). |
+ * | {@link MetallicMaterial#roughness} | Number | [0, 1] | 1 | linear | The roughness of the material surface. |
+ * | {@link MetallicMaterial#specularF0} | Number | [0, 1] | 1 | linear | The specular Fresnel of the material surface. |
+ * | {@link MetallicMaterial#emissive} | Array | [0, 1] for all components | [0,0,0] | linear | The RGB components of the emissive color of the material. |
+ * | {@link MetallicMaterial#alpha} | Number | [0, 1] | 1 | linear | The transparency of the material surface (0 fully transparent, 1 fully opaque). |
+ * | {@link MetallicMaterial#baseColorMap} | {@link Texture} |  | null | sRGB | Texture RGB components multiplying by {@link MetallicMaterial#baseColor}. If the fourth component (A) is present, it multiplies by {@link MetallicMaterial#alpha}. |
+ * | {@link MetallicMaterial#metallicMap} | {@link Texture} |  | null | linear | Texture with first component multiplying by {@link MetallicMaterial#metallic}. |
+ * | {@link MetallicMaterial#roughnessMap} | {@link Texture} |  | null | linear | Texture with first component multiplying by {@link MetallicMaterial#roughness}. |
+ * | {@link MetallicMaterial#metallicRoughnessMap} | {@link Texture} |  | null | linear | Texture with first component multiplying by {@link MetallicMaterial#metallic} and second component multiplying by {@link MetallicMaterial#roughness}. |
+ * | {@link MetallicMaterial#emissiveMap} | {@link Texture} |  | null | linear | Texture with RGB components multiplying by {@link MetallicMaterial#emissive}. |
+ * | {@link MetallicMaterial#alphaMap} | {@link Texture} |  | null | linear | Texture with first component multiplying by {@link MetallicMaterial#alpha}. |
+ * | {@link MetallicMaterial#occlusionMap} | {@link Texture} |  | null | linear | Ambient occlusion texture multiplying by surface's reflected diffuse and specular light. |
+ * | {@link MetallicMaterial#normalMap} | {@link Texture} |  | null | linear | Tangent-space normal map. |
+ * | {@link MetallicMaterial#alphaMode} | String | "opaque", "blend", "mask" | "blend" |  | Alpha blend mode. |
+ * | {@link MetallicMaterial#alphaCutoff} | Number | [0..1] | 0.5 |  | Alpha cutoff value. |
+ * | {@link MetallicMaterial#backfaces} | Boolean |  | false |  | Whether to render {@link ReadableGeometry} backfaces. |
+ * | {@link MetallicMaterial#frontface} | String | "ccw", "cw" | "ccw" |  | The winding order for {@link ReadableGeometry} frontfaces - "cw" for clockwise, or "ccw" for counter-clockwise. |
+ *
+ *
+ * ## Combining Channels Within the Same Textures
+ *
+ * In the previous example we provided separate {@link Texture} for the {@link MetallicMaterial#metallic} and
+ * {@link MetallicMaterial#roughness} channels, but we can combine those channels into the same {@link Texture} to
+ * reduce download time, memory footprint and rendering time (and also for glTF compatibility).
+ *
+ * Here's the {@link Mesh} again, with our MetallicMaterial with those channels combined in the {@link MetallicMaterial#metallicRoughnessMap}
+ * {@link Texture}, where the *R* component multiplies by {@link MetallicMaterial#metallic} and *G* multiplies
+ * by {@link MetallicMaterial#roughness}.
+ *
+ * ````javascript
+ * new Mesh(viewer.scene, {
+ *
+ *     geometry: geometry,
+ *
+ *     material: new MetallicMaterial(viewer.scene, {
+ *
+ *         baseColor: [1, 1, 1],
+ *         metallic: 1.0,
+ *         roughness: 1.0,
+ *
+ *         baseColorMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_Base_Color.png",
+ *             encoding: "sRGB"
+ *         }),
+ *         normalMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_Normal_OpenGL.png"
+ *         }),
+ *         metallicRoughnessMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_MetallicRoughness.png"
+ *         }),
+ *         metallicRoughnessMap : new Texture(viewer.scene, {                  // <<----------- Added
+ *             src: "models/obj/fireHydrant/fire_hydrant_MetallicRoughness.png"  // R component multiplies by metallic
+ *         }),                                                                   // G component multiplies by roughness
+ *         occlusionMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_Mixed_AO.png"
+ *         }),
+ *
+ *         specularF0: 0.7
+ *  })
+ * ````
+ *
+ * Although not shown in this example, we can also texture {@link MetallicMaterial#alpha} with the *A* component of
+ * {@link MetallicMaterial#baseColorMap}'s {@link Texture}, if required.
+ *
+ * ## Alpha Blending
+ *
+ * Let's make our {@link Mesh} transparent.
+ *
+ * We'll update the {@link MetallicMaterial#alpha} and {@link MetallicMaterial#alphaMode}, causing it to blend 50%
+ * with the background:
+ *
+ * ````javascript
+ * hydrant.material.alpha = 0.5;
+ * hydrant.material.alphaMode = "blend";
+ * ````
+ *
+ * ## Alpha Masking
+ *
+ * Let's apply an alpha mask to our {@link Mesh}.
+ *
+ * We'll configure an {@link MetallicMaterial#alphaMap} to multiply by {@link MetallicMaterial#alpha},
+ * with {@link MetallicMaterial#alphaMode} and {@link MetallicMaterial#alphaCutoff} to treat it as an alpha mask:
+ *
+ * ````javascript
+ * new Mesh(viewer.scene, {
+ *
+ *     geometry: geometry,
+ *
+ *     material: new MetallicMaterial(viewer.scene, {
+ *
+ *         baseColor: [1, 1, 1],
+ *         metallic: 1.0,
+ *         roughness: 1.0,
+ *         alpha: 1.0,
+ *         alphaMode : "mask",  // <<---------------- Added
+ *         alphaCutoff : 0.2,   // <<---------------- Added
+ *
+ *         alphaMap : new Texture(viewer.scene{ // <<---------------- Added
+ *              src: "textures/alphaMap.jpg"
+ *         }),
+ *         baseColorMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_Base_Color.png",
+ *             encoding: "sRGB"
+ *         }),
+ *         normalMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_Normal_OpenGL.png"
+ *         }),
+ *         metallicRoughnessMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_MetallicRoughness.png"
+ *         }),
+ *         metallicRoughnessMap : new Texture(viewer.scene, {                  // <<----------- Added
+ *             src: "models/obj/fireHydrant/fire_hydrant_MetallicRoughness.png"  // R component multiplies by metallic
+ *         }),                                                                   // G component multiplies by roughness
+ *         occlusionMap: new Texture(viewer.scene, {
+ *             src: "models/obj/fireHydrant/fire_hydrant_Mixed_AO.png"
+ *         }),
+ *
+ *         specularF0: 0.7
+ *  })
+ * ````
+ */
+class MetallicMaterial extends Material {
+
+    /**
+     @private
+     */
+    get type() {
+        return "MetallicMaterial";
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this MetallicMaterial as well.
+     * @param {*} [cfg] The MetallicMaterial configuration.
+     * @param {String} [cfg.id] Optional ID, unique among all components in the parent {@link Scene}, generated automatically when omitted.
+     * @param {Number[]} [cfg.baseColor=[1,1,1]] RGB diffuse color of this MetallicMaterial. Multiplies by the RGB components of {@link MetallicMaterial#baseColorMap}.
+     * @param {Number} [cfg.metallic=1.0] Factor in the range ````[0..1]```` indicating how metallic this MetallicMaterial is.  ````1```` is metal, ````0```` is non-metal. Multiplies by the *R* component of {@link MetallicMaterial#metallicMap} and the *A* component of {@link MetallicMaterial#metallicRoughnessMap}.
+     * @param {Number} [cfg.roughness=1.0] Factor in the range ````[0..1]```` indicating the roughness of this MetallicMaterial.  ````0```` is fully smooth, ````1```` is fully rough. Multiplies by the *R* component of {@link MetallicMaterial#roughnessMap}.
+     * @param {Number} [cfg.specularF0=0.0] Factor in the range ````[0..1]```` indicating specular Fresnel.
+     * @param {Number[]} [cfg.emissive=[0,0,0]]  RGB emissive color of this MetallicMaterial. Multiplies by the RGB components of {@link MetallicMaterial#emissiveMap}.
+     * @param {Number} [cfg.alpha=1.0] Factor in the range ````[0..1]```` indicating the alpha of this MetallicMaterial.  Multiplies by the *R* component of {@link MetallicMaterial#alphaMap} and the *A* component,  if present, of {@link MetallicMaterial#baseColorMap}. The value of  {@link MetallicMaterial#alphaMode} indicates how alpha is interpreted when rendering.
+     * @param {Texture} [cfg.baseColorMap=undefined] RGBA {@link Texture} containing the diffuse color of this MetallicMaterial, with optional *A* component for alpha. The RGB components multiply by the {@link MetallicMaterial#baseColor} property, while the *A* component, if present, multiplies by the {@link MetallicMaterial#alpha} property.
+     * @param {Texture} [cfg.alphaMap=undefined] RGB {@link Texture} containing this MetallicMaterial's alpha in its *R* component. The *R* component multiplies by the {@link MetallicMaterial#alpha} property. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {Texture} [cfg.metallicMap=undefined] RGB {@link Texture} containing this MetallicMaterial's metallic factor in its *R* component. The *R* component multiplies by the {@link MetallicMaterial#metallic} property. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {Texture} [cfg.roughnessMap=undefined] RGB {@link Texture} containing this MetallicMaterial's roughness factor in its *R* component. The *R* component multiplies by the  {@link MetallicMaterial#roughness} property. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {Texture} [cfg.metallicRoughnessMap=undefined] RGB {@link Texture} containing this MetallicMaterial's metalness in its *R* component and roughness in its *G* component. Its *R* component multiplies by the {@link MetallicMaterial#metallic} property, while its *G* component multiplies by the {@link MetallicMaterial#roughness} property. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {Texture} [cfg.emissiveMap=undefined] RGB {@link Texture} containing the emissive color of this MetallicMaterial. Multiplies by the {@link MetallicMaterial#emissive} property. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {Texture} [cfg.occlusionMap=undefined] RGB ambient occlusion {@link Texture}. Within shaders, multiplies by the specular and diffuse light reflected by surfaces. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {Texture} [cfg.normalMap=undefined] RGB tangent-space normal {@link Texture}. Must be within the same {@link Scene} as this MetallicMaterial.
+     * @param {String} [cfg.alphaMode="opaque"] The alpha blend mode, which specifies how alpha is to be interpreted. Accepted values are "opaque", "blend" and "mask". See the {@link MetallicMaterial#alphaMode} property for more info.
+     * @param {Number} [cfg.alphaCutoff=0.5] The alpha cutoff value. See the {@link MetallicMaterial#alphaCutoff} property for more info.
+     * @param {Boolean} [cfg.backfaces=false] Whether to render {@link ReadableGeometry} backfaces.
+     * @param {Boolean} [cfg.frontface="ccw"] The winding order for {@link ReadableGeometry} front faces - ````"cw"```` for clockwise, or ````"ccw"```` for counter-clockwise.
+     * @param {Number} [cfg.lineWidth=1] Scalar that controls the width of lines for {@link ReadableGeometry} with {@link ReadableGeometry#primitive} set to "lines".
+     * @param {Number} [cfg.pointSize=1] Scalar that controls the size of points for {@link ReadableGeometry} with {@link ReadableGeometry#primitive} set to "points".
+     */
+    constructor(owner, cfg = {}) {
+
+        super(owner, cfg);
+
+        this._state = new RenderState({
+            type: "MetallicMaterial",
+            baseColor: math.vec4([1.0, 1.0, 1.0]),
+            emissive: math.vec4([0.0, 0.0, 0.0]),
+            metallic: null,
+            roughness: null,
+            specularF0: null,
+            alpha: null,
+            alphaMode: null, // "opaque"
+            alphaCutoff: null,
+            lineWidth: null,
+            pointSize: null,
+            backfaces: null,
+            frontface: null, // Boolean for speed; true == "ccw", false == "cw"
+            hash: null
+        });
+
+        this.baseColor = cfg.baseColor;
+        this.metallic = cfg.metallic;
+        this.roughness = cfg.roughness;
+        this.specularF0 = cfg.specularF0;
+        this.emissive = cfg.emissive;
+        this.alpha = cfg.alpha;
+
+        if (cfg.baseColorMap) {
+            this._baseColorMap = this._checkComponent("Texture", cfg.baseColorMap);
+        }
+        if (cfg.metallicMap) {
+            this._metallicMap = this._checkComponent("Texture", cfg.metallicMap);
+
+        }
+        if (cfg.roughnessMap) {
+            this._roughnessMap = this._checkComponent("Texture", cfg.roughnessMap);
+        }
+        if (cfg.metallicRoughnessMap) {
+            this._metallicRoughnessMap = this._checkComponent("Texture", cfg.metallicRoughnessMap);
+        }
+        if (cfg.emissiveMap) {
+            this._emissiveMap = this._checkComponent("Texture", cfg.emissiveMap);
+        }
+        if (cfg.occlusionMap) {
+            this._occlusionMap = this._checkComponent("Texture", cfg.occlusionMap);
+        }
+        if (cfg.alphaMap) {
+            this._alphaMap = this._checkComponent("Texture", cfg.alphaMap);
+        }
+        if (cfg.normalMap) {
+            this._normalMap = this._checkComponent("Texture", cfg.normalMap);
+        }
+
+        this.alphaMode = cfg.alphaMode;
+        this.alphaCutoff = cfg.alphaCutoff;
+        this.backfaces = cfg.backfaces;
+        this.frontface = cfg.frontface;
+        this.lineWidth = cfg.lineWidth;
+        this.pointSize = cfg.pointSize;
+
+        this._makeHash();
+    }
+
+    _makeHash() {
+        const state = this._state;
+        const hash = ["/met"];
+        if (this._baseColorMap) {
+            hash.push("/bm");
+            if (this._baseColorMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+            hash.push("/" + this._baseColorMap._state.encoding);
+        }
+        if (this._metallicMap) {
+            hash.push("/mm");
+            if (this._metallicMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._roughnessMap) {
+            hash.push("/rm");
+            if (this._roughnessMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._metallicRoughnessMap) {
+            hash.push("/mrm");
+            if (this._metallicRoughnessMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._emissiveMap) {
+            hash.push("/em");
+            if (this._emissiveMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._occlusionMap) {
+            hash.push("/ocm");
+            if (this._occlusionMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._alphaMap) {
+            hash.push("/am");
+            if (this._alphaMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._normalMap) {
+            hash.push("/nm");
+            if (this._normalMap._state.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        hash.push(";");
+        state.hash = hash.join("");
+    }
+
+
+    /**
+     * Sets the RGB diffuse color.
+     *
+     * Multiplies by the RGB components of {@link MetallicMaterial#baseColorMap}.
+     *
+     * Default value is ````[1.0, 1.0, 1.0]````.
+     * @type {Number[]}
+     */
+    set baseColor(value) {
+        let baseColor = this._state.baseColor;
+        if (!baseColor) {
+            baseColor = this._state.baseColor = new Float32Array(3);
+        } else if (value && baseColor[0] === value[0] && baseColor[1] === value[1] && baseColor[2] === value[2]) {
+            return;
+        }
+        if (value) {
+            baseColor[0] = value[0];
+            baseColor[1] = value[1];
+            baseColor[2] = value[2];
+        } else {
+            baseColor[0] = 1;
+            baseColor[1] = 1;
+            baseColor[2] = 1;
+        }
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the RGB diffuse color.
+     *
+     * Multiplies by the RGB components of {@link MetallicMaterial#baseColorMap}.
+     *
+     * Default value is ````[1.0, 1.0, 1.0]````.
+     * @type {Number[]}
+     */
+    get baseColor() {
+        return this._state.baseColor;
+    }
+
+
+    /**
+     * Gets the RGB {@link Texture} containing the diffuse color of this MetallicMaterial, with optional *A* component for alpha.
+     *
+     * The RGB components multiply by {@link MetallicMaterial#baseColor}, while the *A* component, if present, multiplies by {@link MetallicMaterial#alpha}.
+     *
+     * @type {Texture}
+     */
+    get baseColorMap() {
+        return this._baseColorMap;
+    }
+
+    /**
+     * Sets the metallic factor.
+     *
+     * This is in the range ````[0..1]```` and indicates how metallic this MetallicMaterial is.
+     *
+     * ````1```` is metal, ````0```` is non-metal.
+     *
+     * Multiplies by the *R* component of {@link MetallicMaterial#metallicMap} and the *A* component of {@link MetallicMaterial#metallicRoughnessMap}.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set metallic(value) {
+        value = (value !== undefined && value !== null) ? value : 1.0;
+        if (this._state.metallic === value) {
+            return;
+        }
+        this._state.metallic = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the metallic factor.
+     *
+     * @type {Number}
+     */
+    get metallic() {
+        return this._state.metallic;
+    }
+
+    /**
+     * Gets the RGB {@link Texture} containing this MetallicMaterial's metallic factor in its *R* component.
+     *
+     * The *R* component multiplies by {@link MetallicMaterial#metallic}.
+     *
+     * @type {Texture}
+     */
+    get metallicMap() {
+        return this._attached.metallicMap;
+    }
+
+    /**
+     *  Sets the roughness factor.
+     *
+     *  This factor is in the range ````[0..1]````, where ````0```` is fully smooth,````1```` is fully rough.
+     *
+     * Multiplies by the *R* component of {@link MetallicMaterial#roughnessMap}.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set roughness(value) {
+        value = (value !== undefined && value !== null) ? value : 1.0;
+        if (this._state.roughness === value) {
+            return;
+        }
+        this._state.roughness = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the roughness factor.
+     *
+     * @type {Number}
+     */
+    get roughness() {
+        return this._state.roughness;
+    }
+
+    /**
+     * Gets the RGB {@link Texture} containing this MetallicMaterial's roughness factor in its *R* component.
+     *
+     * The *R* component multiplies by {@link MetallicMaterial#roughness}.
+     *
+     * @type {Texture}
+     */
+    get roughnessMap() {
+        return this._attached.roughnessMap;
+    }
+
+    /**
+     * Gets the RGB {@link Texture} containing this MetallicMaterial's metalness in its *R* component and roughness in its *G* component.
+     *
+     * Its *B* component multiplies by the {@link MetallicMaterial#metallic} property, while its *G* component multiplies by the {@link MetallicMaterial#roughness} property.
+     *
+     * @type {Texture}
+     */
+    get metallicRoughnessMap() {
+        return this._attached.metallicRoughnessMap;
+    }
+
+    /**
+     * Sets the factor in the range [0..1] indicating specular Fresnel value.
+     *
+     * Default value is ````0.0````.
+     *
+     * @type {Number}
+     */
+    set specularF0(value) {
+        value = (value !== undefined && value !== null) ? value : 0.0;
+        if (this._state.specularF0 === value) {
+            return;
+        }
+        this._state.specularF0 = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the factor in the range [0..1] indicating specular Fresnel value.
+     *
+     * @type {Number}
+     */
+    get specularF0() {
+        return this._state.specularF0;
+    }
+
+    /**
+     * Sets the RGB emissive color.
+     *
+     * Multiplies by {@link MetallicMaterial#emissiveMap}.
+     *
+     * Default value is ````[0.0, 0.0, 0.0]````.
+     *
+     * @type {Number[]}
+     */
+    set emissive(value) {
+        let emissive = this._state.emissive;
+        if (!emissive) {
+            emissive = this._state.emissive = new Float32Array(3);
+        } else if (value && emissive[0] === value[0] && emissive[1] === value[1] && emissive[2] === value[2]) {
+            return;
+        }
+        if (value) {
+            emissive[0] = value[0];
+            emissive[1] = value[1];
+            emissive[2] = value[2];
+        } else {
+            emissive[0] = 0;
+            emissive[1] = 0;
+            emissive[2] = 0;
+        }
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the RGB emissive color.
+     *
+     * @type {Number[]}
+     */
+    get emissive() {
+        return this._state.emissive;
+    }
+
+    /**
+     * Gets the RGB emissive map.
+     *
+     * Multiplies by {@link MetallicMaterial#emissive}.
+     *
+     * @type {Texture}
+     */
+    get emissiveMap() {
+        return this._attached.emissiveMap;
+    }
+
+    /**
+     * Gets the RGB ambient occlusion map.
+     *
+     * Multiplies by the specular and diffuse light reflected by surfaces.
+     *
+     * @type {Texture}
+     */
+    get occlusionMap() {
+        return this._attached.occlusionMap;
+    }
+
+    /**
+     * Sets factor in the range ````[0..1]```` that indicates the alpha value.
+     *
+     * Multiplies by the *R* component of {@link MetallicMaterial#alphaMap} and the *A* component, if present, of {@link MetallicMaterial#baseColorMap}.
+     *
+     * The value of {@link MetallicMaterial#alphaMode} indicates how alpha is interpreted when rendering.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set alpha(value) {
+        value = (value !== undefined && value !== null) ? value : 1.0;
+        if (this._state.alpha === value) {
+            return;
+        }
+        this._state.alpha = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets factor in the range ````[0..1]```` that indicates the alpha value.
+     *
+     * @type {Number}
+     */
+    get alpha() {
+        return this._state.alpha;
+    }
+
+    /**
+     * Gets the RGB {@link Texture} containing this MetallicMaterial's alpha in its *R* component.
+     *
+     * The *R* component multiplies by the {@link MetallicMaterial#alpha} property.
+     *
+     * @type {Texture}
+     */
+    get alphaMap() {
+        return this._attached.alphaMap;
+    }
+
+    /**
+     * Gets the RGB tangent-space normal map {@link Texture}.
+     *
+     * @type {Texture}
+     */
+    get normalMap() {
+        return this._attached.normalMap;
+    }
+
+    /**
+     * Sets the alpha rendering mode.
+     *
+     * This specifies how alpha is interpreted. Alpha is the combined result of the {@link MetallicMaterial#alpha} and {@link MetallicMaterial#alphaMap} properties.
+     *
+     * Accepted values are:
+     *
+     * * "opaque" - The alpha value is ignored and the rendered output is fully opaque (default).
+     * * "mask" - The rendered output is either fully opaque or fully transparent depending on the alpha and {@link MetallicMaterial#alphaCutoff}.
+     * * "blend" - The alpha value is used to composite the source and destination areas. The rendered output is combined with the background using the normal painting operation (i.e. the Porter and Duff over operator).
+     *
+     * @type {String}
+     */
+    set alphaMode(alphaMode) {
+        alphaMode = alphaMode || "opaque";
+        let value = modes[alphaMode];
+        if (value === undefined) {
+            this.error("Unsupported value for 'alphaMode': " + alphaMode + " defaulting to 'opaque'");
+            value = "opaque";
+        }
+        if (this._state.alphaMode === value) {
+            return;
+        }
+        this._state.alphaMode = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the alpha rendering mode.
+     *
+     * @type {String}
+     */
+    get alphaMode() {
+        return modeNames[this._state.alphaMode];
+    }
+
+    /**
+     * Sets the alpha cutoff value.
+     *
+     * Specifies the cutoff threshold when {@link MetallicMaterial#alphaMode} equals "mask". If the alpha is greater than or equal to this value then it is rendered as fully opaque, otherwise, it is rendered as fully transparent. A value greater than 1.0 will render the entire
+     * material as fully transparent. This value is ignored for other modes.
+     *
+     * Alpha is the combined result of the {@link MetallicMaterial#alpha} and {@link MetallicMaterial#alphaMap} properties.
+     *
+     * Default value is ````0.5````.
+     *
+     * @type {Number}
+     */
+    set alphaCutoff(alphaCutoff) {
+        if (alphaCutoff === null || alphaCutoff === undefined) {
+            alphaCutoff = 0.5;
+        }
+        if (this._state.alphaCutoff === alphaCutoff) {
+            return;
+        }
+        this._state.alphaCutoff = alphaCutoff;
+    }
+
+    /**
+     * Gets the alpha cutoff value.
+     *
+     * @type {Number}
+     */
+    get alphaCutoff() {
+        return this._state.alphaCutoff;
+    }
+
+    /**
+     * Sets whether backfaces are visible on attached {@link Mesh}es.
+     *
+     * The backfaces will belong to {@link ReadableGeometry} compoents that are also attached to the {@link Mesh}es.
+     *
+     * Default is ````false````.
+     *
+     * @type {Boolean}
+     */
+    set backfaces(value) {
+        value = !!value;
+        if (this._state.backfaces === value) {
+            return;
+        }
+        this._state.backfaces = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets whether backfaces are visible on attached {@link Mesh}es.
+     *
+     * @type {Boolean}
+     */
+    get backfaces() {
+        return this._state.backfaces;
+    }
+
+    /**
+     * Sets the winding direction of front faces of {@link Geometry} of attached {@link Mesh}es.
+     *
+     * Default value is ````"ccw"````.
+     *
+     * @type {String}
+     */
+    set frontface(value) {
+        value = value !== "cw";
+        if (this._state.frontface === value) {
+            return;
+        }
+        this._state.frontface = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the winding direction of front faces of {@link Geometry} of attached {@link Mesh}es.
+*
+     * @type {String}
+     */
+    get frontface() {
+        return this._state.frontface ? "ccw" : "cw";
+    }
+
+    /**
+     * Sets the MetallicMaterial's line width.
+     *
+     * This is not supported by WebGL implementations based on DirectX [2019].
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set lineWidth(value) {
+        this._state.lineWidth = value || 1.0;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the MetallicMaterial's line width.
+     *
+     * @type {Number}
+     */
+    get lineWidth() {
+        return this._state.lineWidth;
+    }
+
+    /**
+     * Sets the MetallicMaterial's point size.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set pointSize(value) {
+        this._state.pointSize = value || 1.0;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the MetallicMaterial's point size.
+     *
+     * @type {Number}
+     */
+    get pointSize() {
+        return this._state.pointSize;
+    }
+
+    /**
+     * Destroys this MetallicMaterial.
+     */
+    destroy() {
+        super.destroy();
+        this._state.destroy();
+    }
+}
+
+const alphaModes$1 = {"opaque": 0, "mask": 1, "blend": 2};
+const alphaModeNames$1 = ["opaque", "mask", "blend"];
+
+/**
+ * @desc Configures the normal rendered appearance of {@link Mesh}es using the physically-accurate *specular-glossiness* shading model.
+ *
+ * * Useful for insulators, such as wood, ceramics and plastic.
+ * * {@link MetallicMaterial} is best for conductive materials, such as metal.
+ * * {@link PhongMaterial} is appropriate for non-realistic objects.
+ * * {@link LambertMaterial} is appropriate for high-detail models that need to render as efficiently as possible.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create a {@link Mesh} with a {@link buildTorusGeometry} and a SpecularMaterial.
+ *
+ * Note that in this example we're providing separate {@link Texture} for the {@link SpecularMaterial#specular} and {@link SpecularMaterial#glossiness}
+ * channels, which allows us a little creative flexibility. Then, in the next example further down, we'll combine those channels
+ * within the same {@link Texture} for efficiency.
+ *
+ * ````javascript
+ * import {Viewer} from "src/viewer/Viewer.js";
+ * import {Mesh} from "src/scene/mesh/Mesh.js";
+ * import {buildTorusGeometry} from "src/scene/geometry/builders/buildTorusGeometry.js";
+ * import {SpecularMaterial} from "src/scene/materials/SpecularMaterial.js";
+ * import {Texture} from "src/scene/materials/Texture.js";
+ *
+ * const viewer = new Viewer({ canvasId: "myCanvas" });
+ *
+ * const myMesh = new Mesh(viewer.scene,{
+ *
+ *      geometry: new ReadableGeometry(viewer.scene, buildTorusGeometry()),
+ *
+ *      material: new SpecularMaterial(viewer.scene,{
+ *
+ *          // Channels with default values, just to show them
+ *
+ *          diffuse: [1.0, 1.0, 1.0],
+ *          specular: [1.0, 1.0, 1.0],
+ *          glossiness: 1.0,
+ *          emissive: [0.0, 0.0, 0.0]
+ *          alpha: 1.0,
+ *
+ *          // Textures to multiply some of the channels
+ *
+ *          diffuseMap: new Texture(viewer.scene, { // RGB components multiply by diffuse
+ *              src: "textures/diffuse.jpg"
+ *          }),
+ *          specularMap: new Texture(viewer.scene, { // RGB component multiplies by specular
+ *              src: "textures/specular.jpg"
+ *          }),
+ *          glossinessMap: new Texture(viewer.scene, { // R component multiplies by glossiness
+ *              src: "textures/glossiness.jpg"
+ *          }),
+ *          normalMap: new Texture(viewer.scene, {
+ *              src: "textures/normalMap.jpg"
+ *          })
+ *      })
+ * });
+ * ````
+ *
+ * ## Combining Channels Within the Same Textures
+ *
+ *  In the previous example we provided separate {@link Texture} for the {@link SpecularMaterial#specular} and
+ * {@link SpecularMaterial#glossiness} channels, but we can combine those channels into the same {@link Texture} to reduce
+ * download time, memory footprint and rendering time (and also for glTF compatibility).
+ *
+ * Here's our SpecularMaterial again with those channels combined in the {@link SpecularMaterial#specularGlossinessMap}
+ * {@link Texture}, where the *RGB* component multiplies by {@link SpecularMaterial#specular} and *A* multiplies by {@link SpecularMaterial#glossiness}.
+ *
+ * ````javascript
+ * const myMesh = new Mesh(viewer.scene,{
+ *
+ *      geometry: new ReadableGeometry(viewer.scene, buildTorusGeometry()),
+ *
+ *      material: new SpecularMaterial(viewer.scene,{
+ *
+ *          // Channels with default values, just to show them
+ *
+ *          diffuse: [1.0, 1.0, 1.0],
+ *          specular: [1.0, 1.0, 1.0],
+ *          glossiness: 1.0,
+ *          emissive: [0.0, 0.0, 0.0]
+ *          alpha: 1.0,
+ *
+ *          diffuseMap: new Texture(viewer.scene, {
+ *              src: "textures/diffuse.jpg"
+ *          }),
+ *          specularGlossinessMap: new Texture(viewer.scene, { // RGB multiplies by specular, A by glossiness
+ *              src: "textures/specularGlossiness.jpg"
+ *          }),
+ *          normalMap: new Texture(viewer.scene, {
+ *              src: "textures/normalMap.jpg"
+ *          })
+ *      })
+ * });
+ * ````
+ *
+ * Although not shown in this example, we can also texture {@link SpecularMaterial#alpha} with
+ * the *A* component of {@link SpecularMaterial#diffuseMap}'s {@link Texture}, if required.
+ *
+ * ## Alpha Blending
+ *
+ * Let's make our {@link Mesh} transparent. We'll redefine {@link SpecularMaterial#alpha}
+ * and {@link SpecularMaterial#alphaMode}, causing it to blend 50% with the background:
+ *
+ * ````javascript
+ * const myMesh = new Mesh(viewer.scene,{
+ *
+ *      geometry: new ReadableGeometry(viewer.scene, buildTorusGeometry()),
+ *
+ *      material: new SpecularMaterial(viewer.scene,{
+ *
+ *          // Channels with default values, just to show them
+ *
+ *          diffuse: [1.0, 1.0, 1.0],
+ *          specular: [1.0, 1.0, 1.0],
+ *          glossiness: 1.0,
+ *          emissive: [0.0, 0.0, 0.0]
+ *          alpha: 0.5,         // <<----------- Changed
+ *          alphaMode: "blend", // <<----------- Added
+ *
+ *          diffuseMap: new Texture(viewer.scene, {
+ *              src: "textures/diffuse.jpg"
+ *          }),
+ *          specularGlossinessMap: new Texture(viewer.scene, { // RGB multiplies by specular, A by glossiness
+ *              src: "textures/specularGlossiness.jpg"
+ *          }),
+ *          normalMap: new Texture(viewer.scene, {
+ *              src: "textures/normalMap.jpg"
+ *          })
+ *      })
+ * });
+ * ````
+ *
+ * ## Alpha Masking
+ *
+ * Now let's make holes in our {@link Mesh}. We'll give its SpecularMaterial an {@link SpecularMaterial#alphaMap}
+ * and configure {@link SpecularMaterial#alpha}, {@link SpecularMaterial#alphaMode},
+ * and {@link SpecularMaterial#alphaCutoff} to treat it as an alpha mask:
+ *
+ * ````javascript
+ * const myMesh = new Mesh(viewer.scene,{
+ *
+ *     geometry: buildTorusGeometry(viewer.scene, ReadableGeometry, {}),
+ *
+ *      material: new SpecularMaterial(viewer.scene, {
+ *
+ *          // Channels with default values, just to show them
+ *
+ *          diffuse: [1.0, 1.0, 1.0],
+ *          specular: [1.0, 1.0, 1.0],
+ *          glossiness: 1.0,
+ *          emissive: [0.0, 0.0, 0.0]
+ *          alpha: 1.0,         // <<----------- Changed
+ *          alphaMode: "mask",  // <<----------- Changed
+ *          alphaCutoff: 0.2,   // <<----------- Added
+ *
+ *          alphaMap: new Texture(viewer.scene, { // <<---------- Added
+ *              src: "textures/diffuse/crossGridColorMap.jpg"
+ *          }),
+ *          diffuseMap: new Texture(viewer.scene, {
+ *              src: "textures/diffuse.jpg"
+ *          }),
+ *          specularGlossinessMap: new Texture(viewer.scene, { // RGB multiplies by specular, A by glossiness
+ *              src: "textures/specularGlossiness.jpg"
+ *          }),
+ *          normalMap: new Texture(viewer.scene, {
+ *              src: "textures/normalMap.jpg"
+ *          })
+ *      })
+ * });
+ * ````
+ *
+ * ## Background Theory
+ *
+ * For an introduction to physically-based rendering (PBR) concepts, try these articles:
+ *
+ * * Joe Wilson's [Basic Theory of Physically-Based Rendering](https://www.marmoset.co/posts/basic-theory-of-physically-based-rendering/)
+ * * Jeff Russel's [Physically-based Rendering, and you can too!](https://www.marmoset.co/posts/physically-based-rendering-and-you-can-too/)
+ * * Sebastien Legarde's [Adapting a physically-based shading model](http://seblagarde.wordpress.com/tag/physically-based-rendering/)
+ *
+ * ## SpecularMaterial Properties
+ *
+ * The following table summarizes SpecularMaterial properties:
+ *
+ * | Property | Type | Range | Default Value | Space | Description |
+ * |:--------:|:----:|:-----:|:-------------:|:-----:|:-----------:|
+ * | {@link SpecularMaterial#diffuse} | Array | [0, 1] for all components | [1,1,1,1] | linear | The RGB components of the diffuse color of the material. |
+ * | {@link SpecularMaterial#specular} | Array | [0, 1] for all components | [1,1,1,1] | linear | The RGB components of the specular color of the material. |
+ * | {@link SpecularMaterial#glossiness} | Number | [0, 1] | 1 | linear | The glossiness the material. |
+ * | {@link SpecularMaterial#specularF0} | Number | [0, 1] | 1 | linear | The specularF0 of the material surface. |
+ * | {@link SpecularMaterial#emissive} | Array | [0, 1] for all components | [0,0,0] | linear | The RGB components of the emissive color of the material. |
+ * | {@link SpecularMaterial#alpha} | Number | [0, 1] | 1 | linear | The transparency of the material surface (0 fully transparent, 1 fully opaque). |
+ * | {@link SpecularMaterial#diffuseMap} | {@link Texture} |  | null | sRGB | Texture RGB components multiplying by {@link SpecularMaterial#diffuse}. If the fourth component (A) is present, it multiplies by {@link SpecularMaterial#alpha}. |
+ * | {@link SpecularMaterial#specularMap} | {@link Texture} |  | null | sRGB | Texture RGB components multiplying by {@link SpecularMaterial#specular}. If the fourth component (A) is present, it multiplies by {@link SpecularMaterial#alpha}. |
+ * | {@link SpecularMaterial#glossinessMap} | {@link Texture} |  | null | linear | Texture with first component multiplying by {@link SpecularMaterial#glossiness}. |
+ * | {@link SpecularMaterial#specularGlossinessMap} | {@link Texture} |  | null | linear | Texture with first three components multiplying by {@link SpecularMaterial#specular} and fourth component multiplying by {@link SpecularMaterial#glossiness}. |
+ * | {@link SpecularMaterial#emissiveMap} | {@link Texture} |  | null | linear | Texture with RGB components multiplying by {@link SpecularMaterial#emissive}. |
+ * | {@link SpecularMaterial#alphaMap} | {@link Texture} |  | null | linear | Texture with first component multiplying by {@link SpecularMaterial#alpha}. |
+ * | {@link SpecularMaterial#occlusionMap} | {@link Texture} |  | null | linear | Ambient occlusion texture multiplying by surface's reflected diffuse and specular light. |
+ * | {@link SpecularMaterial#normalMap} | {@link Texture} |  | null | linear | Tangent-space normal map. |
+ * | {@link SpecularMaterial#alphaMode} | String | "opaque", "blend", "mask" | "blend" |  | Alpha blend mode. |
+ * | {@link SpecularMaterial#alphaCutoff} | Number | [0..1] | 0.5 |  | Alpha cutoff value. |
+ * | {@link SpecularMaterial#backfaces} | Boolean |  | false |  | Whether to render {@link Geometry} backfaces. |
+ * | {@link SpecularMaterial#frontface} | String | "ccw", "cw" | "ccw" |  | The winding order for {@link Geometry} frontfaces - "cw" for clockwise, or "ccw" for counter-clockwise. |
+ *
+ */
+class SpecularMaterial extends Material {
+
+    /**
+     @private
+     */
+    get type() {
+        return "SpecularMaterial";
+    }
+
+    /**
+     *
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] The SpecularMaterial configuration
+     * @param {String} [cfg.id] Optional ID, unique among all components in the parent {@link Scene}, generated automatically when omitted.
+     * @param {Number[]} [cfg.diffuse=[1,1,1]] RGB diffuse color of this SpecularMaterial. Multiplies by the RGB components of {@link SpecularMaterial#diffuseMap}.
+     * @param {Texture} [cfg.diffuseMap=undefined] RGBA {@link Texture} containing the diffuse color of this SpecularMaterial, with optional *A* component for alpha. The RGB components multiply by {@link SpecularMaterial#diffuse}, while the *A* component, if present, multiplies by {@link SpecularMaterial#alpha}.
+     * @param {Number} [cfg.specular=[1,1,1]] RGB specular color of this SpecularMaterial. Multiplies by the {@link SpecularMaterial#specularMap} and the *RGB* components of {@link SpecularMaterial#specularGlossinessMap}.
+     * @param {Texture} [cfg.specularMap=undefined] RGB texture containing the specular color of this SpecularMaterial. Multiplies by the {@link SpecularMaterial#specular} property. Must be within the same {@link Scene} as this SpecularMaterial.
+     * @param {Number} [cfg.glossiness=1.0] Factor in the range [0..1] indicating how glossy this SpecularMaterial is. 0 is no glossiness, 1 is full glossiness. Multiplies by the *R* component of {@link SpecularMaterial#glossinessMap} and the *A* component of {@link SpecularMaterial#specularGlossinessMap}.
+     * @param {Texture} [cfg.specularGlossinessMap=undefined] RGBA {@link Texture} containing this SpecularMaterial's specular color in its *RGB* component and glossiness in its *A* component. Its *RGB* components multiply by {@link SpecularMaterial#specular}, while its *A* component multiplies by {@link SpecularMaterial#glossiness}. Must be within the same {@link Scene} as this SpecularMaterial.
+     * @param {Number} [cfg.specularF0=0.0] Factor in the range 0..1 indicating how reflective this SpecularMaterial is.
+     * @param {Number[]} [cfg.emissive=[0,0,0]]  RGB emissive color of this SpecularMaterial. Multiplies by the RGB components of {@link SpecularMaterial#emissiveMap}.
+     * @param {Texture} [cfg.emissiveMap=undefined] RGB {@link Texture} containing the emissive color of this SpecularMaterial. Multiplies by the {@link SpecularMaterial#emissive} property. Must be within the same {@link Scene} as this SpecularMaterial.
+     * @param {Texture} [cfg.occlusionMap=undefined] RGB ambient occlusion {@link Texture}. Within shaders, multiplies by the specular and diffuse light reflected by surfaces. Must be within the same {@link Scene} as this SpecularMaterial.
+     * @param {Texture} [cfg.normalMap=undefined] {Texture} RGB tangent-space normal {@link Texture}. Must be within the same {@link Scene} as this SpecularMaterial.
+     * @param {Number} [cfg.alpha=1.0] Factor in the range 0..1 indicating how transparent this SpecularMaterial is. A value of 0.0 indicates fully transparent, 1.0 is fully opaque. Multiplies by the *R* component of {@link SpecularMaterial#alphaMap} and the *A* component, if present, of {@link SpecularMaterial#diffuseMap}.
+     * @param {Texture} [cfg.alphaMap=undefined] RGB {@link Texture} containing this SpecularMaterial's alpha in its *R* component. The *R* component multiplies by the {@link SpecularMaterial#alpha} property. Must be within the same {@link Scene} as this SpecularMaterial.
+     * @param {String} [cfg.alphaMode="opaque"] The alpha blend mode - accepted values are "opaque", "blend" and "mask". See the {@link SpecularMaterial#alphaMode} property for more info.
+     * @param {Number} [cfg.alphaCutoff=0.5] The alpha cutoff value. See the {@link SpecularMaterial#alphaCutoff} property for more info.
+     * @param {Boolean} [cfg.backfaces=false] Whether to render {@link Geometry} backfaces.
+     * @param {Boolean} [cfg.frontface="ccw"] The winding order for {@link Geometry} front faces - "cw" for clockwise, or "ccw" for counter-clockwise.
+     * @param {Number} [cfg.lineWidth=1] Scalar that controls the width of {@link Geometry lines.
+     * @param {Number} [cfg.pointSize=1] Scalar that controls the size of {@link Geometry} points.
+     */
+    constructor(owner, cfg = {}) {
+
+        super(owner, cfg);
+
+        this._state = new RenderState({
+            type: "SpecularMaterial",
+            diffuse: math.vec3([1.0, 1.0, 1.0]),
+            emissive: math.vec3([0.0, 0.0, 0.0]),
+            specular: math.vec3([1.0, 1.0, 1.0]),
+            glossiness: null,
+            specularF0: null,
+            alpha: null,
+            alphaMode: null,
+            alphaCutoff: null,
+            lineWidth: null,
+            pointSize: null,
+            backfaces: null,
+            frontface: null, // Boolean for speed; true == "ccw", false == "cw"
+            hash: null
+        });
+
+        this.diffuse = cfg.diffuse;
+        this.specular = cfg.specular;
+        this.glossiness = cfg.glossiness;
+        this.specularF0 = cfg.specularF0;
+        this.emissive = cfg.emissive;
+        this.alpha = cfg.alpha;
+
+        if (cfg.diffuseMap) {
+            this._diffuseMap = this._checkComponent("Texture", cfg.diffuseMap);
+        }
+        if (cfg.emissiveMap) {
+            this._emissiveMap = this._checkComponent("Texture", cfg.emissiveMap);
+        }
+        if (cfg.specularMap) {
+            this._specularMap = this._checkComponent("Texture", cfg.specularMap);
+        }
+        if (cfg.glossinessMap) {
+            this._glossinessMap = this._checkComponent("Texture", cfg.glossinessMap);
+        }
+        if (cfg.specularGlossinessMap) {
+            this._specularGlossinessMap = this._checkComponent("Texture", cfg.specularGlossinessMap);
+        }
+        if (cfg.occlusionMap) {
+            this._occlusionMap = this._checkComponent("Texture", cfg.occlusionMap);
+        }
+        if (cfg.alphaMap) {
+            this._alphaMap = this._checkComponent("Texture", cfg.alphaMap);
+        }
+        if (cfg.normalMap) {
+            this._normalMap = this._checkComponent("Texture", cfg.normalMap);
+        }
+
+        this.alphaMode = cfg.alphaMode;
+        this.alphaCutoff = cfg.alphaCutoff;
+        this.backfaces = cfg.backfaces;
+        this.frontface = cfg.frontface;
+
+        this.lineWidth = cfg.lineWidth;
+        this.pointSize = cfg.pointSize;
+
+        this._makeHash();
+    }
+
+    _makeHash() {
+        const state = this._state;
+        const hash = ["/spe"];
+        if (this._diffuseMap) {
+            hash.push("/dm");
+            if (this._diffuseMap.hasMatrix) {
+                hash.push("/mat");
+            }
+            hash.push("/" + this._diffuseMap.encoding);
+        }
+        if (this._emissiveMap) {
+            hash.push("/em");
+            if (this._emissiveMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._glossinessMap) {
+            hash.push("/gm");
+            if (this._glossinessMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._specularMap) {
+            hash.push("/sm");
+            if (this._specularMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._specularGlossinessMap) {
+            hash.push("/sgm");
+            if (this._specularGlossinessMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._occlusionMap) {
+            hash.push("/ocm");
+            if (this._occlusionMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._normalMap) {
+            hash.push("/nm");
+            if (this._normalMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        if (this._alphaMap) {
+            hash.push("/opm");
+            if (this._alphaMap.hasMatrix) {
+                hash.push("/mat");
+            }
+        }
+        hash.push(";");
+        state.hash = hash.join("");
+    }
+
+    /**
+     * Sets the RGB diffuse color of this SpecularMaterial.
+     *
+     * Multiplies by the *RGB* components of {@link SpecularMaterial#diffuseMap}.
+     *
+     * Default value is ````[1.0, 1.0, 1.0]````.
+     * @type {Number[]}
+     */
+    set diffuse(value) {
+        let diffuse = this._state.diffuse;
+        if (!diffuse) {
+            diffuse = this._state.diffuse = new Float32Array(3);
+        } else if (value && diffuse[0] === value[0] && diffuse[1] === value[1] && diffuse[2] === value[2]) {
+            return;
+        }
+        if (value) {
+            diffuse[0] = value[0];
+            diffuse[1] = value[1];
+            diffuse[2] = value[2];
+        } else {
+            diffuse[0] = 1;
+            diffuse[1] = 1;
+            diffuse[2] = 1;
+        }
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the RGB diffuse color of this SpecularMaterial.
+     *
+     * @type {Number[]}
+     */
+    get diffuse() {
+        return this._state.diffuse;
+    }
+
+    /**
+     * Gets the RGB {@link Texture} containing the diffuse color of this SpecularMaterial, with optional *A* component for alpha.
+     *
+     * The *RGB* components multipliues by the {@link SpecularMaterial#diffuse} property, while the *A* component, if present, multiplies by the {@link SpecularMaterial#alpha} property.
+     *
+     * @type {Texture}
+     */
+    get diffuseMap() {
+        return this._diffuseMap;
+    }
+
+    /**
+     * Sets the RGB specular color of this SpecularMaterial.
+     *
+     * Multiplies by {@link SpecularMaterial#specularMap} and the *A* component of {@link SpecularMaterial#specularGlossinessMap}.
+     *
+     * Default value is ````[1.0, 1.0, 1.0]````.
+     *
+     * @type {Number[]}
+     */
+    set specular(value) {
+        let specular = this._state.specular;
+        if (!specular) {
+            specular = this._state.specular = new Float32Array(3);
+        } else if (value && specular[0] === value[0] && specular[1] === value[1] && specular[2] === value[2]) {
+            return;
+        }
+        if (value) {
+            specular[0] = value[0];
+            specular[1] = value[1];
+            specular[2] = value[2];
+        } else {
+            specular[0] = 1;
+            specular[1] = 1;
+            specular[2] = 1;
+        }
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the RGB specular color of this SpecularMaterial.
+     *
+     * @type {Number[]}
+     */
+    get specular() {
+        return this._state.specular;
+    }
+
+    /**
+     * Gets the RGB texture containing the specular color of this SpecularMaterial.
+     *
+     * Multiplies by {@link SpecularMaterial#specular}.
+     *
+     * @type {Texture}
+     */
+    get specularMap() {
+        return this._specularMap;
+    }
+
+    /**
+     * Gets the RGBA texture containing this SpecularMaterial's specular color in its *RGB* components and glossiness in its *A* component.
+     *
+     * The *RGB* components multiplies {@link SpecularMaterial#specular}, while the *A* component multiplies by {@link SpecularMaterial#glossiness}.
+     *
+     * @type {Texture}
+     */
+    get specularGlossinessMap() {
+        return this._specularGlossinessMap;
+    }
+
+    /**
+     * Sets the Factor in the range [0..1] indicating how glossy this SpecularMaterial is.
+     *
+     * ````0```` is no glossiness, ````1```` is full glossiness.
+     *
+     * Multiplies by the *R* component of {@link SpecularMaterial#glossinessMap} and the *A* component of {@link SpecularMaterial#specularGlossinessMap}.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set glossiness(value) {
+        value = (value !== undefined && value !== null) ? value : 1.0;
+        if (this._state.glossiness === value) {
+            return;
+        }
+        this._state.glossiness = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the Factor in the range ````[0..1]```` indicating how glossy this SpecularMaterial is.
+
+     * @type {Number}
+     */
+    get glossiness() {
+        return this._state.glossiness;
+    }
+
+    /**
+     * Gets the RGB texture containing this SpecularMaterial's glossiness in its *R* component.
+     *
+     * The *R* component multiplies by {@link SpecularMaterial#glossiness}.
+     ** @type {Texture}
+     */
+    get glossinessMap() {
+        return this._glossinessMap;
+    }
+
+    /**
+     * Sets the factor in the range ````[0..1]```` indicating amount of specular Fresnel.
+     *
+     * Default value is ````0.0````.
+     *
+     * @type {Number}
+     */
+    set specularF0(value) {
+        value = (value !== undefined && value !== null) ? value : 0.0;
+        if (this._state.specularF0 === value) {
+            return;
+        }
+        this._state.specularF0 = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the factor in the range ````[0..1]```` indicating amount of specular Fresnel.
+     *
+     * @type {Number}
+     */
+    get specularF0() {
+        return this._state.specularF0;
+    }
+
+    /**
+     * Sets the RGB emissive color of this SpecularMaterial.
+     *
+     * Multiplies by {@link SpecularMaterial#emissiveMap}.
+
+     * Default value is ````[0.0, 0.0, 0.0]````.
+     *
+     * @type {Number[]}
+     */
+    set emissive(value) {
+        let emissive = this._state.emissive;
+        if (!emissive) {
+            emissive = this._state.emissive = new Float32Array(3);
+        } else if (value && emissive[0] === value[0] && emissive[1] === value[1] && emissive[2] === value[2]) {
+            return;
+        }
+        if (value) {
+            emissive[0] = value[0];
+            emissive[1] = value[1];
+            emissive[2] = value[2];
+        } else {
+            emissive[0] = 0;
+            emissive[1] = 0;
+            emissive[2] = 0;
+        }
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the RGB emissive color of this SpecularMaterial.
+     *
+     * @type {Number[]}
+     */
+    get emissive() {
+        return this._state.emissive;
+    }
+
+    /**
+     * Gets the RGB texture containing the emissive color of this SpecularMaterial.
+     *
+     * Multiplies by {@link SpecularMaterial#emissive}.
+     *
+     * @type {Texture}
+     */
+    get emissiveMap() {
+        return this._emissiveMap;
+    }
+
+    /**
+     * Sets the factor in the range [0..1] indicating how transparent this SpecularMaterial is.
+     *
+     * A value of ````0.0```` is fully transparent, while ````1.0```` is fully opaque.
+     *
+     * Multiplies by the *R* component of {@link SpecularMaterial#alphaMap} and the *A* component, if present, of {@link SpecularMaterial#diffuseMap}.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set alpha(value) {
+        value = (value !== undefined && value !== null) ? value : 1.0;
+        if (this._state.alpha === value) {
+            return;
+        }
+        this._state.alpha = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the factor in the range [0..1] indicating how transparent this SpecularMaterial is.
+     *
+     * @type {Number}
+     */
+    get alpha() {
+        return this._state.alpha;
+    }
+
+    /**
+     * Gets the RGB {@link Texture} with alpha in its *R* component.
+     *
+     * The *R* component multiplies by the {@link SpecularMaterial#alpha} property.
+     *
+     * @type {Texture}
+     */
+    get alphaMap() {
+        return this._alphaMap;
+    }
+
+    /**
+     * Gets the RGB tangent-space normal {@link Texture} attached to this SpecularMaterial.
+     *
+     * @type {Texture}
+     */
+    get normalMap() {
+        return this._normalMap;
+    }
+
+    /**
+     * Gets the RGB ambient occlusion {@link Texture} attached to this SpecularMaterial.
+     *
+     * Multiplies by the specular and diffuse light reflected by surfaces.
+     *
+     * @type {Texture}
+     */
+    get occlusionMap() {
+        return this._occlusionMap;
+    }
+
+    /**
+     * Sets the alpha rendering mode.
+     *
+     * This governs how alpha is treated. Alpha is the combined result of the {@link SpecularMaterial#alpha} and {@link SpecularMaterial#alphaMap} properties.
+     *
+     * Accepted values are:
+     *
+     * * "opaque" - The alpha value is ignored and the rendered output is fully opaque (default).
+     * * "mask" - The rendered output is either fully opaque or fully transparent depending on the alpha value and the specified alpha cutoff value.
+     * * "blend" - The alpha value is used to composite the source and destination areas. The rendered output is combined with the background using the normal painting operation (i.e. the Porter and Duff over operator)
+     *
+     * @type {String}
+     */
+    set alphaMode(alphaMode) {
+        alphaMode = alphaMode || "opaque";
+        let value = alphaModes$1[alphaMode];
+        if (value === undefined) {
+            this.error("Unsupported value for 'alphaMode': " + alphaMode + " defaulting to 'opaque'");
+            value = "opaque";
+        }
+        if (this._state.alphaMode === value) {
+            return;
+        }
+        this._state.alphaMode = value;
+        this.glRedraw();
+    }
+
+    get alphaMode() {
+        return alphaModeNames$1[this._state.alphaMode];
+    }
+
+    /**
+     * Sets the alpha cutoff value.
+     *
+     * Specifies the cutoff threshold when {@link SpecularMaterial#alphaMode} equals "mask". If the alpha is greater than or equal to this value then it is rendered as fully opaque, otherwise, it is rendered as fully transparent. A value greater than 1.0 will render the entire material as fully transparent. This value is ignored for other modes.
+     *
+     * Alpha is the combined result of the {@link SpecularMaterial#alpha} and {@link SpecularMaterial#alphaMap} properties.
+     *
+     * Default value is ````0.5````.
+     *
+     * @type {Number}
+     */
+    set alphaCutoff(alphaCutoff) {
+        if (alphaCutoff === null || alphaCutoff === undefined) {
+            alphaCutoff = 0.5;
+        }
+        if (this._state.alphaCutoff === alphaCutoff) {
+            return;
+        }
+        this._state.alphaCutoff = alphaCutoff;
+    }
+
+    /**
+     * Gets the alpha cutoff value.
+
+     * @type {Number}
+     */
+    get alphaCutoff() {
+        return this._state.alphaCutoff;
+    }
+
+    /**
+     * Sets whether backfaces are visible on attached {@link Mesh}es.
+     *
+     * The backfaces will belong to {@link ReadableGeometry} compoents that are also attached to the {@link Mesh}es.
+     *
+     * Default is ````false````.
+     *
+     * @type {Boolean}
+     */
+    set backfaces(value) {
+        value = !!value;
+        if (this._state.backfaces === value) {
+            return;
+        }
+        this._state.backfaces = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets whether backfaces are visible on attached {@link Mesh}es.
+     *
+     * @type {Boolean}
+     */
+    get backfaces() {
+        return this._state.backfaces;
+    }
+
+    /**
+     * Sets the winding direction of front faces of {@link Geometry} of attached {@link Mesh}es.
+     *
+     * Default value is ````"ccw"````.
+     *
+     * @type {String}
+     */
+    set frontface(value) {
+        value = value !== "cw";
+        if (this._state.frontface === value) {
+            return;
+        }
+        this._state.frontface = value;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the winding direction of front faces of {@link Geometry} of attached {@link Mesh}es.
+     *
+     * @type {String}
+     */
+    get frontface() {
+        return this._state.frontface ? "ccw" : "cw";
+    }
+
+    /**
+     * Sets the SpecularMaterial's line width.
+     *
+     * This is not supported by WebGL implementations based on DirectX [2019].
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set lineWidth(value) {
+        this._state.lineWidth = value || 1.0;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets the SpecularMaterial's line width.
+     *
+     * @type {Number}
+     */
+    get lineWidth() {
+        return this._state.lineWidth;
+    }
+
+    /**
+     * Sets the SpecularMaterial's point size.
+     *
+     * Default value is ````1.0````.
+     *
+     * @type {Number}
+     */
+    set pointSize(value) {
+        this._state.pointSize = value || 1;
+        this.glRedraw();
+    }
+
+    /**
+     * Sets the SpecularMaterial's point size.
+     *
+     * @type {Number}
+     */
+    get pointSize() {
+        return this._state.pointSize;
+    }
+
+    /**
+     * Destroys this SpecularMaterial.
+     */
+    destroy() {
+        super.destroy();
+        this._state.destroy();
+    }
+}
+
+/**
+ * @author xeolabs / https://github.com/xeolabs
+ */
+
+/**
+ * @desc Human-readable WebGL enumeration mappings.
+ * @private
+ */
+const webglEnums = {
+    funcAdd: "FUNC_ADD",
+    funcSubtract: "FUNC_SUBTRACT",
+    funcReverseSubtract: "FUNC_REVERSE_SUBTRACT",
+    zero: "ZERO",
+    one: "ONE",
+    srcColor: "SRC_COLOR",
+    oneMinusSrcColor: "ONE_MINUS_SRC_COLOR",
+    dstColor: "DST_COLOR",
+    oneMinusDstColor: "ONE_MINUS_DST_COLOR",
+    srcAlpha: "SRC_ALPHA",
+    oneMinusSrcAlpha: "ONE_MINUS_SRC_ALPHA",
+    dstAlpha: "DST_ALPHA",
+    oneMinusDstAlpha: "ONE_MINUS_DST_ALPHA",
+    contantColor: "CONSTANT_COLOR",
+    oneMinusConstantColor: "ONE_MINUS_CONSTANT_COLOR",
+    constantAlpha: "CONSTANT_ALPHA",
+    oneMinusConstantAlpha: "ONE_MINUS_CONSTANT_ALPHA",
+    srcAlphaSaturate: "SRC_ALPHA_SATURATE",
+    front: "FRONT",
+    back: "BACK",
+    frontAndBack: "FRONT_AND_BACK",
+    never: "NEVER",
+    less: "LESS",
+    equal: "EQUAL",
+    lequal: "LEQUAL",
+    greater: "GREATER",
+    notequal: "NOTEQUAL",
+    gequal: "GEQUAL",
+    always: "ALWAYS",
+    cw: "CW",
+    ccw: "CCW",
+    linear: "LINEAR",
+    nearest: "NEAREST",
+    linearMipmapNearest: "LINEAR_MIPMAP_NEAREST",
+    nearestMipmapNearest: "NEAREST_MIPMAP_NEAREST",
+    nearestMipmapLinear: "NEAREST_MIPMAP_LINEAR",
+    linearMipmapLinear: "LINEAR_MIPMAP_LINEAR",
+    repeat: "REPEAT",
+    clampToEdge: "CLAMP_TO_EDGE",
+    mirroredRepeat: "MIRRORED_REPEAT",
+    alpha: "ALPHA",
+    rgb: "RGB",
+    rgba: "RGBA",
+    luminance: "LUMINANCE",
+    luminanceAlpha: "LUMINANCE_ALPHA",
+    textureBinding2D: "TEXTURE_BINDING_2D",
+    textureBindingCubeMap: "TEXTURE_BINDING_CUBE_MAP",
+    compareRToTexture: "COMPARE_R_TO_TEXTURE", // Hardware Shadowing Z-depth,
+    unsignedByte: "UNSIGNED_BYTE"
+};
+
+function getGLEnum(gl, name, defaultVal) {
+    if (name === undefined) {
+        return defaultVal;
+    }
+    const glName = webglEnums[name];
+    if (glName === undefined) {
+        return defaultVal;
+    }
+    return gl[glName];
+}
+
+const color = new Uint8Array([0, 0, 0, 1]);
+
+/**
+ * @desc A low-level component that represents a 2D WebGL texture.
+ *
+ * @private
+ */
+class Texture2D {
+
+    constructor(gl, target) {
+        this.gl = gl;
+        this.target = target || gl.TEXTURE_2D;
+        this.texture = gl.createTexture();
+        this.setPreloadColor([0, 0, 0, 0]); // Prevents "there is no texture bound to the unit 0" error
+        this.allocated = true;
+    }
+
+    setPreloadColor(value) {
+
+        if (!value) {
+            color[0] = 0;
+            color[1] = 0;
+            color[2] = 0;
+            color[3] = 255;
+        } else {
+            color[0] = Math.floor(value[0] * 255);
+            color[1] = Math.floor(value[1] * 255);
+            color[2] = Math.floor(value[2] * 255);
+            color[3] = Math.floor((value[3] !== undefined ? value[3] : 1) * 255);
+        }
+
+        const gl = this.gl;
+
+        gl.bindTexture(this.target, this.texture);
+        gl.texParameteri(this.target, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(this.target, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+        if (this.target === gl.TEXTURE_CUBE_MAP) {
+
+            const faces = [
+                gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+                gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+                gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+                gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+                gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+            ];
+
+            for (let i = 0, len = faces.length; i < len; i++) {
+                gl.texImage2D(faces[i], 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, color);
+            }
+
+        } else {
+            gl.texImage2D(this.target, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, color);
+        }
+
+        gl.bindTexture(this.target, null);
+    }
+
+    setTarget(target) {
+        this.target = target || this.gl.TEXTURE_2D;
+    }
+
+    setImage(image, props) {
+        const gl = this.gl;
+        gl.bindTexture(this.target, this.texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, props.flipY);
+        if (this.target === gl.TEXTURE_CUBE_MAP) {
+            if (utils.isArray(image)) {
+                const images = image;
+                const faces = [
+                    gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+                    gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+                    gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+                    gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                    gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+                    gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+                ];
+                for (let i = 0, len = faces.length; i < len; i++) {
+                    gl.texImage2D(faces[i], 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[i]);
+                }
+            }
+        } else {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        }
+        gl.bindTexture(this.target, null);
+    }
+
+    setProps(props) {
+        const gl = this.gl;
+        gl.bindTexture(this.target, this.texture);
+        if (props.minFilter) {
+            const minFilter = getGLEnum(gl, props.minFilter);
+            if (minFilter) {
+                gl.texParameteri(this.target, gl.TEXTURE_MIN_FILTER, minFilter);
+                if (minFilter === gl.NEAREST_MIPMAP_NEAREST ||
+                    minFilter === gl.LINEAR_MIPMAP_NEAREST ||
+                    minFilter === gl.NEAREST_MIPMAP_LINEAR ||
+                    minFilter === gl.LINEAR_MIPMAP_LINEAR) {
+
+                    gl.generateMipmap(this.target);
+                }
+            }
+        }
+        if (props.magFilter) {
+            const magFilter = getGLEnum(gl, props.magFilter);
+            if (magFilter) {
+                gl.texParameteri(this.target, gl.TEXTURE_MAG_FILTER, magFilter);
+            }
+        }
+        if (props.wrapS) {
+            const wrapS = getGLEnum(gl, props.wrapS);
+            if (wrapS) {
+                gl.texParameteri(this.target, gl.TEXTURE_WRAP_S, wrapS);
+            }
+        }
+        if (props.wrapT) {
+            const wrapT = getGLEnum(gl, props.wrapT);
+            if (wrapT) {
+                gl.texParameteri(this.target, gl.TEXTURE_WRAP_T, wrapT);
+            }
+        }
+        gl.bindTexture(this.target, null);
+    }
+
+    bind(unit) {
+        if (!this.allocated) {
+            return;
+        }
+        if (this.texture) {
+            const gl = this.gl;
+            gl.activeTexture(gl["TEXTURE" + unit]);
+            gl.bindTexture(this.target, this.texture);
+            return true;
+        }
+        return false;
+    }
+
+    unbind(unit) {
+        if (!this.allocated) {
+            return;
+        }
+        if (this.texture) {
+            const gl = this.gl;
+            gl.activeTexture(gl["TEXTURE" + unit]);
+            gl.bindTexture(this.target, null);
+        }
+    }
+
+    destroy() {
+        if (!this.allocated) {
+            return;
+        }
+        if (this.texture) {
+            this.gl.deleteTexture(this.texture);
+            this.texture = null;
+        }
+    }
+}
+
+function ensureImageSizePowerOfTwo(image) {
+    if (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height)) {
+        const canvas = document.createElement("canvas");
+        canvas.width = nextHighestPowerOfTwo(image.width);
+        canvas.height = nextHighestPowerOfTwo(image.height);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image,
+            0, 0, image.width, image.height,
+            0, 0, canvas.width, canvas.height);
+        image = canvas;
+    }
+    return image;
+}
+
+function isPowerOfTwo(x) {
+    return (x & (x - 1)) === 0;
+}
+
+function nextHighestPowerOfTwo(x) {
+    --x;
+    for (let i = 1; i < 32; i <<= 1) {
+        x = x | x >> i;
+    }
+    return x + 1;
+}
+
+/**
+ * @desc A 2D texture map.
+ *
+ * * Textures are attached to {@link Material}s, which are attached to {@link Mesh}es.
+ * * To create a Texture from an image file, set {@link Texture#src} to the image file path.
+ * * To create a Texture from an HTMLImageElement, set the Texture's {@link Texture#image} to the HTMLImageElement.
+ *
+ * ## Usage
+ *
+ * In this example we have a Mesh with a {@link PhongMaterial} which applies diffuse {@link Texture}, and a {@link buildTorusGeometry} which builds a {@link ReadableGeometry}.
+ *
+ * Note that xeokit will ignore {@link PhongMaterial#diffuse} and {@link PhongMaterial#specular}, since we override those
+ * with {@link PhongMaterial#diffuseMap} and {@link PhongMaterial#specularMap}. The {@link Texture} pixel colors directly
+ * provide the diffuse and specular components for each fragment across the {@link ReadableGeometry} surface.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#materials_Texture)]
+ *
+ * ```` javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {buildTorusGeometry} from "../src/scene/geometry/builders/buildTorusGeometry.js";
+ * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
+ * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
+ * import {Texture} from "../src/scene/materials/Texture.js";
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas"
+ * });
+ *
+ * viewer.camera.eye = [0, 0, 5];
+ * viewer.camera.look = [0, 0, 0];
+ * viewer.camera.up = [0, 1, 0];
+ *
+ * new Mesh(viewer.scene, {
+ *      geometry: new ReadableGeometry(viewer.scene, buildTorusGeometry({
+ *          center: [0, 0, 0],
+ *          radius: 1.5,
+ *          tube: 0.5,
+ *          radialSegments: 32,
+ *          tubeSegments: 24,
+ *          arc: Math.PI * 2.0
+ *      }),
+ *      material: new PhongMaterial(viewer.scene, {
+ *          ambient: [0.9, 0.3, 0.9],
+ *          shininess: 30,
+ *          diffuseMap: new Texture(viewer.scene, {
+ *              src: "textures/diffuse/uvGrid2.jpg"
+ *          })
+ *      })
+ * });
+ *````
+ */
+class Texture extends Component {
+
+    /**
+     @private
+     */
+    get type() {
+        return "Texture";
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this Texture as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this Texture, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String} [cfg.src=null] Path to image file to load into this Texture. See the {@link Texture#src} property for more info.
+     * @param {HTMLImageElement} [cfg.image=null] HTML Image object to load into this Texture. See the {@link Texture#image} property for more info.
+     * @param {String} [cfg.minFilter="linearMipmapLinear"] How the texture is sampled when a texel covers less than one pixel. See the {@link Texture#minFilter} property for more info.
+     * @param {String} [cfg.magFilter="linear"] How the texture is sampled when a texel covers more than one pixel. See the {@link Texture#magFilter} property for more info.
+     * @param {String} [cfg.wrapS="repeat"] Wrap parameter for texture coordinate *S*. See the {@link Texture#wrapS} property for more info.
+     * @param {String} [cfg.wrapT="repeat"] Wrap parameter for texture coordinate *S*. See the {@link Texture#wrapT} property for more info.
+     * @param {Boolean} [cfg.flipY=false] Flips this Texture's source data along its vertical axis when true.
+     * @param {Number[]} [cfg.translate=[0,0]] 2D translation vector that will be added to texture's *S* and *T* coordinates.
+     * @param {Number[]} [cfg.scale=[1,1]] 2D scaling vector that will be applied to texture's *S* and *T* coordinates.
+     * @param {Number} [cfg.rotate=0] Rotation, in degrees, that will be applied to texture's *S* and *T* coordinates.
+     * @param  {String} [cfg.encoding="linear"] Encoding format.  See the {@link Texture#encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+
+        super(owner, cfg);
+
+        this._state = new RenderState({
+            texture: new Texture2D(this.scene.canvas.gl),
+            matrix: math.identityMat4(),
+            hasMatrix: (cfg.translate && (cfg.translate[0] !== 0 || cfg.translate[1] !== 0)) || (!!cfg.rotate) || (cfg.scale && (cfg.scale[0] !== 0 || cfg.scale[1] !== 0)),
+            minFilter: this._checkMinFilter(cfg.minFilter),
+            magFilter: this._checkMagFilter(cfg.magFilter),
+            wrapS: this._checkWrapS(cfg.wrapS),
+            wrapT: this._checkWrapT(cfg.wrapT),
+            flipY: this._checkFlipY(cfg.flipY),
+            encoding: this._checkEncoding(cfg.encoding)
+        });
+
+        // Data source
+
+        this._src = null;
+        this._image = null;
+
+        // Transformation
+
+        this._translate = math.vec2([0, 0]);
+        this._scale = math.vec2([1, 1]);
+        this._rotate = math.vec2([0, 0]);
+
+        this._matrixDirty = false;
+
+        // Transform
+
+        this.translate = cfg.translate;
+        this.scale = cfg.scale;
+        this.rotate = cfg.rotate;
+
+        // Data source
+
+        if (cfg.src) {
+            this.src = cfg.src; // Image file
+        } else if (cfg.image) {
+            this.image = cfg.image; // Image object
+        }
+
+        stats.memory.textures++;
+    }
+
+    _checkMinFilter(value) {
+        value = value || "linearMipmapLinear";
+        if (value !== "linear" &&
+            value !== "linearMipmapNearest" &&
+            value !== "linearMipmapLinear" &&
+            value !== "nearestMipmapLinear" &&
+            value !== "nearestMipmapNearest") {
+            this.error("Unsupported value for 'minFilter': '" + value +
+                "' - supported values are 'linear', 'linearMipmapNearest', 'nearestMipmapNearest', " +
+                "'nearestMipmapLinear' and 'linearMipmapLinear'. Defaulting to 'linearMipmapLinear'.");
+            value = "linearMipmapLinear";
+        }
+        return value;
+    }
+
+    _checkMagFilter(value) {
+        value = value || "linear";
+        if (value !== "linear" && value !== "nearest") {
+            this.error("Unsupported value for 'magFilter': '" + value +
+                "' - supported values are 'linear' and 'nearest'. Defaulting to 'linear'.");
+            value = "linear";
+        }
+        return value;
+    }
+
+    _checkFilter(value) {
+        value = value || "linear";
+        if (value !== "linear" && value !== "nearest") {
+            this.error("Unsupported value for 'magFilter': '" + value +
+                "' - supported values are 'linear' and 'nearest'. Defaulting to 'linear'.");
+            value = "linear";
+        }
+        return value;
+    }
+
+    _checkWrapS(value) {
+        value = value || "repeat";
+        if (value !== "clampToEdge" && value !== "mirroredRepeat" && value !== "repeat") {
+            this.error("Unsupported value for 'wrapS': '" + value +
+                "' - supported values are 'clampToEdge', 'mirroredRepeat' and 'repeat'. Defaulting to 'repeat'.");
+            value = "repeat";
+        }
+        return value;
+    }
+
+    _checkWrapT(value) {
+        value = value || "repeat";
+        if (value !== "clampToEdge" && value !== "mirroredRepeat" && value !== "repeat") {
+            this.error("Unsupported value for 'wrapT': '" + value +
+                "' - supported values are 'clampToEdge', 'mirroredRepeat' and 'repeat'. Defaulting to 'repeat'.");
+            value = "repeat";
+        }
+        return value;
+    }
+
+    _checkFlipY(value) {
+        return !!value;
+    }
+
+    _checkEncoding(value) {
+        value = value || "linear";
+        if (value !== "linear" && value !== "sRGB" && value !== "gamma") {
+            this.error("Unsupported value for 'encoding': '" + value + "' - supported values are 'linear', 'sRGB', 'gamma'. Defaulting to 'linear'.");
+            value = "linear";
+        }
+        return value;
+    }
+
+    _webglContextRestored() {
+        this._state.texture = new Texture2D(this.scene.canvas.gl);
+        if (this._image) {
+            this.image = this._image;
+        } else if (this._src) {
+            this.src = this._src;
+        }
+    }
+
+    _update() {
+        const state = this._state;
+        if (this._matrixDirty) {
+            let matrix;
+            let t;
+            if (this._translate[0] !== 0 || this._translate[1] !== 0) {
+                matrix = math.translationMat4v([this._translate[0], this._translate[1], 0], this._state.matrix);
+            }
+            if (this._scale[0] !== 1 || this._scale[1] !== 1) {
+                t = math.scalingMat4v([this._scale[0], this._scale[1], 1]);
+                matrix = matrix ? math.mulMat4(matrix, t) : t;
+            }
+            if (this._rotate !== 0) {
+                t = math.rotationMat4v(this._rotate * 0.0174532925, [0, 0, 1]);
+                matrix = matrix ? math.mulMat4(matrix, t) : t;
+            }
+            if (matrix) {
+                state.matrix = matrix;
+            }
+            this._matrixDirty = false;
+        }
+        this.glRedraw();
+    }
+
+
+    /**
+     * Sets an HTML DOM Image object to source this Texture from.
+     *
+     * Sets {@link Texture#src} null.
+     *
+     * @type {HTMLImageElement}
+     */
+    set image(value) {
+        this._image = ensureImageSizePowerOfTwo(value);
+        this._image.crossOrigin = "Anonymous";
+        this._state.texture.setImage(this._image, this._state);
+        this._state.texture.setProps(this._state); // Generate mipmaps
+        this._src = null;
+        this.glRedraw();
+    }
+
+    /**
+     * Gets HTML DOM Image object this Texture is sourced from, if any.
+     *
+     * Returns null if not set.
+     *
+     * @type {HTMLImageElement}
+     */
+    get image() {
+        return this._image;
+    }
+
+    /**
+     * Sets path to an image file to source this Texture from.
+     *
+     * Sets {@link Texture#image} null.
+     *
+     * @type {String}
+     */
+    set src(src) {
+        this.scene.loading++;
+        this.scene.canvas.spinner.processes++;
+        const self = this;
+        let image = new Image();
+        image.onload = function () {
+            image = ensureImageSizePowerOfTwo(image);
+            //self._image = image; // For faster WebGL context restore - memory inefficient?
+            self._state.texture.setImage(image, self._state);
+            self._state.texture.setProps(self._state); // Generate mipmaps
+            self.scene.loading--;
+            self.scene.canvas.spinner.processes--;
+            self.glRedraw();
+        };
+        image.src = src;
+        this._src = src;
+        this._image = null;
+    }
+
+    /**
+     * Gets path to the image file this Texture from, if any.
+     *
+     * Returns null if not set.
+     *
+     * @type {String}
+     */
+    get src() {
+        return this._src;
+    }
+
+    /**
+     * Sets the 2D translation vector added to this Texture's *S* and *T* UV coordinates.
+     *
+     * Default value is ````[0, 0]````.
+     *
+     * @type {Number[]}
+     */
+    set translate(value) {
+        this._translate.set(value || [0, 0]);
+        this._matrixDirty = true;
+        this._needUpdate();
+    }
+
+    /**
+     * Gets the 2D translation vector added to this Texture's *S* and *T* UV coordinates.
+     *
+     * Default value is ````[0, 0]````.
+     *
+     * @type {Number[]}
+     */
+    get translate() {
+        return this._translate;
+    }
+
+    /**
+     * Sets the 2D scaling vector that will be applied to this Texture's *S* and *T* UV coordinates.
+     *
+     * Default value is ````[1, 1]````.
+     *
+     * @type {Number[]}
+     */
+    set scale(value) {
+        this._scale.set(value || [1, 1]);
+        this._matrixDirty = true;
+        this._needUpdate();
+    }
+
+    /**
+     * Gets the 2D scaling vector that will be applied to this Texture's *S* and *T* UV coordinates.
+     *
+     * Default value is ````[1, 1]````.
+     *
+     * @type {Number[]}
+     */
+    get scale() {
+        return this._scale;
+    }
+
+    /**
+     * Sets the rotation angles, in degrees, that will be applied to this Texture's *S* and *T* UV coordinates.
+     *
+     * Default value is ````0````.
+     *
+     * @type {Number}
+     */
+    set rotate(value) {
+        value = value || 0;
+        if (this._rotate === value) {
+            return;
+        }
+        this._rotate = value;
+        this._matrixDirty = true;
+        this._needUpdate();
+    }
+
+    /**
+     * Gets the rotation angles, in degrees, that will be applied to this Texture's *S* and *T* UV coordinates.
+     *
+     * Default value is ````0````.
+     *
+     * @type {Number}
+     */
+    get rotate() {
+        return this._rotate;
+    }
+
+    /**
+     * Gets how this Texture is sampled when a texel covers less than one pixel.
+     *
+     * Options are:
+     *
+     * * "nearest" - Uses the value of the texture element that is nearest
+     * (in Manhattan distance) to the center of the pixel being textured.
+     *
+     * * "linear" - Uses the weighted average of the four texture elements that are
+     * closest to the center of the pixel being textured.
+     *
+     * * "nearestMipmapNearest" - Chooses the mipmap that most closely matches the
+     * size of the pixel being textured and uses the "nearest" criterion (the texture
+     * element nearest to the center of the pixel) to produce a texture value.
+     *
+     * * "linearMipmapNearest" - Chooses the mipmap that most closely matches the size of
+     * the pixel being textured and uses the "linear" criterion (a weighted average of the
+     * four texture elements that are closest to the center of the pixel) to produce a
+     * texture value.
+     *
+     * * "nearestMipmapLinear" - Chooses the two mipmaps that most closely
+     * match the size of the pixel being textured and uses the "nearest" criterion
+     * (the texture element nearest to the center of the pixel) to produce a texture
+     * value from each mipmap. The final texture value is a weighted average of those two
+     * values.
+     *
+     * * "linearMipmapLinear" - (default) - Chooses the two mipmaps that most closely match the size
+     * of the pixel being textured and uses the "linear" criterion (a weighted average
+     * of the four texture elements that are closest to the center of the pixel) to
+     * produce a texture value from each mipmap. The final texture value is a weighted
+     * average of those two values.
+     *
+     * Default value is "linearMipmapLinear".
+     *
+     *  @type {String}
+     */
+    get minFilter() {
+        return this._state.minFilter;
+    }
+
+    /**
+     * Gets how this Texture is sampled when a texel covers more than one pixel.
+     *
+     * * "nearest" - Uses the value of the texture element that is nearest
+     * (in Manhattan distance) to the center of the pixel being textured.
+     * * "linear" - (default) - Uses the weighted average of the four texture elements that are
+     * closest to the center of the pixel being textured.
+     *
+     * Default value is "linearMipmapLinear".
+     *
+     * @type {String}
+     */
+    get magFilter() {
+        return this._state.magFilter;
+    }
+
+    /**
+     * Gets the wrap parameter for this Texture's *S* coordinate.
+     *
+     * Values can be:
+     *
+     * * "clampToEdge" -  causes *S* coordinates to be clamped to the size of the texture.
+     * * "mirroredRepeat" - causes the *S* coordinate to be set to the fractional part of the texture coordinate
+     * if the integer part of *S* is even; if the integer part of *S* is odd, then the *S* texture coordinate is
+     * set to *1 - frac ⁡ S* , where *frac ⁡ S* represents the fractional part of *S*.
+     * * "repeat" - (default) - causes the integer part of the *S* coordinate to be ignored; xeokit uses only the
+     * fractional part, thereby creating a repeating pattern.
+     *
+     * Default value is "repeat".
+     *
+     * @type {String}
+     */
+    get wrapS() {
+        return this._state.wrapS;
+    }
+
+    /**
+     * Gets the wrap parameter for this Texture's *T* coordinate.
+     *
+     * Values can be:
+     *
+     * * "clampToEdge" -  causes *S* coordinates to be clamped to the size of the texture.
+     *  * "mirroredRepeat" - causes the *S* coordinate to be set to the fractional part of the texture coordinate
+     * if the integer part of *S* is even; if the integer part of *S* is odd, then the *S* texture coordinate is
+     * set to *1 - frac ⁡ S* , where *frac ⁡ S* represents the fractional part of *S*.
+     * * "repeat" - (default) - causes the integer part of the *S* coordinate to be ignored; xeokit uses only the
+     * fractional part, thereby creating a repeating pattern.
+     *
+     * Default value is "repeat".
+     *
+     * @type {String}
+     */
+    get wrapT() {
+        return this._state.wrapT;
+    }
+
+    /**
+     * Gets if this Texture's source data is flipped along its vertical axis.
+     *
+     * @type {Boolean}
+     */
+    get flipY() {
+        return this._state.flipY;
+    }
+
+    /**
+     * Gets the Texture's encoding format.
+     *
+     * @type {String}
+     */
+    get encoding() {
+        return this._state.encoding;
+    }
+
+    /**
+     * Destroys this Texture
+     */
+    destroy() {
+        super.destroy();
+        if (this._state.texture) {
+            this._state.texture.destroy();
+        }
+        this._state.destroy();
+        stats.memory.textures--;
+    }
+}
+
+/**
+ * @private
+ */
+class GLTFQualityLoader {
+
+    constructor(cfg) { // TODO: Loading options fallbacks on loader, eg. handleGLTFNode etc
+    }
+
+    load(plugin, modelNode, src, options, ok, error) {
+        options = options || {};
+        var spinner = modelNode.scene.canvas.spinner;
+        spinner.processes++;
+        loadGLTF(plugin, modelNode, src, options, function () {
+                spinner.processes--;
+                core.scheduleTask(function () {
+                    modelNode.scene.fire("modelLoaded", modelNode.id); // FIXME: Assumes listeners know order of these two events
+                    modelNode.fire("loaded", true, false);
+                });
+                if (ok) {
+                    ok();
+                }
+            },
+            function (msg) {
+                spinner.processes--;
+                modelNode.error(msg);
+                if (error) {
+                    error(msg);
+                }
+                modelNode.fire("error", msg);
+            });
+    }
+
+    parse(plugin, modelNode, gltf, options, ok, error) {
+        options = options || {};
+        var spinner = modelNode.scene.canvas.spinner;
+        spinner.processes++;
+        parseGLTF(plugin, gltf, "", options, modelNode, function () {
+                spinner.processes--;
+                modelNode.scene.fire("modelLoaded", modelNode.id); // FIXME: Assumes listeners know order of these two events
+                modelNode.fire("loaded", true, false);
+                if (ok) {
+                    ok();
+                }
+            },
+            function (msg) {
+                spinner.processes--;
+                modelNode.error(msg);
+                modelNode.fire("error", msg);
+                if (error) {
+                    error(msg);
+                }
+            });
+    }
+}
+
+
+var loadGLTF = (function () {
+    return function (plugin, modelNode, src, options, ok, error) {
+        plugin.dataSource.getGLTF(src, function (json) { // OK
+                options.basePath = getBasePath(src);
+                parseGLTF(plugin, json, src, options, modelNode, ok, error);
+            },
+            error);
+    };
+
+    function getBasePath(src) {
+        var i = src.lastIndexOf("/");
+        return (i !== 0) ? src.substring(0, i + 1) : "";
+    }
+})();
+
+var parseGLTF = (function () {
+
+    const WEBGL_COMPONENT_TYPES = {
+        5120: Int8Array,
+        5121: Uint8Array,
+        5122: Int16Array,
+        5123: Uint16Array,
+        5125: Uint32Array,
+        5126: Float32Array
+    };
+
+    const WEBGL_TYPE_SIZES = {
+        'SCALAR': 1,
+        'VEC2': 2,
+        'VEC3': 3,
+        'VEC4': 4,
+        'MAT2': 4,
+        'MAT3': 9,
+        'MAT4': 16
+    };
+
+    return function (plugin, json, src, options, modelNode, ok) {
+        modelNode.clear();
+        var ctx = {
+            src: src,
+            loadBuffer: options.loadBuffer,
+            basePath: options.basePath,
+            prioritizeGLTFNode: options.prioritizeGLTFNode,
+            handleGLTFNode: options.handleGLTFNode,
+            ignoreMaterials: !!options.ignoreMaterials,
+            edgeThreshold: options.edgeThreshold,
+            readableGeometry: !!options.readableGeometry,
+            json: json,
+            scene: modelNode.scene,
+            plugin: plugin,
+            modelNode: modelNode,
+            modelNodeProps: {
+                visible: modelNode.visible,
+                culled: modelNode.culled,
+                xrayed: modelNode.xrayed,
+                highlighted: modelNode.highlighted,
+                selected: modelNode.selected,
+                outlined: modelNode.outlined,
+                clippable: modelNode.clippable,
+                pickable: modelNode.pickable,
+                collidable: modelNode.collidable,
+                castsShadow: modelNode.castsShadow,
+                receivesShadow: modelNode.receivesShadow,
+                colorize: modelNode.colorize,
+                opacity: modelNode.opacity,
+                edges: modelNode.edges
+            }
+        };
+
+        modelNode.scene.loading++; // Disables (re)compilation
+
+        loadBuffers(ctx, function () {
+
+            loadBufferViews(ctx);
+            loadAccessors(ctx);
+            loadTextures(ctx);
+            loadMaterials(ctx);
+            loadMeshes(ctx);
+            loadDefaultScene(ctx);
+
+            modelNode.scene.loading--; // Re-enables (re)compilation
+
+            ok();
+        });
+    };
+
+    function loadBuffers(ctx, ok) {
+        var buffers = ctx.json.buffers;
+        if (buffers) {
+            var numToLoad = buffers.length;
+            for (var i = 0, len = buffers.length; i < len; i++) {
+                loadBuffer(ctx, buffers[i], function () {
+                    if (--numToLoad === 0) {
+                        ok();
+                    }
+                }, function (msg) {
+                    ctx.plugin.error(msg);
+                    if (--numToLoad === 0) {
+                        ok();
+                    }
+                });
+            }
+        } else {
+            ok();
+        }
+    }
+
+    function loadBuffer(ctx, bufferInfo, ok, err) {
+        var uri = bufferInfo.uri;
+        if (uri) {
+            ctx.plugin.dataSource.getArrayBuffer(ctx.src, uri, function (data) {
+                    bufferInfo._buffer = data;
+                    ok();
+                },
+                err);
+        } else {
+            err('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+        }
+    }
+
+    function loadBufferViews(ctx) {
+        var bufferViewsInfo = ctx.json.bufferViews;
+        if (bufferViewsInfo) {
+            for (var i = 0, len = bufferViewsInfo.length; i < len; i++) {
+                loadBufferView(ctx, bufferViewsInfo[i]);
+            }
+        }
+    }
+
+    function loadBufferView(ctx, bufferViewInfo) {
+
+        var buffer = ctx.json.buffers[bufferViewInfo.buffer];
+
+        bufferViewInfo._typedArray = null;
+
+        var byteLength = bufferViewInfo.byteLength || 0;
+        var byteOffset = bufferViewInfo.byteOffset || 0;
+
+        bufferViewInfo._buffer = buffer._buffer.slice(byteOffset, byteOffset + byteLength);
+    }
+
+    function loadAccessors(ctx) {
+        var accessorsInfo = ctx.json.accessors;
+        if (accessorsInfo) {
+            for (var i = 0, len = accessorsInfo.length; i < len; i++) {
+                loadAccessor(ctx, accessorsInfo[i]);
+            }
+        }
+    }
+
+    function loadAccessor(ctx, accessorInfo) {
+        var bufferViewInfo = ctx.json.bufferViews[accessorInfo.bufferView];
+        var itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
+        var TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
+
+        // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
+        var elementBytes = TypedArray.BYTES_PER_ELEMENT;
+        var itemBytes = elementBytes * itemSize;
+
+        // The buffer is not interleaved if the stride is the item size in bytes.
+        if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) ; else {
+            accessorInfo._typedArray = new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
+            accessorInfo._itemSize = itemSize;
+        }
+    }
+
+
+    function loadTextures(ctx) {
+        var texturesInfo = ctx.json.textures;
+        if (texturesInfo) {
+            for (var i = 0, len = texturesInfo.length; i < len; i++) {
+                loadTexture(ctx, texturesInfo[i]);
+            }
+        }
+    }
+
+    function loadTexture(ctx, textureInfo) {
+        textureInfo._texture = new Texture(ctx.modelNode, {
+            src: ctx.json.images[textureInfo.source].uri ? ctx.basePath + ctx.json.images[textureInfo.source].uri : undefined,
+            flipY: !!textureInfo.flipY,
+            encoding: "sRGB"
+        });
+    }
+
+    function loadMaterials(ctx) {
+        var materialsInfo = ctx.json.materials;
+        if (materialsInfo) {
+            var materialInfo;
+            var material;
+            for (var i = 0, len = materialsInfo.length; i < len; i++) {
+                materialInfo = materialsInfo[i];
+                material = loadMaterial(ctx, materialInfo);
+                materialInfo._material = material;
+            }
+        }
+    }
+
+    function loadMaterial(ctx, materialInfo) {
+
+        var json = ctx.json;
+        var cfg = {};
+        var textureInfo;
+
+        // Common attributes
+
+        var normalTexture = materialInfo.normalTexture;
+        if (normalTexture) {
+            textureInfo = json.textures[normalTexture.index];
+            if (textureInfo) {
+                cfg.normalMap = textureInfo._texture;
+                //cfg.normalMap.encoding = "linear";
+            }
+        }
+
+        var occlusionTexture = materialInfo.occlusionTexture;
+        if (occlusionTexture) {
+            textureInfo = json.textures[occlusionTexture.index];
+            if (textureInfo) {
+                cfg.occlusionMap = textureInfo._texture;
+            }
+        }
+
+        var emissiveTexture = materialInfo.emissiveTexture;
+        if (emissiveTexture) {
+            textureInfo = json.textures[emissiveTexture.index];
+            if (textureInfo) {
+                cfg.emissiveMap = textureInfo._texture;
+                //cfg.emissiveMap.encoding = "sRGB";
+            }
+        }
+
+        var emissiveFactor = materialInfo.emissiveFactor;
+        if (emissiveFactor) {
+            cfg.emissive = emissiveFactor;
+        }
+
+        cfg.backfaces = !!materialInfo.doubleSided;
+
+        var alphaMode = materialInfo.alphaMode;
+        switch (alphaMode) {
+            case "NORMAL_OPAQUE":
+                cfg.alphaMode = "opaque";
+                break;
+            case "MASK":
+                cfg.alphaMode = "mask";
+                break;
+            case "BLEND":
+                cfg.alphaMode = "blend";
+                break;
+        }
+
+        var alphaCutoff = materialInfo.alphaCutoff;
+        if (alphaCutoff !== undefined) {
+            cfg.alphaCutoff = alphaCutoff;
+        }
+
+        var extensions = materialInfo.extensions;
+        if (extensions) {
+
+            // Specular PBR material
+
+            var specularPBR = extensions["KHR_materials_pbrSpecularGlossiness"];
+            if (specularPBR) {
+
+                var diffuseFactor = specularPBR.diffuseFactor;
+                if (diffuseFactor !== null && diffuseFactor !== undefined) {
+                    cfg.diffuse = diffuseFactor.slice(0, 3);
+                    cfg.alpha = diffuseFactor[3];
+                }
+
+                var diffuseTexture = specularPBR.diffuseTexture;
+                if (diffuseTexture) {
+                    textureInfo = json.textures[diffuseTexture.index];
+                    if (textureInfo) {
+                        cfg.diffuseMap = textureInfo._texture;
+                        //cfg.diffuseMap.encoding = "sRGB";
+                    }
+                }
+
+                var specularFactor = specularPBR.specularFactor;
+                if (specularFactor !== null && specularFactor !== undefined) {
+                    cfg.specular = specularFactor.slice(0, 3);
+                }
+
+                var glossinessFactor = specularPBR.glossinessFactor;
+                if (glossinessFactor !== null && glossinessFactor !== undefined) {
+                    cfg.glossiness = glossinessFactor;
+                }
+
+                var specularGlossinessTexture = specularPBR.specularGlossinessTexture;
+                if (specularGlossinessTexture) {
+                    textureInfo = json.textures[specularGlossinessTexture.index];
+                    if (textureInfo) {
+                        cfg.specularGlossinessMap = textureInfo._texture;
+                        //cfg.specularGlossinessMap.encoding = "linear";
+                    }
+                }
+
+                return new SpecularMaterial(ctx.modelNode, cfg);
+            }
+
+            // Common Phong, Blinn, Lambert or Constant materials
+
+            var common = extensions["KHR_materials_common"];
+            if (common) {
+
+                var technique = common.technique;
+                var values = common.values || {};
+
+                var blinn = technique === "BLINN";
+                var phong = technique === "PHONG";
+                var lambert = technique === "LAMBERT";
+
+                var shininess = values.shininess;
+                if ((blinn || phong) && shininess !== null && shininess !== undefined) {
+                    cfg.shininess = shininess;
+                } else {
+                    cfg.shininess = 0;
+                }
+                var texture;
+                var diffuse = values.diffuse;
+                if (diffuse && (blinn || phong || lambert)) {
+                    if (utils.isString(diffuse)) {
+                        texture = ctx.textures[diffuse];
+                        if (texture) {
+                            cfg.diffuseMap = texture;
+                            //  cfg.diffuseMap.encoding = "sRGB";
+                        }
+                    } else {
+                        cfg.diffuse = diffuse.slice(0, 3);
+                    }
+                } else {
+                    cfg.diffuse = [0, 0, 0];
+                }
+
+                var specular = values.specular;
+                if (specular && (blinn || phong)) {
+                    if (utils.isString(specular)) {
+                        texture = ctx.textures[specular];
+                        if (texture) {
+                            cfg.specularMap = texture;
+                        }
+                    } else {
+                        cfg.specular = specular.slice(0, 3);
+                    }
+                } else {
+                    cfg.specular = [0, 0, 0];
+                }
+
+                var emission = values.emission;
+                if (emission) {
+                    if (utils.isString(emission)) {
+                        texture = ctx.textures[emission];
+                        if (texture) {
+                            cfg.emissiveMap = texture;
+                        }
+                    } else {
+                        cfg.emissive = emission.slice(0, 3);
+                    }
+                } else {
+                    cfg.emissive = [0, 0, 0];
+                }
+
+                var transparency = values.transparency;
+                if (transparency !== null && transparency !== undefined) {
+                    cfg.alpha = transparency;
+                } else {
+                    cfg.alpha = 1.0;
+                }
+
+                var transparent = values.transparent;
+
+                return new PhongMaterial(ctx.scene, cfg);
+            }
+        }
+
+        // Metallic PBR naterial
+
+        var metallicPBR = materialInfo.pbrMetallicRoughness;
+        if (metallicPBR) {
+
+            var baseColorFactor = metallicPBR.baseColorFactor;
+            if (baseColorFactor) {
+                cfg.baseColor = baseColorFactor.slice(0, 3);
+                cfg.alpha = baseColorFactor[3];
+            }
+
+            var baseColorTexture = metallicPBR.baseColorTexture;
+            if (baseColorTexture) {
+                textureInfo = json.textures[baseColorTexture.index];
+                if (textureInfo) {
+                    cfg.baseColorMap = textureInfo._texture;
+                    //cfg.baseColorMap.encoding = "sRGB";
+                }
+            }
+
+            var metallicFactor = metallicPBR.metallicFactor;
+            if (metallicFactor !== null && metallicFactor !== undefined) {
+                cfg.metallic = metallicFactor;
+            }
+
+            var roughnessFactor = metallicPBR.roughnessFactor;
+            if (roughnessFactor !== null && roughnessFactor !== undefined) {
+                cfg.roughness = roughnessFactor;
+            }
+
+            var metallicRoughnessTexture = metallicPBR.metallicRoughnessTexture;
+            if (metallicRoughnessTexture) {
+                textureInfo = json.textures[metallicRoughnessTexture.index];
+                if (textureInfo) {
+                    cfg.metallicRoughnessMap = textureInfo._texture;
+                    // cfg.metallicRoughnessMap.encoding = "linear";
+                }
+            }
+
+            return new MetallicMaterial(ctx.scene, cfg);
+        }
+
+        // Default material
+
+        return new PhongMaterial(ctx.scene, cfg);
+    }
+
+    function loadMeshes(ctx) {
+        var meshes = ctx.json.meshes;
+        if (meshes) {
+            for (var i = 0, len = meshes.length; i < len; i++) {
+                loadMesh(ctx, meshes[i]);
+            }
+        }
+    }
+
+    function loadMesh(ctx, meshInfo) {
+        var json = ctx.json;
+        var mesh = [];
+        var primitivesInfo = meshInfo.primitives;
+        var materialIndex;
+        var materialInfo;
+        var accessorInfo;
+        var attributes;
+
+        if (primitivesInfo) {
+
+            var primitiveInfo;
+            var indicesIndex;
+            var positionsIndex;
+            var normalsIndex;
+            var uv0Index;
+            var geometryCfg;
+            var meshCfg;
+            var geometry;
+
+            for (var i = 0, len = primitivesInfo.length; i < len; i++) {
+
+                geometryCfg = {
+                    primitive: "triangles",
+                    compressGeometry: true,
+                    edgeThreshold: ctx.edgeThreshold
+                };
+
+                primitiveInfo = primitivesInfo[i];
+                indicesIndex = primitiveInfo.indices;
+
+                if (indicesIndex !== null && indicesIndex !== undefined) {
+                    accessorInfo = json.accessors[indicesIndex];
+                    geometryCfg.indices = accessorInfo._typedArray;
+                }
+
+                attributes = primitiveInfo.attributes;
+                if (!attributes) {
+                    continue;
+                }
+
+                positionsIndex = attributes.POSITION;
+
+                if (positionsIndex !== null && positionsIndex !== undefined) {
+                    accessorInfo = json.accessors[positionsIndex];
+                    geometryCfg.positions = accessorInfo._typedArray;
+                }
+
+                normalsIndex = attributes.NORMAL;
+
+                if (normalsIndex !== null && normalsIndex !== undefined) {
+                    accessorInfo = json.accessors[normalsIndex];
+                    geometryCfg.normals = accessorInfo._typedArray;
+                }
+
+                uv0Index = attributes.TEXCOORD_0;
+
+                if (uv0Index !== null && uv0Index !== undefined) {
+                    accessorInfo = json.accessors[uv0Index];
+                    geometryCfg.uv = accessorInfo._typedArray;
+                }
+
+                meshCfg = {};
+
+                if (ctx.readableGeometry) {
+                    geometry = new ReadableGeometry(ctx.modelNode, geometryCfg);
+                } else {
+                    geometry = new VBOGeometry(ctx.modelNode, geometryCfg);
+                }
+
+                meshCfg.geometry = geometry;
+
+                materialIndex = primitiveInfo.material;
+                if (materialIndex !== null && materialIndex !== undefined) {
+                    materialInfo = json.materials[materialIndex];
+                    if (materialInfo) {
+                        meshCfg.material = materialInfo._material;
+                    }
+                }
+
+                mesh.push(meshCfg);
+            }
+        }
+        meshInfo._mesh = mesh;
+    }
+
+    function loadDefaultScene(ctx) {
+        var json = ctx.json;
+        var scene = json.scene || 0;
+        var defaultSceneInfo = json.scenes[scene];
+        if (!defaultSceneInfo) {
+            error(ctx, "glTF has no default scene");
+            return;
+        }
+        loadScene(ctx, defaultSceneInfo);
+    }
+
+    function loadScene(ctx, sceneInfo) {
+        var nodes = sceneInfo.nodes;
+        if (!nodes) {
+            return;
+        }
+        var json = ctx.json;
+        var glTFNode;
+        for (var i = 0, len = nodes.length; i < len; i++) {
+            glTFNode = json.nodes[nodes[i]];
+            if (!glTFNode) {
+                error(ctx, "Node not found: " + i);
+                continue;
+            }
+            loadNode(ctx, glTFNode, null, null);
+        }
+    }
+
+    function loadNode(ctx, glTFNode, matrix, parent) {
+
+        parent = parent || ctx.modelNode;
+
+        var createEntity;
+
+        if (ctx.prioritizeGLTFNode) {
+            const priority = ctx.prioritizeGLTFNode(ctx.modelNode.id, glTFNode);
+            if (priority === undefined || priority === null) {
+                return;
+            }
+        }
+
+        if (ctx.handleGLTFNode) {
+            var actions = {};
+            if (!ctx.handleGLTFNode(ctx.modelNode.id, glTFNode, actions)) {
+                return;
+            }
+            if (actions.createEntity) {
+                createEntity = actions.createEntity;
+            }
+        }
+
+        const json = ctx.json;
+        const modelNode = ctx.modelNode;
+        const hasChildNodes = glTFNode.children && glTFNode.children.length > 0;
+
+        var localMatrix;
+
+        if (glTFNode.matrix) {
+            localMatrix = glTFNode.matrix;
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, math.mat4());
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.translation) {
+            localMatrix = math.translationMat4v(glTFNode.translation);
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, localMatrix);
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.rotation) {
+            localMatrix = math.quaternionToMat4(glTFNode.rotation);
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, localMatrix);
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.scale) {
+            localMatrix = math.scalingMat4v(glTFNode.scale);
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, localMatrix);
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.mesh !== undefined) {
+
+            var meshInfo = json.meshes[glTFNode.mesh];
+
+            if (meshInfo) {
+
+                var meshesInfo = meshInfo._mesh;
+                var meshesInfoMesh;
+                var mesh;
+                var numMeshes = meshesInfo.length;
+
+                if (!createEntity && numMeshes > 0 && !hasChildNodes) {
+
+                    // Case 1: Not creating object, node has meshes, node has no child nodes
+
+                    for (var i = 0, len = numMeshes; i < len; i++) {
+                        meshesInfoMesh = meshesInfo[i];
+                        let meshCfg = {
+                            geometry: meshesInfoMesh.geometry,
+                            matrix: matrix
+                        };
+                        utils.apply(ctx.modelNodeProps, meshCfg);
+                        meshCfg.material = meshesInfoMesh.material;
+                        mesh = new Mesh(modelNode, meshCfg);
+                        parent.addChild(mesh, false); // Don't automatically inherit properties
+                    }
+                    return;
+                }
+
+                if (createEntity && numMeshes === 1 && !hasChildNodes) {
+
+                    // Case 2: Creating object, node has one mesh, node has no child nodes
+
+                    meshesInfoMesh = meshesInfo[0];
+                    let meshCfg = {
+                        geometry: meshesInfoMesh.geometry,
+                        matrix: matrix
+                    };
+                    utils.apply(ctx.modelNodeProps, meshCfg);
+                    meshCfg.material = meshesInfoMesh.material;
+                    utils.apply(createEntity, meshCfg);
+                    mesh = new Mesh(modelNode, meshCfg);
+                    parent.addChild(mesh, false); // Don't automatically inherit properties
+                    return;
+                }
+
+                if (createEntity && numMeshes > 0 && !hasChildNodes) {
+
+                    // Case 3: Creating object, node has meshes, node has no child nodes
+
+                    let nodeCfg = {
+                        matrix: matrix
+                    };
+                    utils.apply(ctx.modelNodeProps, nodeCfg);
+                    utils.apply(createEntity, nodeCfg);
+                    let childNode = new Node(modelNode, nodeCfg);
+                    parent.addChild(childNode, false);
+                    for (let i = 0, len = numMeshes; i < len; i++) {
+                        meshesInfoMesh = meshesInfo[i];
+                        let meshCfg = {
+                            geometry: meshesInfoMesh.geometry
+                        };
+                        utils.apply(ctx.modelNodeProps, meshCfg);
+                        meshCfg.material = meshesInfoMesh.material;
+                        utils.apply(createEntity, meshCfg);
+                        meshCfg.id = null; // Avoid ID clash with parent Node
+                        mesh = new Mesh(modelNode, meshCfg);
+                        childNode.addChild(mesh, false);
+                    }
+                    return;
+                }
+
+                if (!createEntity && numMeshes > 0 && hasChildNodes) {
+
+                    // Case 4: Not creating object, node has meshes, node has child nodes
+
+                    let nodeCfg = {
+                        matrix: matrix
+                    };
+                    utils.apply(ctx.modelNodeProps, nodeCfg);
+                    let childNode = new Node(modelNode, nodeCfg);
+                    parent.addChild(childNode, false);
+                    for (let i = 0, len = numMeshes; i < len; i++) {
+                        meshesInfoMesh = meshesInfo[i];
+                        let meshCfg = {
+                            geometry: meshesInfoMesh.geometry
+                        };
+                        utils.apply(nodeCfg, meshCfg);
+                        meshCfg.id = null; // Avoid ID clash with parent Node
+                        meshCfg.matrix = null; // Node has matrix
+                        meshCfg.material = meshesInfoMesh.material;
+                        mesh = new Mesh(modelNode, meshCfg);
+                        childNode.addChild(mesh, false);
+                    }
+                    matrix = null;
+                    parent = childNode;
+                }
+
+                if (createEntity && numMeshes === 0 && hasChildNodes) {
+
+                    // Case 5: Creating explicit object, node has meshes OR node has child nodes
+
+                    let nodeCfg = {
+                        matrix: matrix
+                    };
+                    utils.apply(ctx.modelNodeProps, nodeCfg);
+                    utils.apply(createEntity, nodeCfg);
+                    createEntity.matrix = matrix;
+                    let childNode = new Node(modelNode, nodeCfg);
+                    parent.addChild(childNode, false); // Don't automatically inherit properties
+                    matrix = null;
+                    parent = childNode;
+                }
+
+                if (createEntity && numMeshes > 0 || hasChildNodes) {
+
+                    // Case 6: Creating explicit object, node has meshes OR node has child nodes
+
+                    let nodeCfg = {
+                        matrix: matrix
+                    };
+                    utils.apply(ctx.modelNodeProps, nodeCfg);
+                    if (createEntity) {
+                        utils.apply(createEntity, nodeCfg);
+                    }
+                    let childNode = new Node(modelNode, nodeCfg);
+                    parent.addChild(childNode, false); // Don't automatically inherit properties
+                    for (let i = 0, len = numMeshes; i < len; i++) {
+                        meshesInfoMesh = meshesInfo[i];
+                        let meshCfg = {
+                            geometry: meshesInfoMesh.geometry
+                        };
+                        utils.apply(ctx.modelProps, meshCfg);
+                        meshCfg.material = meshesInfoMesh.material;
+                        if (createEntity) {
+                            utils.apply(createEntity, meshCfg);
+                        }
+                        meshCfg.id = null; // Avoid ID clash with parent Node
+                        mesh = new Mesh(modelNode, meshCfg);
+                        childNode.addChild(mesh, false); // Don't automatically inherit properties
+                    }
+                    matrix = null;
+                    parent = childNode;
+                }
+            }
+        }
+
+        if (glTFNode.children) {
+            var children = glTFNode.children;
+            var childNodeInfo;
+            var childNodeIdx;
+            for (let i = 0, len = children.length; i < len; i++) {
+                childNodeIdx = children[i];
+                childNodeInfo = json.nodes[childNodeIdx];
+                if (!childNodeInfo) {
+                    error(ctx, "Node not found: " + i);
+                    continue;
+                }
+                loadNode(ctx, childNodeInfo, matrix, parent);
+            }
+        }
+    }
+
+    function error(ctx, msg) {
+        ctx.plugin.error(msg);
+    }
+})();
+
+/**
+ * @private
+ */
+class GLTFPerformanceLoader {
+
+    constructor(cfg) { // TODO: Loading options fallbacks on loader, eg. handleGLTFNode etc
+    }
+
+    load(plugin, performanceModel, src, options, ok, error) {
+        options = options || {};
+        loadGLTF$1(plugin, performanceModel, src, options, function () {
+                core.scheduleTask(function () {
+                    performanceModel.scene.fire("modelLoaded", performanceModel.id); // FIXME: Assumes listeners know order of these two events
+                    performanceModel.fire("loaded", true, false);
+                });
+                if (ok) {
+                    ok();
+                }
+            },
+            function (msg) {
+                plugin.error(msg);
+                if (error) {
+                    error(msg);
+                }
+                performanceModel.fire("error", msg);
+            });
+    }
+
+    parse(plugin, performanceModel, gltf, options, ok, error) {
+        options = options || {};
+        parseGLTF$1(plugin, gltf, "", options, performanceModel, function () {
+                performanceModel.scene.fire("modelLoaded", performanceModel.id); // FIXME: Assumes listeners know order of these two events
+                performanceModel.fire("loaded", true, false);
+                if (ok) {
+                    ok();
+                }
+            },
+            function (msg) {
+                performanceModel.error(msg);
+                performanceModel.fire("error", msg);
+                if (error) {
+                    error(msg);
+                }
+            });
+    }
+}
+
+const INSTANCE_THRESHOLD = 1;
+
+const loadGLTF$1 = (function () {
+
+    return function (plugin, performanceModel, src, options, ok, error) {
+        const spinner = plugin.viewer.scene.canvas.spinner;
+        spinner.processes++;
+        plugin.dataSource.getGLTF(src, function (json) { // OK
+                spinner.processes--;
+                parseGLTF$1(plugin, json, src, options, performanceModel, ok, error);
+            },
+            error);
+    };
+})();
+
+const parseGLTF$1 = (function () {
+
+    const WEBGL_COMPONENT_TYPES = {
+        5120: Int8Array,
+        5121: Uint8Array,
+        5122: Int16Array,
+        5123: Uint16Array,
+        5125: Uint32Array,
+        5126: Float32Array
+    };
+
+    const WEBGL_TYPE_SIZES = {
+        'SCALAR': 1,
+        'VEC2': 2,
+        'VEC3': 3,
+        'VEC4': 4,
+        'MAT2': 4,
+        'MAT3': 9,
+        'MAT4': 16
+    };
+
+    return function (plugin, json, src, options, performanceModel, ok) {
+        const ctx = {
+            src: src,
+            loadBuffer: options.loadBuffer,
+            handleGLTFNode: options.handleGLTFNode,
+            json: json,
+            scene: performanceModel.scene,
+            plugin: plugin,
+            performanceModel: performanceModel,
+            geometryCreated: {},
+            numObjects: 0,
+            nodes: []
+        };
+        const spinner = plugin.viewer.scene.canvas.spinner;
+        spinner.processes++;
+        loadBuffers(ctx, function () {
+            loadBufferViews(ctx);
+            freeBuffers(ctx); // Don't need buffers once we've created views of them
+            loadMaterials(ctx);
+            spinner.processes--;
+            loadDefaultScene(ctx);
+            performanceModel.finalize();
+            ok();
+        });
+    };
+
+    function loadBuffers(ctx, ok) {
+        const buffers = ctx.json.buffers;
+        if (buffers) {
+            let numToLoad = buffers.length;
+            for (let i = 0, len = buffers.length; i < len; i++) {
+                loadBuffer(ctx, buffers[i], function () {
+                    if (--numToLoad === 0) {
+                        ok();
+                    }
+                }, function (msg) {
+                    ctx.plugin.error(msg);
+                    if (--numToLoad === 0) {
+                        ok();
+                    }
+                });
+            }
+        } else {
+            ok();
+        }
+    }
+
+    function loadBuffer(ctx, bufferInfo, ok, err) {
+        const uri = bufferInfo.uri;
+        if (uri) {
+            ctx.plugin.dataSource.getArrayBuffer(ctx.src, uri, function (data) {
+                    bufferInfo._buffer = data;
+                    ok();
+                },
+                err);
+        } else {
+            err('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+        }
+    }
+
+    function loadBufferViews(ctx) {
+        const bufferViewsInfo = ctx.json.bufferViews;
+        if (bufferViewsInfo) {
+            for (let i = 0, len = bufferViewsInfo.length; i < len; i++) {
+                loadBufferView(ctx, bufferViewsInfo[i]);
+            }
+        }
+    }
+
+    function loadBufferView(ctx, bufferViewInfo) {
+        const buffer = ctx.json.buffers[bufferViewInfo.buffer];
+        bufferViewInfo._typedArray = null;
+        const byteLength = bufferViewInfo.byteLength || 0;
+        const byteOffset = bufferViewInfo.byteOffset || 0;
+        bufferViewInfo._buffer = buffer._buffer.slice(byteOffset, byteOffset + byteLength);
+    }
+
+    function freeBuffers(ctx) {
+        const buffers = ctx.json.buffers;
+        if (buffers) {
+            for (let i = 0, len = buffers.length; i < len; i++) {
+                buffers[i]._buffer = null;
+            }
+        }
+    }
+
+    function loadMaterials(ctx) {
+        const materialsInfo = ctx.json.materials;
+        if (materialsInfo) {
+            for (let i = 0, len = materialsInfo.length; i < len; i++) {
+                const materialInfo = materialsInfo[i];
+                const material = loadMaterialColorize(ctx, materialInfo);
+                materialInfo._rgbaColor = material;
+            }
+        }
+    }
+
+    function loadMaterialColorize(ctx, materialInfo) { // Substitute RGBA for material, to use fast flat shading instead
+        const colorize = new Float32Array([1, 1, 1, 1]);
+        const extensions = materialInfo.extensions;
+        if (extensions) {
+            const specularPBR = extensions["KHR_materials_pbrSpecularGlossiness"];
+            if (specularPBR) {
+                const diffuseFactor = specularPBR.diffuseFactor;
+                if (diffuseFactor !== null && diffuseFactor !== undefined) {
+                    colorize.set(diffuseFactor);
+                }
+            }
+            const common = extensions["KHR_materials_common"];
+            if (common) {
+                const technique = common.technique;
+                const values = common.values || {};
+                const blinn = technique === "BLINN";
+                const phong = technique === "PHONG";
+                const lambert = technique === "LAMBERT";
+                const diffuse = values.diffuse;
+                if (diffuse && (blinn || phong || lambert)) {
+                    if (!utils.isString(diffuse)) {
+                        colorize.set(diffuse);
+                    }
+                }
+                const transparency = values.transparency;
+                if (transparency !== null && transparency !== undefined) {
+                    colorize[3] = transparency;
+                }
+                const transparent = values.transparent;
+                if (transparent !== null && transparent !== undefined) {
+                    colorize[3] = transparent;
+                }
+            }
+        }
+        const metallicPBR = materialInfo.pbrMetallicRoughness;
+        if (metallicPBR) {
+            const baseColorFactor = metallicPBR.baseColorFactor;
+            if (baseColorFactor) {
+                colorize.set(baseColorFactor);
+            }
+        }
+        return colorize;
+    }
+
+    function loadDefaultScene(ctx) {
+        const json = ctx.json;
+        const scene = json.scene || 0;
+        const defaultSceneInfo = json.scenes[scene];
+        if (!defaultSceneInfo) {
+            error(ctx, "glTF has no default scene");
+            return;
+        }
+        preprocessScene(ctx, defaultSceneInfo);
+        loadScene(ctx, defaultSceneInfo);
+    }
+
+    function preprocessScene(ctx, sceneInfo) {
+        const nodes = sceneInfo.nodes;
+        if (!nodes) {
+            return;
+        }
+        const json = ctx.json;
+        for (let i = 0, len = nodes.length; i < len; i++) {
+            const glTFNode = json.nodes[nodes[i]];
+            if (!glTFNode) {
+                error(ctx, "Node not found: " + i);
+                continue;
+            }
+            countMeshUsage(ctx, i);
+        }
+    }
+
+    function loadScene(ctx, sceneInfo) {
+        const nodes = sceneInfo.nodes;
+        if (!nodes) {
+            return;
+        }
+        const json = ctx.json;
+        for (let i = 0, len = nodes.length; i < len; i++) {
+            const glTFNode = json.nodes[nodes[i]];
+            if (!glTFNode) {
+                error(ctx, "Node not found: " + i);
+                continue;
+            }
+            countMeshUsage(ctx, glTFNode);
+        }
+        ctx.plugin.viewer.scene.canvas.spinner.processes++;
+        for (let i = 0, len = nodes.length; i < len; i++) {
+            const glTFNode = json.nodes[nodes[i]];
+            loadNode(ctx, glTFNode, null);
+        }
+        ctx.plugin.viewer.scene.canvas.spinner.processes--;
+    }
+
+    function countMeshUsage(ctx, glTFNode) {
+        const json = ctx.json;
+        const mesh = glTFNode.mesh;
+        if (mesh !== undefined) {
+            const meshInfo = json.meshes[glTFNode.mesh];
+            if (meshInfo) {
+                meshInfo.instances = meshInfo.instances ? meshInfo.instances + 1 : 1;
+            }
+        }
+        if (glTFNode.children) {
+            const children = glTFNode.children;
+            for (let i = 0, len = children.length; i < len; i++) {
+                const childNodeIdx = children[i];
+                const childNodeInfo = json.nodes[childNodeIdx];
+                if (!childNodeInfo) {
+                    error(ctx, "Node not found: " + i);
+                    continue;
+                }
+                countMeshUsage(ctx, childNodeInfo);
+            }
+        }
+    }
+
+    function loadNode(ctx, glTFNode, matrix) {
+
+        const json = ctx.json;
+        let localMatrix;
+
+        if (glTFNode.matrix) {
+            localMatrix = glTFNode.matrix;
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, math.mat4());
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.translation) {
+            localMatrix = math.translationMat4v(glTFNode.translation);
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, math.mat4());
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.rotation) {
+            localMatrix = math.quaternionToMat4(glTFNode.rotation);
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, math.mat4());
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.scale) {
+            localMatrix = math.scalingMat4v(glTFNode.scale);
+            if (matrix) {
+                matrix = math.mulMat4(matrix, localMatrix, math.mat4());
+            } else {
+                matrix = localMatrix;
+            }
+        }
+
+        if (glTFNode.mesh !== undefined) {
+
+            const meshInfo = json.meshes[glTFNode.mesh];
+
+            if (meshInfo) {
+
+                let createEntity;
+
+                if (ctx.handleGLTFNode) {
+                    const actions = {};
+                    if (!ctx.handleGLTFNode(ctx.performanceModel.id, glTFNode, actions)) {
+                        return;
+                    }
+                    if (actions.createEntity) {
+                        createEntity = actions.createEntity;
+                    }
+                }
+
+                const performanceModel = ctx.performanceModel;
+                const worldMatrix = matrix ? matrix.slice() : math.identityMat4();
+                const numPrimitives = meshInfo.primitives.length;
+
+                if (numPrimitives > 0) {
+
+                    const meshIds = [];
+
+                    for (let i = 0; i < numPrimitives; i++) {
+                        const meshCfg = {
+                            id: performanceModel.id + "." + ctx.numObjects++,
+                            matrix: worldMatrix
+                        };
+                        const primitiveInfo = meshInfo.primitives[i];
+
+                        const materialIndex = primitiveInfo.material;
+                        let materialInfo;
+                        if (materialIndex !== null && materialIndex !== undefined) {
+                            materialInfo = json.materials[materialIndex];
+                        }
+                        if (materialInfo) {
+                            meshCfg.color = materialInfo._rgbaColor;
+                            meshCfg.opacity = materialInfo._rgbaColor[3];
+
+                        } else {
+                            meshCfg.color = new Float32Array([1.0, 1.0, 1.0]);
+                            meshCfg.opacity = 1.0;
+                        }
+
+                        if (createEntity) {
+                            if (createEntity.colorize) {
+                                meshCfg.color = createEntity.colorize;
+                            }
+                            if (createEntity.opacity !== undefined && createEntity.opacity !== null) {
+                                meshCfg.opacity = createEntity.opacity;
+                            }
+                        }
+
+                        if (meshInfo.instances > INSTANCE_THRESHOLD) {
+
+                            // Instancing
+
+                            const geometryId = performanceModel.id + "." + glTFNode.mesh + "." + i;
+                            if (!ctx.geometryCreated[geometryId]) {
+                                const geometryCfg = {
+                                    id: geometryId
+                                };
+                                loadPrimitiveGeometry(ctx, primitiveInfo, geometryCfg);
+                                performanceModel.createGeometry(geometryCfg);
+                                ctx.geometryCreated[geometryId] = true;
+                            }
+
+                            meshCfg.geometryId = geometryId;
+
+                            performanceModel.createMesh(meshCfg);
+                            meshIds.push(meshCfg.id);
+
+                        } else {
+
+                            // Batching
+
+                            loadPrimitiveGeometry(ctx, primitiveInfo, meshCfg);
+
+                            performanceModel.createMesh(meshCfg);
+                            meshIds.push(meshCfg.id);
+                        }
+                    }
+
+                    if (createEntity) {
+                        performanceModel.createEntity(utils.apply(createEntity, {
+                            meshIds: meshIds
+                        }));
+                    } else {
+                        performanceModel.createEntity({
+                            meshIds: meshIds
+                        });
+                    }
+                }
+            }
+        }
+
+        if (glTFNode.children) {
+            const children = glTFNode.children;
+            for (let i = 0, len = children.length; i < len; i++) {
+                const childNodeIdx = children[i];
+                const childNodeInfo = json.nodes[childNodeIdx];
+                if (!childNodeInfo) {
+                    error(ctx, "Node not found: " + i);
+                    continue;
+                }
+                loadNode(ctx, childNodeInfo, matrix);
+            }
+        }
+    }
+
+    function loadPrimitiveGeometry(ctx, primitiveInfo, geometryCfg) {
+        const attributes = primitiveInfo.attributes;
+        if (!attributes) {
+            return;
+        }
+        geometryCfg.primitive = "triangles";
+        const indicesIndex = primitiveInfo.indices;
+        if (indicesIndex !== null && indicesIndex !== undefined) {
+            const accessorInfo = ctx.json.accessors[indicesIndex];
+            geometryCfg.indices = loadAccessorTypedArray(ctx, accessorInfo);
+        }
+        const positionsIndex = attributes.POSITION;
+        if (positionsIndex !== null && positionsIndex !== undefined) {
+            const accessorInfo = ctx.json.accessors[positionsIndex];
+            geometryCfg.positions = loadAccessorTypedArray(ctx, accessorInfo);
+            //  scalePositionsArray(geometryCfg.positions);
+        }
+        const normalsIndex = attributes.NORMAL;
+        if (normalsIndex !== null && normalsIndex !== undefined) {
+            const accessorInfo = ctx.json.accessors[normalsIndex];
+            geometryCfg.normals = loadAccessorTypedArray(ctx, accessorInfo);
+        }
+        if (geometryCfg.indices) {
+            geometryCfg.edgeIndices = buildEdgeIndices(geometryCfg.positions, geometryCfg.indices, null, 10); // Save PerformanceModel from building edges
+        }
+    }
+
+    function loadAccessorTypedArray(ctx, accessorInfo) {
+        const bufferViewInfo = ctx.json.bufferViews[accessorInfo.bufferView];
+        const itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
+        const TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
+        const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
+        const itemBytes = elementBytes * itemSize;
+        if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
+            error("interleaved buffer!"); // TODO
+        } else {
+            return new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
+        }
+    }
+
+    function error(ctx, msg) {
+        ctx.plugin.error(msg);
+    }
+})();
+
+/**
+ * Default data access strategy for {@link GLTFLoaderPlugin}.
+ *
+ * This just loads assets using XMLHttpRequest.
+ */
+class GLTFDefaultDataSource {
+
+    constructor() {
+    }
+
+    /**
+     * Gets metamodel JSON.
+     *
+     * @param {String|Number} metaModelSrc Identifies the metamodel JSON asset.
+     * @param {{Function(*)}} ok Fired on successful loading of the metamodel JSON asset.
+     * @param {{Function(*)}} error Fired on error while loading the metamodel JSON asset.
+     */
+    getMetaModel(metaModelSrc, ok, error) {
+        utils.loadJSON(metaModelSrc,
+            (json) => {
+                ok(json);
+            },
+            function (errMsg) {
+                error(errMsg);
+            });
+    }
+
+    /**
+     * Gets glTF JSON.
+     *
+     * @param {String|Number} glTFSrc Identifies the glTF JSON asset.
+     * @param {Function} ok Fired on successful loading of the glTF JSON asset.
+     * @param {Function} error Fired on error while loading the glTF JSON asset.
+     */
+    getGLTF(glTFSrc, ok, error) {
+        utils.loadJSON(glTFSrc,
+            (gltf) => {
+                ok(gltf);
+            },
+            function (errMsg) {
+                error(errMsg);
+            });
+    }
+
+    /**
+     * Gets glTF binary attachment.
+     *
+     * Note that this method requires the source of the glTF JSON asset. This is because the binary attachment
+     * source could be relative to the glTF source, IE. it may not be a global ID.
+     *
+     * @param {String|Number} glTFSrc Identifies the glTF JSON asset.
+     * @param {String|Number} binarySrc Identifies the glTF binary asset.
+     * @param {Function} ok Fired on successful loading of the glTF binary asset.
+     * @param {Function} error Fired on error while loading the glTF binary asset.
+     */
+    getArrayBuffer(glTFSrc, binarySrc, ok, error) {
+        loadArraybuffer$1(glTFSrc, binarySrc,
+            (arrayBuffer) => {
+                ok(arrayBuffer);
+            },
+            function (errMsg) {
+                error(errMsg);
+            });
+    }
+}
+
+function loadArraybuffer$1(glTFSrc, binarySrc, ok, err) {
+    // Check for data: URI
+    var defaultCallback = () => {
+    };
+    ok = ok || defaultCallback;
+    err = err || defaultCallback;
+    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+    const dataUriRegexResult = binarySrc.match(dataUriRegex);
+    if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
+        const isBase64 = !!dataUriRegexResult[2];
+        var data = dataUriRegexResult[3];
+        data = window.decodeURIComponent(data);
+        if (isBase64) {
+            data = window.atob(data);
+        }
+        try {
+            const buffer = new ArrayBuffer(data.length);
+            const view = new Uint8Array(buffer);
+            for (var i = 0; i < data.length; i++) {
+                view[i] = data.charCodeAt(i);
+            }
+            window.setTimeout(function () {
+                ok(buffer);
+            }, 0);
+        } catch (error) {
+            window.setTimeout(function () {
+                err(error);
+            }, 0);
+        }
+    } else {
+        const basePath = getBasePath(glTFSrc);
+        const url = basePath + binarySrc;
+        const request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.responseType = 'arraybuffer';
+        request.onreadystatechange = function () {
+            if (request.readyState === 4) {
+                if (request.status === 200) {
+                    ok(request.response);
+                } else {
+                    err('loadArrayBuffer error : ' + request.response);
+                }
+            }
+        };
+        request.send(null);
+    }
+}
+
+function getBasePath(src) {
+    var i = src.lastIndexOf("/");
+    return (i !== 0) ? src.substring(0, i + 1) : "";
+}
+
+/**
+ * {@link Viewer} plugin that loads models from [glTF](https://www.khronos.org/gltf/).
+ *
+ * * Creates an {@link Entity} representing each model it loads, which will have {@link Entity#isModel} set ````true```` and will be registered by {@link Entity#id} in {@link Scene#models}.
+ * * Creates an {@link Entity} for each object within the model, which is indicated by each glTF ````node```` that has a ````name```` attribute. Those Entities will have {@link Entity#isObject} set ````true```` and will be registered by {@link Entity#id} in {@link Scene#objects}.
+ * * When loading, can set the World-space position, scale and rotation of each model within World space, along with initial properties for all the model's {@link Entity}s.
+ *
+ * ## Metadata
+ *
+ * GLTFLoaderPlugin can also load an accompanying JSON metadata file with each model, which creates a {@link MetaModel} corresponding
+ * to the model {@link Entity} and a {@link MetaObject} corresponding to each object {@link Entity}.
+ *
+ * Each {@link MetaObject} has a {@link MetaObject#type}, which indicates the classification of its corresponding {@link Entity}. When loading
+ * metadata, we can also provide GLTFLoaderPlugin with a custom lookup table of initial values to set on the properties of each type of {@link Entity}. By default, GLTFLoaderPlugin
+ * uses its own map of default colors and visibilities for IFC element types.
+ *
+ * ## Quality Setting
+ *
+ * By default, GLTFLoaderPlugin will load a high-performance scene representation that's optimized for low memory usage and
+ * optimal rendering. The high-performance representation renders large numbers of objects efficiently, using geometry
+ * batching and instancing, with simple Lambertian shading that ignores any textures and realistic materials in the glTF.
+ *
+ * Specifying ````performance:false```` to {@link GLTFLoaderPlugin#load} will internally load a heavier scene
+ * representation comprised of {@link Node}, {@link Mesh}, {@link Geometry}, {@link Material} and {@link Texture} components,
+ * that will exactly preserve the materials specified in the glTF. Use this when you want to load a model for a realistic preview,
+ * maybe using PBR etc.
+ *
+ * We tend to use the default ````performance:true```` setting for CAD and BIM models, where structure is more important that
+ * surface appearance.
+ *
+ * Publically, GLTFLoaderPlugin creates the same {@link Entity}s for both levels of performance. Privately, however, it implements
+ * {@link Entity}s using two different sets of concrete subtypes, for its two different internally-managed scene representations.
+ *
+ * ## Usage
+ *
+ * In the example below we'll load the Schependomlaan model from a [glTF file](http://xeokit.github.io/xeokit-sdk/examples/models/gltf/schependomlaan/), along
+ * with an accompanying JSON [IFC metadata file](http://xeokit.github.io/xeokit-sdk/examples/metaModels/schependomlaan/).
+ *
+ * This will create a bunch of {@link Entity}s that represents the model and its objects, along with a {@link MetaModel} and {@link MetaObject}s
+ * that hold their metadata.
+ *
+ * Since this model contains IFC types, the GLTFLoaderPlugin will set the initial colors of object {@link Entity}s according
+ * to the standard IFC element colors in the GLTFModel's current map. Override that with your own map via property {@link GLTFLoaderPlugin#objectDefaults}.
+ *
+ * Read more about this example in the user guide on [Viewing BIM Models Offline](https://github.com/xeokit/xeokit-sdk/wiki/Viewing-BIM-Models-Offline).
+ *
+ * We're leaving ````performance: true```` since our model has many objects and we're not interested in realistic rendering.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#BIMOffline_glTF_OTCConferenceCenter)]
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {GLTFLoaderPlugin} from "../src/plugins/GLTFLoaderPlugin/GLTFLoaderPlugin.js";
+ *
+ * //------------------------------------------------------------------------------------------------------------------
+ * // 1. Create a Viewer,
+ * // 2. Arrange the camera,
+ * // 3. Tweak the selection material (tone it down a bit)
+ * //------------------------------------------------------------------------------------------------------------------
+ *
+ * // 1
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas",
+ *      transparent: true
+ * });
+ *
+ * // 2
+ * viewer.camera.orbitPitch(20);
+ * viewer.camera.orbitYaw(-45);
+ *
+ * // 3
+ * viewer.scene.selectedMaterial.fillAlpha = 0.1;
+ *
+ * //------------------------------------------------------------------------------------------------------------------
+ * // 1. Create a glTF loader plugin,
+ * // 2. Load a glTF building model and JSON IFC metadata
+ * // 3. Emphasis the edges to make it look nice
+ * //------------------------------------------------------------------------------------------------------------------
+ *
+ * // 1
+ * const gltfLoader = new GLTFLoaderPlugin(viewer);
+ *
+ * // 2
+ * var model = gltfLoader.load({                                    // Returns an Entity that represents the model
+ *      id: "myModel",
+ *      src: "./models/gltf/OTCConferenceCenter/scene.gltf",
+ *      metaModelSrc: "./metaModels/OTCConferenceCenter/metaModel.json",     // Creates a MetaModel (see below)
+ *      edges: true,
+ *      performance: true  // Load high-performance scene representation (default is false)
+ * });
+ *
+ * model.on("loaded", () => {
+ *
+ *      //--------------------------------------------------------------------------------------------------------------
+ *      // 1. Find metadata on the third storey
+ *      // 2. Select all the objects in the building's third storey
+ *      // 3. Fit the camera to all the objects on the third storey
+ *      //--------------------------------------------------------------------------------------------------------------
+ *
+ *      // 1
+ *      const metaModel = viewer.metaScene.metaModels["myModel"];       // MetaModel with ID "myModel"
+ *      const metaObject
+ *          = viewer.metaScene.metaObjects["0u4wgLe6n0ABVaiXyikbkA"];   // MetaObject with ID "0u4wgLe6n0ABVaiXyikbkA"
+ *
+ *      const name = metaObject.name;                                   // "01 eerste verdieping"
+ *      const type = metaObject.type;                                   // "IfcBuildingStorey"
+ *      const parent = metaObject.parent;                               // MetaObject with type "IfcBuilding"
+ *      const children = metaObject.children;                           // Array of child MetaObjects
+ *      const objectId = metaObject.id;                                 // "0u4wgLe6n0ABVaiXyikbkA"
+ *      const objectIds = viewer.metaScene.getObjectIDsInSubtree(objectId);   // IDs of leaf sub-objects
+ *      const aabb = viewer.scene.getAABB(objectIds);                   // Axis-aligned boundary of the leaf sub-objects
+ *
+ *      // 2
+ *      viewer.scene.setObjectsSelected(objectIds, true);
+ *
+ *      // 3
+ *      viewer.cameraFlight.flyTo(aabb);
+ * });
+ *
+ * // Find the model Entity by ID
+ * model = viewer.scene.models["myModel"];
+ *
+ * // Destroy the model
+ * model.destroy();
+ * ````
+ *
+ * ## Transforming
+ *
+ * We have the option to rotate, scale and translate each  *````.glTF````* model as we load it.
+ *
+ * This lets us load multiple models, or even multiple copies of the same model, and position them apart from each other.
+ *
+ * In the example below, we'll scale our model to half its size, rotate it 90 degrees about its local X-axis, then
+ * translate it 100 units along its X axis.
+ *
+ * [[Run example](https://xeokit.github.io/xeokit-sdk/examples/#loading_glTF_Duplex_transform)]
+ *
+ * ````javascript
+ * const model = gltfLoader.load({
+ *      src: "./models/gltf/duplex/scene.gltf",
+ *      metaModelSrc: "./metaModels/duplex/metaModel.json",
+ *      rotation: [90,0,0],
+ *      scale: [0.5, 0.5, 0.5],
+ *      position: [100, 0, 0]
+ * });
+ * ````
+ *
+ * ## Including and excluding IFC types
+ *
+ * We can also load only those objects that have the specified IFC types. In the example below, we'll load only the
+ * objects that represent walls.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#BIMOffline_glTF_includeTypes_PlanView)]
+ *
+ * ````javascript
+ * const model = gltfLoader.load({
+ *     id: "myModel",
+ *      src: "./models/gltf/OTCConferenceCenter/scene.gltf",
+ *      metaModelSrc: "./metaModels/OTCConferenceCenter/metaModel.json",
+ *      includeTypes: ["IfcWallStandardCase"]
+ * });
+ * ````
+ *
+ * We can also load only those objects that **don't** have the specified IFC types. In the example below, we'll load only the
+ * objects that do not represent empty space.
+ *
+ * ````javascript
+ * const model = gltfLoader.load({
+ *     id: "myModel",
+ *      src: "./models/gltf/OTCConferenceCenter/scene.gltf",
+ *      metaModelSrc: "./metaModels/OTCConferenceCenter/metaModel.json",
+ *      excludeTypes: ["IfcSpace"]
+ * });
+ * ````
+ * @class GLTFLoaderPlugin
+ */
+class GLTFLoaderPlugin extends Plugin {
+
+    /**
+     * @constructor
+     *
+     * @param {Viewer} viewer The Viewer.
+     * @param {Object} cfg  Plugin configuration.
+     * @param {String} [cfg.id="GLTFLoader"] Optional ID for this plugin, so that we can find it within {@link Viewer#plugins}.
+     * @param {Object} [cfg.objectDefaults] Map of initial default states for each loaded {@link Entity} that represents an object.  Default value is {@link IFCObjectDefaults}.
+     * @param {Object} [cfg.dataSource] A custom data source through which the GLTFLoaderPlugin can load metadata, glTF and binary attachments. Defaults to an instance of {@link GLTFDefaultDataSource}, which loads uover HTTP.
+     */
+    constructor(viewer, cfg = {}) {
+
+        super("GLTFLoader", viewer, cfg);
+
+        /**
+         * @private
+         */
+        this._glTFQualityLoader = new GLTFQualityLoader(this, cfg);
+
+        /**
+         * @private
+         */
+        this._glTFPerformanceLoader = new GLTFPerformanceLoader(this, cfg);
+
+        this.dataSource = cfg.dataSource;
+        this.objectDefaults = cfg.objectDefaults;
+    }
+
+    /**
+     * Sets a custom data source through which the GLTFLoaderPlugin can load metadata, glTF and binary attachments.
+     *
+     * Default value is {@link GLTFDefaultDataSource}, which loads via an XMLHttpRequest.
+     *
+     * @type {Object}
+     */
+    set dataSource(value) {
+        this._dataSource = value || new GLTFDefaultDataSource();
+    }
+
+    /**
+     * Gets the custom data source through which the GLTFLoaderPlugin can load metadata, glTF and binary attachments.
+     *
+     * Default value is {@link GLTFDefaultDataSource}, which loads via an XMLHttpRequest.
+     *
+     * @type {Object}
+     */
+    get dataSource() {
+        return this._dataSource;
+    }
+
+    /**
+     * Sets map of initial default states for each loaded {@link Entity} that represents an object.
+     *
+     * Default value is {@link IFCObjectDefaults}.
+     *
+     * @type {{String: Object}}
+     */
+    set objectDefaults(value) {
+        this._objectDefaults = value || IFCObjectDefaults;
+    }
+
+    /**
+     * Gets map of initial default states for each loaded {@link Entity} that represents an object.
+     *
+     * Default value is {@link IFCObjectDefaults}.
+     *
+     * @type {{String: Object}}
+     */
+    get objectDefaults() {
+        return this._objectDefaults;
+    }
+
+    /**
+     * Loads a glTF model from a file into this GLTFLoaderPlugin's {@link Viewer}.
+     *
+     * @param {*} params Loading parameters.
+     * @param {String} [params.id] ID to assign to the root {@link Entity#id}, unique among all components in the Viewer's {@link Scene}, generated automatically by default.
+     * @param {String} [params.src] Path to a glTF file, as an alternative to the ````gltf```` parameter.
+     * @param {*} [params.gltf] glTF JSON, as an alternative to the ````src```` parameter.
+     * @param {String} [params.metaModelSrc] Path to an optional metadata file, as an alternative to the ````metaModelData```` parameter (see user guide: [Model Metadata](https://github.com/xeolabs/xeokit.io/wiki/Model-Metadata)).
+     * @param {*} [params.metaModelData] JSON model metadata, as an alternative to the ````metaModelSrc```` parameter (see user guide: [Model Metadata](https://github.com/xeolabs/xeokit.io/wiki/Model-Metadata)).
+     * @param {{String:Object}} [params.objectDefaults] Map of initial default states for each loaded {@link Entity} that represents an object. Default value is {@link IFCObjectDefaults}.
+     * @params {String[]} [params.includeTypes] When loading metadata, only loads objects that have {@link MetaObject}s with {@link MetaObject#type} values in this list.
+     * @params {String[]} [params.excludeTypes] When loading metadata, never loads objects that have {@link MetaObject}s with {@link MetaObject#type} values in this list.
+     * @param {Boolean} [params.edges=false] Whether or not xeokit renders the model with edges emphasized.
+     * @param {Number[]} [params.position=[0,0,0]] The model World-space 3D position.
+     * @param {Number[]} [params.scale=[1,1,1]] The model's World-space scale.
+     * @param {Number[]} [params.rotation=[0,0,0]] The model's World-space rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
+     * @param {Number[]} [params.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]] The model's world transform matrix. Overrides the position, scale and rotation parameters.
+     * @param {Boolean} [params.backfaces=false] When true, allows visible backfaces, wherever specified in the glTF. When false, ignores backfaces.
+     * @param {Number} [params.edgeThreshold=10] When xraying, highlighting, selecting or edging, this is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
+     * @params {Boolean} [params.performance=true] Set ````false```` to load all the materials and textures provided by the glTF file, otherwise leave ````true```` to load the default high-performance representation optimized for low memory usage and efficient rendering.
+     * @returns {Entity} Entity representing the model, which will have {@link Entity#isModel} set ````true```` and will be registered by {@link Entity#id} in {@link Scene#models}
+     */
+    load(params = {}) {
+
+        if (params.id && this.viewer.scene.components[params.id]) {
+            this.error("Component with this ID already exists in viewer: " + params.id + " - will autogenerate this ID");
+            delete params.id;
+        }
+
+        const performance = params.performance !== false;
+
+        const model = performance
+
+            // PerformanceModel provides performance-oriented scene representation
+            // converting glTF materials to simple flat-shading without textures
+
+            ? new PerformanceModel(this.viewer.scene, utils.apply(params, {
+                isModel: true
+            }))
+
+            // Scene Node graph supports original glTF materials
+
+            : new Node(this.viewer.scene, utils.apply(params, {
+                isModel: true
+            }));
+
+        const modelId = model.id;  // In case ID was auto-generated
+
+        if (!params.src && !params.gltf) {
+            this.error("load() param expected: src or gltf");
+            return model; // Return new empty model
+        }
+
+        const loader = performance ? this._glTFPerformanceLoader : this._glTFQualityLoader;
+
+        if (params.metaModelSrc || params.metaModelData) {
+
+            const objectDefaults = params.objectDefaults || this._objectDefaults || IFCObjectDefaults;
+
+            const processMetaModelData = (metaModelData) => {
+
+                this.viewer.metaScene.createMetaModel(modelId, metaModelData, {
+                    includeTypes: params.includeTypes,
+                    excludeTypes: params.excludeTypes
+                });
+
+                this.viewer.scene.canvas.spinner.processes--;
+
+                var includeTypes;
+                if (params.includeTypes) {
+                    includeTypes = {};
+                    for (let i = 0, len = params.includeTypes.length; i < len; i++) {
+                        includeTypes[params.includeTypes[i]] = true;
+                    }
+                }
+                if (params.excludeTypes) {
+                    for (let i = 0, len = params.excludeTypes.length; i < len; i++) {
+                        includeTypes[params.excludeTypes[i]] = true;
+                    }
+                }
+
+                params.readableGeometry = false;
+
+                params.handleGLTFNode = (modelId, glTFNode, actions) => {
+
+                    const name = glTFNode.name;
+
+                    if (!name) {
+                        return true; // Continue descending this node subtree
+                    }
+
+                    const nodeId = name;
+                    const metaObject = this.viewer.metaScene.metaObjects[nodeId];
+                    const type = (metaObject ? metaObject.type : "DEFAULT") || "DEFAULT";
+
+                    actions.createEntity = {
+                        id: nodeId,
+                        isObject: true // Registers the Entity in Scene#objects
+                    };
+
+                    const props = objectDefaults[type];
+
+                    if (props) { // Set Entity's initial rendering state for recognized type
+
+                        if (props.visible === false) {
+                            actions.createEntity.visible = false;
+                        }
+
+                        if (props.colorize) {
+                            actions.createEntity.colorize = props.colorize;
+                        }
+
+                        if (props.pickable === false) {
+                            actions.createEntity.pickable = false;
+                        }
+
+                        if (props.opacity !== undefined && props.opacity !== null) {
+                            actions.createEntity.opacity = props.opacity;
+                        }
+                    }
+
+                    return true; // Continue descending this glTF node subtree
+                };
+
+                if (params.src) {
+                    loader.load(this, model, params.src, params);
+                } else {
+                    loader.parse(this, model, params.gltf, params);
+                }
+            };
+
+            if (params.metaModelSrc) {
+
+                const metaModelSrc = params.metaModelSrc;
+
+                this.viewer.scene.canvas.spinner.processes++;
+
+                this._dataSource.getMetaModel(metaModelSrc, (metaModelData) => {
+
+                    this.viewer.scene.canvas.spinner.processes--;
+
+                    processMetaModelData(metaModelData);
+
+                }, (errMsg) => {
+                    this.error(`load(): Failed to load model metadata for model '${modelId} from  '${metaModelSrc}' - ${errMsg}`);
+                    this.viewer.scene.canvas.spinner.processes--;
+                });
+
+            } else if (params.metaModelData) {
+
+                processMetaModelData(params.metaModelData);
+            }
+
+        } else {
+
+            params.handleGLTFNode = (modelId, glTFNode, actions) => {
+
+                const name = glTFNode.name;
+
+                if (!name) {
+                    return true; // Continue descending this node subtree
+                }
+
+                const id = name;
+
+                actions.createEntity = { // Create an Entity for this glTF scene node
+                    id: id,
+                    isObject: true // Registers the Entity in Scene#objects
+                };
+
+                return true; // Continue descending this glTF node subtree
+            };
+
+            if (params.src) {
+                loader.load(this, model, params.src, params);
+            } else {
+                loader.parse(this, model, params.gltf, params);
+            }
+        }
+
+        model.once("destroyed", () => {
+            this.viewer.metaScene.destroyMetaModel(modelId);
+        });
+
+        return model;
+    }
+
+    /**
+     * Destroys this GLTFLoaderPlugin.
+     */
+    destroy() {
+        super.destroy();
+    }
+}
+
 /**
  * @desc Creates a sphere-shaped {@link Geometry}.
  *
@@ -54809,4 +60401,4 @@ function buildSphereGeometry(cfg = {}) {
     });
 }
 
-export { Mesh, PhongMaterial, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };
+export { GLTFLoaderPlugin, Mesh, PhongMaterial, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };

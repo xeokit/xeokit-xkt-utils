@@ -65,7 +65,7 @@
 
     log("Loading glTF file..");
 
-    utils.loadJSON("./models/gltf/gearbox/GearboxAssy.gltf", (json) => {
+    utils.loadJSON("./models/gltf/duplex/scene.gltf", (json) => {
 
             log("Parsing glTF into XKTModel..");
 
@@ -89,7 +89,7 @@
 
                 const xktLoader = new XKTLoaderPlugin(viewer);
 
-                const model = xktLoader.load({
+                xktLoader.load({
                     id: "myModel",
                     xkt: xktArrayBuffer,
                     edges: true
@@ -99,7 +99,7 @@
 
                 log("Visualizing tile boundaries..");
 
-                visualizeXKTModelTileAABBs(viewer.scene, xktModel);
+              //  visualizeXKTModelTileAABBs(viewer.scene, xktModel);
             });
         },
         function (errMsg) {

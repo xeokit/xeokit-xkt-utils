@@ -17,7 +17,7 @@
 
 <body>
 <canvas id="myCanvas"></canvas>
-<div id="info">
+<div id="info" style="visibility:hidden;">
     <h1><a  target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a model to XKT from glTF</h1><br>
 
     <div id="log">Loading JavaScript modules...</div>
@@ -89,7 +89,7 @@
 
                 const xktLoader = new XKTLoaderPlugin(viewer);
 
-                const model = xktLoader.load({
+                xktLoader.load({
                     id: "myModel",
                     xkt: xktArrayBuffer,
                     edges: true
@@ -99,12 +99,16 @@
 
                 log("Visualizing tile boundaries..");
 
-                visualizeXKTModelTileAABBs(viewer.scene, xktModel);
+                //visualizeXKTModelTileAABBs(viewer.scene, xktModel);
             });
         },
         function (errMsg) {
             log("ERROR: " + errMsg);
         });
+
+    viewer.scene.on("tick", () => {
+       viewer.scene.camera.orbitYaw(1.0);
+    });
 
     window.viewer = viewer; // For debugging
 
