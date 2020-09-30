@@ -41,6 +41,8 @@ class XKTEntity {
         /**
          * The 4x4 modeling transform matrix.
          *
+         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.
+         *
          * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the
          * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,
          * then this matrix is ignored.

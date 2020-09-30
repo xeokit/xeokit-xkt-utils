@@ -395,7 +395,7 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                             matrix: primitiveModelingMatrix,
                             color: color,
                             opacity: opacity,
-                            positions: geometryArrays.positions,
+                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused primitive positions
                             normals: geometryArrays.normals,
                             indices: geometryArrays.indices
                         });
