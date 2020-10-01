@@ -62,11 +62,14 @@ the primitives used by tile's entities are relative to the center of their tile,
 * [**````XKTModel````**]() represents a single model.
 * [**````XKTPrimitive````**]() represents an individual mesh, which has vertex positions, vertex normals, triangle indices, edge indices, an RGB color, and an opacity. 
 * [**````XKTPrimitiveInstance````**]() is an association class that represents the use of an ````XKTPrimitive```` by an ````XKTEntity````. 
-* [**````XKTEntity````**]() represents a 3D object, which has a unique ID, and one or more ````PrimitiveInstances````.
+* [**````XKTEntity````**]() represents a 3D object, which has a unique ID, one or more ````PrimitiveInstances````. 
 * [**````XKTTile````**]() represents a spatial, box-shaped region within the ````XKTModel````. An ````XKTTile```` has one or more ````XKTEntitys````, a World-space axis-aligned bounding 
 box (AABB) that encloses the ````XKTEntitys````, and a decoding matrix to de-quantize the vertex positions belonging to the primitives instanced by the entities. 
 
 When a primitive is used only once (ie. it is associated with exactly one primitive instance), then the primitive's positions are in World-space. Otherwise, the primitive's positions are in Local-space.
+
+An ````XKTEntity```` has a modeling matrix if it shares ````XKTPrimitives```` with other ````XKTEntity````'s. The modeling matrix encodes 
+the modeling transform that's applied to the XKTEntities, relative to the XKTTile that contains the XKTEntity.
 
 ## JavaScript Utilities
 
@@ -113,7 +116,7 @@ Elements deflated with [zlib](http://www.zlib.net/) are flagged in the fourth co
 | ````primitive_instances```` | Uint32[] | For each mesh, base index of a portion in ````decode_matrices````. Primitives can share decode matrices. | Deflated |
 | ````each_entity_id```` | String | String | An ID for each entity. This is a string-encoded JSON array of strings. | Deflated |
 | ````each_entity_primitive_instances_portion```` | Uint32[] | For each mesh instance, the base index of the primitive's portion of the ````each_primitive_*```` arrays. | Deflated |
-| ````each_entity_matrices_portion```` | String | ID for each entity. This is a string-encoded JSON array of strings. | Deflated |
+| ````each_entity_matrices_portion```` | Uint32 | For each entity, the base index of the entity's 16-element portion of the ````matrices```` arrays. | Deflated |
 | ````each_tile_aabb```` | Float32[] | A World-space, axis-aligned bounding box (AABB) for each tile. Each AABB has six 32-bit floating-point values that indicate the min and max extents of the box on each axis: *xmin*, *ymin*, *zmin*, *xmax", *ymax" and "zmax".| Deflated |
 | ````each_tile_decode_matrix```` | Float32[] | For each tile, a dequantization matrix to decode the ````positions```` belonging to its entities' ````primitives````. | Deflated |
 | ````each_tile_entities_portion```` | Uint32[] | For each tile, an index to the first element of tile's portion of ````each_entity_id````, ````each_entity_primitive_instances_portion````, ````each_tile_aabb```` and ````each_tile_decode_matrix````. | Deflated |
