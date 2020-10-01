@@ -32,7 +32,7 @@ const WEBGL_TYPE_SIZES = {
  * @param {String} [options.basePath] Base directory where binary attachments may be found.
  * @returns {Promise} A Promise which returns the XKTModel when resolved.
  */
-function loadXKTModelFromGLTF(gltf, model, options = {}) {
+function loadGLTFIntoXKTModel(gltf, model, options = {}) {
 
     const parsingCtx = {
         basePath: options.basePath || "./",
@@ -476,4 +476,4 @@ function error(parsingCtx, msg) {
     parsingCtx.error(msg);
 }
 
-export {loadXKTModelFromGLTF};
+export {loadGLTFIntoXKTModel};

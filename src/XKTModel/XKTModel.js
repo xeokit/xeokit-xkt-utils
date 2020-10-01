@@ -22,7 +22,7 @@ const kdTreeDimLength = new Float32Array(3);
  * contains {@link XKTEntity}s, which represent the objects within its region. Each {@link XKTEntity}
  * has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
  *
- * * Import glTF into an XKTModel using {@link loadXKTModelFromGLTF}
+ * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
  * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *

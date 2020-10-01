@@ -8,7 +8,7 @@ const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
 /**
- * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadXKTModelFromGLTF}.
+ * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.
  *
  * @private
  */
