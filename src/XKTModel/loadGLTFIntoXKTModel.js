@@ -2,6 +2,15 @@ import {utils} from "./lib/utils.js";
 import {math} from "./lib/math.js";
 import {XKTModel} from "./XKTModel.js";
 
+// HACK: Allows node.js to find atob()
+let atob2;
+if (typeof atob === 'undefined') {
+    const atob = require('atob');
+    atob2 = atob;
+} else {
+    atob2 = atob;
+}
+
 const WEBGL_COMPONENT_TYPES = {
     5120: Int8Array,
     5121: Uint8Array,
