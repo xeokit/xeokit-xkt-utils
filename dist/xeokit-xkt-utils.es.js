@@ -5082,6 +5082,10 @@ const utils = {
     isString: isString,
 };
 
+if (typeof atob === 'undefined') {
+    const atob = require('atob');
+}
+
 const WEBGL_COMPONENT_TYPES = {
     5120: Int8Array,
     5121: Uint8Array,
@@ -12929,7 +12933,6 @@ var p = /*#__PURE__*/Object.freeze({
     __moduleExports: pako$1
 });
 
-//let pako = window.pako || p;
 let pako$2 = p;
 if (!pako$2.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako$2 = pako$2.default;
@@ -12938,13 +12941,12 @@ if (!pako$2.inflate) {  // See https://github.com/nodeca/pako/issues/97
 const XKT_VERSION = 6; // XKT format version
 
 /**
- * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
+ * Serializes an {@link XKTModel} to an {@link ArrayBuffer}.
  *
  * @param {XKTModel} xktModel The {@link XKTModel}.
- * @param {*} pako The Pako API
  * @returns {ArrayBuffer} The {@link ArrayBuffer}.
  */
-function writeXKTModelToArrayBuffer(xktModel, pako) {
+function writeXKTModelToArrayBuffer(xktModel) {
 
     const data = getModelData(xktModel);
 

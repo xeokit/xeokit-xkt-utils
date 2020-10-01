@@ -41,7 +41,7 @@
         loadGLTFIntoXKTModel,
         writeXKTModelToArrayBuffer,
         validateXKTArrayBuffer
-    } from "../dist/xeokit-xkt-tools.es.js";
+    } from "../dist/xeokit-xkt-utils.es.js";
 
     //------------------------------------------------------------------------------------------------------------------
     // Create a Viewer, arrange the camera
@@ -68,7 +68,7 @@
 
     log("Loading glTF file..");
 
-    utils.loadJSON("./models/gltf/duplex/scene.gltf", (json) => {
+    utils.loadJSON("./models/xkt/schependomlaan/v6_schependomlaan.xkt", (json) => {
 
             log("Parsing glTF into XKTModel..");
 

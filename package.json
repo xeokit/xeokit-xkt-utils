@@ -1,7 +1,7 @@
 {
-  "name": "xeokit-xkt-tools",
-  "version": "1.0.0",
-  "description": "JavaScript tools to generate .XKT files",
+  "name": "xeokit-xkt-utils",
+  "version": "0.0.1",
+  "description": "JavaScript utilities to create .XKT files",
   "main": "index.js",
   "directories": {},
   "scripts": {
@@ -12,20 +12,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xeokit/xeokit-xkt-tools.git"
+    "url": "git+https://github.com/xeokit/xeokit-xkt-utils.git"
   },
   "keywords": [
+    "xeolabs",
     "xeokit",
     "bim",
+    "ifc",
+    "webgl",
     "xkt",
     "gltf"
   ],
   "author": "Lindsay Kay",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/xeokit/xeokit-xkt-tools/issues"
+    "url": "https://github.com/xeokit/xeokit-xkt-utils/issues"
   },
-  "homepage": "https://github.com/xeokit/xeokit-xkt-tools#readme",
+  "homepage": "https://github.com/xeokit/xeokit-xkt-utils#readme",
   "dependencies": {
     "autoprefixer": "^9.8.5",
     "esdoc": "^1.1.0",

@@ -5,18 +5,18 @@ export default {
     input: './index.js',
     output: [
         {
-            file: './dist/xeokit-xkt-tools.es.js',
+            file: './dist/xeokit-xkt-utils.es.js',
             format: 'es',
             name: 'bundle'
         },
         {
-            file: './dist/xeokit-xkt-tools.cjs.js',
+            file: './dist/xeokit-xkt-utils.cjs.js',
             format: 'cjs',
             name: 'bundle2'
         }
     ],
     plugins: [
         nodeResolve(),
-       // minify()
+        // minify()
     ]
 }

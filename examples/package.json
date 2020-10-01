@@ -1,7 +1,7 @@
 {
-  "name": "xeokit-xkt-tools-demos",
+  "name": "xeokit-xkt-utils-examples",
   "version": "1.0.0",
-  "description": "xeokit examples to test xeokit-gltf-to-xkt",
+  "description": "Usage examples for xeokit-xkt-utils",
   "main": "index.js",
   "scripts": {
     "build": "rollup -c"

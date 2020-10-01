@@ -18,9 +18,9 @@
 
         "brand": {
           "logo": "./images/logo.jpg",
-          "title": "xeokit-xkt-tools",
+          "title": "xeokit-xkt-utils",
           "description": "",
-          "repository": "https://github.com/xeokit/xeokit-xkt-tools",
+          "repository": "https://github.com/xeokit/xeokit-xkt-utils",
           "site": "http://xeokit.io",
           "author": "http://xeolabs.com",
           "image": "./images/logo.jpg"

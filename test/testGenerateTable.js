@@ -1,4 +1,4 @@
-const XKTModel = require("../dist/xeokit-xkt-tools.cjs.js");
+const XKTModel = require("../dist/xeokit-xkt-utils.cjs.js");
 
 const assert = require('assert');
 
