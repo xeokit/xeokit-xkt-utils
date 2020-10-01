@@ -1,11 +1,7 @@
-import {XKTModel} from "./src/XKTModel/XKTModel.js";
-// import {createMeshesFromXKTModel} from "./src/createMeshesFromXKTModel.js";
-import {loadGLTFIntoXKTModel} from "./src/XKTModel/loadGLTFIntoXKTModel.js";
-import {validateXKTArrayBuffer} from "./src/XKTModel/validateXKTArrayBuffer.js";
-import {writeXKTModelToArrayBuffer} from "./src/XKTModel/writeXKTModelToArrayBuffer.js";
+export {XKTModel} from "./src/XKTModel/XKTModel.js";
 
-export {XKTModel};
-// export {createMeshesFromXKTModel};
-export {loadGLTFIntoXKTModel};
-export {validateXKTArrayBuffer};
-export {writeXKTModelToArrayBuffer};
+export {loadGLTFIntoXKTModel} from "./src/XKTModel/loadGLTFIntoXKTModel.js";
+
+export {validateXKTArrayBuffer} from "./src/XKTModel/validateXKTArrayBuffer.js";
+
+export {writeXKTModelToArrayBuffer} from "./src/XKTModel/writeXKTModelToArrayBuffer.js";

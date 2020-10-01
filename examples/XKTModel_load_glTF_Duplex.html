@@ -30,15 +30,18 @@
     // Import the modules we need for this example
     //------------------------------------------------------------------------------------------------------------------
 
-    import {utils} from "./build/xeokit-components.js";
-    import {Viewer} from "./build/xeokit-components.js";
-    import {XKTLoaderPlugin} from "./build/xeokit-components.js";
+    import {
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
 
-    import {XKTModel} from "./../src/XKTModel/XKTModel.js";
-    import {loadGLTFIntoXKTModel} from "./../src/XKTModel/loadGLTFIntoXKTModel.js";
-    import {writeXKTModelToArrayBuffer} from "./../src/XKTModel/writeXKTModelToArrayBuffer.js";
-    import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
-    import {validateXKTArrayBuffer} from "../dist/xeokit-xkt-tools.es.js";
+    import {
+        XKTModel,
+        loadGLTFIntoXKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "../dist/xeokit-xkt-tools.es.js";
 
     //------------------------------------------------------------------------------------------------------------------
     // Create a Viewer, arrange the camera

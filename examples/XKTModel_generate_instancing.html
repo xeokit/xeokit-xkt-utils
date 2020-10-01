@@ -26,13 +26,22 @@
 </body>
 <script type="module">
 
+
     import {Viewer, XKTLoaderPlugin} from "./build/xeokit-components.js";
 
-    import {XKTModel} from "./../src/XKTModel/XKTModel.js";
-    import {writeXKTModelToArrayBuffer} from "./../src/XKTModel/writeXKTModelToArrayBuffer.js";
-    import {validateXKTArrayBuffer} from "./../src/XKTModel/validateXKTArrayBuffer.js";
-    import {createMeshesFromXKTModel} from "./js/createMeshesFromXKTModel.js";
+    import {
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "../dist/xeokit-xkt-tools.es.js";
+
     import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
+
 
     const viewer = new Viewer({
         canvasId: "myCanvas",

@@ -18,8 +18,10 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1><a  target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a double-precision BIM model from gltf to XKT</h1><br>
-<p>This model is centered at  [1842022, 10, -5173301], which causes it to contain double-precision coordinates, which the XKT format emulates on WebGL.</p><br>
+    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a
+        double-precision BIM model from gltf to XKT</h1><br>
+    <p>This model is centered at [1842022, 10, -5173301], which causes it to contain double-precision coordinates, which
+        the XKT format emulates on WebGL.</p><br>
     <p>Model curtesy of <a href="https://bimdata.io">BIMData</a></p><br>
     <div id="log">Loading JavaScript modules...</div>
 
@@ -31,15 +33,18 @@
     // Import the modules we need for this example
     //------------------------------------------------------------------------------------------------------------------
 
-    import {utils} from "./build/xeokit-components.js";
-    import {Viewer} from "./build/xeokit-components.js";
-    import {XKTLoaderPlugin} from "./build/xeokit-components.js";
+    import {
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
 
-    import {XKTModel} from "./../src/XKTModel/XKTModel.js";
-    import {loadGLTFIntoXKTModel} from "./../src/XKTModel/loadGLTFIntoXKTModel.js";
-    import {writeXKTModelToArrayBuffer} from "./../src/XKTModel/writeXKTModelToArrayBuffer.js";
-    import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
-    import {validateXKTArrayBuffer} from "../dist/xeokit-xkt-tools.es.js";
+    import {
+        XKTModel,
+        loadGLTFIntoXKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "../dist/xeokit-xkt-tools.es.js";
 
     //------------------------------------------------------------------------------------------------------------------
     // Create a Viewer, arrange the camera
@@ -50,7 +55,7 @@
         transparent: true
     });
 
-    viewer.camera.eye =  [136.27810668945312, 29.578109741210938, 32.587806701660156];
+    viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
     viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
     viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
 
@@ -108,7 +113,7 @@
         });
 
     viewer.scene.on("tick", () => {
-       viewer.scene.camera.orbitYaw(1.0);
+        viewer.scene.camera.orbitYaw(1.0);
     });
 
     window.viewer = viewer; // For debugging
