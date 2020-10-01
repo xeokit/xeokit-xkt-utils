@@ -5175,9 +5175,9 @@
                                 "line": 91,
                                 "column": 38
                               },
-                              "identifierName": "Float32Array"
+                              "identifierName": "Float64Array"
                             },
-                            "name": "Float32Array"
+                            "name": "Float64Array"
                           },
                           "arguments": [
                             {
@@ -32007,7 +32007,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "Float32Array",
+      "value": "Float64Array",
       "start": 4674,
       "end": 4686,
       "loc": {

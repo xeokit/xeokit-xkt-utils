@@ -34,7 +34,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -73,7 +73,7 @@
 contains <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>s, which represent the objects within its region. Each <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>
 has <span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span>s, which indicate the <span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span>s that comprise the <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>.</p>
 <ul>
-<li>Import glTF into an XKTModel using <span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></li>
+<li>Import glTF into an XKTModel using <span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></li>
 <li>Build an XKTModel programmatically using <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createPrimitive">XKTModel#createPrimitive</a></span> and <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createEntity">XKTModel#createEntity</a></span></li>
 <li>Serialize an XKTModel to an ArrayBuffer using <span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></li>
 </ul>
@@ -1194,7 +1194,7 @@ positions of all shared <span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPri
     </tr>
 <tr data-ice="property" data-depth="1">
       <td data-ice="name" class="code" data-depth="1">params.positions</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array">Float32Array</a></span></td>
+      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array">Float64Array</a></span></td>
       <td data-ice="appendix"></td>
       <td data-ice="description"><p>Floating-point Local-space vertex positions for the <span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span>.</p>
 </td>

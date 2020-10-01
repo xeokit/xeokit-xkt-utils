@@ -1201,9 +1201,9 @@
               "line": 35,
               "column": 29
             },
-            "identifierName": "loadXKTModelFromGLTF"
+            "identifierName": "loadGLTFIntoXKTModel"
           },
-          "name": "loadXKTModelFromGLTF",
+          "name": "loadGLTFIntoXKTModel",
           "leadingComments": null
         },
         "generator": false,
@@ -30659,9 +30659,9 @@
                   "line": 479,
                   "column": 28
                 },
-                "identifierName": "loadXKTModelFromGLTF"
+                "identifierName": "loadGLTFIntoXKTModel"
               },
-              "name": "loadXKTModelFromGLTF"
+              "name": "loadGLTFIntoXKTModel"
             },
             "exported": {
               "type": "Identifier",
@@ -30676,9 +30676,9 @@
                   "line": 479,
                   "column": 28
                 },
-                "identifierName": "loadXKTModelFromGLTF"
+                "identifierName": "loadGLTFIntoXKTModel"
               },
-              "name": "loadXKTModelFromGLTF"
+              "name": "loadGLTFIntoXKTModel"
             }
           }
         ],
@@ -30725,9 +30725,9 @@
                 "line": 35,
                 "column": 29
               },
-              "identifierName": "loadXKTModelFromGLTF"
+              "identifierName": "loadGLTFIntoXKTModel"
             },
-            "name": "loadXKTModelFromGLTF",
+            "name": "loadGLTFIntoXKTModel",
             "leadingComments": null
           },
           "generator": false,
@@ -34519,7 +34519,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "loadXKTModelFromGLTF",
+      "value": "loadGLTFIntoXKTModel",
       "start": 896,
       "end": 916,
       "loc": {
@@ -96105,7 +96105,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "loadXKTModelFromGLTF",
+      "value": "loadGLTFIntoXKTModel",
       "start": 15745,
       "end": 15765,
       "loc": {

@@ -284,7 +284,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+                        "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float64Array}\n         ",
                         "start": 421,
                         "end": 584,
                         "loc": {
@@ -936,7 +936,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+                          "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float64Array}\n         ",
                           "start": 421,
                           "end": 584,
                           "loc": {
@@ -1309,7 +1309,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+      "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float64Array}\n         ",
       "start": 421,
       "end": 584,
       "loc": {
@@ -1701,7 +1701,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+      "value": "*\n         * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float64Array}\n         ",
       "start": 421,
       "end": 584,
       "loc": {

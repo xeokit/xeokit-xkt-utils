@@ -30,9 +30,9 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/loadxktmodelfromgltf.js~loadxktmodelfromgltf",
-    "function/index.html#static-function-loadXKTModelFromGLTF",
-    "<span>loadXKTModelFromGLTF</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/loadXKTModelFromGLTF.js</span>",
+    "xeokit-xkt-tools/src/xktmodel/loadgltfintoxktmodel.js~loadgltfintoxktmodel",
+    "function/index.html#static-function-loadGLTFIntoXKTModel",
+    "<span>loadGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/loadGLTFIntoXKTModel.js</span>",
     "function"
   ],
   [
@@ -618,9 +618,9 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "src/xktmodel/loadxktmodelfromgltf.js",
-    "file/src/XKTModel/loadXKTModelFromGLTF.js.html",
-    "src/XKTModel/loadXKTModelFromGLTF.js",
+    "src/xktmodel/loadgltfintoxktmodel.js",
+    "file/src/XKTModel/loadGLTFIntoXKTModel.js.html",
+    "src/XKTModel/loadGLTFIntoXKTModel.js",
     "file"
   ],
   [

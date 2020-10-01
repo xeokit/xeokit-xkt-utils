@@ -45,7 +45,7 @@
         517,
         583,
         587,
-        682
+        691
       ]
     },
     "src/XKTModel/XKTPrimitive.js": {
@@ -96,7 +96,7 @@
         1
       ]
     },
-    "src/XKTModel/loadXKTModelFromGLTF.js": {
+    "src/XKTModel/loadGLTFIntoXKTModel.js": {
       "expectCount": 20,
       "actualCount": 1,
       "undocumentLines": [

@@ -35,7 +35,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -67,7 +67,7 @@ const kdTreeDimLength = new Float32Array(3);
  * contains {@link XKTEntity}s, which represent the objects within its region. Each {@link XKTEntity}
  * has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
  *
- * * Import glTF into an XKTModel using {@link loadXKTModelFromGLTF}
+ * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
  * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *

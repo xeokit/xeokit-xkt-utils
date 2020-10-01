@@ -34,7 +34,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadXKTModelFromGLTF">loadXKTModelFromGLTF</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -66,7 +66,7 @@ const kdTreeDimLength = new Float32Array(3);
  * contains {@link XKTEntity}s, which represent the objects within its region. Each {@link XKTEntity}
  * has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
  *
- * * Import glTF into an XKTModel using {@link loadXKTModelFromGLTF}
+ * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
  * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *
@@ -257,7 +257,7 @@ class XKTModel {
      * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTPrimitive} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
      * @param {Uint8Array} params.color RGB color for the {@link XKTPrimitive}, with each color component in range [0..1].
      * @param {Number} params.opacity Opacity factor for the {@link XKTPrimitive}, in range [0..1].
-     * @param {Float32Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
+     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
      * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTPrimitive}.
      * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTPrimitive}.
      * @returns {XKTPrimitive} The new {@link XKTPrimitive}.
@@ -661,6 +661,8 @@ class XKTModel {
         }
 
         const tileCenter = math.getAABB3Center(tileAABB);
+        const tileCenterNeg = math.mulVec3Scalar(tileCenter, -1, math.vec3());
+
         const rtcAABB = math.AABB3(); // AABB centered at the RTC origin
 
         rtcAABB[0] = tileAABB[0] - tileCenter[0];
@@ -676,36 +678,43 @@ class XKTModel {
 
             const primitiveInstances = entity.primitiveInstances;
 
-            for (let j = 0, lenj = primitiveInstances.length; j &lt; lenj; j++) {
+            if (entity.hasReusedPrimitives) {
 
-                const primitiveInstance = primitiveInstances[j];
-                const primitive = primitiveInstance.primitive;
+                // Post-multiply a translation to the entity&apos;s modeling matrix
+                // to center the entity&apos;s primitive instances to the tile RTC center
 
-                if (!primitive.reused) {
+                math.translateMat4v(tileCenterNeg, entity.matrix);
 
-                    const positions = primitive.positions;
+            } else {
 
-                    // Center positions relative to their tile&apos;s World-space center
+                for (let j = 0, lenj = primitiveInstances.length; j &lt; lenj; j++) {
 
-                    for (let k = 0, lenk = positions.length; k &lt; lenk; k += 3) {
+                    const primitiveInstance = primitiveInstances[j];
+                    const primitive = primitiveInstance.primitive;
 
-                        // positions[k + 0] -= tileCenter[0];
-                        // positions[k + 1] -= tileCenter[1];
-                        // positions[k + 2] -= tileCenter[2];
+                    if (!primitive.reused) {
 
-                        // positions[k + 0] -= 15;
-                        // positions[k + 1] -= 15;
-                        // positions[k + 2] -= 15;
+                        const positions = primitive.positions;
+
+                        // Center positions relative to their tile&apos;s World-space center
+
+                        for (let k = 0, lenk = positions.length; k &lt; lenk; k += 3) {
+
+                            positions[k + 0] -= tileCenter[0];
+                            positions[k + 1] -= tileCenter[1];
+                            positions[k + 2] -= tileCenter[2];
+                        }
+
+                        // Quantize positions relative to tile&apos;s RTC-space boundary
+
+                        geometryCompression.quantizePositions(positions, positions.length, rtcAABB, primitive.positionsQuantized);
+
+                        numBatchingEntities++;
+
+                    } else {
+
+
                     }
-
-                    // Quantize positions relative to tile&apos;s RTC-space boundary
-
-                    geometryCompression.quantizePositions(positions, positions.length, rtcAABB, primitive.positionsQuantized);
-
-                    numBatchingEntities++;
-                } else {
-
-
                 }
             }
 
