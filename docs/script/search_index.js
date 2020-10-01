@@ -1,50 +1,56 @@
 window.esdocSearchIndex = [
   [
-    "xeokit-xkt-tools/src/xktmodel/xktentity.js~xktentity",
+    "xeokit-xkt-utils/src/xktmodel/xktentity.js~xktentity",
     "class/src/XKTModel/XKTEntity.js~XKTEntity.html",
-    "<span>XKTEntity</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTEntity.js</span>",
+    "<span>XKTEntity</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/XKTEntity.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/xktmodel.js~xktmodel",
+    "xeokit-xkt-utils/src/xktmodel/xktmodel.js~xktmodel",
     "class/src/XKTModel/XKTModel.js~XKTModel.html",
-    "<span>XKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTModel.js</span>",
+    "<span>XKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/XKTModel.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/xktprimitive.js~xktprimitive",
+    "xeokit-xkt-utils/src/xktmodel/xktprimitive.js~xktprimitive",
     "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html",
-    "<span>XKTPrimitive</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTPrimitive.js</span>",
+    "<span>XKTPrimitive</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/XKTPrimitive.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance",
+    "xeokit-xkt-utils/src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance",
     "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html",
-    "<span>XKTPrimitiveInstance</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTPrimitiveInstance.js</span>",
+    "<span>XKTPrimitiveInstance</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/XKTPrimitiveInstance.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/xkttile.js~xkttile",
+    "xeokit-xkt-utils/src/xktmodel/xkttile.js~xkttile",
     "class/src/XKTModel/XKTTile.js~XKTTile.html",
-    "<span>XKTTile</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/XKTTile.js</span>",
+    "<span>XKTTile</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/XKTTile.js</span>",
     "class"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/loadgltfintoxktmodel.js~loadgltfintoxktmodel",
+    "xeokit-xkt-utils/src/xktmodel/loadgltfintoxktmodel.js~loadgltfintoxktmodel",
     "function/index.html#static-function-loadGLTFIntoXKTModel",
-    "<span>loadGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/loadGLTFIntoXKTModel.js</span>",
+    "<span>loadGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/loadGLTFIntoXKTModel.js</span>",
     "function"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/validatexktarraybuffer.js~validatexktarraybuffer",
+    "xeokit-xkt-utils/src/xktmodel/lib/pako.es.js~pako",
+    "variable/index.html#static-variable-pako",
+    "<span>pako</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/lib/pako.es.js</span>",
+    "variable"
+  ],
+  [
+    "xeokit-xkt-utils/src/xktmodel/validatexktarraybuffer.js~validatexktarraybuffer",
     "function/index.html#static-function-validateXKTArrayBuffer",
-    "<span>validateXKTArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/validateXKTArrayBuffer.js</span>",
+    "<span>validateXKTArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/validateXKTArrayBuffer.js</span>",
     "function"
   ],
   [
-    "xeokit-xkt-tools/src/xktmodel/writexktmodeltoarraybuffer.js~writexktmodeltoarraybuffer",
+    "xeokit-xkt-utils/src/xktmodel/writexktmodeltoarraybuffer.js~writexktmodeltoarraybuffer",
     "function/index.html#static-function-writeXKTModelToArrayBuffer",
-    "<span>writeXKTModelToArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-tools/src/XKTModel/writeXKTModelToArrayBuffer.js</span>",
+    "<span>writeXKTModelToArrayBuffer</span> <span class=\"search-result-import-path\">xeokit-xkt-utils/src/XKTModel/writeXKTModelToArrayBuffer.js</span>",
     "function"
   ],
   [
@@ -603,6 +609,12 @@ window.esdocSearchIndex = [
     "src/xktmodel/lib/math.js",
     "file/src/XKTModel/lib/math.js.html",
     "src/XKTModel/lib/math.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/lib/pako.es.js",
+    "file/src/XKTModel/lib/pako.es.js.html",
+    "src/XKTModel/lib/pako.es.js",
     "file"
   ],
   [

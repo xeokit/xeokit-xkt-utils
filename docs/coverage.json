@@ -1,6 +1,6 @@
 {
-  "coverage": "50.39%",
-  "expectCount": 127,
+  "coverage": "49.23%",
+  "expectCount": 130,
   "actualCount": 64,
   "files": {
     "src/XKTModel/KDNode.js": {
@@ -89,6 +89,15 @@
         8
       ]
     },
+    "src/XKTModel/lib/pako.es.js": {
+      "expectCount": 3,
+      "actualCount": 0,
+      "undocumentLines": [
+        1,
+        11,
+        15
+      ]
+    },
     "src/XKTModel/lib/utils.js": {
       "expectCount": 2,
       "actualCount": 1,
@@ -100,25 +109,25 @@
       "expectCount": 20,
       "actualCount": 1,
       "undocumentLines": [
-        5,
         14,
-        64,
-        87,
-        99,
-        138,
+        23,
+        73,
+        96,
+        108,
         147,
         156,
-        164,
+        165,
         173,
-        186,
-        231,
-        242,
-        255,
-        282,
-        295,
-        438,
-        462,
-        475
+        182,
+        195,
+        240,
+        251,
+        264,
+        291,
+        304,
+        447,
+        471,
+        484
       ]
     },
     "src/XKTModel/validateXKTArrayBuffer.js": {
