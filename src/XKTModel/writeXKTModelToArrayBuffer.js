@@ -1,6 +1,6 @@
-import * as p from "./lib/pako.js";
+import * as p from "./lib/pako.es.js";
 
-let pako = window.pako || p;
+let pako = p;
 if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako = pako.default;
 }
@@ -8,7 +8,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
 const XKT_VERSION = 6; // XKT format version
 
 /**
- * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
+ * Serializes an {@link XKTModel} to an {@link ArrayBuffer}.
  *
  * @param {XKTModel} xktModel The {@link XKTModel}.
  * @returns {ArrayBuffer} The {@link ArrayBuffer}.
@@ -65,7 +65,7 @@ function getModelData(xktModel) {
 
     const data = {
 
-       //   positions: new Uint16Array(lenPositions), // All geometry arrays
+        //   positions: new Uint16Array(lenPositions), // All geometry arrays
         positions: new Float32Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
         indices: new Uint32Array(lenIndices),
@@ -110,7 +110,7 @@ function getModelData(xktModel) {
         const primitive = primitivesList [primitiveIndex];
 
         data.positions.set(primitive.positions, countPositions);
-     //   data.positions.set(primitive.positionsQuantized, countPositions);
+        //   data.positions.set(primitive.positionsQuantized, countPositions);
         data.normals.set(primitive.normalsOctEncoded, countNormals);
         data.indices.set(primitive.indices, countIndices);
         data.edgeIndices.set(primitive.edgeIndices, countEdgeIndices);

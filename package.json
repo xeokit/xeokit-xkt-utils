@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "JavaScript tools to generate .XKT files",
   "main": "index.js",
-  "directories": {
-
-  },
+  "directories": {},
   "scripts": {
     "test": "mocha",
     "build": " rollup -c",
@@ -37,6 +35,7 @@
     "rollup-plugin-node-resolve": "^5.2.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^15.1.0",
     "mocha": "^8.1.3"
   }
 }
