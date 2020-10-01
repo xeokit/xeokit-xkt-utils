@@ -36,7 +36,7 @@
     import {XKTLoaderPlugin} from "./build/xeokit-components.js";
 
     import {XKTModel} from "./../src/XKTModel/XKTModel.js";
-    import {loadXKTModelFromGLTF} from "./../src/XKTModel/loadXKTModelFromGLTF.js";
+    import {loadGLTFIntoXKTModel} from "./../src/XKTModel/loadGLTFIntoXKTModel.js";
     import {writeXKTModelToArrayBuffer} from "./../src/XKTModel/writeXKTModelToArrayBuffer.js";
     import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
     import {validateXKTArrayBuffer} from "../dist/xeokit-xkt-tools.es.js";
@@ -74,7 +74,7 @@
                 viewer: viewer
             });
 
-            loadXKTModelFromGLTF(json, xktModel, {basePath: ""}).then(() => {
+            loadGLTFIntoXKTModel(json, xktModel, {basePath: ""}).then(() => {
 
                 log("Writing XKTModel to array buffer..");
 

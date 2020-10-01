@@ -70,7 +70,7 @@ function inflate(deflatedData) {
         eachEntityPrimitiveInstancesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
         eachEntityMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMatricesPortion).buffer),
 
-        eachTileAABB: new Float32Array(pako.inflate(deflatedData.eachTileAABB).buffer),
+        eachTileAABB: new Float64Array(pako.inflate(deflatedData.eachTileAABB).buffer),
         eachTileDecodeMatrix: new Float32Array(pako.inflate(deflatedData.eachTileDecodeMatrix).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako.inflate(deflatedData.eachTileEntitiesPortion).buffer),
     };
@@ -150,14 +150,10 @@ function load(viewer, options, inflatedData, performanceModel) {
 
         const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
-        const tileCenter = math.getAABB3Center(tileAABB);
+
+        math.getAABB3Center(tileAABB, tileCenter);
 
         console.log("Parsing tile " + tileIndex + " - tileCenter = " + tileCenter);
-
-        // Visualize the tile's AABB
-
-       // createAABBHelper(performanceModel.scene, tileAABB);
-        createPosHelper(performanceModel.scene, tileCenter);
 
         // Iterate over each tile's entities
 
