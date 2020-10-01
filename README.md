@@ -56,6 +56,8 @@ box (AABB) that encloses the ````XKTEntitys````, and a decoding matrix to de-qua
 In the example below, we'll programmatically build a simple [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html).
 
 ````javascript
+const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
+
 const xktModel = new XKTModel();
 
 xktModel.createPrimitive({
@@ -209,12 +211,17 @@ utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
 
 ## Using in node.js
 
-TODO: massage the snippet below into a comprehensive node.js example.
+In the example below, we'll load the contents of a glTF file, then 
+use [````loadGLTFIntoXKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel) to parse the 
+glTF into an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html), then
+we'll use [````writeXKTModelToArrayBuffer````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer)  to serialize our [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) to an ````ArrayBuffer````, which we finally write to an ````.xkt```` file. 
+
+
 
 ````javascript
 const fs = require('fs');
 
-const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./XKTModel/lib/xeokit-xkt-utils.cjs.js");
+const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
 
 const gltfPath = "./myModel.gltf";
 const xktPath = "./myModel.xkt";
