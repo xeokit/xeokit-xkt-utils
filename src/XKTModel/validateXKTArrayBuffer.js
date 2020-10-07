@@ -45,8 +45,7 @@ function extract(elements) {
         eachEntityPrimitiveInstancesPortion: elements[12],
         eachEntityMatricesPortion: elements[13],
         eachTileAABB: elements[14],
-        eachTileDecodeMatrix: elements[15],
-        eachTileEntitiesPortion: elements[16]
+        eachTileEntitiesPortion: elements[15]
     };
 }
 
@@ -68,7 +67,6 @@ function inflate(deflatedData) {
         eachEntityPrimitiveInstancesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
         eachEntityMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMatricesPortion).buffer),
         eachTileAABB: new Float64Array(pako.inflate(deflatedData.eachTileAABB).buffer),
-        eachTileDecodeMatrix: new Float32Array(pako.inflate(deflatedData.eachTileDecodeMatrix).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako.inflate(deflatedData.eachTileEntitiesPortion).buffer),
     };
 }
@@ -147,7 +145,6 @@ function validateData(inflatedData, xktModel) {
         const tileDecodeMatrixIndex = tileIndex * 16;
         const tileAABBIndex = tileIndex * 6;
 
-        const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
 
         // ASSERTIONS
@@ -161,11 +158,6 @@ function validateData(inflatedData, xktModel) {
 
         if (!compareArrays(tileAABB, xktTile.aabb)) {
             console.error("compareArrays(tileAABB, xktTile.aabb) === false");
-            return false;
-        }
-
-        if (!compareArrays(tileDecodeMatrix, xktTile.decodeMatrix)) {
-            console.error("compareArrays(tileDecodeMatrix, xktTile.decodeMatrix) === false");
             return false;
         }
 

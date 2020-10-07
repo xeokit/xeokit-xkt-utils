@@ -13,10 +13,9 @@ class XKTTile {
      *
      * @private
      * @param aabb
-     * @param decodeMatrix
      * @param entities
      */
-    constructor(aabb, decodeMatrix, entities) {
+    constructor(aabb, entities) {
 
         /**
          * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.
@@ -24,13 +23,6 @@ class XKTTile {
          * @type {Float64Array}
          */
         this.aabb = aabb;
-
-        /**
-         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.
-         *
-         * @type {Float32Array}
-         */
-        this.decodeMatrix = decodeMatrix;
 
         /**
          * The {@link XKTEntity}'s within this XKTTile.

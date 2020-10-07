@@ -12,7 +12,7 @@ const tempVec4b = math.vec4([0, 0, 0, 1]);
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
-const KD_TREE_MAX_DEPTH = 5; // Increase if greater precision needed
+const KD_TREE_MAX_DEPTH = 4; // Increase if greater precision needed
 const kdTreeDimLength = new Float32Array(3);
 
 /**
@@ -679,11 +679,7 @@ class XKTModel {
             this.entitiesList.push(entity);
         }
 
-        const decodeMatrix = math.mat4();
-
-        geometryCompression.createPositionsDecodeMatrix(rtcAABB, decodeMatrix);
-
-        const tile = new XKTTile(tileAABB, decodeMatrix, entities);
+        const tile = new XKTTile(tileAABB, entities);
 
         this.tilesList.push(tile);
     }

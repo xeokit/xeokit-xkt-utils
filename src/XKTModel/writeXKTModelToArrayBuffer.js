@@ -88,7 +88,6 @@ function getModelData(xktModel) {
         eachEntityMatricesPortion: new Uint32Array(numEntities), // For each entity that shares primitives, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared primitives' Local-space vertex positions. Thios is ignored for entities that don't share primitives, because the vertex positions of non-shared primitives are pre-transformed into World-space.
 
         eachTileAABB: new Float64Array(numTiles * 6), // For each tile, an axis-aligned bounding box
-        eachTileDecodeMatrix: new Float32Array(numTiles * 16), // For each tile, a position de-quantization matrix
         eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityPrimitiveInstancesPortion and eachEntityMatricesPortion used by the tile
     };
 
@@ -147,7 +146,6 @@ function getModelData(xktModel) {
         data.eachTileEntitiesPortion[tileIndex] = entityIndex;
 
         const tileAABB = tile.aabb;
-        const tileDecodeMatrix = tile.decodeMatrix;
 
         for (let j = 0; j < numTileEntities; j++) {
 
@@ -187,8 +185,6 @@ function getModelData(xktModel) {
         const tileDecodeMatrixIndex = tileIndex * 16;
 
         data.eachTileAABB.set(tileAABB, tileAABBIndex);
-        data.eachTileDecodeMatrix.set(tileDecodeMatrix, tileDecodeMatrixIndex);
-
     }
 
     return data;
@@ -222,7 +218,6 @@ function deflateData(data) {
         eachEntityMatricesPortion: pako.deflate(data.eachEntityMatricesPortion.buffer),
 
         eachTileAABB: pako.deflate(data.eachTileAABB.buffer),
-        eachTileDecodeMatrix: pako.deflate(data.eachTileDecodeMatrix.buffer),
         eachTileEntitiesPortion: pako.deflate(data.eachTileEntitiesPortion.buffer)
     };
 }
@@ -252,7 +247,6 @@ function createArrayBuffer(deflatedData) {
         deflatedData.eachEntityMatricesPortion,
 
         deflatedData.eachTileAABB,
-        deflatedData.eachTileDecodeMatrix,
         deflatedData.eachTileEntitiesPortion
     ]);
 }
