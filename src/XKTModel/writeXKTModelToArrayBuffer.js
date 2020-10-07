@@ -65,8 +65,7 @@ function getModelData(xktModel) {
 
     const data = {
 
-        //   positions: new Uint16Array(lenPositions), // All geometry arrays
-        positions: new Float32Array(lenPositions), // All geometry arrays
+        positions: new Uint16Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
@@ -109,8 +108,7 @@ function getModelData(xktModel) {
 
         const primitive = primitivesList [primitiveIndex];
 
-        data.positions.set(primitive.positions, countPositions);
-        //   data.positions.set(primitive.positionsQuantized, countPositions);
+        data.positions.set(primitive.positionsQuantized, countPositions);
         data.normals.set(primitive.normalsOctEncoded, countNormals);
         data.indices.set(primitive.indices, countIndices);
         data.edgeIndices.set(primitive.edgeIndices, countEdgeIndices);

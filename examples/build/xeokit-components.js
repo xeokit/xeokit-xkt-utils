@@ -1209,7 +1209,7 @@ const math = {
      * @return {Array(Number)} The geometric mean vec2
      */
     geometricMeanVec2(...vectors) {
-        const geometricMean = new Float32Array(vectors[0]);
+        const geometricMean = new FloatArrayType(vectors[0]);
         for (let i = 1; i < vectors.length; i++) {
             geometricMean[0] += vectors[i][0];
             geometricMean[1] += vectors[i][1];
@@ -7716,12 +7716,49 @@ class Canvas extends Component {
 }
 
 /**
- * @desc Provides rendering context to {@link Drawable"}}Drawables{{/crossLink}} as xeokit renders them for a frame.
+ * Given a view matrix and a relative-to-center (RTC) coordinate origin, returns a view matrix
+ * to transform RTC coordinates to View-space.
+ *
+ * The returned view matrix is
+ *
+ * @private
+ */
+const createRTCViewMat = (function () {
+
+    const tempMat = new Float32Array(16);
+    const rtcCenterWorld = new Float64Array(4);
+    const rtcCenterView = new Float64Array(4);
+
+    return function (viewMat, rtcCenter, rtcViewMat = tempMat) {
+        rtcCenterWorld[0] = rtcCenter[0];
+        rtcCenterWorld[1] = rtcCenter[1];
+        rtcCenterWorld[2] = rtcCenter[2];
+        rtcCenterWorld[3] = 1;
+        math.transformVec4(viewMat, rtcCenterWorld, rtcCenterView);
+        math.setMat4Translation(viewMat, rtcCenterView, rtcViewMat);
+        return rtcViewMat;
+    }
+}());
+
+/**
+ * @desc Provides rendering context to {@link Drawable"}s as xeokit renders them for a frame.
+ *
+ * Also creates RTC viewing and picking matrices, caching and reusing matrices within each frame.
+ *
  * @private
  */
 class FrameContext {
 
-    constructor() {
+    constructor(scene) {
+
+        this._scene = scene;
+
+        this._matPool = [];
+        this._matPoolNextFreeIndex = 0;
+
+        this._rtcViewMats = {};
+        this._rtcPickViewMats = {};
+
         this.reset();
     }
 
@@ -7730,6 +7767,10 @@ class FrameContext {
      * @private
      */
     reset() {
+
+        this._matPoolNextFreeIndex = 0;
+        this._rtcViewMats = {};
+        this._rtcPickViewMats = {};
 
         /**
          * ID of the last {@link webgl.Program} that was bound during the current frame.
@@ -7877,6 +7918,53 @@ class FrameContext {
          * @type Number
          */
         this.lineWidth = 1;
+    }
+
+    /**
+     * Get View and View-Normal RTC matrices for the given RTC coordinates.
+     */
+    getRTCViewMatrices(rtcCenter) {
+        const hash = rtcCenter.join();
+        let rtcViewMats = this._rtcViewMats[hash];
+        if (!rtcViewMats) {
+            rtcViewMats = [
+                this._getNewMat(), // RTC view matrix
+                this._getNewMat()  // RTC view normal matrix
+            ];
+            this._rtcViewMats[hash] = rtcViewMats;
+            const viewMat = this._scene.camera.viewMatrix;
+            const rtcViewMat = rtcViewMats[0];
+            const rtcViewNormalMat = rtcViewMats[1];
+            createRTCViewMat(viewMat, rtcCenter, rtcViewMat);
+            math.inverseMat4(rtcViewMat, rtcViewNormalMat);
+            math.transposeMat4(rtcViewNormalMat);
+        }
+        return rtcViewMats;
+    }
+
+    /**
+     * Get picking View RTC matrix for the given RTC coordinates.
+     */
+    getRTCPickViewMatrix(rtcCenter) {
+        const hash = rtcCenter.join();
+        let rtcPickViewMat = this._rtcPickViewMats[hash];
+        if (!rtcPickViewMat) {
+            rtcPickViewMat = this._getNewMat();
+            this._rtcPickViewMats[hash] = rtcPickViewMat;
+            const pickViewMat = this.pickViewMatrix || this._scene.camera.viewMatrix;
+            createRTCViewMat(pickViewMat, rtcCenter, rtcPickViewMat);
+        }
+        return rtcPickViewMat;
+    }
+
+    _getNewMat() {
+        let mat = this._matPool[this._matPoolNextFreeIndex];
+        if (!mat) {
+            mat = math.mat4();
+            this._matPool[this._matPoolNextFreeIndex] = mat;
+        }
+        this._matPoolNextFreeIndex++;
+        return mat;
     }
 }
 
@@ -8531,15 +8619,15 @@ class PickResult {
         this.primIndex = -1;
 
         this._canvasPos = new Int16Array([0, 0]);
-        this._origin = new Float32Array([0, 0, 0]);
-        this._direction = new Float32Array([0, 0, 0]);
+        this._origin = new Float64Array([0, 0, 0]);
+        this._direction = new Float64Array([0, 0, 0]);
         this._indices = new Int32Array(3);
-        this._localPos = new Float32Array([0, 0, 0]);
-        this._worldPos = new Float32Array([0, 0, 0]);
-        this._viewPos = new Float32Array([0, 0, 0]);
-        this._bary = new Float32Array([0, 0, 0]);
-        this._worldNormal = new Float32Array([0, 0, 0]);
-        this._uv = new Float32Array([0, 0]);
+        this._localPos = new Float64Array([0, 0, 0]);
+        this._worldPos = new Float64Array([0, 0, 0]);
+        this._viewPos = new Float64Array([0, 0, 0]);
+        this._bary = new Float64Array([0, 0, 0]);
+        this._worldNormal = new Float64Array([0, 0, 0]);
+        this._uv = new Float64Array([0, 0]);
 
         this.reset();
     }
@@ -10332,7 +10420,7 @@ const Renderer = function (scene, options) {
 
     options = options || {};
 
-    const frameCtx = new FrameContext();
+    const frameCtx = new FrameContext(scene);
     const canvas = scene.canvas.canvas;
     const gl = scene.canvas.gl;
     const canvasTransparent = (!!options.transparent);
@@ -10544,7 +10632,7 @@ const Renderer = function (scene, options) {
         }
 
 
-            drawShadowMaps();
+        drawShadowMaps();
 
         drawColor(params);
     }
@@ -11253,6 +11341,7 @@ const Renderer = function (scene, options) {
         const tempVec4e = math.vec4();
         const tempMat4a = math.mat4();
         const tempMat4b = math.mat4();
+        const tempMat4c = math.mat4();
 
         return function (pickable, canvasX, canvasY, pickViewMatrix, pickProjMatrix, pickResult) {
 
@@ -11277,10 +11366,21 @@ const Renderer = function (scene, options) {
             const screenZ = unpackDepth(pix); // Get screen-space Z at the given canvas coords
 
             // Calculate clip space coordinates, which will be in range of x=[-1..1] and y=[-1..1], with y=(+1) at top
-            var x = (canvasX - canvas.width / 2) / (canvas.width / 2);
-            var y = -(canvasY - canvas.height / 2) / (canvas.height / 2);
-            var pvMat = math.mulMat4(pickProjMatrix, pickViewMatrix, tempMat4a);
-            var pvMatInverse = math.inverseMat4(pvMat, tempMat4b);
+            const x = (canvasX - canvas.width / 2) / (canvas.width / 2);
+            const y = -(canvasY - canvas.height / 2) / (canvas.height / 2);
+
+            const rtcCenter = pickable.rtcCenter;
+            let pvMat;
+
+            if (rtcCenter) {
+                const rtcPickViewMat = createRTCViewMat(pickViewMatrix, rtcCenter, tempMat4a);
+                pvMat = math.mulMat4(pickProjMatrix, rtcPickViewMat, tempMat4b);
+
+            } else {
+                pvMat = math.mulMat4(pickProjMatrix, pickViewMatrix, tempMat4b);
+            }
+
+            const pvMatInverse = math.inverseMat4(pvMat, tempMat4c);
 
             tempVec4a[0] = x;
             tempVec4a[1] = y;
@@ -11298,8 +11398,12 @@ const Renderer = function (scene, options) {
             var world2 = math.transformVec4(pvMatInverse, tempVec4b);
             world2 = math.mulVec4Scalar(world2, 1 / world2[3]);
 
-            var dir = math.subVec3(world2, world1, tempVec4c);
-            var worldPos = math.addVec3(world1, math.mulVec4Scalar(dir, screenZ, tempVec4d), tempVec4e);
+            const dir = math.subVec3(world2, world1, tempVec4c);
+            const worldPos = math.addVec3(world1, math.mulVec4Scalar(dir, screenZ, tempVec4d), tempVec4e);
+
+            if (rtcCenter) {
+                math.addVec3(worldPos, rtcCenter);
+            }
 
             pickResult.worldPos = worldPos;
         }
@@ -15599,6 +15703,26 @@ function getPositionsBounds(array) {
     };
 }
 
+const createPositionsDecodeMatrix = (function () {
+    const translate = math.mat4();
+    const scale = math.mat4();
+    return function (aabb, positionsDecodeMatrix) {
+        positionsDecodeMatrix = positionsDecodeMatrix || math.mat4();
+        const xmin = aabb[0];
+        const ymin = aabb[1];
+        const zmin = aabb[2];
+        const xwid = aabb[3] - xmin;
+        const ywid = aabb[4] - ymin;
+        const zwid = aabb[5] - zmin;
+        const maxInt = 65535;
+        math.identityMat4(translate);
+        math.translationMat4v(aabb, translate);
+        math.identityMat4(scale);
+        math.scalingMat4v([xwid / maxInt, ywid / maxInt, zwid / maxInt], scale);
+        math.mulMat4(translate, scale, positionsDecodeMatrix);
+        return positionsDecodeMatrix;
+    };
+})();
 
 /**
  * @private
@@ -15884,6 +16008,7 @@ function decompressNormals(octs, result) {
 const geometryCompressionUtils = {
 
     getPositionsBounds: getPositionsBounds,
+    createPositionsDecodeMatrix: createPositionsDecodeMatrix,
     compressPositions: compressPositions,
     decompressPositions: decompressPositions,
     decompressPosition: decompressPosition,
@@ -19563,12 +19688,12 @@ function getEntityIDMap(scene, entityIds) {
  *     var primitive = pickResult.primitive; // Type of primitive that was picked, usually "triangles"
  *     var primIndex = pickResult.primIndex; // Position of triangle's first index in the picked Mesh's Geometry's indices array
  *     var indices = pickResult.indices; // UInt32Array containing the triangle's vertex indices
- *     var localPos = pickResult.localPos; // Float32Array containing the picked Local-space position on the triangle
- *     var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the triangle
- *     var viewPos = pickResult.viewPos; // Float32Array containing the picked View-space position on the triangle
- *     var bary = pickResult.bary; // Float32Array containing the picked barycentric position within the triangle
- *     var normal = pickResult.normal; // Float32Array containing the interpolated normal vector at the picked position on the triangle
- *     var uv = pickResult.uv; // Float32Array containing the interpolated UV coordinates at the picked position on the triangle
+ *     var localPos = pickResult.localPos; // Float64Array containing the picked Local-space position on the triangle
+ *     var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the triangle
+ *     var viewPos = pickResult.viewPos; // Float64Array containing the picked View-space position on the triangle
+ *     var bary = pickResult.bary; // Float64Array containing the picked barycentric position within the triangle
+ *     var normal = pickResult.normal; // Float64Array containing the interpolated normal vector at the picked position on the triangle
+ *     var uv = pickResult.uv; // Float64Array containing the interpolated UV coordinates at the picked position on the triangle
  * }
  * ````
  *
@@ -21115,7 +21240,7 @@ class Scene extends Component {
     /**
      * Gets the World-space axis-aligned 3D boundary (AABB) of this Scene.
      *
-     * The AABB is represented by a six-element Float32Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
+     * The AABB is represented by a six-element Float64Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * When the Scene has no content, will be ````[-100,-100,-100,100,100,100]````.
      *
@@ -21227,19 +21352,19 @@ class Scene extends Component {
      *
      *         var primIndex = pickResult.primIndex; // Position of triangle's first index in the picked Entity's Geometry's indices array
      *         var indices = pickResult.indices; // UInt32Array containing the triangle's vertex indices
-     *         var localPos = pickResult.localPos; // Float32Array containing the picked Local-space position on the triangle
-     *         var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the triangle
-     *         var viewPos = pickResult.viewPos; // Float32Array containing the picked View-space position on the triangle
-     *         var bary = pickResult.bary; // Float32Array containing the picked barycentric position within the triangle
-     *         var worldNormal = pickResult.worldNormal; // Float32Array containing the interpolated World-space normal vector at the picked position on the triangle
-     *         var uv = pickResult.uv; // Float32Array containing the interpolated UV coordinates at the picked position on the triangle
+     *         var localPos = pickResult.localPos; // Float64Array containing the picked Local-space position on the triangle
+     *         var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the triangle
+     *         var viewPos = pickResult.viewPos; // Float64Array containing the picked View-space position on the triangle
+     *         var bary = pickResult.bary; // Float64Array containing the picked barycentric position within the triangle
+     *         var worldNormal = pickResult.worldNormal; // Float64Array containing the interpolated World-space normal vector at the picked position on the triangle
+     *         var uv = pickResult.uv; // Float64Array containing the interpolated UV coordinates at the picked position on the triangle
      *
      *     } else if (pickResult.worldPos && pickResult.worldNormal) {
      *
      *         // Picked a point and normal on the entity surface
      *
-     *         var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the Entity surface
-     *         var worldNormal = pickResult.worldNormal; // Float32Array containing the picked World-space normal vector on the Entity Surface
+     *         var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the Entity surface
+     *         var worldNormal = pickResult.worldNormal; // Float64Array containing the picked World-space normal vector on the Entity Surface
      *     }
      * }
      * ````
@@ -21264,21 +21389,21 @@ class Scene extends Component {
      *           var primitive = pickResult.primitive; // Type of primitive that was picked, usually "triangles"
      *           var primIndex = pickResult.primIndex; // Position of triangle's first index in the picked Entity's Geometry's indices array
      *           var indices = pickResult.indices; // UInt32Array containing the triangle's vertex indices
-     *           var localPos = pickResult.localPos; // Float32Array containing the picked Local-space position on the triangle
-     *           var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the triangle
-     *           var viewPos = pickResult.viewPos; // Float32Array containing the picked View-space position on the triangle
-     *           var bary = pickResult.bary; // Float32Array containing the picked barycentric position within the triangle
-     *           var worldNormal = pickResult.worldNormal; // Float32Array containing the interpolated World-space normal vector at the picked position on the triangle
-     *           var uv = pickResult.uv; // Float32Array containing the interpolated UV coordinates at the picked position on the triangle
-     *           var origin = pickResult.origin; // Float32Array containing the World-space ray origin
-     *           var direction = pickResult.direction; // Float32Array containing the World-space ray direction
+     *           var localPos = pickResult.localPos; // Float64Array containing the picked Local-space position on the triangle
+     *           var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the triangle
+     *           var viewPos = pickResult.viewPos; // Float64Array containing the picked View-space position on the triangle
+     *           var bary = pickResult.bary; // Float64Array containing the picked barycentric position within the triangle
+     *           var worldNormal = pickResult.worldNormal; // Float64Array containing the interpolated World-space normal vector at the picked position on the triangle
+     *           var uv = pickResult.uv; // Float64Array containing the interpolated UV coordinates at the picked position on the triangle
+     *           var origin = pickResult.origin; // Float64Array containing the World-space ray origin
+     *           var direction = pickResult.direction; // Float64Array containing the World-space ray direction
      *
      *     } else if (pickResult.worldPos && pickResult.worldNormal) {
      *
      *         // Picked a point and normal on the entity surface
      *
-     *         var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the Entity surface
-     *         var worldNormal = pickResult.worldNormal; // Float32Array containing the picked World-space normal vector on the Entity Surface
+     *         var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the Entity surface
+     *         var worldNormal = pickResult.worldNormal; // Float64Array containing the picked World-space normal vector on the Entity Surface
      *     }
      * }
      *  ````
@@ -21330,7 +21455,7 @@ class Scene extends Component {
 
         if (pickResult) {
             if (pickResult.entity.fire) {
-                pickResult.entity.fire("picked", pickResult); // TODO: PerformanceModelNode doeosn't fire events...
+                pickResult.entity.fire("picked", pickResult); // TODO: PerformanceModelNode doesn't fire events
             }
             return pickResult;
         }
@@ -27147,7 +27272,7 @@ class PerformanceMesh {
          *
          * @property aabb
          * @final
-         * @type {Number[]}
+         * @type {Float64Array}
          */
         this.aabb = math.AABB3();
 
@@ -27159,6 +27284,16 @@ class PerformanceMesh {
         this._colorizing = false;
 
         this.numTriangles = 0;
+
+        /**
+         * 3D origin of the PerformanceMesh's vertex positions, if they are in relative-to-center (RTC) coordinates.
+         *
+         * When this is defined, then the positions are RTC, which means that they are relative to this position.
+         *
+         * @property rtcCenter
+         * @type {Float64Array}
+         */
+        this.rtcCenter = null;
     }
 
     /**
@@ -27448,7 +27583,7 @@ class PerformanceNode {
      * Represented by a six-element Float64Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
-     * @type {Number[]}
+     * @type {Float64Array}
      */
     get aabb() {
         return this._offsetAABB;
@@ -28101,14 +28236,6 @@ function buildVertex(scene) {
 
     src.push("// Batched geometry drawing vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
@@ -28304,33 +28431,8 @@ function buildFragment(scene, withSAO) {
     return src;
 }
 
-/**
- * Given a view matrix and a relative-to-center (RTC) coordinate origin, returns a view matrix
- * to transform RTC coordinates to View-space.
- *
- * The returned view matrix is
- *
- * @private
- */
-const createRTCViewMat = (function () {
-
-    const tempMat = new Float32Array(16);
-    const rtcCenterWorld = new Float64Array(4);
-    const rtcCenterView = new Float64Array(4);
-
-    return function (viewMat, rtcCenter, rtcViewMat = tempMat) {
-        rtcCenterWorld[0] = rtcCenter[0];
-        rtcCenterWorld[1] = rtcCenter[1];
-        rtcCenterWorld[2] = rtcCenter[2];
-        rtcCenterWorld[3] = 1;
-        math.transformVec4(viewMat, rtcCenterWorld, rtcCenterView);
-        math.setMat4Translation(viewMat, rtcCenterView, rtcViewMat);
-        return rtcViewMat;
-    }
-}());
-
 const tempVec4$1 = math.vec4();
-const viewNormalMatrix = math.mat4();
+const viewNormalMatrix$1 = math.mat4();
 
 /**
  * @private
@@ -28375,9 +28477,9 @@ class BatchingDrawRenderer {
             const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
             gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
 
-            math.inverseMat4(viewMatrix, viewNormalMatrix);
-            math.transposeMat4(viewNormalMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix);
+            math.inverseMat4(viewMatrix, viewNormalMatrix$1);
+            math.transposeMat4(viewNormalMatrix$1);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix$1);
 
         } else {
 
@@ -28575,14 +28677,6 @@ function buildVertex$1(scene) {
 
     src.push("// Batched fill vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
@@ -28717,7 +28811,7 @@ class BatchingFillRenderer {
         const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniform1i(this._uRenderPass, renderPass);
-        gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, model.worldMatrix);
+        gl.uniformMatrix4fv(this._uModelMatrix, false, model.worldMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         if (this._aFlags) {
@@ -28840,14 +28934,6 @@ function buildVertex$2(scene) {
     const src = [];
 
     src.push("// Batched geometry edges drawing vertex shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
 
     src.push("uniform int renderPass;");
 
@@ -29115,14 +29201,6 @@ function buildVertex$3(scene) {
 
     src.push("// Batched geometry picking vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
@@ -29352,14 +29430,6 @@ function buildVertex$4(scene) {
     const src = [];
 
     src.push("// Batched geometry depth vertex shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
 
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
@@ -29599,13 +29669,7 @@ function buildVertex$5(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry normals vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
@@ -29840,13 +29904,7 @@ function buildVertex$6(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched occlusion vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
+
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -30057,15 +30115,6 @@ function buildVertex$7(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry depth vertex shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -30293,14 +30342,6 @@ function buildVertex$8(scene) {
     const src = [];
     src.push("// Batched geometry normals vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
@@ -30425,9 +30466,24 @@ class BatchingNormalsRenderer {
             this._bindProgram();
         }
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
+        if (rtcCenter) {
+
+            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
+            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+
+            math.inverseMat4(viewMatrix, viewNormalMatrix);
+            math.transposeMat4(viewNormalMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix);
+
+        } else {
+
+            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        }
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
         this._aNormal.bindArrayBuffer(state.normalsBuf);
@@ -32000,14 +32056,6 @@ function buildVertex$a(scene) {
 
     src.push("// Instancing geometry drawing vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
@@ -32215,7 +32263,7 @@ function buildFragment$a(scene, withSAO) {
 }
 
 const tempVec4$2 = math.vec4();
-const viewNormalMatrix$1 = math.mat4();
+const viewNormalMatrix$2 = math.mat4();
 
 /**
  * @private
@@ -32269,9 +32317,9 @@ class InstancingDrawRenderer {
             const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
             gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
 
-            math.inverseMat4(viewMatrix, viewNormalMatrix$1);
-            math.transposeMat4(viewNormalMatrix$1);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix$1);
+            math.inverseMat4(viewMatrix, viewNormalMatrix$2);
+            math.transposeMat4(viewNormalMatrix$2);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix$2);
 
         } else {
 
@@ -32514,14 +32562,6 @@ function buildVertex$b(scene) {
     const src = [];
 
     src.push("// Instancing fill vertex shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
 
     src.push("uniform int renderPass;");
 
@@ -32824,14 +32864,6 @@ function buildVertex$c(scene) {
     const src = [];
     src.push("// Instancing edges vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("uniform int renderPass;");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
@@ -33128,14 +33160,6 @@ function buildVertex$d(scene) {
 
     src.push("// Instancing geometry picking vertex shader");
 
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
@@ -33408,13 +33432,6 @@ function buildVertex$e(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
@@ -33692,13 +33709,6 @@ function buildVertex$f(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry normals vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec2 normal;");
@@ -33994,13 +34004,6 @@ function buildVertex$g(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing occlusion vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -34262,14 +34265,6 @@ function buildVertex$h(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth drawing vertex shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
 
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
@@ -34545,13 +34540,6 @@ function buildVertex$i(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth drawing vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
@@ -34686,10 +34674,22 @@ class InstancingNormalsRenderer {
         }
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
-        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        if (rtcCenter) {
+
+            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
+            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+
+            math.inverseMat4(viewMatrix, viewNormalMatrix);
+            math.transposeMat4(viewNormalMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix);
+
+        } else {
+
+            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        }
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34834,13 +34834,6 @@ function buildVertex$j(scene) {
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry shadow drawing vertex shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
     src.push("attribute vec3 position;");
     src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
@@ -37483,9 +37476,9 @@ class PerformanceModel extends Component {
             this.numTransparentLayerPortions++;
         }
 
-        var mesh = new PerformanceMesh(this, id, color, opacity);
+        const mesh = new PerformanceMesh(this, id, color, opacity);
 
-        var pickId = mesh.pickId;
+        const pickId = mesh.pickId;
 
         const a = pickId >> 24 & 0xFF;
         const b = pickId >> 16 & 0xFF;
@@ -37519,6 +37512,8 @@ class PerformanceModel extends Component {
             const numTriangles = Math.round(instancingLayer.numIndices / 3);
             this._numTriangles += numTriangles;
             mesh.numTriangles = numTriangles;
+
+            mesh.rtcCenter = instancingLayer.rtcCenter;
 
         } else { // Batching
 
@@ -37633,6 +37628,8 @@ class PerformanceModel extends Component {
             const numTriangles = Math.round(indices.length / 3);
             this._numTriangles += numTriangles;
             mesh.numTriangles = numTriangles;
+
+            mesh.rtcCenter = cfg.rtcCenter;
         }
 
         mesh.parent = null; // Will be set within PerformanceModelNode constructor
@@ -38093,7 +38090,7 @@ class PerformanceModel extends Component {
      * @type {Boolean}
      */
     get pickable() {
-        return this._pickable;
+        return (this.numPickableLayerPortions > 0);
     }
 
     /**
@@ -46905,27 +46902,20 @@ if (!pako$5.inflate) {  // See https://github.com/nodeca/pako/issues/97
 function extract$5(elements) {
 
     return {
-
         positions: elements[0],
         normals: elements[1],
         indices: elements[2],
         edgeIndices: elements[3],
-
         matrices: elements[4],
-
         reusedPrimitivesDecodeMatrix: elements[5],
-
         eachPrimitivePositionsAndNormalsPortion: elements[6],
         eachPrimitiveIndicesPortion: elements[7],
         eachPrimitiveEdgeIndicesPortion: elements[8],
         eachPrimitiveColorAndOpacity: elements[9],
-
         primitiveInstances: elements[10],
-
         eachEntityId: elements[11],
         eachEntityPrimitiveInstancesPortion: elements[12],
         eachEntityMatricesPortion: elements[13],
-
         eachTileAABB: elements[14],
         eachTileDecodeMatrix: elements[15],
         eachTileEntitiesPortion: elements[16]
@@ -46935,28 +46925,20 @@ function extract$5(elements) {
 function inflate$5(deflatedData) {
 
     return {
-
-        //positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
-        positions: new Float32Array(pako$5.inflate(deflatedData.positions).buffer),
+        positions: new Uint16Array(pako$5.inflate(deflatedData.positions).buffer),
         normals: new Int8Array(pako$5.inflate(deflatedData.normals).buffer),
         indices: new Uint32Array(pako$5.inflate(deflatedData.indices).buffer),
         edgeIndices: new Uint32Array(pako$5.inflate(deflatedData.edgeIndices).buffer),
-
         matrices: new Float32Array(pako$5.inflate(deflatedData.matrices).buffer),
-
         reusedPrimitivesDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.reusedPrimitivesDecodeMatrix).buffer),
-
         eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
         eachPrimitiveIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
         eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
         eachPrimitiveColorAndOpacity: new Uint8Array(pako$5.inflate(deflatedData.eachPrimitiveColorAndOpacity).buffer),
-
         primitiveInstances: new Uint32Array(pako$5.inflate(deflatedData.primitiveInstances).buffer),
-
         eachEntityId: pako$5.inflate(deflatedData.eachEntityId, {to: 'string'}),
         eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
         eachEntityMatricesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityMatricesPortion).buffer),
-
         eachTileAABB: new Float64Array(pako$5.inflate(deflatedData.eachTileAABB).buffer),
         eachTileDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.eachTileDecodeMatrix).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachTileEntitiesPortion).buffer),
@@ -47022,6 +47004,7 @@ function load$5(viewer, options, inflatedData, performanceModel) {
     // Iterate over tiles
 
     const tileCenter = math.vec3();
+    const rtcAABB = math.AABB3(); 
 
     for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
 
@@ -47030,14 +47013,21 @@ function load$5(viewer, options, inflatedData, performanceModel) {
 
         const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
         const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
-
-        const tileDecodeMatrixIndex = tileIndex * 16;
         const tileAABBIndex = tileIndex * 6;
 
-        const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
+        //const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
 
         math.getAABB3Center(tileAABB, tileCenter);
+
+        rtcAABB[0] = tileAABB[0] - tileCenter[0];
+        rtcAABB[1] = tileAABB[1] - tileCenter[1];
+        rtcAABB[2] = tileAABB[2] - tileCenter[2];
+        rtcAABB[3] = tileAABB[3] - tileCenter[0];
+        rtcAABB[4] = tileAABB[4] - tileCenter[1];
+        rtcAABB[5] = tileAABB[5] - tileCenter[2];
+
+        const tileDecodeMatrix = geometryCompressionUtils.createPositionsDecodeMatrix(rtcAABB);
 
         const geometryCreated = {};
 
@@ -47095,7 +47085,7 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                             normals: primitiveNormals,
                             indices: primitiveIndices,
                             edgeIndices: primitiveEdgeIndices,
-                            // positionsDecodeMatrix: reusedPrimitivesDecodeMatrix
+                            positionsDecodeMatrix: reusedPrimitivesDecodeMatrix
                         });
 
                         geometryCreated[geometryId] = true;
@@ -47121,7 +47111,7 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                         normals: primitiveNormals,
                         indices: primitiveIndices,
                         edgeIndices: primitiveEdgeIndices,
-                        //            positionsDecodeMatrix: tileDecodeMatrix,
+                        positionsDecodeMatrix: tileDecodeMatrix,
                         // color: color,
                         // opacity: opacity
                     }));
@@ -47175,12 +47165,12 @@ parsers[ParserV6.version] = ParserV6;
  * * XKTLoaderPlugin is the most efficient way to load high-detail models into xeokit.
  * * An *````.xkt````* file is a single BLOB containing a model, compressed using geometry quantization
  * and [pako](https://nodeca.github.io/pako/).
+ * * Supports double-precision coordinates, via ````.xkt```` format version 6.
  * * Set the position, scale and rotation of each model as you load it.
  * * Filter which IFC types get loaded.
  * * Configure initial default appearances for IFC types.
  * * Set a custom data source for *````.xkt````* and IFC metadata files.
- * * Does not support textures or physically-based materials.
- * * Supports 64-bit coordinate precision.
+ * * Does not (yet) support textures or physically-based materials.
  *
  * ## Credits
  *
@@ -50700,7 +50690,7 @@ DrawRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-DrawRenderer.prototype.drawMesh = function (frame, mesh) {
+DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     if (!this._program) {
         this._allocate(mesh);
     }
@@ -50712,39 +50702,52 @@ DrawRenderer.prototype.drawMesh = function (frame, mesh) {
     const meshState = mesh._state;
     const materialState = mesh._material._state;
     const geometryState = mesh._geometry._state;
+    const camera = scene.camera;
 
-    if (frame.lastProgramId !== this._program.id) {
-        frame.lastProgramId = this._program.id;
-        this._bindProgram(frame);
+    if (frameCtx.lastProgramId !== this._program.id) {
+        frameCtx.lastProgramId = this._program.id;
+        this._bindProgram(frameCtx);
+    }
+
+    const rtcCenter = mesh.rtcCenter;
+    if (rtcCenter) {
+        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
+        const rtcViewMat = rtcMatrices[0];
+        const rtcViewNormalMat = rtcMatrices[1];
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, rtcViewNormalMat);
+    } else {
+        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
     }
 
     if (materialState.id !== this._lastMaterialId) {
 
-        frame.textureUnit = this._baseTextureUnit;
+        frameCtx.textureUnit = this._baseTextureUnit;
 
         const backfaces = materialState.backfaces;
-        if (frame.backfaces !== backfaces) {
+        if (frameCtx.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frame.backfaces = backfaces;
+            frameCtx.backfaces = backfaces;
         }
 
         const frontface = materialState.frontface;
-        if (frame.frontface !== frontface) {
+        if (frameCtx.frontface !== frontface) {
             if (frontface) {
                 gl.frontFace(gl.CCW);
             } else {
                 gl.frontFace(gl.CW);
             }
-            frame.frontface = frontface;
+            frameCtx.frontface = frontface;
         }
 
-        if (frame.lineWidth !== materialState.lineWidth) {
+        if (frameCtx.lineWidth !== materialState.lineWidth) {
             gl.lineWidth(materialState.lineWidth);
-            frame.lineWidth = materialState.lineWidth;
+            frameCtx.lineWidth = materialState.lineWidth;
         }
 
         if (this._uPointSize) {
@@ -50789,64 +50792,64 @@ DrawRenderer.prototype.drawMesh = function (frame, mesh) {
                         0);
                 }
                 if (material._ambientMap && material._ambientMap._state.texture && this._uMaterialAmbientMap) {
-                    program.bindTexture(this._uMaterialAmbientMap, material._ambientMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uMaterialAmbientMap, material._ambientMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uMaterialAmbientMapMatrix) {
                         gl.uniformMatrix4fv(this._uMaterialAmbientMapMatrix, false, material._ambientMap._state.matrix);
                     }
                 }
                 if (material._diffuseMap && material._diffuseMap._state.texture && this._uDiffuseMap) {
-                    program.bindTexture(this._uDiffuseMap, material._diffuseMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uDiffuseMap, material._diffuseMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uDiffuseMapMatrix) {
                         gl.uniformMatrix4fv(this._uDiffuseMapMatrix, false, material._diffuseMap._state.matrix);
                     }
                 }
                 if (material._specularMap && material._specularMap._state.texture && this._uSpecularMap) {
-                    program.bindTexture(this._uSpecularMap, material._specularMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uSpecularMap, material._specularMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uSpecularMapMatrix) {
                         gl.uniformMatrix4fv(this._uSpecularMapMatrix, false, material._specularMap._state.matrix);
                     }
                 }
                 if (material._emissiveMap && material._emissiveMap._state.texture && this._uEmissiveMap) {
-                    program.bindTexture(this._uEmissiveMap, material._emissiveMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uEmissiveMap, material._emissiveMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uEmissiveMapMatrix) {
                         gl.uniformMatrix4fv(this._uEmissiveMapMatrix, false, material._emissiveMap._state.matrix);
                     }
                 }
                 if (material._alphaMap && material._alphaMap._state.texture && this._uAlphaMap) {
-                    program.bindTexture(this._uAlphaMap, material._alphaMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uAlphaMap, material._alphaMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uAlphaMapMatrix) {
                         gl.uniformMatrix4fv(this._uAlphaMapMatrix, false, material._alphaMap._state.matrix);
                     }
                 }
                 if (material._reflectivityMap && material._reflectivityMap._state.texture && this._uReflectivityMap) {
-                    program.bindTexture(this._uReflectivityMap, material._reflectivityMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    program.bindTexture(this._uReflectivityMap, material._reflectivityMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
                     if (this._uReflectivityMapMatrix) {
                         gl.uniformMatrix4fv(this._uReflectivityMapMatrix, false, material._reflectivityMap._state.matrix);
                     }
                 }
                 if (material._normalMap && material._normalMap._state.texture && this._uNormalMap) {
-                    program.bindTexture(this._uNormalMap, material._normalMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uNormalMap, material._normalMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uNormalMapMatrix) {
                         gl.uniformMatrix4fv(this._uNormalMapMatrix, false, material._normalMap._state.matrix);
                     }
                 }
                 if (material._occlusionMap && material._occlusionMap._state.texture && this._uOcclusionMap) {
-                    program.bindTexture(this._uOcclusionMap, material._occlusionMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uOcclusionMap, material._occlusionMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uOcclusionMapMatrix) {
                         gl.uniformMatrix4fv(this._uOcclusionMapMatrix, false, material._occlusionMap._state.matrix);
                     }
@@ -50964,72 +50967,72 @@ DrawRenderer.prototype.drawMesh = function (frame, mesh) {
                 }
                 const baseColorMap = material._baseColorMap;
                 if (baseColorMap && baseColorMap._state.texture && this._uBaseColorMap) {
-                    program.bindTexture(this._uBaseColorMap, baseColorMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uBaseColorMap, baseColorMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uBaseColorMapMatrix) {
                         gl.uniformMatrix4fv(this._uBaseColorMapMatrix, false, baseColorMap._state.matrix);
                     }
                 }
                 const metallicMap = material._metallicMap;
                 if (metallicMap && metallicMap._state.texture && this._uMetallicMap) {
-                    program.bindTexture(this._uMetallicMap, metallicMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uMetallicMap, metallicMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uMetallicMapMatrix) {
                         gl.uniformMatrix4fv(this._uMetallicMapMatrix, false, metallicMap._state.matrix);
                     }
                 }
                 const roughnessMap = material._roughnessMap;
                 if (roughnessMap && roughnessMap._state.texture && this._uRoughnessMap) {
-                    program.bindTexture(this._uRoughnessMap, roughnessMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uRoughnessMap, roughnessMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uRoughnessMapMatrix) {
                         gl.uniformMatrix4fv(this._uRoughnessMapMatrix, false, roughnessMap._state.matrix);
                     }
                 }
                 const metallicRoughnessMap = material._metallicRoughnessMap;
                 if (metallicRoughnessMap && metallicRoughnessMap._state.texture && this._uMetallicRoughnessMap) {
-                    program.bindTexture(this._uMetallicRoughnessMap, metallicRoughnessMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uMetallicRoughnessMap, metallicRoughnessMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uMetallicRoughnessMapMatrix) {
                         gl.uniformMatrix4fv(this._uMetallicRoughnessMapMatrix, false, metallicRoughnessMap._state.matrix);
                     }
                 }
                 var emissiveMap = material._emissiveMap;
                 if (emissiveMap && emissiveMap._state.texture && this._uEmissiveMap) {
-                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uEmissiveMapMatrix) {
                         gl.uniformMatrix4fv(this._uEmissiveMapMatrix, false, emissiveMap._state.matrix);
                     }
                 }
                 var occlusionMap = material._occlusionMap;
                 if (occlusionMap && material._occlusionMap._state.texture && this._uOcclusionMap) {
-                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uOcclusionMapMatrix) {
                         gl.uniformMatrix4fv(this._uOcclusionMapMatrix, false, occlusionMap._state.matrix);
                     }
                 }
                 var alphaMap = material._alphaMap;
                 if (alphaMap && alphaMap._state.texture && this._uAlphaMap) {
-                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uAlphaMapMatrix) {
                         gl.uniformMatrix4fv(this._uAlphaMapMatrix, false, alphaMap._state.matrix);
                     }
                 }
                 var normalMap = material._normalMap;
                 if (normalMap && normalMap._state.texture && this._uNormalMap) {
-                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uNormalMapMatrix) {
                         gl.uniformMatrix4fv(this._uNormalMapMatrix, false, normalMap._state.matrix);
                     }
@@ -51062,72 +51065,72 @@ DrawRenderer.prototype.drawMesh = function (frame, mesh) {
                 }
                 const diffuseMap = material._diffuseMap;
                 if (diffuseMap && diffuseMap._state.texture && this._uDiffuseMap) {
-                    program.bindTexture(this._uDiffuseMap, diffuseMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uDiffuseMap, diffuseMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uDiffuseMapMatrix) {
                         gl.uniformMatrix4fv(this._uDiffuseMapMatrix, false, diffuseMap._state.matrix);
                     }
                 }
                 const specularMap = material._specularMap;
                 if (specularMap && specularMap._state.texture && this._uSpecularMap) {
-                    program.bindTexture(this._uSpecularMap, specularMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uSpecularMap, specularMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uSpecularMapMatrix) {
                         gl.uniformMatrix4fv(this._uSpecularMapMatrix, false, specularMap._state.matrix);
                     }
                 }
                 const glossinessMap = material._glossinessMap;
                 if (glossinessMap && glossinessMap._state.texture && this._uGlossinessMap) {
-                    program.bindTexture(this._uGlossinessMap, glossinessMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uGlossinessMap, glossinessMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uGlossinessMapMatrix) {
                         gl.uniformMatrix4fv(this._uGlossinessMapMatrix, false, glossinessMap._state.matrix);
                     }
                 }
                 const specularGlossinessMap = material._specularGlossinessMap;
                 if (specularGlossinessMap && specularGlossinessMap._state.texture && this._uSpecularGlossinessMap) {
-                    program.bindTexture(this._uSpecularGlossinessMap, specularGlossinessMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uSpecularGlossinessMap, specularGlossinessMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uSpecularGlossinessMapMatrix) {
                         gl.uniformMatrix4fv(this._uSpecularGlossinessMapMatrix, false, specularGlossinessMap._state.matrix);
                     }
                 }
                 var emissiveMap = material._emissiveMap;
                 if (emissiveMap && emissiveMap._state.texture && this._uEmissiveMap) {
-                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uEmissiveMapMatrix) {
                         gl.uniformMatrix4fv(this._uEmissiveMapMatrix, false, emissiveMap._state.matrix);
                     }
                 }
                 var occlusionMap = material._occlusionMap;
                 if (occlusionMap && occlusionMap._state.texture && this._uOcclusionMap) {
-                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uOcclusionMapMatrix) {
                         gl.uniformMatrix4fv(this._uOcclusionMapMatrix, false, occlusionMap._state.matrix);
                     }
                 }
                 var alphaMap = material._alphaMap;
                 if (alphaMap && alphaMap._state.texture && this._uAlphaMap) {
-                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uAlphaMapMatrix) {
                         gl.uniformMatrix4fv(this._uAlphaMapMatrix, false, alphaMap._state.matrix);
                     }
                 }
                 var normalMap = material._normalMap;
                 if (normalMap && normalMap._state.texture && this._uNormalMap) {
-                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                     if (this._uNormalMapMatrix) {
                         gl.uniformMatrix4fv(this._uNormalMapMatrix, false, normalMap._state.matrix);
                     }
@@ -51174,27 +51177,27 @@ DrawRenderer.prototype.drawMesh = function (frame, mesh) {
         }
         if (this._aPosition) {
             this._aPosition.bindArrayBuffer(geometryState.positionsBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(geometryState.normalsBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (this._aUV) {
             this._aUV.bindArrayBuffer(geometryState.uvBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (this._aColor) {
             this._aColor.bindArrayBuffer(geometryState.colorsBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(geometryState.flagsBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (geometryState.indicesBuf) {
             geometryState.indicesBuf.bind();
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         this._lastGeometryId = geometryState.id;
     }
@@ -51203,10 +51206,10 @@ DrawRenderer.prototype.drawMesh = function (frame, mesh) {
 
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-        frame.drawElements++;
+        frameCtx.drawElements++;
     } else if (geometryState.positions) {
         gl.drawArrays(gl.TRIANGLES, 0, geometryState.positions.numItems);
-        frame.drawArrays++;
+        frameCtx.drawArrays++;
     }
 };
 
@@ -51482,7 +51485,7 @@ DrawRenderer.prototype._allocate = function (mesh) {
 
 };
 
-DrawRenderer.prototype._bindProgram = function (frame) {
+DrawRenderer.prototype._bindProgram = function (frameCtx) {
 
     const maxTextureUnits = WEBGL_INFO.MAX_TEXTURE_UNITS;
     const scene = this._scene;
@@ -51496,8 +51499,8 @@ DrawRenderer.prototype._bindProgram = function (frame) {
 
     program.bind();
 
-    frame.useProgram++;
-    frame.textureUnit = 0;
+    frameCtx.useProgram++;
+    frameCtx.textureUnit = 0;
 
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
@@ -51509,10 +51512,7 @@ DrawRenderer.prototype._bindProgram = function (frame) {
     this._lastColorize[3] = -1;
 
     const camera = scene.camera;
-    const cameraState = camera._state;
 
-    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
-    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, cameraState.normalMatrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
 
     for (var i = 0, len = lightsState.lights.length; i < len; i++) {
@@ -51548,24 +51548,24 @@ DrawRenderer.prototype._bindProgram = function (frame) {
                 }
                 const shadowRenderBuf = light.getShadowRenderBuf();
                 if (shadowRenderBuf) {
-                    program.bindTexture("shadowMap" + i, shadowRenderBuf.getTexture(), frame.textureUnit);
-                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-                    frame.bindTexture++;
+                    program.bindTexture("shadowMap" + i, shadowRenderBuf.getTexture(), frameCtx.textureUnit);
+                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    frameCtx.bindTexture++;
                 }
             }
         }
     }
 
     if (lightsState.lightMaps.length > 0 && lightsState.lightMaps[0].texture && this._uLightMap) {
-        program.bindTexture(this._uLightMap, lightsState.lightMaps[0].texture, frame.textureUnit);
-        frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-        frame.bindTexture++;
+        program.bindTexture(this._uLightMap, lightsState.lightMaps[0].texture, frameCtx.textureUnit);
+        frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+        frameCtx.bindTexture++;
     }
 
     if (lightsState.reflectionMaps.length > 0 && lightsState.reflectionMaps[0].texture && this._uReflectionMap) {
-        program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frame.textureUnit);
-        frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
-        frame.bindTexture++;
+        program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frameCtx.textureUnit);
+        frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+        frameCtx.bindTexture++;
     }
 
     if (sectionPlanesState.sectionPlanes.length > 0) {
@@ -51597,7 +51597,7 @@ DrawRenderer.prototype._bindProgram = function (frame) {
         gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
     }
 
-    this._baseTextureUnit = frame.textureUnit;
+    this._baseTextureUnit = frameCtx.textureUnit;
 };
 
 /**
@@ -51895,29 +51895,38 @@ EmphasisFillRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-EmphasisFillRenderer.prototype.drawMesh = function (frame, mesh, mode) {
+EmphasisFillRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
     if (!this._program) {
         this._allocate(mesh);
     }
     const scene = this._scene;
+    const camera = scene.camera;
     const gl = scene.canvas.gl;
     const materialState = mode === 0 ? mesh._xrayMaterial._state : (mode === 1 ? mesh._highlightMaterial._state : mesh._selectedMaterial._state);
     const meshState = mesh._state;
     const geometryState = mesh._geometry._state;
-    if (frame.lastProgramId !== this._program.id) {
-        frame.lastProgramId = this._program.id;
-        this._bindProgram(frame);
+    if (frameCtx.lastProgramId !== this._program.id) {
+        frameCtx.lastProgramId = this._program.id;
+        this._bindProgram(frameCtx);
+    }
+    const rtcCenter = mesh.rtcCenter;
+    if (rtcCenter) {
+        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
+        const rtcViewMat = rtcMatrices[0];
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
+    } else {
+        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
     }
     if (materialState.id !== this._lastMaterialId) {
         const fillColor = materialState.fillColor;
         const backfaces = materialState.backfaces;
-        if (frame.backfaces !== backfaces) {
+        if (frameCtx.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frame.backfaces = backfaces;
+            frameCtx.backfaces = backfaces;
         }
         gl.uniform4f(this._uFillColor, fillColor[0], fillColor[1], fillColor[2], materialState.fillAlpha);
         this._lastMaterialId = materialState.id;
@@ -51940,26 +51949,26 @@ EmphasisFillRenderer.prototype.drawMesh = function (frame, mesh, mode) {
         }
         if (this._aPosition) {
             this._aPosition.bindArrayBuffer(geometryState.positionsBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(geometryState.normalsBuf);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (geometryState.indicesBuf) {
             geometryState.indicesBuf.bind();
-            frame.bindArray++;
+            frameCtx.bindArray++;
             // gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-            // frame.drawElements++;
+            // frameCtx.drawElements++;
         } else if (geometryState.positionsBuf) ;
         this._lastGeometryId = geometryState.id;
     }
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-        frame.drawElements++;
+        frameCtx.drawElements++;
     } else if (geometryState.positionsBuf) {
         gl.drawArrays(gl.TRIANGLES, 0, geometryState.positionsBuf.numItems);
-        frame.drawArrays++;
+        frameCtx.drawArrays++;
     }
 };
 
@@ -52022,7 +52031,7 @@ EmphasisFillRenderer.prototype._allocate = function (mesh) {
     this._lastGeometryId = null;
 };
 
-EmphasisFillRenderer.prototype._bindProgram = function (frame) {
+EmphasisFillRenderer.prototype._bindProgram = function (frameCtx) {
     const scene = this._scene;
     const gl = scene.canvas.gl;
     const sectionPlanesState = scene._sectionPlanesState;
@@ -52032,13 +52041,12 @@ EmphasisFillRenderer.prototype._bindProgram = function (frame) {
     let light;
     const program = this._program;
     program.bind();
-    frame.useProgram++;
-    frame.textureUnit = 0;
+    frameCtx.useProgram++;
+    frameCtx.textureUnit = 0;
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
     this._lastIndicesBufId = null;
-    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
     gl.uniformMatrix4fv(this._uViewNormalMatrix, false, cameraState.normalMatrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera.project._state.matrix);
     for (var i = 0, len = lightsState.lights.length; i < len; i++) {
@@ -52280,19 +52288,28 @@ EmphasisEdgesRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-EmphasisEdgesRenderer.prototype.drawMesh = function (frame, mesh, mode) {
+EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
     if (!this._program) {
         this._allocate(mesh);
     }
     const scene = this._scene;
+    const camera = scene.camera;
     const gl = scene.canvas.gl;
     let materialState;
     const meshState = mesh._state;
     const geometry = mesh._geometry;
     const geometryState = geometry._state;
-    if (frame.lastProgramId !== this._program.id) {
-        frame.lastProgramId = this._program.id;
-        this._bindProgram(frame);
+    if (frameCtx.lastProgramId !== this._program.id) {
+        frameCtx.lastProgramId = this._program.id;
+        this._bindProgram(frameCtx);
+    }
+    const rtcCenter = mesh.rtcCenter;
+    if (rtcCenter) {
+        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
+        const rtcViewMat = rtcMatrices[0];
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
+    } else {
+        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
     }
     switch (mode) {
         case 0:
@@ -52311,17 +52328,17 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frame, mesh, mode) {
     }
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
-        if (frame.backfaces !== backfaces) {
+        if (frameCtx.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frame.backfaces = backfaces;
+            frameCtx.backfaces = backfaces;
         }
-        if (frame.lineWidth !== materialState.edgeWidth) {
+        if (frameCtx.lineWidth !== materialState.edgeWidth) {
             gl.lineWidth(materialState.edgeWidth);
-            frame.lineWidth = materialState.edgeWidth;
+            frameCtx.lineWidth = materialState.edgeWidth;
         }
         if (this._uEdgeColor) {
             const edgeColor = materialState.edgeColor;
@@ -52354,14 +52371,14 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frame, mesh, mode) {
             }
             if (this._aPosition) {
                 this._aPosition.bindArrayBuffer(geometryState.positionsBuf, geometryState.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
-                frame.bindArray++;
+                frameCtx.bindArray++;
             }
             indicesBuf.bind();
-            frame.bindArray++;
+            frameCtx.bindArray++;
             this._lastGeometryId = geometryState.id;
         }
         gl.drawElements(gl.LINES, indicesBuf.numItems, indicesBuf.itemType, 0);
-        frame.drawElements++;
+        frameCtx.drawElements++;
     }
 };
 
@@ -52396,7 +52413,7 @@ EmphasisEdgesRenderer.prototype._allocate = function (mesh) {
     this._lastGeometryId = null;
 };
 
-EmphasisEdgesRenderer.prototype._bindProgram = function (frame) {
+EmphasisEdgesRenderer.prototype._bindProgram = function (frameCtx) {
     const program = this._program;
     const scene = this._scene;
     const gl = scene.canvas.gl;
@@ -52404,11 +52421,10 @@ EmphasisEdgesRenderer.prototype._bindProgram = function (frame) {
     const camera = scene.camera;
     const cameraState = camera._state;
     program.bind();
-    frame.useProgram++;
+    frameCtx.useProgram++;
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
-    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera.project._state.matrix);
     if (sectionPlanesState.sectionPlanes.length > 0) {
         const clips = sectionPlanesState.sectionPlanes;
@@ -52610,7 +52626,7 @@ PickMeshRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-PickMeshRenderer.prototype.drawMesh = function (frame, mesh) {
+PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     if (!this._program) {
         this._allocate(mesh);
     }
@@ -52618,51 +52634,55 @@ PickMeshRenderer.prototype.drawMesh = function (frame, mesh) {
     const gl = scene.canvas.gl;
     const materialState = mesh._material._state;
     const geometryState = mesh._geometry._state;
-    if (frame.lastProgramId !== this._program.id) {
-        frame.lastProgramId = this._program.id;
-        this._bindProgram(frame);
+    if (frameCtx.lastProgramId !== this._program.id) {
+        frameCtx.lastProgramId = this._program.id;
+        this._bindProgram(frameCtx);
     }
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
-        if (frame.backfaces !== backfaces) {
+        if (frameCtx.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frame.backfaces = backfaces;
+            frameCtx.backfaces = backfaces;
         }
         const frontface = materialState.frontface;
-        if (frame.frontface !== frontface) {
+        if (frameCtx.frontface !== frontface) {
             if (frontface) {
                 gl.frontFace(gl.CCW);
             } else {
                 gl.frontFace(gl.CW);
             }
-            frame.frontface = frontface;
+            frameCtx.frontface = frontface;
         }
         this._lastMaterialId = materialState.id;
     }
-    gl.uniformMatrix4fv(this._uViewMatrix, false, frame.pickViewMatrix);
-    gl.uniformMatrix4fv(this._uProjMatrix, false, frame.pickProjMatrix);
+    const rtcCenter = mesh.rtcCenter;
+    if (rtcCenter) {
+        const rtcPickViewMat = frameCtx.getRTCPickViewMatrix(rtcCenter);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMat);
+    } else {
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix);
+    }
+    gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
     gl.uniformMatrix4fv(this._uModelMatrix, false, mesh.worldMatrix);
-    // Mesh state
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
     }
     gl.uniform3fv(this._uOffset, mesh._state.offset);
-    // Bind VBOs
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
             gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
         }
         if (this._aPosition) {
             this._aPosition.bindArrayBuffer(geometryState.positionsBuf, geometryState.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         if (geometryState.indicesBuf) {
             geometryState.indicesBuf.bind();
-            frame.bindArray++;
+            frameCtx.bindArray++;
         }
         this._lastGeometryId = geometryState.id;
     }
@@ -52675,7 +52695,7 @@ PickMeshRenderer.prototype.drawMesh = function (frame, mesh) {
     gl.uniform4f(this._uPickColor, r / 255, g / 255, b / 255, a / 255);
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-        frame.drawElements++;
+        frameCtx.drawElements++;
     } else if (geometryState.positions) {
         gl.drawArrays(gl.TRIANGLES, 0, geometryState.positions.numItems);
     }
@@ -52711,12 +52731,12 @@ PickMeshRenderer.prototype._allocate = function (mesh) {
     this._lastGeometryId = null;
 };
 
-PickMeshRenderer.prototype._bindProgram = function (frame) {
+PickMeshRenderer.prototype._bindProgram = function (frameCtx) {
     const scene = this._scene;
     const gl = scene.canvas.gl;
     const sectionPlanesState = scene._sectionPlanesState;
     this._program.bind();
-    frame.useProgram++;
+    frameCtx.useProgram++;
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
@@ -52892,7 +52912,7 @@ PickTriangleRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-PickTriangleRenderer.prototype.drawMesh = function (frame, mesh) {
+PickTriangleRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     if (!this._program) {
         this._allocate(mesh);
     }
@@ -52900,19 +52920,22 @@ PickTriangleRenderer.prototype.drawMesh = function (frame, mesh) {
     const gl = scene.canvas.gl;
     const sectionPlanesState = scene._sectionPlanesState;
     const materialState = mesh._material._state;
-    const meshState = mesh._state;
     const geometry = mesh._geometry;
     const geometryState = mesh._geometry._state;
     const backfaces = materialState.backfaces;
     const frontface = materialState.frontface;
     const positionsBuf = geometry._getPickTrianglePositions();
     const pickColorsBuf = geometry._getPickTriangleColors();
-    const camera = scene.camera;
-    const cameraState = camera._state;
     this._program.bind();
-    frame.useProgram++;
-    gl.uniformMatrix4fv(this._uViewMatrix, false, frame.pickViewMatrix);
-    gl.uniformMatrix4fv(this._uProjMatrix, false, frame.pickProjMatrix);
+    frameCtx.useProgram++;
+    const rtcCenter = mesh.rtcCenter;
+    if (rtcCenter) {
+        const rtcPickViewMat = frameCtx.getRTCPickViewMatrix(rtcCenter);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMat);
+    } else {
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix);
+    }
+    gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
     if (sectionPlanesState.sectionPlanes.length > 0) {
         const sectionPlanes = sectionPlanesState.sectionPlanes;
         let sectionPlaneUniforms;
@@ -52937,21 +52960,21 @@ PickTriangleRenderer.prototype.drawMesh = function (frame, mesh) {
             }
         }
     }
-    if (frame.backfaces !== backfaces) {
+    if (frameCtx.backfaces !== backfaces) {
         if (backfaces) {
             gl.disable(gl.CULL_FACE);
         } else {
             gl.enable(gl.CULL_FACE);
         }
-        frame.backfaces = backfaces;
+        frameCtx.backfaces = backfaces;
     }
-    if (frame.frontface !== frontface) {
+    if (frameCtx.frontface !== frontface) {
         if (frontface) {
             gl.frontFace(gl.CCW);
         } else {
             gl.frontFace(gl.CW);
         }
-        frame.frontface = frontface;
+        frameCtx.frontface = frontface;
     }
     this._lastMaterialId = materialState.id;
     gl.uniformMatrix4fv(this._uModelMatrix, false, mesh.worldMatrix);
@@ -53203,20 +53226,25 @@ OcclusionRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     }
 
     const camera = scene.camera;
-    const cameraState = camera._state;
 
-    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
+    const rtcCenter = mesh.rtcCenter;
+    if (rtcCenter) {
+        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
+        const rtcViewMat = rtcMatrices[0];
+        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
+    } else {
+        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
+    }
+
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
     gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
 
-    // Mesh state
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
     }
 
     gl.uniform3fv(this._uOffset, mesh._state.offset);
 
-    // Bind VBOs
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
             gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
@@ -53826,7 +53854,8 @@ class Mesh extends Component {
             pickID: this.scene._renderer.getPickID(this),
             drawHash: "",
             pickHash: "",
-            offset: math.vec3()
+            offset: math.vec3(),
+            rtcCenter: null
         });
 
         this._drawRenderer = null;
@@ -53864,6 +53893,10 @@ class Mesh extends Component {
         this._localMatrixDirty = true;
         this._worldMatrixDirty = true;
         this._worldNormalMatrixDirty = true;
+
+        if (cfg.rtcCenter) {
+            this._state.rtcCenter = math.vec3(cfg.rtcCenter);
+        }
 
         if (cfg.matrix) {
             this.matrix = cfg.matrix;
@@ -53966,7 +53999,7 @@ class Mesh extends Component {
             this._state.drawHash = drawHash;
             this._putDrawRenderers();
             this._drawRenderer = DrawRenderer.get(this);
-           // this._shadowRenderer = ShadowRenderer.get(this);
+            // this._shadowRenderer = ShadowRenderer.get(this);
             this._emphasisFillRenderer = EmphasisFillRenderer.get(this);
             this._emphasisEdgesRenderer = EmphasisEdgesRenderer.get(this);
         }
@@ -54129,15 +54162,28 @@ class Mesh extends Component {
     }
 
     _buildAABB(worldMatrix, aabb) {
+
         math.transformOBB3(worldMatrix, this._geometry.obb, obb);
         math.OBB3ToAABB3(obb, aabb);
+
         const offset = this._state.offset;
+
         aabb[0] += offset[0];
         aabb[1] += offset[1];
         aabb[2] += offset[2];
         aabb[3] += offset[0];
         aabb[4] += offset[1];
         aabb[5] += offset[2];
+
+        if (this._state.rtcCenter) {
+            const rtcCenter = this._state.rtcCenter;
+            aabb[0] += rtcCenter[0];
+            aabb[1] += rtcCenter[1];
+            aabb[2] += rtcCenter[2];
+            aabb[3] += rtcCenter[0];
+            aabb[4] += rtcCenter[1];
+            aabb[5] += rtcCenter[2];
+        }
     }
 
     /**
@@ -54520,6 +54566,41 @@ class Mesh extends Component {
             this._updateAABB();
         }
         return this._aabb;
+    }
+
+    /**
+     * Sets the 3D origin of the Mesh's {@link Geometry}'s vertex positions.
+     *
+     * When this is defined, then the positions are RTC, which means that they are relative to this position.
+     *
+     * @type {Float64Array}
+     */
+    set rtcCenter(rtcCenter) {
+        if (rtcCenter) {
+            if (!this._state.rtcCenter) {
+                this._state.rtcCenter = math.vec3();
+            }
+            this._state.rtcCenter.set(rtcCenter);
+            this._setAABBDirty();
+            this.scene._aabbDirty = true;
+        } else {
+            if (this._state.rtcCenter) {
+                this._state.rtcCenter = null;
+                this._setAABBDirty();
+                this.scene._aabbDirty = true;
+            }
+        }
+    }
+
+    /**
+     * 3D origin of the Mesh's {@link Geometry}'s vertex positions.
+     *
+     * When this is defined, then the positions are RTC, which means that they are relative to this position.
+     *
+     * @type {Float64Array}
+     */
+    get rtcCenter() {
+        return this._state.rtcCenter;
     }
 
     /**
