@@ -117,7 +117,7 @@ function parseArrayBuffer(parsingCtx, url, ok, err) {
         let data = dataUriRegexResult[3];
         data = decodeURIComponent(data);
         if (isBase64) {
-            data = atob(data);
+            data = atob2(data);
         }
         try {
             const buffer = new ArrayBuffer(data.length);
