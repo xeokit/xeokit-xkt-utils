@@ -46917,8 +46917,7 @@ function extract$5(elements) {
         eachEntityPrimitiveInstancesPortion: elements[12],
         eachEntityMatricesPortion: elements[13],
         eachTileAABB: elements[14],
-        eachTileDecodeMatrix: elements[15],
-        eachTileEntitiesPortion: elements[16]
+        eachTileEntitiesPortion: elements[15]
     };
 }
 
@@ -46940,7 +46939,6 @@ function inflate$5(deflatedData) {
         eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
         eachEntityMatricesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityMatricesPortion).buffer),
         eachTileAABB: new Float64Array(pako$5.inflate(deflatedData.eachTileAABB).buffer),
-        eachTileDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.eachTileDecodeMatrix).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachTileEntitiesPortion).buffer),
     };
 }
@@ -46978,7 +46976,6 @@ function load$5(viewer, options, inflatedData, performanceModel) {
     const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
 
     const eachTileAABB = inflatedData.eachTileAABB;
-    const eachTileDecodeMatrix = inflatedData.eachTileDecodeMatrix;
     const eachTileEntitiesPortion = inflatedData.eachTileEntitiesPortion;
 
     const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
@@ -47009,13 +47006,13 @@ function load$5(viewer, options, inflatedData, performanceModel) {
     for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
 
         const lastTileIndex = (numTiles - 1);
+
         const atLastTile = (tileIndex === lastTileIndex);
 
         const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
         const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
-        const tileAABBIndex = tileIndex * 6;
 
-        //const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
+        const tileAABBIndex = tileIndex * 6;
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
 
         math.getAABB3Center(tileAABB, tileCenter);
@@ -47095,8 +47092,8 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                         id: meshId,
                         geometryId: geometryId,
                         matrix: entityMatrix,
-                        // color: color,
-                        // opacity: opacity
+                        color: color,
+                        opacity: opacity
                     }));
 
                     meshIds.push(meshId);
@@ -47112,8 +47109,8 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                         indices: primitiveIndices,
                         edgeIndices: primitiveEdgeIndices,
                         positionsDecodeMatrix: tileDecodeMatrix,
-                        // color: color,
-                        // opacity: opacity
+                        color: color,
+                        opacity: opacity
                     }));
 
                     meshIds.push(meshId);

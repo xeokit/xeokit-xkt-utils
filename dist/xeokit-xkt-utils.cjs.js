@@ -4301,10 +4301,9 @@ class XKTTile {
      *
      * @private
      * @param aabb
-     * @param decodeMatrix
      * @param entities
      */
-    constructor(aabb, decodeMatrix, entities) {
+    constructor(aabb, entities) {
 
         /**
          * Axis-aligned World-space bounding box that encloses the {@link XKTEntity}'s within this Tile.
@@ -4312,13 +4311,6 @@ class XKTTile {
          * @type {Float64Array}
          */
         this.aabb = aabb;
-
-        /**
-         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.
-         *
-         * @type {Float32Array}
-         */
-        this.decodeMatrix = decodeMatrix;
 
         /**
          * The {@link XKTEntity}'s within this XKTTile.
@@ -4370,7 +4362,7 @@ const tempVec4b = math.vec4([0, 0, 0, 1]);
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
-const KD_TREE_MAX_DEPTH = 5; // Increase if greater precision needed
+const KD_TREE_MAX_DEPTH = 4; // Increase if greater precision needed
 const kdTreeDimLength = new Float32Array(3);
 
 /**
@@ -5030,11 +5022,7 @@ class XKTModel {
             this.entitiesList.push(entity);
         }
 
-        const decodeMatrix = math.mat4();
-
-        geometryCompression.createPositionsDecodeMatrix(rtcAABB, decodeMatrix);
-
-        const tile = new XKTTile(tileAABB, decodeMatrix, entities);
+        const tile = new XKTTile(tileAABB, entities);
 
         this.tilesList.push(tile);
     }
@@ -5616,8 +5604,7 @@ function extract(elements) {
         eachEntityPrimitiveInstancesPortion: elements[12],
         eachEntityMatricesPortion: elements[13],
         eachTileAABB: elements[14],
-        eachTileDecodeMatrix: elements[15],
-        eachTileEntitiesPortion: elements[16]
+        eachTileEntitiesPortion: elements[15]
     };
 }
 
@@ -5639,7 +5626,6 @@ function inflate(deflatedData) {
         eachEntityPrimitiveInstancesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
         eachEntityMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMatricesPortion).buffer),
         eachTileAABB: new Float64Array(pako.inflate(deflatedData.eachTileAABB).buffer),
-        eachTileDecodeMatrix: new Float32Array(pako.inflate(deflatedData.eachTileDecodeMatrix).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako.inflate(deflatedData.eachTileEntitiesPortion).buffer),
     };
 }
@@ -5714,11 +5700,8 @@ function validateData(inflatedData, xktModel) {
 
         const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
         const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
-
-        const tileDecodeMatrixIndex = tileIndex * 16;
         const tileAABBIndex = tileIndex * 6;
 
-        const tileDecodeMatrix = eachTileDecodeMatrix.subarray(tileDecodeMatrixIndex, tileDecodeMatrixIndex + 16);
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
 
         // ASSERTIONS
@@ -5732,11 +5715,6 @@ function validateData(inflatedData, xktModel) {
 
         if (!compareArrays(tileAABB, xktTile.aabb)) {
             console.error("compareArrays(tileAABB, xktTile.aabb) === false");
-            return false;
-        }
-
-        if (!compareArrays(tileDecodeMatrix, xktTile.decodeMatrix)) {
-            console.error("compareArrays(tileDecodeMatrix, xktTile.decodeMatrix) === false");
             return false;
         }
 
@@ -13030,7 +13008,6 @@ function getModelData(xktModel) {
         eachEntityMatricesPortion: new Uint32Array(numEntities), // For each entity that shares primitives, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared primitives' Local-space vertex positions. Thios is ignored for entities that don't share primitives, because the vertex positions of non-shared primitives are pre-transformed into World-space.
 
         eachTileAABB: new Float64Array(numTiles * 6), // For each tile, an axis-aligned bounding box
-        eachTileDecodeMatrix: new Float32Array(numTiles * 16), // For each tile, a position de-quantization matrix
         eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityPrimitiveInstancesPortion and eachEntityMatricesPortion used by the tile
     };
 
@@ -13089,7 +13066,6 @@ function getModelData(xktModel) {
         data.eachTileEntitiesPortion[tileIndex] = entityIndex;
 
         const tileAABB = tile.aabb;
-        const tileDecodeMatrix = tile.decodeMatrix;
 
         for (let j = 0; j < numTileEntities; j++) {
 
@@ -13126,11 +13102,8 @@ function getModelData(xktModel) {
         }
 
         const tileAABBIndex = tileIndex * 6;
-        const tileDecodeMatrixIndex = tileIndex * 16;
 
         data.eachTileAABB.set(tileAABB, tileAABBIndex);
-        data.eachTileDecodeMatrix.set(tileDecodeMatrix, tileDecodeMatrixIndex);
-
     }
 
     return data;
@@ -13164,7 +13137,6 @@ function deflateData(data) {
         eachEntityMatricesPortion: pako$2.deflate(data.eachEntityMatricesPortion.buffer),
 
         eachTileAABB: pako$2.deflate(data.eachTileAABB.buffer),
-        eachTileDecodeMatrix: pako$2.deflate(data.eachTileDecodeMatrix.buffer),
         eachTileEntitiesPortion: pako$2.deflate(data.eachTileEntitiesPortion.buffer)
     };
 }
@@ -13194,7 +13166,6 @@ function createArrayBuffer(deflatedData) {
         deflatedData.eachEntityMatricesPortion,
 
         deflatedData.eachTileAABB,
-        deflatedData.eachTileDecodeMatrix,
         deflatedData.eachTileEntitiesPortion
     ]);
 }
