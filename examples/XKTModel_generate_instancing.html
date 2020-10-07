@@ -49,6 +49,9 @@
     viewer.camera.look = [0, -5.75, 0];
     viewer.camera.up = [0.18, 0.93, -0.25];
 
+    viewer.cameraControl.navMode = "orbit";
+    viewer.cameraControl.followPointer = true;
+
     function log(msg) {
         document.getElementById("log").innerHTML += "<br>" + msg;
     }
