@@ -5086,8 +5086,13 @@ const utils = {
     isString: isString,
 };
 
+// HACK: Allows node.js to find atob()
+let atob2;
 if (typeof atob === 'undefined') {
     const atob = require('atob');
+    atob2 = atob;
+} else {
+    atob2 = atob;
 }
 
 const WEBGL_COMPONENT_TYPES = {
@@ -5196,7 +5201,7 @@ function parseArrayBuffer(parsingCtx, url, ok, err) {
         let data = dataUriRegexResult[3];
         data = decodeURIComponent(data);
         if (isBase64) {
-            data = atob(data);
+            data = atob2(data);
         }
         try {
             const buffer = new ArrayBuffer(data.length);
@@ -13003,7 +13008,6 @@ function getModelData(xktModel) {
     const data = {
 
         positions: new Uint16Array(lenPositions), // All geometry arrays
-        //positions: new Float32Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
@@ -13046,7 +13050,6 @@ function getModelData(xktModel) {
 
         const primitive = primitivesList [primitiveIndex];
 
-        //data.positions.set(primitive.positions, countPositions);
         data.positions.set(primitive.positionsQuantized, countPositions);
         data.normals.set(primitive.normalsOctEncoded, countNormals);
         data.indices.set(primitive.indices, countIndices);

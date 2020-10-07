@@ -47004,7 +47004,7 @@ function load$5(viewer, options, inflatedData, performanceModel) {
     // Iterate over tiles
 
     const tileCenter = math.vec3();
-    const rtcAABB = math.AABB3(); 
+    const rtcAABB = math.AABB3();
 
     for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
 
