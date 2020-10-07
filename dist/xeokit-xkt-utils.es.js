@@ -4358,7 +4358,8 @@ const tempVec4b = math.vec4([0, 0, 0, 1]);
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
-const KD_TREE_MAX_DEPTH = 4; // Increase if greater precision needed
+const MIN_TILE_DIAG = 10000;
+
 const kdTreeDimLength = new Float32Array(3);
 
 /**
@@ -4851,21 +4852,21 @@ class XKTModel {
         for (let entityId in this.entities) {
             if (this.entities.hasOwnProperty(entityId)) {
                 const entity = this.entities[entityId];
-                const depth = 0;
-                const maxKDNodeDepth = KD_TREE_MAX_DEPTH;
-                this._insertEntityIntoKDTree(rootKDNode, entity, depth + 1, maxKDNodeDepth);
+                this._insertEntityIntoKDTree(rootKDNode, entity);
             }
         }
 
         return rootKDNode;
     }
 
-    _insertEntityIntoKDTree(kdNode, entity, depth, maxKDTreeDepth) {
+    _insertEntityIntoKDTree(kdNode, entity) {
 
         const nodeAABB = kdNode.aabb;
         const entityAABB = entity.aabb;
 
-        if (depth >= maxKDTreeDepth) {
+        const nodeAABBDiag = math.getAABB3Diag(nodeAABB);
+
+        if (nodeAABBDiag < MIN_TILE_DIAG) {
             kdNode.entities = kdNode.entities || [];
             kdNode.entities.push(entity);
             math.expandAABB3(nodeAABB, entityAABB);
@@ -4874,14 +4875,14 @@ class XKTModel {
 
         if (kdNode.left) {
             if (math.containsAABB3(kdNode.left.aabb, entityAABB)) {
-                this._insertEntityIntoKDTree(kdNode.left, entity, depth + 1, maxKDTreeDepth);
+                this._insertEntityIntoKDTree(kdNode.left, entity);
                 return;
             }
         }
 
         if (kdNode.right) {
             if (math.containsAABB3(kdNode.right.aabb, entityAABB)) {
-                this._insertEntityIntoKDTree(kdNode.right, entity, depth + 1, maxKDTreeDepth);
+                this._insertEntityIntoKDTree(kdNode.right, entity);
                 return;
             }
         }
@@ -4905,7 +4906,7 @@ class XKTModel {
             aabbLeft[dim + 3] = ((nodeAABB[dim] + nodeAABB[dim + 3]) / 2.0);
             kdNode.left = new KDNode(aabbLeft);
             if (math.containsAABB3(aabbLeft, entityAABB)) {
-                this._insertEntityIntoKDTree(kdNode.left, entity, depth + 1, maxKDTreeDepth);
+                this._insertEntityIntoKDTree(kdNode.left, entity);
                 return;
             }
         }
@@ -4915,7 +4916,7 @@ class XKTModel {
             aabbRight[dim] = ((nodeAABB[dim] + nodeAABB[dim + 3]) / 2.0);
             kdNode.right = new KDNode(aabbRight);
             if (math.containsAABB3(aabbRight, entityAABB)) {
-                this._insertEntityIntoKDTree(kdNode.right, entity, depth + 1, maxKDTreeDepth);
+                this._insertEntityIntoKDTree(kdNode.right, entity);
                 return;
             }
         }
