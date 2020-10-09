@@ -71,7 +71,7 @@
 
     log("Loading glTF file..");
 
-    utils.loadJSON("./models/gltf/duplex/scene.gltf", (json) => {
+    utils.loadJSON("./models/xkt/schependomlaan/schependomlaan.xkt", (json) => {
 
             log("Parsing glTF into XKTModel..");
 
@@ -98,7 +98,7 @@
                 xktLoader.load({
                     id: "myModel",
                     xkt: xktArrayBuffer,
-                    metaModelSrc: "./metaModels/duplex/metaModel.json",
+                    metaModelSrc: "./metaModels/schependomlaan/metaModel.json",
                     edges: true
                 });
 
