@@ -1,59 +1,57 @@
-# xeokit-xkt-utils
-JavaScript tools to generate .XKT files
 
-* [API documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
-* [Live examples](https://xeokit.github.io/xeokit-xkt-utils/examples)
 
 ![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
 
+# xeokit-xkt-utils
+
+
+````xeokit-xkt-utils```` is a JavaScript library for generating ````.xkt```` files for loading into [xeokit](http://xeokit.io).
+
+This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) to convert glTF to .XKT.  
+
+
+* [API Docs](https://xeokit.github.io/xeokit-xkt-utils/docs)
+* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
 
 ## Contents
+- [Features](#features)
+- [JavaScript API](#javascript-api)
+    + [XKTModel - The XKT Document Model](#xktmodel---the-xkt-document-model)
+    + [Building an XKTModel](#building-an-xktmodel)
+    + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
+    + [Validating the ArrayBuffer](#validating-the-arraybuffer)
+    + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
+    + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
+- [Using in node.js](#using-in-nodejs)
+- [Building](#building)
+    
 
 ## Features
 
-#### Support for Large WGS84 Coordinates
+* **Convert glTF into .xkt**
+* **Generate .xkt programmatically** when you need to write your own authoring or conversion tools
+* **Full-precision geometry** without the cost of storing double-precision values
+* **Geometry compression** using instancing, quantization, oct-encoding and zipping   
 
-Using graphics APIs such as WebGL, graphics processing units (GPUs) internally operate on single precision 
-32-bit floating-point numbers. 
+## JavaScript API
 
-Single precision values are generally said to have seven accurate decimal digits; 
-therefore as your numbers become larger, the numbers are less accurately represented.  
+#### XKTModel - The XKT Document Model
 
-````xeokit-xkt-utils```` improves the accuracy of the math executed on the GPU beyond the GPU's single precision 
-limitations by using relative-to-eye coordinates [TODO] 
- 
-#### Compressed Geometry
-
-
-## Usage
-
-#### Classes
-
-````xeokit-xkt-utils```` provides five javaScript classes from which we can build an 
-in-memory "document-object model" that represents the contents of an ````.xkt```` file. 
-
-* [**````XKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) represents an ````.xkt```` model, providing methods through which we can create 3D objects within the model. 
-* [**````XKTPrimitive````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html) represents an individual mesh, which has vertex positions, vertex normals, triangle indices, edge indices, an RGB color, and an opacity. 
-* [**````XKTPrimitiveInstance````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html) is an association class that represents the use of an ````XKTPrimitive```` by an ````XKTEntity````. 
-* [**````XKTEntity````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTEntity.js~XKTEntity.html) represents a 3D object, which has a unique ID, and one or more ````PrimitiveInstances````.
-* [**````XKTTile````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTTile.js~XKTTile.html) represents a  box-shaped region within the ````XKTModel````. Each ````XKTTile```` has one or more ````XKTEntitys````, a World-space axis-aligned bounding 
-box (AABB) that encloses the ````XKTEntitys````, and a decoding matrix to de-quantize the vertex positions belonging to the primitives instanced by the entities. 
-
-<br><br>
-
-![Class diagram](https://xeokit.github.io/xeokit-xkt-utils/images/classes.png)
-
-#### Functions
+````xeokit-xkt-utils```` provides an  [**````XKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) 
+class that represents an ````.xkt```` model. As shown in the example below, ````XKTModel```` has builder methods that allow 
+ us to populate it with 3D objects.  
 
 ````xeokit-xkt-utils```` also provides functions for loading, serializing and testing ````XKTModels````:
 
-* [**````loadGLTFIntoXKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel) load glTF JSON into an ````XKTModel````.
+* [**````loadGLTFIntoXKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel) loads glTF JSON into an ````XKTModel````.
 * [**````writeXKTModelToArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) serializes an ````XKTModel```` to an ````ArrayBuffer````.
-* [**````validateXKTArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer) verifies the correctness of an ````ArrayBuffer```` against the ````XKTModel```` it was serialized from. 
+* [**````validateXKTArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer) validates an ````ArrayBuffer```` against the ````XKTModel```` it was serialized from. 
 
 #### Building an XKTModel
 
-In the example below, we'll programmatically build a simple [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html).
+In the example below, we'll programmatically build a simple [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) resembling this table:
+
+![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
 
 ````javascript
 const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
@@ -209,49 +207,19 @@ utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
     (errMsg) => {  });
 ````
 
-## Using in node.js
+## Building 
 
-In the example below, we'll load the contents of a glTF file, then 
-use [````loadGLTFIntoXKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel) to parse the 
-glTF into an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html), then
-we'll use [````writeXKTModelToArrayBuffer````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer)  to serialize our [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) to an ````ArrayBuffer````, which we finally write to an ````.xkt```` file. 
+To build the binaries in ````./dist````:
 
+````npm run build````
 
+To build the JavaScript API documentation in ````./docs````:
 
-````javascript
-const fs = require('fs');
+````npm run docs````
 
-const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
+To build the live tests in ````./examples````:
 
-const gltfPath = "./myModel.gltf";
-const xktPath = "./myModel.xkt";
-
-const gltfText = await new Promise((resolve, reject) => {
-    fs.readFile(gltfPath, (error, gltfText) => {
-        if (error !== null) {
-            reject(error);
-            return;
-        }
-        resolve(gltfText);
-    });
-});
-
-const gltf = JSON.parse(gltfText);
-
-const xktModel = new XKTModel();
-
-loadGLTFIntoXKTModel(gltf, xktModel, {basePath: "./"});
-
-const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-    
-await new Promise((resolve, reject) => {
-    fs.writeFile(xktPath, Buffer.from(xktArrayBuffer), (error) => {
-        if (error !== null) {
-            console.error(`Unable to write to file at path: ${xktPath}`);
-            reject(error);
-            return;
-        }
-        resolve();
-    });
-});
+````
+cd examples
+npm run build
 ````
