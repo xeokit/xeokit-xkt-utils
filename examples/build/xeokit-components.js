@@ -11237,6 +11237,10 @@ const Renderer = function (scene, options) {
 
             pickResult.entity = (pickable.delegatePickedEntity) ? pickable.delegatePickedEntity() : pickable;
 
+            if (!pickResult.entity) {
+                return null;
+            }
+
             return pickResult;
         };
     })();
@@ -22704,11 +22708,13 @@ class PivotController {
      */
     startPivot(worldPos) {
 
-        if (worldPos) { // Use last pivotPoint by default
-            this._pivotWorldPos.set(worldPos);
-        }
-
         const camera = this._scene.camera;
+
+        if (worldPos) {
+            this._pivotWorldPos.set(worldPos);
+        } else {
+            this._pivotWorldPos.set(camera.look);
+        }
 
         let lookat = math.lookAtMat4v(camera.eye, camera.look, camera.worldUp);
         math.transformPoint3(lookat, this._pivotWorldPos, this._cameraOffset);
@@ -28772,6 +28778,8 @@ function buildFragment$1(scene) {
     return src;
 }
 
+const defaultColor = new Float32Array([1, 1, 1]);
+
 /**
  * @private
  */
@@ -28813,7 +28821,9 @@ class BatchingFillRenderer {
         gl.uniform1i(this._uRenderPass, renderPass);
         gl.uniformMatrix4fv(this._uModelMatrix, false, model.worldMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
@@ -29098,7 +29108,9 @@ class BatchingEdgesRenderer {
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniform1i(this._uRenderPass, renderPass);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
@@ -29324,7 +29336,9 @@ class BatchingPickMeshRenderer {
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
@@ -29563,7 +29577,9 @@ class BatchingPickDepthRenderer {
         gl.uniform1f(this._uZFar, projectState.far);
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
@@ -29796,7 +29812,9 @@ class BatchingPickNormalsRenderer {
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(state.normalsBuf);
         }
@@ -30016,7 +30034,9 @@ class BatchingOcclusionRenderer {
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aColor) {
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
@@ -30236,7 +30256,9 @@ class BatchingDepthRenderer {
         const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
         if (this._aColor) { // Needed for masking out transparent entities using alpha channel
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
@@ -32357,8 +32379,10 @@ class InstancingDrawRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         state.indicesBuf.bind();
 
@@ -32375,7 +32399,10 @@ class InstancingDrawRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-          instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -32728,8 +32755,10 @@ class InstancingFillRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         state.indicesBuf.bind();
 
@@ -32765,7 +32794,9 @@ class InstancingFillRenderer {
         if (this._aFlags2) {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -33044,8 +33075,10 @@ class InstancingEdgesRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         state.edgeIndicesBuf.bind();
         instanceExt.drawElementsInstancedANGLE(gl.LINES, state.edgeIndicesBuf.numItems, state.edgeIndicesBuf.itemType, 0, state.numInstances);
@@ -33053,7 +33086,10 @@ class InstancingEdgesRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 0); // TODO: Is this needed
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
 
         if (this._aFlags) {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
@@ -33316,8 +33352,10 @@ class InstancingPickMeshRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         state.indicesBuf.bind();
 
@@ -33333,7 +33371,9 @@ class InstancingPickMeshRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -33597,8 +33637,10 @@ class InstancingPickDepthRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         state.indicesBuf.bind();
 
@@ -33614,7 +33656,10 @@ class InstancingPickDepthRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -33879,8 +33924,10 @@ class InstancingPickNormalsRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         state.indicesBuf.bind();
 
@@ -33897,7 +33944,10 @@ class InstancingPickNormalsRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -34142,8 +34192,10 @@ class InstancingOcclusionRenderer {
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         this._aFlags.bindArrayBuffer(state.flagsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 1);
@@ -34169,7 +34221,9 @@ class InstancingOcclusionRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -34417,8 +34471,10 @@ class InstancingDepthRenderer {
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         this._aColor.bindArrayBuffer(state.colorsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
@@ -34444,7 +34500,9 @@ class InstancingDepthRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -34702,8 +34760,10 @@ class InstancingNormalsRenderer {
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aNormal.bindArrayBuffer(state.normalsBuf);
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         this._aColor.bindArrayBuffer(state.colorsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
@@ -34728,7 +34788,10 @@ class InstancingNormalsRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
@@ -34979,8 +35042,10 @@ class InstancingShadowRenderer {
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
 
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
+        }
 
         this._aColor.bindArrayBuffer(state.colorsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
@@ -35006,7 +35071,10 @@ class InstancingShadowRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-        instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+
+        if (this._aOffset) {
+            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
+        }
     }
 
     _allocate() {
