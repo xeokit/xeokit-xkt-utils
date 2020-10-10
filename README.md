@@ -46,7 +46,7 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 At the center of ````xeokit-xkt-utils```` is the  [**````XKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) 
 class, which represents an ````XKT```` model. 
 
-````XKTModel```` has builder methods that allow  us to populate the model with 3D objects, as shown in the example below.  
+````XKTModel```` has builder methods that allow  us to populate it with 3D objects, as shown in the example below.  
 
 ````xeokit-xkt-utils```` also provides utility functions for loading, serializing and validating ````XKTModels````:
 
@@ -172,9 +172,9 @@ const model = xktLoader.load({
 });
 ````
 
-The ````XKTLoaderPlugin```` could also load our ````ArrayBuffer```` from a URL.
+Note that the ````XKTLoaderPlugin```` could also load our ````ArrayBuffer```` from a URL.
 
-Finally, we'll fit the whole model in view.
+Finally, let's fit the whole model in view.
 
 ````javascript
 viewer.cameraFlight.flyTo(model);
@@ -187,6 +187,12 @@ Let's use [````loadGLTFIntoXKTModel````](https://xeokit.github.io/xeokit-xkt-uti
 We'll also use the classes and functions introduced in the previous examples to serialize the [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) to an ````ArrayBuffer````, then validate the ````ArrayBuffer```` and load it into a [````Viewer````](https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html).
 
 ````javascript
+const viewer = new Viewer({
+    canvasId: "myCanvas"
+});
+
+const xktLoader = new XKTLoaderPlugin(viewer);
+
 utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
 
         const xktModel = new XKTModel();
@@ -196,12 +202,6 @@ utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
             const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
-
-            const viewer = new Viewer({
-                canvasId: "myCanvas"
-            });
-
-            const xktLoader = new XKTLoaderPlugin(viewer);
 
             xktLoader.load({
                 id: "myModel",
