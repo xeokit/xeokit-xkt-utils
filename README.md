@@ -1,13 +1,13 @@
 
+# xeokit-xkt-utils
+
+[![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
 ![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
 
-# xeokit-xkt-utils
+````xeokit-xkt-utils```` is a JavaScript library for generating ````XKT```` files for loading into [xeokit](http://xeokit.io).
 
-
-````xeokit-xkt-utils```` is a JavaScript library for generating ````.xkt```` files for loading into [xeokit](http://xeokit.io).
-
-This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) to convert glTF to .XKT.  
+This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) to convert glTF to XKT.  
 
 
 * [API Docs](https://xeokit.github.io/xeokit-xkt-utils/docs)
@@ -28,8 +28,8 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 
 ## Features
 
-* **Convert glTF into .xkt**
-* **Generate .xkt programmatically** when you need to write your own authoring or conversion tools
+* **Convert glTF into XKT**
+* **Generate XKT programmatically** when you need to write your own authoring or conversion tools
 * **Full-precision geometry** without the cost of storing double-precision values
 * **Geometry compression** using instancing, quantization, oct-encoding and zipping   
 
@@ -38,7 +38,7 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 #### XKTModel - The XKT Document Model
 
 ````xeokit-xkt-utils```` provides an  [**````XKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) 
-class that represents an ````.xkt```` model. As shown in the example below, ````XKTModel```` has builder methods that allow 
+class that represents an ````XKT```` model. As shown in the example below, ````XKTModel```` has builder methods that allow 
  us to populate it with 3D objects.  
 
 ````xeokit-xkt-utils```` also provides functions for loading, serializing and testing ````XKTModels````:
