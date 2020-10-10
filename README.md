@@ -34,10 +34,10 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 
 ## Features
 
-* **Generate XKT programmatically** when you need to write your own authoring or conversion tools
-* **Convert glTF into XKT**
-* **Full-precision geometry** without the cost of storing double-precision values
-* **Geometry compression** using instancing, quantization, oct-encoding and zipping   
+* Generate XKT programmatically 
+* Full-precision geometry
+* Geometry compression   
+* Convert glTF into XKT
 
 ## JavaScript API
 
