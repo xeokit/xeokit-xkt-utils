@@ -42,17 +42,17 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><p><img src="http://xeokit.io/img/kdtree.jpeg" alt="Spatial partitioning"></p>
-<h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><code>xeokit-xkt-utils</code> is a JavaScript library for generating <code>.xkt</code> files for loading into <a href="http://xeokit.io">xeokit</a>.</p>
-<p>This library is used within <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> to convert glTF to .XKT.  </p>
-<ul>
-<li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs">API Docs</a></li>
-<li><a href="https://xeokit.github.io/xeokit-xkt-utils/examples">Live Tests</a></li>
-</ul>
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
+<p><code>xeokit-xkt-utils</code> is a library of JavaScript tools for creating <code>XKT</code> model geometry files, which we then can load 
+into <a href="http://xeokit.io">xeokit</a>.</p>
+<p>Using this library in either the browser or node, we can convert glTF into <code>XKT</code>, and can even programmatically generate <code>XKT</code> files.</p>
+<p>This library is used within <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> to convert glTF to <code>XKT</code> V6.    </p>
+<p><img src="http://xeokit.io/img/kdtree.jpeg" alt="Spatial partitioning"></p>
 <h2 id="contents">Contents</h2><ul>
+<li><a href="#links">Links</a></li>
 <li><a href="#features">Features</a></li>
 <li><a href="#javascript-api">JavaScript API</a><ul>
-<li><a href="#xktmodel---the-xkt-document-model">XKTModel - The XKT Document Model</a></li>
+<li><a href="#xktmodel">XKTModel</a></li>
 <li><a href="#building-an-xktmodel">Building an XKTModel</a></li>
 <li><a href="#serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</a></li>
 <li><a href="#validating-the-arraybuffer">Validating the ArrayBuffer</a></li>
@@ -60,25 +60,30 @@
 <li><a href="#loading-gltf-into-an-xktmodel">Loading glTF into an XKTModel</a></li>
 </ul>
 </li>
-<li><a href="#using-in-nodejs">Using in node.js</a></li>
+<li><a href="#using-in-nodejs">Using in node</a></li>
 <li><a href="#building">Building</a></li>
 </ul>
-<h2 id="features">Features</h2><ul>
-<li><strong>Convert glTF into .xkt</strong></li>
-<li><strong>Generate .xkt programmatically</strong> when you need to write your own authoring or conversion tools</li>
-<li><strong>Full-precision geometry</strong> without the cost of storing double-precision values</li>
-<li><strong>Geometry compression</strong> using instancing, quantization, oct-encoding and zipping   </li>
+<h2 id="links">Links</h2><ul>
+<li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs">API Documentation</a></li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-utils/examples">Live Tests</a></li>
+<li><a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a></li>
 </ul>
-<h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel---the-xkt-document-model">XKTModel - The XKT Document Model</h4><p><code>xeokit-xkt-utils</code> provides an  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a> 
-class that represents an <code>.xkt</code> model. As shown in the example below, <code>XKTModel</code> has builder methods that allow 
- us to populate it with 3D objects.  </p>
-<p><code>xeokit-xkt-utils</code> also provides functions for loading, serializing and testing <code>XKTModels</code>:</p>
+<h2 id="features">Features</h2><ul>
+<li><strong>Generate XKT files programmatically</strong> in both the browser and node.  </li>
+<li><strong>Convert glTF into XKT files</strong>.</li>
+<li><strong>Full-precision geometry</strong> without the cost of storing double-precision values.</li>
+<li><strong>Geometry compression</strong> using instancing, quantization, oct-encoding and zipping.   </li>
+</ul>
+<h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel">XKTModel</h4><p>At the center of <code>xeokit-xkt-utils</code> is the  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a> 
+class, which represents an <code>XKT</code> model. </p>
+<p><code>XKTModel</code> has builder methods that allow  us to populate it with 3D objects, as shown in the example below.  </p>
+<p><code>xeokit-xkt-utils</code> also provides utility functions for loading, serializing and validating <code>XKTModels</code>:</p>
 <ul>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel"><strong><code>loadGLTFIntoXKTModel</code></strong></a> loads glTF JSON into an <code>XKTModel</code>.</li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><strong><code>writeXKTModelToArrayBuffer</code></strong></a> serializes an <code>XKTModel</code> to an <code>ArrayBuffer</code>.</li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer"><strong><code>validateXKTArrayBuffer</code></strong></a> validates an <code>ArrayBuffer</code> against the <code>XKTModel</code> it was serialized from. </li>
 </ul>
-<h4 id="building-an-xktmodel">Building an XKTModel</h4><p>In the example below, we&apos;ll programmatically build a simple <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> resembling this table:</p>
+<h4 id="building-an-xktmodel">Building an XKTModel</h4><p>Let&apos;s programmatically build a simple <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> resembling the table below.</p>
 <p><img src="http://xeokit.io/img/kdtree.jpeg" alt="Spatial partitioning"></p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require(&quot;./xeokit-xkt-utils.cjs.js&quot;);
 
@@ -145,10 +150,10 @@ xktModel.createEntity({
      rotation: [0, 0, 0]
  });</code>
 </code></pre>
-<p>Once we&apos;ve built our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> we need to finalize it:</p>
+<p>Once we&apos;ve built our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> we need to finalize it. Then it&apos;s ready to use.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">xktModel.finalize();</code>
 </code></pre>
-<h4 id="serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</h4><p>Next, we&apos;ll use  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><code>writeXKTModelToArrayBuffer</code></a>  to serialize our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to an <code>ArrayBuffer</code>:</p>
+<h4 id="serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</h4><p>Next, we&apos;ll use  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><code>writeXKTModelToArrayBuffer</code></a>  to serialize our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to an <code>ArrayBuffer</code>.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);</code>
 </code></pre>
 <h4 id="validating-the-arraybuffer">Validating the ArrayBuffer</h4><p>Now we&apos;ll use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer"><code>validateXKTArrayBuffer</code></a> to validate 
@@ -160,39 +165,39 @@ if (!xktArrayBufferValid) {
     console.error(&quot;XKT array buffer is invalid!&quot;);
 }</code>
 </code></pre>
-<h4 id="loading-the-arraybuffer-into-a-viewer">Loading the ArrayBuffer into a Viewer</h4><p>Let&apos;s now create a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a> and load the <code>ArrayBuffer</code> into it using an <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html"><code>XKTLoaderPlugin</code></a>:</p>
+<h4 id="loading-the-arraybuffer-into-a-viewer">Loading the ArrayBuffer into a Viewer</h4><p>Let&apos;s now create a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>, then load the <code>ArrayBuffer</code> into it using an <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html"><code>XKTLoaderPlugin</code></a>.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const viewer = new Viewer({
     canvasId: &quot;myCanvas&quot;
 });
 
 const xktLoader = new XKTLoaderPlugin(viewer);
 
-xktLoader.load({
+const model = xktLoader.load({
     id: &quot;myModel&quot;,
     xkt: xktArrayBuffer
 });</code>
 </code></pre>
-<p>The <code>XKTLoaderPlugin</code> can also load our <code>ArrayBuffer</code> from a file.</p>
-<p>Finally, we&apos;ll fit the model in view:</p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">viewer.cameraFlight.flyTo(viewer.scene);</code>
+<p>Note that the <code>XKTLoaderPlugin</code> could also load our <code>ArrayBuffer</code> from a URL.</p>
+<p>Finally, let&apos;s fit the whole model in view.</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">viewer.cameraFlight.flyTo(model);</code>
 </code></pre>
 <h4 id="loading-gltf-into-an-xktmodel">Loading glTF into an XKTModel</h4><p>Let&apos;s use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel"><code>loadGLTFIntoXKTModel</code></a> to parse glTF into an <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>. </p>
 <p>We&apos;ll also use the classes and functions introduced in the previous examples to serialize the <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to an <code>ArrayBuffer</code>, then validate the <code>ArrayBuffer</code> and load it into a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>.</p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">utils.loadJSON(&quot;./models/gltf/MAP/MAP.gltf&quot;, (json) =&gt; {
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const viewer = new Viewer({
+    canvasId: &quot;myCanvas&quot;
+});
+
+const xktLoader = new XKTLoaderPlugin(viewer);
+
+utils.loadJSON(&quot;./models/gltf/MAP/MAP.gltf&quot;, (json) =&gt; {
 
         const xktModel = new XKTModel();
 
-        loadGLTFIntoXKTModel(json, xktModel, {basePath: &quot;&quot;}).then(() =&gt; {
+        loadGLTFIntoXKTModel(json, xktModel).then(() =&gt; {
 
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
             const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
-
-            const viewer = new Viewer({
-                canvasId: &quot;myCanvas&quot;
-            });
-
-            const xktLoader = new XKTLoaderPlugin(viewer);
 
             xktLoader.load({
                 id: &quot;myModel&quot;,
@@ -204,14 +209,24 @@ xktLoader.load({
     },
     (errMsg) =&gt; {  });</code>
 </code></pre>
-<h2 id="building">Building</h2><p>To build the binaries in <code>./dist</code>:</p>
-<p><code>npm run build</code></p>
-<p>To build the JavaScript API documentation in <code>./docs</code>:</p>
-<p><code>npm run docs</code></p>
-<p>To build the live tests in <code>./examples</code>:</p>
-<pre><code><code class="source-code prettyprint">cd examples
+<h2 id="building">Building</h2><p>Building the binaries in <a href="https://xeokit.github.io/xeokit-xkt-utils/dist"><code>./dist</code></a>):</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">npm update
 npm run build</code>
-</code></pre></div>
+</code></pre>
+<p>This will build:</p>
+<ul>
+<li><a href="./dist/xeokit-xkt-utils.cjs.js">./dist/xeokit-xkt-utils.cjs.js</a> - CommonJS module</li>
+<li><a href="./dist/xeokit-xkt-utils.es.js">./dist/xeokit-xkt-utils.es.js</a> - ES module</li>
+</ul>
+<p>Building the JavaScript API documentation in <a href="https://xeokit.github.io/xeokit-xkt-utils/docs"><code>./docs</code></a>:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">npm run docs</code>
+</code></pre>
+<p>Building the live tests in <a href="https://xeokit.github.io/xeokit-xkt-utils/examples"><code>./examples</code></a>:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">cd examples
+npm update
+npm run build</code>
+</code></pre>
+</div>
 </div>
 
 <footer class="footer">
