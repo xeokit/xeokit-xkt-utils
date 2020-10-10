@@ -6,9 +6,9 @@
 ````xeokit-xkt-utils```` is a library of JavaScript tools for creating ````XKT```` model geometry files, which we then can load 
 into [xeokit](http://xeokit.io).
 
-Using this library in either the browser or node, we can convert glTF into ````XKT````, and can even programmatically generate ````XKT```` files.
+Using this library in either browser or node, we can convert glTF into ````XKT````, and can even programmatically generate ````XKT```` files.
 
-This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) to convert glTF to ````XKT```` V6.    
+This library is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to convert glTF to ````XKT````.    
 
 ![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
 
@@ -30,14 +30,15 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 
 * [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
-* [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt)
+* [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
+* [npm](https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils)
 
 ## Features
 
-* **Generate XKT files programmatically** in both the browser and node.  
+* **Generate XKT files programmatically** in browser and node.  
 * **Convert glTF into XKT files**.
 * **Full-precision geometry** without the cost of storing double-precision values.
-* **Geometry compression** using instancing, quantization, oct-encoding and zipping.   
+* **Geometry compression** using instancing, quantization, oct-encoding and gzip.   
 
 ## JavaScript API
 
@@ -46,9 +47,9 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 At the center of ````xeokit-xkt-utils```` is the  [**````XKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) 
 class, which represents an ````XKT```` model. 
 
-````XKTModel```` has builder methods that allow  us to populate it with 3D objects, as shown in the example below.  
+````XKTModel```` provides builder methods, with which we can programmatically populate it with 3D objects.  
 
-````xeokit-xkt-utils```` also provides utility functions for loading, serializing and validating ````XKTModels````:
+````xeokit-xkt-utils```` provides these utility functions for loading, serializing and validating ````XKTModels````:
 
 * [**````loadGLTFIntoXKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel) loads glTF JSON into an ````XKTModel````.
 * [**````writeXKTModelToArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) serializes an ````XKTModel```` to an ````ArrayBuffer````.
@@ -56,7 +57,7 @@ class, which represents an ````XKT```` model.
 
 #### Building an XKTModel
 
-Let's programmatically build a simple [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) resembling the table below.
+Let's programmatically build a simple [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) that resembles the table below.
 
 ![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
 
