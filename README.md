@@ -3,8 +3,6 @@
 
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
-
 ````xeokit-xkt-utils```` is a library of JavaScript tools for creating ````XKT```` files, which we can then load into a 
  [xeokit](http://xeokit.io) viewer.
 
@@ -14,6 +12,8 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 * [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
 ---
+![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
+
 ## Contents
 - [Features](#features)
 - [JavaScript API](#javascript-api)
