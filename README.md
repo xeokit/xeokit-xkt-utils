@@ -3,18 +3,17 @@
 
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-````xeokit-xkt-utils```` is a library of JavaScript tools for creating ````XKT```` files, which we can then load into a 
- [xeokit](http://xeokit.io) viewer.
+````xeokit-xkt-utils```` is a library of JavaScript tools for creating ````XKT```` model geometry files that we can load 
+into [xeokit](http://xeokit.io).
+
+Using this library, we can programmatically generate ````XKT```` files, or convert glTF into ````XKT````.
 
 This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) to convert glTF to ````XKT````.  
 
----
-* [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
-* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
----
 ![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
 
 ## Contents
+- [Links](#links)
 - [Features](#features)
 - [JavaScript API](#javascript-api)
     + [XKTModel - The XKT Document Model](#xktmodel---the-xkt-document-model)
@@ -27,10 +26,16 @@ This library is used within [xeokit-gltf-to-xkt](https://github.com/xeokit/xeoki
 - [Building](#building)
     
 
+## Links
+
+* [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
+* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
+* [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt)
+
 ## Features
 
-* **Convert glTF into XKT**
 * **Generate XKT programmatically** when you need to write your own authoring or conversion tools
+* **Convert glTF into XKT**
 * **Full-precision geometry** without the cost of storing double-precision values
 * **Geometry compression** using instancing, quantization, oct-encoding and zipping   
 
