@@ -22,7 +22,6 @@ This library is currently used within the [xeokit-gltf-to-xkt](https://github.co
     + [Validating the ArrayBuffer](#validating-the-arraybuffer)
     + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
     + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
-- [Using in node](#using-in-nodejs)
 - [Building](#building)
     
 
@@ -57,9 +56,9 @@ class, which represents an ````XKT```` model.
 
 #### Building an XKTModel
 
-Let's programmatically build a simple [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) that resembles the table below.
+Let's use [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html)'s builder methods to programmatically build a model that resembles the screenshot below.
 
-![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
+![Spatial partitioning](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)
 
 ````javascript
 const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
