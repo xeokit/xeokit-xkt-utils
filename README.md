@@ -56,9 +56,15 @@ class, which represents an ````XKT```` model.
 
 #### Building an XKTModel
 
-Let's use [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html)'s builder methods to programmatically build a model that resembles the screenshot below.
+To demonstrate the API, let's use [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html)'s builder
+ methods to programmatically build a model that resembles the screenshot below. Then we'll serialize the ````XKTModel```` to an 
+ ````ArrayBuffer````, which we'll load that into a xeokit [````Viewer````](https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html)
+ using [````XKTLoaderPlugin````](https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html). 
 
-![Spatial partitioning](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)
+[![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate_instancing)
+ 
+[[Run this example](https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate_instancing)]
+ 
 
 ````javascript
 const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
