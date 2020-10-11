@@ -44,10 +44,9 @@
 
 <div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
 <p><code>xeokit-xkt-utils</code> is a library of JavaScript tools for creating <code>XKT</code> model geometry files, which we then can load 
-into <a href="http://xeokit.io">xeokit</a>.</p>
-<p>Using this library in either browser or node, we can convert glTF into <code>XKT</code>, and can even programmatically generate <code>XKT</code> files.</p>
+into <a href="http://xeokit.io">xeokit</a>. Using this library in either browser or node, we can convert glTF into <code>XKT</code>, and can even programmatically generate <code>XKT</code> files.</p>
 <p>This library is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to convert glTF to <code>XKT</code>.    </p>
-<p><img src="http://xeokit.io/img/kdtree.jpeg" alt="Spatial partitioning"></p>
+<p><img src="http://xeokit.io/img/BimdataViewerCroppedNarrow.jpg" alt="Spatial partitioning"></p>
 <h2 id="contents">Contents</h2><ul>
 <li><a href="#links">Links</a></li>
 <li><a href="#features">Features</a></li>
@@ -60,7 +59,6 @@ into <a href="http://xeokit.io">xeokit</a>.</p>
 <li><a href="#loading-gltf-into-an-xktmodel">Loading glTF into an XKTModel</a></li>
 </ul>
 </li>
-<li><a href="#using-in-nodejs">Using in node</a></li>
 <li><a href="#building">Building</a></li>
 </ul>
 <h2 id="links">Links</h2><ul>
@@ -70,23 +68,33 @@ into <a href="http://xeokit.io">xeokit</a>.</p>
 <li><a href="https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils">npm</a></li>
 </ul>
 <h2 id="features">Features</h2><ul>
-<li><strong>Generate XKT files programmatically</strong> in browser and node.  </li>
-<li><strong>Convert glTF into XKT files</strong>.</li>
-<li><strong>Full-precision geometry</strong> without the cost of storing double-precision values.</li>
-<li><strong>Geometry compression</strong> using instancing, quantization, oct-encoding and gzip.   </li>
+<li>Generate XKT files programmatically, in browser and node.  </li>
+<li>Convert glTF into XKT files.</li>
+<li>Full-precision geometry without the cost of storing double-precision values.</li>
+<li>Geometry compression using instancing, quantization, oct-encoding and gzip.   </li>
 </ul>
 <h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel">XKTModel</h4><p>At the center of <code>xeokit-xkt-utils</code> is the  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a> 
 class, which represents an <code>XKT</code> model. </p>
 <p><code>XKTModel</code> provides builder methods, with which we can programmatically populate it with 3D objects.  </p>
-<p><code>xeokit-xkt-utils</code> provides these utility functions for loading, serializing and validating <code>XKTModels</code>:</p>
+<p><code>xeokit-xkt-utils</code> also provides these utility functions for loading, serializing and validating <code>XKTModels</code>:</p>
 <ul>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel"><strong><code>loadGLTFIntoXKTModel</code></strong></a> loads glTF JSON into an <code>XKTModel</code>.</li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><strong><code>writeXKTModelToArrayBuffer</code></strong></a> serializes an <code>XKTModel</code> to an <code>ArrayBuffer</code>.</li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer"><strong><code>validateXKTArrayBuffer</code></strong></a> validates an <code>ArrayBuffer</code> against the <code>XKTModel</code> it was serialized from. </li>
 </ul>
-<h4 id="building-an-xktmodel">Building an XKTModel</h4><p>Let&apos;s programmatically build a simple <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> that resembles the table below.</p>
-<p><img src="http://xeokit.io/img/kdtree.jpeg" alt="Spatial partitioning"></p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require(&quot;./xeokit-xkt-utils.cjs.js&quot;);
+<h4 id="building-an-xktmodel">Building an XKTModel</h4><p>To demonstrate the API, let&apos;s use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>&apos;s builder
+ methods to programmatically build a model that resembles the screenshot below. Then we&apos;ll serialize the <code>XKTModel</code> to an 
+ <code>ArrayBuffer</code>, which we&apos;ll finally load that into a xeokit <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>
+ using <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html"><code>XKTLoaderPlugin</code></a>. </p>
+<p>We&apos;ll code this example to run in the browser, using the ES module in <a href="./dist/xeokit-xkt-utils.es.js">xeokit-xkt-utils.es.js</a>. We could also code it 
+to run on node, using the CommonJS module in <a href="./dist/xeokit-xkt-utils.cjs.js">xeokit-xkt-utils.cjs.js</a>. </p>
+<p><a href="https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate_instancing"><img src="http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png" alt="XKTModel Example"></a></p>
+<p>[<a href="https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate_instancing">Run this example</a>]</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">
+import {XKTModel, writeXKTModelToArrayBuffer, validateXKTArrayBuffer} from &quot;./dist/xeokit-xkt-utils.es.js&quot;;
+
+// Or in node:
+// const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require(&quot;./xeokit-xkt-utils.cjs.js&quot;);
 
 const xktModel = new XKTModel();
 

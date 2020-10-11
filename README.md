@@ -4,9 +4,7 @@
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
 ````xeokit-xkt-utils```` is a library of JavaScript tools for creating ````XKT```` model geometry files, which we then can load 
-into [xeokit](http://xeokit.io).
-
-Using this library in either browser or node, we can convert glTF into ````XKT````, and can even programmatically generate ````XKT```` files.
+into [xeokit](http://xeokit.io). Using this library in either browser or node, we can convert glTF into ````XKT````, and can even programmatically generate ````XKT```` files.
 
 This library is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to convert glTF to ````XKT````.    
 
@@ -34,10 +32,10 @@ This library is currently used within the [xeokit-gltf-to-xkt](https://github.co
 
 ## Features
 
-* **Generate XKT files programmatically** in browser and node.  
-* **Convert glTF into XKT files**.
-* **Full-precision geometry** without the cost of storing double-precision values.
-* **Geometry compression** using instancing, quantization, oct-encoding and gzip.   
+* Generate XKT files programmatically, in browser and node.  
+* Convert glTF into XKT files.
+* Full-precision geometry without the cost of storing double-precision values.
+* Geometry compression using instancing, quantization, oct-encoding and gzip.   
 
 ## JavaScript API
 
@@ -48,7 +46,7 @@ class, which represents an ````XKT```` model.
 
 ````XKTModel```` provides builder methods, with which we can programmatically populate it with 3D objects.  
 
-````xeokit-xkt-utils```` provides these utility functions for loading, serializing and validating ````XKTModels````:
+````xeokit-xkt-utils```` also provides these utility functions for loading, serializing and validating ````XKTModels````:
 
 * [**````loadGLTFIntoXKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-loadGLTFIntoXKTModel) loads glTF JSON into an ````XKTModel````.
 * [**````writeXKTModelToArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) serializes an ````XKTModel```` to an ````ArrayBuffer````.
@@ -58,8 +56,11 @@ class, which represents an ````XKT```` model.
 
 To demonstrate the API, let's use [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html)'s builder
  methods to programmatically build a model that resembles the screenshot below. Then we'll serialize the ````XKTModel```` to an 
- ````ArrayBuffer````, which we'll load that into a xeokit [````Viewer````](https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html)
+ ````ArrayBuffer````, which we'll finally load that into a xeokit [````Viewer````](https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html)
  using [````XKTLoaderPlugin````](https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html). 
+
+We'll code this example to run in the browser, using the ES module in [xeokit-xkt-utils.es.js](./dist/xeokit-xkt-utils.es.js). We could also code it 
+to run on node, using the CommonJS module in [xeokit-xkt-utils.cjs.js](./dist/xeokit-xkt-utils.cjs.js). 
 
 [![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate_instancing)
  
@@ -67,7 +68,11 @@ To demonstrate the API, let's use [````XKTModel````](https://xeokit.github.io/xe
  
 
 ````javascript
-const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
+
+import {XKTModel, writeXKTModelToArrayBuffer, validateXKTArrayBuffer} from "./dist/xeokit-xkt-utils.es.js";
+
+// Or in node:
+// const {XKTModel, loadGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
 
 const xktModel = new XKTModel();
 
