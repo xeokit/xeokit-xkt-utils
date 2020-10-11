@@ -10,7 +10,7 @@ Using this library in either browser or node, we can convert glTF into ````XKT``
 
 This library is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to convert glTF to ````XKT````.    
 
-![Spatial partitioning](http://xeokit.io/img/kdtree.jpeg)
+![Spatial partitioning](http://xeokit.io/img/BimdataViewerCroppedNarrow.jpg)
 
 ## Contents
 - [Links](#links)
