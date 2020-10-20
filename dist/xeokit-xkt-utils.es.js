@@ -4365,100 +4365,16 @@ const kdTreeDimLength = new Float32Array(3);
 /**
  * A document model that represents the contents of an .XKT V6 file.
  *
- * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions. Each {@link XKTTile}
- * contains {@link XKTEntity}s, which represent the objects within its region. Each {@link XKTEntity}
- * has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
- *
+ * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
+ * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
+ * * Each {@link XKTEntity} has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
  * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
  * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *
  * ## Usage
  *
- * Procedurally building a simple table model in an XKTModel:
- *
- * ````javascript
- * const xktModel = new XKTModel();
- *
- * xktModel.createPrimitive({
- *      primitiveId: "legPrimitive",
- *      primitiveType: "triangles",
- *      positions: [
- *          1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, 1, 1, -1, -1, 1,
- *          -1, -1, 1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, -1,
- *          -1, -1, -1, -1, -1, 1, -1, 1, 1, -1
- *      ],
- *      normals: [
- *          0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
- *          -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0,
- *          -1, 0, 0, -1
- *      ],
- *      indices: [
- *          0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19,
- *          20, 21, 22, 20, 22, 23
- *      ],
- *      color: [255, 0, 0],
- *      opacity: 255
- *  });
- *
- * xktModel.createEntity({
- *      entityId: "leg1",
- *      primitiveIds: ["legPrimitive"],
- *      position: [-4, -6, -4],
- *      scale: [1, 3, 1],
- *      rotation: [0, 0, 0]
- *  });
- *
- * xktModel.createEntity({
- *      entityId: "leg2",
- *      primitiveIds: ["legPrimitive"],
- *      position: [4, -6, -4],
- *      scale: [1, 3, 1],
- *      rotation: [0, 0, 0]
- *  });
- *
- * xktModel.createEntity({
- *      entityId: "leg3",
- *      primitiveIds: ["legPrimitive"],
- *      position: [4, -6, 4],
- *      scale: [1, 3, 1],
- *      rotation: [0, 0, 0]
- *  });
- *
- * xktModel.createEntity({
- *      entityId: "leg4",
- *      primitiveIds: ["legPrimitive"],
- *      position: [-4, -6, 4],
- *      scale: [1, 3, 1],
- *      rotation: [0, 0, 0]
- *  });
- *
- * xktModel.createEntity({
- *      entityId: "top",
- *      primitiveIds: ["legPrimitive"],
- *      position: [0, -3, 0],
- *      scale: [6, 0.5, 6],
- *      rotation: [0, 0, 0]
- *  });
- *
- * xktModel.finalize();
- *````
- *
- * Using {@link writeXKTModelToArrayBuffer} to write the XKTModel to an array buffer:
- *
- * ````javascript
- * const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
- * ````
- *
- * Using {@link validateXKTArrayBuffer} to validate the array buffer against the XKTModel:
- *
- * ````javascript
- * const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
- *
- * if (!xktArrayValid) {
- *     console.error("XKT array buffer is invalid!");
- * }
- * ````
+ * See [main docs page](/docs/#javascript-api) for usage examples.
  *
  * @class XKTModel
  */
@@ -5110,11 +5026,12 @@ const WEBGL_TYPE_SIZES = {
  * @param {String} [options.basePath] Base directory where binary attachments may be found.
  * @returns {Promise} A Promise which returns the XKTModel when resolved.
  */
-function loadGLTFIntoXKTModel(gltf, model, options = {}) {
+function loadGLTFIntoXKTModel(gltf, getAttachment) {
+    const model = new XKTModel();
 
     const parsingCtx = {
-        basePath: options.basePath || "./",
         gltf: gltf,
+        getAttachment: getAttachment,
         model: model,
         numPrimitivesCreated: 0,
         numEntitiesCreated: 0,
@@ -5122,63 +5039,36 @@ function loadGLTFIntoXKTModel(gltf, model, options = {}) {
         meshInstanceCounts: {},
         _meshPrimitiveIds: {}
     };
+    parseBuffers(parsingCtx);
+    parseBufferViews(parsingCtx);
+    freeBuffers(parsingCtx);
+    parseMaterials(parsingCtx);
+    parseDefaultScene(parsingCtx);
 
-    return new Promise((resolve, reject) => {
-
-        parseBuffers(parsingCtx, () => {
-
-            parseBufferViews(parsingCtx);
-            freeBuffers(parsingCtx);
-            parseMaterials(parsingCtx);
-            parseDefaultScene(parsingCtx);
-
-            model.finalize();
-
-            resolve(model);
-        });
-    });
+    model.finalize();
+    return model;
 }
 
-function parseBuffers(parsingCtx, ok) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
-    var buffers = parsingCtx.gltf.buffers;
+function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+    const buffers = parsingCtx.gltf.buffers;
     if (buffers) {
-        var numToLoad = buffers.length;
-        for (let i = 0, len = buffers.length; i < len; i++) {
-            parseBuffer(parsingCtx, buffers[i],
-                () => {
-                    if (--numToLoad === 0) {
-                        ok();
-                    }
-                },
-                (msg) => {
-                    console.error(msg);
-                    if (--numToLoad === 0) {
-                        ok();
-                    }
-                });
+        for (var i = 0, len = buffers.length; i < len; i++) {
+            parseBuffer(parsingCtx, buffers[i]);
         }
-    } else {
-        ok();
     }
 }
 
-function parseBuffer(parsingCtx, bufferInfo, ok, error) {
+function parseBuffer(parsingCtx, bufferInfo) {
     const uri = bufferInfo.uri;
     if (uri) {
-        parseArrayBuffer(parsingCtx, uri, (arrayBuffer) => {
-            bufferInfo._buffer = arrayBuffer;
-            ok();
-        }, error);
+        bufferInfo._buffer  = parseArrayBuffer(parsingCtx, uri);
     } else {
-        error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+        error(parsingCtx, 'gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
     }
 }
 
-function parseArrayBuffer(parsingCtx, url, ok, err) {
+function parseArrayBuffer(parsingCtx, url) {
     // Check for data: URI
-    const defaultCallback = (_value) => undefined;
-    ok = ok || defaultCallback;
-    err = err || defaultCallback;
     const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
     const dataUriRegexResult = url.match(dataUriRegex);
     if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
@@ -5188,28 +5078,15 @@ function parseArrayBuffer(parsingCtx, url, ok, err) {
         if (isBase64) {
             data = atob2(data);
         }
-        try {
-            const buffer = new ArrayBuffer(data.length);
-            const view = new Uint8Array(buffer);
-            for (let i = 0; i < data.length; i++) {
-                view[i] = data.charCodeAt(i);
-            }
-            ok(buffer);
-
-        } catch (error) {
-            err(error);
+        const buffer = new ArrayBuffer(data.length);
+        const view = new Uint8Array(buffer);
+        for (let i = 0; i < data.length; i++) {
+            view[i] = data.charCodeAt(i);
         }
+        return buffer;
     } else {
-
-        const absURL = parsingCtx.basePath + url;
-        fs.readFile(absURL, (error, contents) => {
-            if (error !== null) {
-                err(error);
-                return;
-            }
-            const arrayBuffer = toArrayBuffer(contents);
-            ok(arrayBuffer);
-        });
+        const contents = parsingCtx.getAttachment(url);
+        return toArrayBuffer(contents);
     }
 }
 
@@ -5262,7 +5139,6 @@ function parseMaterials(parsingCtx) {
 }
 
 function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
-    const gltf = parsingCtx.gltf;
     const color = new Float32Array([1, 1, 1, 1]);
     const extensions = materialInfo.extensions;
     if (extensions) {
@@ -5544,7 +5420,7 @@ function parseAccessorTypedArray(parsingCtx, accessorInfo) {
     const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
     const itemBytes = elementBytes * itemSize;
     if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
-        error("interleaved buffer!"); // TODO
+        error(parsingCtx, "interleaved buffer!"); // TODO
     } else {
         return new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
     }
