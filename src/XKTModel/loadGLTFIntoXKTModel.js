@@ -41,11 +41,12 @@ const WEBGL_TYPE_SIZES = {
  * @param {String} [options.basePath] Base directory where binary attachments may be found.
  * @returns {Promise} A Promise which returns the XKTModel when resolved.
  */
-function loadGLTFIntoXKTModel(gltf, model, options = {}) {
+function loadGLTFIntoXKTModel(gltf, getAttachment) {
+    const model = new XKTModel();
 
     const parsingCtx = {
-        basePath: options.basePath || "./",
         gltf: gltf,
+        getAttachment: getAttachment,
         model: model,
         numPrimitivesCreated: 0,
         numEntitiesCreated: 0,
@@ -53,63 +54,35 @@ function loadGLTFIntoXKTModel(gltf, model, options = {}) {
         meshInstanceCounts: {},
         _meshPrimitiveIds: {}
     };
+    parseBuffers(parsingCtx);
+    parseBufferViews(parsingCtx);
+    freeBuffers(parsingCtx);
+    parseMaterials(parsingCtx);
+    parseDefaultScene(parsingCtx);
 
-    return new Promise((resolve, reject) => {
-
-        parseBuffers(parsingCtx, () => {
-
-            parseBufferViews(parsingCtx);
-            freeBuffers(parsingCtx);
-            parseMaterials(parsingCtx);
-            parseDefaultScene(parsingCtx);
-
-            model.finalize();
-
-            resolve(model);
-        });
-    });
+    model.finalize();
+    return model;
 }
 
-function parseBuffers(parsingCtx, ok) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
-    var buffers = parsingCtx.gltf.buffers;
+function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+    const buffers = parsingCtx.gltf.buffers;
     if (buffers) {
-        var numToLoad = buffers.length;
-        for (let i = 0, len = buffers.length; i < len; i++) {
-            parseBuffer(parsingCtx, buffers[i],
-                () => {
-                    if (--numToLoad === 0) {
-                        ok();
-                    }
-                },
-                (msg) => {
-                    console.error(msg);
-                    if (--numToLoad === 0) {
-                        ok();
-                    }
-                });
+        for (var i = 0, len = buffers.length; i < len; i++) {
+            parseBuffer(parsingCtx, buffers[i]);
         }
-    } else {
-        ok();
     }
 }
 
-function parseBuffer(parsingCtx, bufferInfo, ok, error) {
+function parseBuffer(parsingCtx, bufferInfo) {
     const uri = bufferInfo.uri;
-    if (uri) {
-        parseArrayBuffer(parsingCtx, uri, (arrayBuffer) => {
-            bufferInfo._buffer = arrayBuffer;
-            ok();
-        }, error);
-    } else {
-        error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+    if (!uri) {
+        throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
     }
+    bufferInfo._buffer  = parseArrayBuffer(parsingCtx, uri);
 }
 
-function parseArrayBuffer(parsingCtx, url, ok, err) {
+function parseArrayBuffer(parsingCtx, url) {
     // Check for data: URI
-    const defaultCallback = (_value) => undefined;
-    ok = ok || defaultCallback;
-    err = err || defaultCallback;
     const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
     const dataUriRegexResult = url.match(dataUriRegex);
     if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
@@ -119,28 +92,15 @@ function parseArrayBuffer(parsingCtx, url, ok, err) {
         if (isBase64) {
             data = atob2(data);
         }
-        try {
-            const buffer = new ArrayBuffer(data.length);
-            const view = new Uint8Array(buffer);
-            for (let i = 0; i < data.length; i++) {
-                view[i] = data.charCodeAt(i);
-            }
-            ok(buffer);
-
-        } catch (error) {
-            err(error);
+        const buffer = new ArrayBuffer(data.length);
+        const view = new Uint8Array(buffer);
+        for (let i = 0; i < data.length; i++) {
+            view[i] = data.charCodeAt(i);
         }
+        return buffer;
     } else {
-
-        const absURL = parsingCtx.basePath + url;
-        fs.readFile(absURL, (error, contents) => {
-            if (error !== null) {
-                err(error);
-                return;
-            }
-            const arrayBuffer = toArrayBuffer(contents);
-            ok(arrayBuffer);
-        });
+        const contents = parsingCtx.getAttachment(url);
+        return toArrayBuffer(contents);
     }
 }
 
@@ -193,7 +153,6 @@ function parseMaterials(parsingCtx) {
 }
 
 function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
-    const gltf = parsingCtx.gltf;
     const color = new Float32Array([1, 1, 1, 1]);
     const extensions = materialInfo.extensions;
     if (extensions) {
@@ -241,8 +200,7 @@ function parseDefaultScene(parsingCtx) {
     const scene = parsingCtx.gltf.scene || 0;
     const defaultSceneInfo = parsingCtx.gltf.scenes[scene];
     if (!defaultSceneInfo) {
-        error(parsingCtx, "glTF has no default scene");
-        return;
+        throw new Error("glTF has no default scene");
     }
     prepareSceneCountMeshes(parsingCtx, defaultSceneInfo);
     parseScene(parsingCtx, defaultSceneInfo);
@@ -436,7 +394,7 @@ function parseNode(parsingCtx, glTFNode, matrix) {
             const childNodeIdx = children[i];
             const childGLTFNode = gltf.nodes[childNodeIdx];
             if (!childGLTFNode) {
-                error(parsingCtx, "Node not found: " + i);
+                console.warn('Node not found: ' + i);
                 continue;
             }
             parseNode(parsingCtx, childGLTFNode, matrix);
@@ -475,14 +433,11 @@ function parseAccessorTypedArray(parsingCtx, accessorInfo) {
     const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
     const itemBytes = elementBytes * itemSize;
     if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
-        error("interleaved buffer!"); // TODO
+        throw new Error("interleaved buffer!"); // TODO
     } else {
         return new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
     }
 }
 
-function error(parsingCtx, msg) {
-    parsingCtx.error(msg);
-}
 
 export {loadGLTFIntoXKTModel};
