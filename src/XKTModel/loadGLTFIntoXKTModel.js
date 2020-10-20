@@ -43,7 +43,7 @@ const WEBGL_TYPE_SIZES = {
 async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
         gltf: gltf,
-        getAttachment: getAttachment,
+        getAttachment: getAttachment || (() => {throw new Error('You must define getAttachment() method to convert glTF with external resources')}),
         model: model,
         numPrimitivesCreated: 0,
         numEntitiesCreated: 0,
