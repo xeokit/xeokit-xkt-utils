@@ -29,9 +29,7 @@
     "url": "https://github.com/xeokit/xeokit-xkt-utils/issues"
   },
   "homepage": "https://github.com/xeokit/xeokit-xkt-utils#readme",
-  "dependencies": {
-
-  },
+  "dependencies": {},
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
     "mocha": "^8.1.3",
@@ -43,6 +41,7 @@
     "rollup-plugin-node-resolve": "^5.2.0"
   },
   "files": [
-    "/dist"
+    "/dist",
+    "src"
   ]
 }
