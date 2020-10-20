@@ -4,7 +4,7 @@
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
 **````xeokit-xkt-utils````** is a library of JavaScript tools for creating ````XKT```` model geometry files, which we then can load 
-into [xeokit](http://xeokit.io). Using this library in either browser or node, we can convert glTF into ````XKT````, and can even programmatically generate ````XKT```` files.
+into [xeokit](http://xeokit.io). Using this library in either browser or node, we can convert glTF into ````XKT````, and can even generate ````XKT```` files programmatically.
 
 This library is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to convert glTF to ````XKT````.    
 
