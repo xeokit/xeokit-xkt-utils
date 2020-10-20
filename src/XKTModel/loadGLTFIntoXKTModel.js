@@ -1,6 +1,5 @@
 import {utils} from "./lib/utils.js";
 import {math} from "./lib/math.js";
-import {XKTModel} from "./XKTModel.js";
 
 // HACK: Allows node.js to find atob()
 let atob2;
@@ -41,9 +40,7 @@ const WEBGL_TYPE_SIZES = {
  * @param {String} [options.basePath] Base directory where binary attachments may be found.
  * @returns {Promise} A Promise which returns the XKTModel when resolved.
  */
-function loadGLTFIntoXKTModel(gltf, getAttachment) {
-    const model = new XKTModel();
-
+async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
         gltf: gltf,
         getAttachment: getAttachment,
@@ -54,37 +51,31 @@ function loadGLTFIntoXKTModel(gltf, getAttachment) {
         meshInstanceCounts: {},
         _meshPrimitiveIds: {}
     };
-    parseBuffers(parsingCtx);
+    await parseBuffers(parsingCtx);
     parseBufferViews(parsingCtx);
     freeBuffers(parsingCtx);
     parseMaterials(parsingCtx);
     parseDefaultScene(parsingCtx);
-
-    model.finalize();
-    return model;
 }
-
-function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+async function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
     const buffers = parsingCtx.gltf.buffers;
     if (buffers) {
-        for (var i = 0, len = buffers.length; i < len; i++) {
-            parseBuffer(parsingCtx, buffers[i]);
-        }
+        await Promise.all(buffers.map(buffer => parseBuffer(parsingCtx, buffer)));
     }
 }
 
-function parseBuffer(parsingCtx, bufferInfo) {
+async function parseBuffer(parsingCtx, bufferInfo) {
     const uri = bufferInfo.uri;
     if (!uri) {
         throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
     }
-    bufferInfo._buffer  = parseArrayBuffer(parsingCtx, uri);
+    bufferInfo._buffer = await parseArrayBuffer(parsingCtx, uri);
 }
 
-function parseArrayBuffer(parsingCtx, url) {
+async function parseArrayBuffer(parsingCtx, uri) {
     // Check for data: URI
     const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
-    const dataUriRegexResult = url.match(dataUriRegex);
+    const dataUriRegexResult = uri.match(dataUriRegex);
     if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
         const isBase64 = !!dataUriRegexResult[2];
         let data = dataUriRegexResult[3];
@@ -98,8 +89,10 @@ function parseArrayBuffer(parsingCtx, url) {
             view[i] = data.charCodeAt(i);
         }
         return buffer;
+
     } else {
-        const contents = parsingCtx.getAttachment(url);
+        // Uri is a path to a file
+        const contents = await parsingCtx.getAttachment(uri, parsingCtx);
         return toArrayBuffer(contents);
     }
 }
@@ -107,7 +100,7 @@ function parseArrayBuffer(parsingCtx, url) {
 function toArrayBuffer(buf) {
     var ab = new ArrayBuffer(buf.length);
     var view = new Uint8Array(ab);
-    for (var i = 0; i < buf.length; ++i) {
+    for (let i = 0; i < buf.length; ++i) {
         view[i] = buf[i];
     }
     return ab;
