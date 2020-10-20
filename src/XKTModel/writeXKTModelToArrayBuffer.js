@@ -79,7 +79,9 @@ function getModelData(xktModel) {
         eachPrimitiveEdgeIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.edgeIndices
         eachPrimitiveColorAndOpacity: new Uint8Array(lenColors), // For each primitive, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
 
-        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each entity, a collective index into eachPrimitivePositionsAndNormalsPortion, eachPrimitiveIndicesPortion, eachPrimitiveEdgeIndicesPortion, eachPrimitiveDecodeMatricesPortion and eachPrimitiveColorAndOpacity
+        // Primitive instances are grouped in runs that are shared by the same entities
+
+        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each primitive instance, an index into the eachPrimitive* arrays
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
