@@ -36,9 +36,7 @@ const WEBGL_TYPE_SIZES = {
  *
  * @param {Object} gltf The glTF JSON.
  * @param {XKTModel} model XKTModel to parse into
- * @param {Object} options
- * @param {String} [options.basePath] Base directory where binary attachments may be found.
- * @returns {Promise} A Promise which returns the XKTModel when resolved.
+ * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
  */
 async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
