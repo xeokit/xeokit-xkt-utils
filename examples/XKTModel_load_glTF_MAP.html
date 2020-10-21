@@ -74,46 +74,43 @@
 
     log("Loading 'MAP.glTF'..");
 
-    utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
+    utils.loadJSON("./models/gltf/MAP/MAP.gltf", async (json) => {
+        log("Parsing glTF into XKTModel..");
 
-            log("Parsing glTF into XKTModel..");
+        const xktModel = new XKTModel();
 
-            const xktModel = new XKTModel({
-                viewer: viewer
-            });
+        await loadGLTFIntoXKTModel(json, xktModel);
+        xktModel.finalize();
 
-            loadGLTFIntoXKTModel(json, xktModel, {basePath: ""}).then(() => {
+        log("Writing XKTModel to array buffer..");
 
-                log("Writing XKTModel to array buffer..");
+        const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
-                const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+        log("Validating array buffer..");
 
-                log("Validating array buffer..");
+        const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
-                const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+        log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
 
-                log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
+        log("Loading array buffer into Viewer..");
 
-                log("Loading array buffer into Viewer..");
+        const xktLoader = new XKTLoaderPlugin(viewer);
 
-                const xktLoader = new XKTLoaderPlugin(viewer);
-
-                xktLoader.load({
-                    id: "myModel",
-                    xkt: xktArrayBuffer,
-                    edges: true
-                });
-
-                viewer.cameraFlight.flyTo(viewer.scene);
-
-                log("Visualizing tile boundaries..");
-
-                //visualizeXKTModelTileAABBs(viewer.scene, xktModel);
-            });
-        },
-        function (errMsg) {
-            log("ERROR: " + errMsg);
+        xktLoader.load({
+            id: "myModel",
+            xkt: xktArrayBuffer,
+            edges: true
         });
+
+        viewer.cameraFlight.flyTo(viewer.scene);
+
+        log("Visualizing tile boundaries..");
+
+        //visualizeXKTModelTileAABBs(viewer.scene, xktModel);
+    },
+    function (errMsg) {
+        log("ERROR: " + errMsg);
+    });
 
     viewer.scene.on("tick", () => {
         viewer.scene.camera.orbitYaw(1.0);

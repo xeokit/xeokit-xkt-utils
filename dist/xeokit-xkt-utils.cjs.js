@@ -5026,9 +5026,7 @@ const WEBGL_TYPE_SIZES = {
  *
  * @param {Object} gltf The glTF JSON.
  * @param {XKTModel} model XKTModel to parse into
- * @param {Object} options
- * @param {String} [options.basePath] Base directory where binary attachments may be found.
- * @returns {Promise} A Promise which returns the XKTModel when resolved.
+ * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
  */
 async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
@@ -5082,7 +5080,7 @@ async function parseArrayBuffer(parsingCtx, uri) {
 
     } else {
         // Uri is a path to a file
-        const contents = await parsingCtx.getAttachment(uri, parsingCtx);
+        const contents = await parsingCtx.getAttachment(uri);
         return toArrayBuffer(contents);
     }
 }
@@ -12864,7 +12862,9 @@ function getModelData(xktModel) {
         eachPrimitiveEdgeIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.edgeIndices
         eachPrimitiveColorAndOpacity: new Uint8Array(lenColors), // For each primitive, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
 
-        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each entity, a collective index into eachPrimitivePositionsAndNormalsPortion, eachPrimitiveIndicesPortion, eachPrimitiveEdgeIndicesPortion, eachPrimitiveDecodeMatricesPortion and eachPrimitiveColorAndOpacity
+        // Primitive instances are grouped in runs that are shared by the same entities
+
+        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each primitive instance, an index into the eachPrimitive* arrays
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
