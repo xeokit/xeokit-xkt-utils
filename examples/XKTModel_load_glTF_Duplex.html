@@ -18,7 +18,8 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1><a  target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a single-precision model from glTF to XKT</h1><br>
+    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting a
+        single-precision model from glTF to XKT</h1><br>
 
     <div id="log">Loading JavaScript modules...</div>
 
@@ -52,7 +53,7 @@
         transparent: true
     });
 
-    viewer.camera.eye =  [136.27810668945312, 29.578109741210938, 32.587806701660156];
+    viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
     viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
     viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
 
@@ -72,43 +73,47 @@
     log("Loading glTF file..");
 
     utils.loadJSON("./models/gltf/duplex/scene.gltf", async (json) => {
-        log("Parsing glTF into XKTModel..");
 
-        const xktModel = new XKTModel();
+            log("Parsing glTF into XKTModel..");
 
-        await loadGLTFIntoXKTModel(json, xktModel);
-        xktModel.finalize();
+            const xktModel = new XKTModel();
 
-        log("Writing XKTModel to array buffer..");
+            await loadGLTFIntoXKTModel(json, xktModel);
 
-        const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+            xktModel.finalize();
 
-        log("Validating array buffer..");
+            log("Writing XKTModel to array buffer..");
 
-        const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
-        log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
+            log("Validating array buffer..");
 
-        log("Loading array buffer into Viewer..");
+            const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
-        const xktLoader = new XKTLoaderPlugin(viewer);
+            log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
 
-        xktLoader.load({
-            id: "myModel",
-            xkt: xktArrayBuffer,
-            metaModelSrc: "./metaModels/duplex/metaModel.json",
-            edges: true
+            log("Loading array buffer into Viewer..");
+
+            const xktLoader = new XKTLoaderPlugin(viewer);
+
+            const model = xktLoader.load({
+                id: "myModel",
+                xkt: xktArrayBuffer,
+                metaModelSrc: "./metaModels/duplex/metaModel.json",
+                edges: true
+            });
+
+            model.on("loaded", () => {
+                viewer.cameraFlight.flyTo(viewer.scene);
+            });
+
+            log("Visualizing tile boundaries..");
+
+            //  visualizeXKTModelTileAABBs(viewer.scene, xktModel);
+        },
+        function (errMsg) {
+            log("ERROR: " + errMsg);
         });
-
-        viewer.cameraFlight.flyTo(viewer.scene);
-
-        log("Visualizing tile boundaries..");
-
-        //  visualizeXKTModelTileAABBs(viewer.scene, xktModel);
-    },
-    function (errMsg) {
-        log("ERROR: " + errMsg);
-    });
 
     window.viewer = viewer; // For debugging
 
