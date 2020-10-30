@@ -945,36 +945,38 @@ const math = {
     },
 
     /**
+     * Converts a list of double-precision values to a list of high-part floats and a list of low-part floats.
+     * @param doubleVals
+     * @param floatValsHigh
+     * @param floatValsLow
+     */
+    doublesToFloats(doubleVals, floatValsHigh, floatValsLow) {
+        const floatPair = new Float32Array(2);
+        for (let i = 0, len = doubleVals.length; i < len; i++) {
+            math.splitDouble(doubleVals[i], floatPair);
+            floatValsHigh[i] = floatPair[0];
+            floatValsLow[i] = floatPair[1];
+        }
+    },
+
+    /**
+     * Splits a double value into two floats.
+     * @param value
+     * @param floatPair
+     */
+    splitDouble(value, floatPair) {
+        const hi = Float32Array.from([value])[0];
+        const low = value - hi;
+        floatPair[0] = hi;
+        floatPair[1] = low;
+    },
+
+    /**
      * Returns a new UUID.
      * @method createUUID
      * @static
      * @return string The new UUID
      */
-    //createUUID: function () {
-    //    // http://www.broofa.com/Tools/Math.uuid.htm
-    //    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
-    //    var uuid = new Array(36);
-    //    var rnd = 0;
-    //    var r;
-    //    return function () {
-    //        for (var i = 0; i < 36; i++) {
-    //            if (i === 8 || i === 13 || i === 18 || i === 23) {
-    //                uuid[i] = '-';
-    //            } else if (i === 14) {
-    //                uuid[i] = '4';
-    //            } else {
-    //                if (rnd <= 0x02) {
-    //                    rnd = 0x2000000 + ( Math.random() * 0x1000000 ) | 0;
-    //                }
-    //                r = rnd & 0xf;
-    //                rnd = rnd >> 4;
-    //                uuid[i] = chars[( i === 19 ) ? ( r & 0x3 ) | 0x8 : r];
-    //            }
-    //        }
-    //        return uuid.join('');
-    //    };
-    //}(),
-    //
     createUUID: ((() => {
         const lut = [];
         for (let i = 0; i < 256; i++) {
@@ -4765,6 +4767,49 @@ const math = {
     },
 
     /**
+     * 
+     * @param dir
+     * @param constant
+     * @param aabb
+     * @returns {number}
+     */
+    planeAABB3Intersect(dir, constant, aabb) {
+        let min, max;
+        if (dir[0] > 0) {
+            min = dir[0] * aabb[0];
+            max = dir[0] * aabb[3];
+        } else {
+            min = dir[0] * aabb[3];
+            max = dir[0] * aabb[0];
+        }
+        if (dir[1] > 0) {
+            min += dir[1] * aabb[1];
+            max += dir[1] * aabb[4];
+        } else {
+            min += dir[1] * aabb[4];
+            max += dir[1] * aabb[1];
+        }
+        if (dir[2] > 0) {
+            min += dir[2] * aabb[2];
+            max += dir[2] * aabb[5];
+        } else {
+            min += dir[2] * aabb[5];
+            max += dir[2] * aabb[2];
+        }
+        const outside = (min <= -constant) && (max <= -constant);
+        if (outside) {
+            return -1;
+        }
+
+        const inside = (min >= -constant) && (max >= -constant);
+        if (inside) {
+            return 1;
+        }
+
+        return 0;
+    },
+
+    /**
      * Finds the minimum 2D projected axis-aligned boundary enclosing the given 3D points.
      *
      * @private
@@ -7715,6 +7760,8 @@ class Canvas extends Component {
     }
 }
 
+const tempVec3a = math.vec3();
+
 /**
  * Given a view matrix and a relative-to-center (RTC) coordinate origin, returns a view matrix
  * to transform RTC coordinates to View-space.
@@ -7739,6 +7786,23 @@ const createRTCViewMat = (function () {
         return rtcViewMat;
     }
 }());
+
+/**
+ * Given a 3D plane defined by distance from origin and direction, and an RTC center position,
+ * return a plane position that is relative to the RTC center.
+ *
+ * @param dist
+ * @param dir
+ * @param rtcCenter
+ * @param rtcPlanePos
+ * @returns {*}
+ */
+function getPlaneRTCPos(dist, dir, rtcCenter, rtcPlanePos) {
+    const rtcCenterToPlaneDist = math.dotVec3(dir, rtcCenter) + dist;
+    const dirNormalized = math.normalizeVec3(dir, tempVec3a);
+    math.mulVec3Scalar(dirNormalized, -rtcCenterToPlaneDist, rtcPlanePos);
+    return rtcPlanePos;
+}
 
 /**
  * @desc Provides rendering context to {@link Drawable"}s as xeokit renders them for a frame.
@@ -7778,6 +7842,13 @@ class FrameContext {
          * @type {Number}
          */
         this.lastProgramId = null;
+
+        /**
+         * The last RTC center that was used during the current frame.
+         * @property lastRTCCenter
+         * @type {Number[]}
+         */
+        this.lastRTCCenter = null;
 
         /**
          * Whether SAO is currently enabled during the current frame.
@@ -7921,38 +7992,28 @@ class FrameContext {
     }
 
     /**
-     * Get View and View-Normal RTC matrices for the given RTC coordinates.
+     * Get View matrix for the given RTC center.
      */
-    getRTCViewMatrices(rtcCenter) {
-        const hash = rtcCenter.join();
-        let rtcViewMats = this._rtcViewMats[hash];
-        if (!rtcViewMats) {
-            rtcViewMats = [
-                this._getNewMat(), // RTC view matrix
-                this._getNewMat()  // RTC view normal matrix
-            ];
-            this._rtcViewMats[hash] = rtcViewMats;
-            const viewMat = this._scene.camera.viewMatrix;
-            const rtcViewMat = rtcViewMats[0];
-            const rtcViewNormalMat = rtcViewMats[1];
-            createRTCViewMat(viewMat, rtcCenter, rtcViewMat);
-            math.inverseMat4(rtcViewMat, rtcViewNormalMat);
-            math.transposeMat4(rtcViewNormalMat);
+    getRTCViewMatrix(rtcCenterHash, rtcCenter) {
+        let rtcViewMat = this._rtcViewMats[rtcCenterHash];
+        if (!rtcViewMat) {
+            rtcViewMat = this._getNewMat();
+            createRTCViewMat(this._scene.camera.viewMatrix, rtcCenter, rtcViewMat);
+            this._rtcViewMats[rtcCenterHash] = rtcViewMat;
         }
-        return rtcViewMats;
+        return rtcViewMat;
     }
 
     /**
-     * Get picking View RTC matrix for the given RTC coordinates.
+     * Get picking View RTC matrix for the given RTC center.
      */
-    getRTCPickViewMatrix(rtcCenter) {
-        const hash = rtcCenter.join();
-        let rtcPickViewMat = this._rtcPickViewMats[hash];
+    getRTCPickViewMatrix(rtcCenterHash, rtcCenter) {
+        let rtcPickViewMat = this._rtcPickViewMats[rtcCenterHash];
         if (!rtcPickViewMat) {
             rtcPickViewMat = this._getNewMat();
-            this._rtcPickViewMats[hash] = rtcPickViewMat;
             const pickViewMat = this.pickViewMatrix || this._scene.camera.viewMatrix;
             createRTCViewMat(pickViewMat, rtcCenter, rtcPickViewMat);
+            this._rtcPickViewMats[rtcCenterHash] = rtcPickViewMat;
         }
         return rtcPickViewMat;
     }
@@ -7965,139 +8026,6 @@ class FrameContext {
         }
         this._matPoolNextFreeIndex++;
         return mat;
-    }
-}
-
-/**
- * @desc Passed to each {@link Drawable#getRenderFlags} method as xeokit is about to render it, to query what rendering methods xeokit should call on the {@link Drawable} to render it.
- * @private
- */
-class RenderFlags {
-
-    /**
-     * @private
-     */
-    constructor() {
-        this.reset();
-    }
-
-    /**
-     * @private
-     */
-    reset() {
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillOpaque}.
-         * @property normalFillOpaque
-         * @type {boolean}
-         */
-        this.normalFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesOpaque}.
-         * @property normalEdgesOpaque
-         * @type {boolean}
-         */
-        this.normalEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillTransparent}.
-         * @property normalFillTransparent
-         * @type {boolean}
-         */
-        this.normalFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesTransparent}.
-         * @property normalEdgesTransparent
-         * @type {boolean}
-         */
-        this.normalEdgesTransparent = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillOpaque}.
-         * @property xrayedFillOpaque
-         * @type {boolean}
-         */
-        this.xrayedFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedEdgesOpaque}.
-         * @property xrayedEdgesOpaque
-         * @type {boolean}
-         */
-        this.xrayedEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillTransparent}.
-         * @property xrayedFillTransparent
-         * @type {boolean}
-         */
-        this.xrayedFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #xrayedEdgesTransparent}.
-         * @property xrayedEdgesTransparent
-         * @type {boolean}
-         */
-        this.xrayedEdgesTransparent = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawHighlightedFillOpaque}.
-         * @property highlightedFillOpaque
-         * @type {boolean}
-         */
-        this.highlightedFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesOpaque}.
-         * @property highlightedEdgesOpaque
-         * @type {boolean}
-         */
-        this.highlightedEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedFillTransparent}.
-         * @property highlightedFillTransparent
-         * @type {boolean}
-         */
-        this.highlightedFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesTransparent}.
-         * @property highlightedEdgesTransparent
-         * @type {boolean}
-         */
-        this.highlightedEdgesTransparent = false;
-
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillOpaque}.
-         * @property selectedFillOpaque
-         * @type {boolean}
-         */
-        this.selectedFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesOpaque}.
-         * @property selectedEdgesOpaque
-         * @type {boolean}
-         */
-        this.selectedEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillTransparent}.
-         * @property selectedFillTransparent
-         * @type {boolean}
-         */
-        this.selectedFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesTransparent}.
-         * @property selectedEdgesTransparent
-         * @type {boolean}
-         */
-        this.selectedEdgesTransparent = false;
     }
 }
 
@@ -9278,8 +9206,219 @@ class ArrayBuf {
     }
 }
 
+class OcclusionLayer {
+
+    constructor(scene, rtcCenter) {
+
+        this.scene = scene;
+        this.aabb = math.AABB3();
+        this.rtcCenter = math.vec3(rtcCenter);
+        this.rtcCenterHash = this.rtcCenter.join();
+        this.numMarkers = 0;
+        this.markers = {};
+        this.markerList = [];                  // Ordered array of Markers
+        this.markerIndices = {};               // ID map of Marker indices in _markerList
+        this.positions = [];                   // Packed array of World-space marker positions
+        this.indices = [];                     // Indices corresponding to array above
+        this.positionsBuf = null;
+        this.lenPositionsBuf = 0;
+        this.indicesBuf = null;
+        this.sectionPlanesActive = [];
+        this.culledBySectionPlanes = false;
+        this.occlusionTestList = [];           // List of
+        this.lenOcclusionTestList = 0;
+        this.pixels = [];
+        this.aabbDirty = false;
+        this.markerListDirty = false;
+        this.positionsDirty = true;
+        this.occlusionTestListDirty = false;
+    }
+
+    addMarker(marker) {
+        this.markers[marker.id] = marker;
+        this.markerListDirty = true;
+        this.numMarkers++;
+    }
+
+    markerWorldPosUpdated(marker) {
+        if (!this.markers[marker.id]) { // Not added
+            return;
+        }
+        const i = this.markerIndices[marker.id];
+        this.positions[i * 3 + 0] = marker.worldPos[0];
+        this.positions[i * 3 + 1] = marker.worldPos[1];
+        this.positions[i * 3 + 2] = marker.worldPos[2];
+        this.positionsDirty = true; // TODO: avoid reallocating VBO each time
+    }
+
+    removeMarker(marker) {
+        delete this.markers[marker.id];
+        this.markerListDirty = true;
+        this.numMarkers--;
+    }
+
+    update() {
+        if (this.markerListDirty) {
+            this._buildMarkerList();
+            this.markerListDirty = false;
+            this.positionsDirty = true;
+            this.occlusionTestListDirty = true;
+        }
+        if (this.positionsDirty) { //////////////  TODO: Don't rebuild this when positions change, very wasteful
+            this._buildPositions();
+            this.positionsDirty = false;
+            this.aabbDirty = true;
+            this.vbosDirty = true;
+        }
+        if (this.aabbDirty) {
+            this._buildAABB();
+            this.aabbDirty = false;
+        }
+        if (this.vbosDirty) {
+            this._buildVBOs();
+            this.vbosDirty = false;
+        }
+        if (this.occlusionTestListDirty) {
+            this._buildOcclusionTestList();
+        }
+        this._updateActiveSectionPlanes();
+    }
+
+    _buildMarkerList() {
+        this.numMarkers = 0;
+        for (var id in this.markers) {
+            if (this.markers.hasOwnProperty(id)) {
+                this.markerList[this.numMarkers] = this.markers[id];
+                this.markerIndices[id] = this.numMarkers;
+                this.numMarkers++;
+            }
+        }
+        this.markerList.length = this.numMarkers;
+    }
+
+    _buildPositions() {
+        let j = 0;
+        for (let i = 0; i < this.numMarkers; i++) {
+            if (this.markerList[i]) {
+                const marker = this.markerList[i];
+                const worldPos = marker.worldPos;
+                this.positions[j++] = worldPos[0];
+                this.positions[j++] = worldPos[1];
+                this.positions[j++] = worldPos[2];
+                this.indices[i] = i;
+            }
+        }
+        this.positions.length = this.numMarkers * 3;
+        this.indices.length = this.numMarkers;
+    }
+
+    _buildAABB() {
+        const aabb = this.aabb;
+        math.collapseAABB3(aabb);
+        math.expandAABB3Points3(aabb, this.positions);
+        const rtcCenter = this.rtcCenter;
+        aabb[0] += rtcCenter[0];
+        aabb[1] += rtcCenter[1];
+        aabb[2] += rtcCenter[2];
+        aabb[3] += rtcCenter[0];
+        aabb[4] += rtcCenter[1];
+        aabb[5] += rtcCenter[2];
+    }
+
+    _buildVBOs() {
+        if (this.positionsBuf) {
+            if (this.lenPositionsBuf === this.positions.length) { // Just updating buffer elements, don't need to reallocate
+                this.positionsBuf.setData(this.positions); // Indices don't need updating
+                return;
+            }
+            this.positionsBuf.destroy();
+            this.positionsBuf = null;
+            this.indicesBuf.destroy();
+            this.indicesBuf = null;
+        }
+        const gl = this.scene.canvas.gl;
+        const lenPositions = this.numMarkers * 3;
+        const lenIndices = this.numMarkers;
+        this.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this.positions), lenPositions, 3, gl.STATIC_DRAW);
+        this.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), lenIndices, 1, gl.STATIC_DRAW);
+        this.lenPositionsBuf = this.positions.length;
+    }
+
+    _buildOcclusionTestList() {
+        const canvas = this.scene.canvas;
+        const near = this.scene.camera.perspective.near; // Assume near enough to ortho near
+        const boundary = canvas.boundary;
+        const canvasWidth = boundary[2];
+        const canvasHeight = boundary[3];
+        let lenPixels = 0;
+        this.lenOcclusionTestList = 0;
+        for (let i = 0; i < this.numMarkers; i++) {
+            const marker = this.markerList[i];
+            const viewPos = marker.viewPos;
+            if (viewPos[2] > -near) { // Clipped by near plane
+                marker._setVisible(false);
+                continue;
+            }
+            const canvasPos = marker.canvasPos;
+            const canvasX = canvasPos[0];
+            const canvasY = canvasPos[1];
+            if ((canvasX + 10) < 0 || (canvasY + 10) < 0 || (canvasX - 10) > canvasWidth || (canvasY - 10) > canvasHeight) {
+                marker._setVisible(false);
+                continue;
+            }
+            if (marker.entity && !marker.entity.visible) {
+                marker._setVisible(false);
+                continue;
+            }
+            if (marker.occludable) {
+                this.occlusionTestList[this.lenOcclusionTestList++] = marker;
+                this.pixels[lenPixels++] = canvasX;
+                this.pixels[lenPixels++] = canvasY;
+                continue;
+            }
+            marker._setVisible(true);
+        }
+    }
+
+    _updateActiveSectionPlanes() {
+        const sectionPlanes = this.scene._sectionPlanesState.sectionPlanes;
+        const numSectionPlanes = sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            for (let i = 0; i < numSectionPlanes; i++) {
+                const sectionPlane = sectionPlanes[i];
+                if (!sectionPlane.active) {
+                    this.sectionPlanesActive[i] = false;
+                } else {
+                    const intersect = math.planeAABB3Intersect(sectionPlane.dir, sectionPlane.dist, this.aabb);
+                    const outside = (intersect === -1);
+                    if (outside) {
+                        this.culledBySectionPlanes = true;
+                        return;
+                    }
+                    const intersecting = (intersect === 0);
+                    this.sectionPlanesActive[i] = intersecting;
+                }
+            }
+        }
+        this.culledBySectionPlanes = false;
+    }
+
+    destroy() {
+        this.markers = {};
+        this.markerList.length = 0;
+        if (this.positionsBuf) {
+            this.positionsBuf.destroy();
+        }
+        if (this.indicesBuf) {
+            this.indicesBuf.destroy();
+        }
+    }
+}
+
 const MARKER_COLOR = math.vec3([1.0, 0.0, 0.0]);
 const POINT_SIZE = 20;
+
+const tempVec3a$1 = math.vec3();
 
 /**
  * Manages occlusion testing. Private member of a Renderer.
@@ -9289,17 +9428,11 @@ class OcclusionTester {
     constructor(scene) {
 
         this._scene = scene;
-        this._markers = {};                     // ID map of Markers
-        this._markerList = [];                  // Ordered array of Markers
-        this._markerIndices = {};               // ID map of Marker indices in _markerList
-        this._numMarkers = 0;                   // Length of _markerList
-        this._positions = [];                   // Packed array of World-space marker positions
-        this._indices = [];                     // Indices corresponding to array above
-        this._positionsBuf = null;              // Positions VBO to render marker positions
-        this._indicesBuf = null;                // Indices VBO
-        this._occlusionTestList = [];           // List of
-        this._lenOcclusionTestList = 0;
-        this._pixels = [];
+
+        this._occlusionLayers = {};
+        this._occlusionLayersList = [];
+        this._occlusionLayersListDirty = false;
+
         this._shaderSource = null;
         this._program = null;
 
@@ -9307,22 +9440,18 @@ class OcclusionTester {
 
         this._shaderSourceDirty = true;         // Need to build shader source code ?
         this._programDirty = false;             // Need to build shader program ?
-        this._markerListDirty = false;          // Need to (re)build _markerList ?
-        this._positionsDirty = false;           // Need to (re)build _positions and _indices ?
-        this._vbosDirty = false;                // Need to rebuild _positionsBuf and _indicesBuf ?
-        this._occlusionTestListDirty = false;   // Need to build _occlusionTestList ?
 
-        this._lenPositionsBuf = 0;
+        this._markersToOcclusionLayersMap = {};
 
-        scene.camera.on("viewMatrix", () => {
+        this._onCameraViewMatrix = scene.camera.on("viewMatrix", () => {
             this._occlusionTestListDirty = true;
         });
 
-        scene.camera.on("projMatrix", () => {
+        this._onCameraProjMatrix = scene.camera.on("projMatrix", () => {
             this._occlusionTestListDirty = true;
         });
 
-        scene.canvas.on("boundary", () => {
+        this._onCanvasBoundary = scene.canvas.on("boundary", () => {
             this._occlusionTestListDirty = true;
         });
     }
@@ -9332,8 +9461,15 @@ class OcclusionTester {
      * @param marker
      */
     addMarker(marker) {
-        this._markers[marker.id] = marker;
-        this._markerListDirty = true;
+        const rtcCenterHash = marker.rtcCenter.join();
+        let occlusionLayer = this._occlusionLayers[rtcCenterHash];
+        if (!occlusionLayer) {
+            occlusionLayer = new OcclusionLayer(this._scene, marker.rtcCenter);
+            this._occlusionLayers[occlusionLayer.rtcCenterHash] = occlusionLayer;
+            this._occlusionLayersListDirty = true;
+        }
+        occlusionLayer.addMarker(marker);
+        this._markersToOcclusionLayersMap[marker.id] = occlusionLayer;
     }
 
     /**
@@ -9341,15 +9477,31 @@ class OcclusionTester {
      * @param marker
      */
     markerWorldPosUpdated(marker) {
-        if (!this._markers[marker.id]) { // Not added
+        const occlusionLayer = this._markersToOcclusionLayersMap[marker.id];
+        if (!occlusionLayer) {
+            marker.error("Marker has not been added to OcclusionTester");
             return;
         }
-        const i = this._markerIndices[marker.id];
-        this._positions[i * 3 + 0] = marker.worldPos[0];
-        this._positions[i * 3 + 1] = marker.worldPos[1];
-        this._positions[i * 3 + 2] = marker.worldPos[2];
-
-        this._positionsDirty = true; // TODO: avoid reallocating VBO each time
+        const rtcCenterHash = marker.rtcCenter.join();
+        if (rtcCenterHash !== occlusionLayer.rtcCenterHash) {
+            if (occlusionLayer.numMarkers === 1) {
+                occlusionLayer.destroy();
+                delete this._occlusionLayers[occlusionLayer.rtcCenterHash];
+                this._occlusionLayersListDirty = true;
+            } else {
+                occlusionLayer.removeMarker(marker);
+            }
+            let newOcclusionLayer = this._occlusionLayers[rtcCenterHash];
+            if (!newOcclusionLayer) {
+                newOcclusionLayer = new OcclusionLayer(this._scene, marker.rtcCenter);
+                this._occlusionLayers[rtcCenterHash] = occlusionLayer;
+                this._occlusionLayersListDirty = true;
+            }
+            newOcclusionLayer.addMarker(marker);
+            this._markersToOcclusionLayersMap[marker.id] = newOcclusionLayer;
+        } else {
+            occlusionLayer.markerWorldPosUpdated(marker);
+        }
     }
 
     /**
@@ -9357,23 +9509,44 @@ class OcclusionTester {
      * @param marker
      */
     removeMarker(marker) {
-        delete this._markers[marker.id];
-        this._markerListDirty = true;
+        const rtcCenterHash = marker.rtcCenter.join();
+        let occlusionLayer = this._occlusionLayers[rtcCenterHash];
+        if (!occlusionLayer) {
+            return;
+        }
+        if (occlusionLayer.numMarkers === 1) {
+            occlusionLayer.destroy();
+            delete this._occlusionLayers[occlusionLayer.rtcCenterHash];
+            this._occlusionLayersListDirty = true;
+        } else {
+            occlusionLayer.removeMarker(marker);
+        }
+        delete this._markersToOcclusionLayersMap[marker.id];
     }
 
     /**
-     * Prepares for an occlusion test.
-     * Binds render buffer.
+     * Returns true if an occlusion test is needed.
+     *
+     * @returns {boolean}
+     */
+    get needOcclusionTest() {
+        return this._occlusionTestListDirty;
+    }
+
+    /**
+     * Binds the render buffer. After calling this, the caller then renders object silhouettes to the render buffer,
+     * then calls drawMarkers() and doOcclusionTest().
      */
     bindRenderBuf() {
 
         const shaderSourceHash = [this._scene.canvas.canvas.id, this._scene._sectionPlanesState.getHash()].join(";");
+
         if (shaderSourceHash !== this._shaderSourceHash) {
             this._shaderSourceHash = shaderSourceHash;
             this._shaderSourceDirty = true;
         }
 
-        if (this._shaderSourceDirty) { // TODO: Set this when hash changes
+        if (this._shaderSourceDirty) {
             this._buildShaderSource();
             this._shaderSourceDirty = false;
             this._programDirty = true;
@@ -9385,26 +9558,17 @@ class OcclusionTester {
             this._occlusionTestListDirty = true;
         }
 
-        if (this._markerListDirty) {
-            this._buildMarkerList();
-            this._markerListDirty = false;
-            this._positionsDirty = true;
-            this._occlusionTestListDirty = true;
-        }
-
-        if (this._positionsDirty) { //////////////  TODO: Don't rebuild this when positions change, very wasteful
-            this._buildPositions();
-            this._positionsDirty = false;
-            this._vbosDirty = true;
-        }
-
-        if (this._vbosDirty) {
-            this._buildVBOs();
-            this._vbosDirty = false;
+        if (this._occlusionLayersListDirty) {
+            this._buildOcclusionLayersList();
+            this._occlusionLayersListDirty = false;
         }
 
         if (this._occlusionTestListDirty) {
-            this._buildOcclusionTestList();
+            for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
+                const occlusionLayer = this._occlusionLayersList[i];
+                occlusionLayer.occlusionTestListDirty = true;
+            }
+            this._occlusionTestListDirty = false;
         }
 
         {
@@ -9412,6 +9576,16 @@ class OcclusionTester {
             this._readPixelBuf.bind();
             this._readPixelBuf.clear();
         }
+    }
+
+    _buildOcclusionLayersList() {
+        let numOcclusionLayers = 0;
+        for (let rtcCenterHash in this._occlusionLayers) {
+            if (this._occlusionLayers.hasOwnProperty(rtcCenterHash)) {
+                this._occlusionLayersList[numOcclusionLayers++] = this._occlusionLayers[rtcCenterHash];
+            }
+        }
+        this._occlusionLayersList.length = numOcclusionLayers;
     }
 
     _buildShaderSource() {
@@ -9425,7 +9599,7 @@ class OcclusionTester {
         const scene = this._scene;
         const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
         const src = [];
-        src.push("// Mesh occlusion vertex shader");
+        src.push("// OcclusionTester vertex shader");
         src.push("attribute vec3 position;");
         src.push("uniform mat4 modelMatrix;");
         src.push("uniform mat4 viewMatrix;");
@@ -9450,7 +9624,7 @@ class OcclusionTester {
         const sectionPlanesState = scene._sectionPlanesState;
         const clipping = sectionPlanesState.sectionPlanes.length > 0;
         const src = [];
-        src.push("// Mesh occlusion fragment shader");
+        src.push("// OcclusionTester fragment shader");
         src.push("precision lowp float;");
         if (clipping) {
             src.push("varying vec4 vWorldPosition;");
@@ -9492,7 +9666,7 @@ class OcclusionTester {
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
         const sectionPlanes = sectionPlanesState.sectionPlanes;
-        for (var i = 0, len = sectionPlanes.length; i < len; i++) {
+        for (let i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
                 pos: program.getLocation("sectionPlanePos" + i),
@@ -9502,152 +9676,82 @@ class OcclusionTester {
         this._aPosition = program.getAttribute("position");
     }
 
-    _buildMarkerList() {
-        this._numMarkers = 0;
-        for (var id in this._markers) {
-            if (this._markers.hasOwnProperty(id)) {
-                this._markerList[this._numMarkers] = this._markers[id];
-                this._markerIndices[id] = this._numMarkers;
-                this._numMarkers++;
-            }
-        }
-        this._markerList.length = this._numMarkers;
-    }
-
-    _buildPositions() {
-        var j = 0;
-        for (var i = 0; i < this._numMarkers; i++) {
-            if (this._markerList[i]) {
-                const marker = this._markerList[i];
-                const worldPos = marker.worldPos;
-                this._positions[j++] = worldPos[0];
-                this._positions[j++] = worldPos[1];
-                this._positions[j++] = worldPos[2];
-                this._indices[i] = i;
-            }
-        }
-        this._positions.length = this._numMarkers * 3;
-        this._indices.length = this._numMarkers;
-    }
-
-    _buildVBOs() {
-        if (this._positionsBuf) {
-            if (this._lenPositionsBuf === this._positions.length) { // Just updating buffer elements, don't need to reallocate
-                this._positionsBuf.setData(this._positions); // Indices don't need updating
-                return;
-            }
-            this._positionsBuf.destroy();
-            this._positionsBuf = null;
-            this._indicesBuf.destroy();
-            this._indicesBuf = null;
-        }
-        const gl = this._scene.canvas.gl;
-        const lenPositions = this._numMarkers * 3;
-        const lenIndices = this._numMarkers;
-        this._positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._positions), lenPositions, 3, gl.STATIC_DRAW);
-        this._indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this._indices), lenIndices, 1, gl.STATIC_DRAW);
-        this._lenPositionsBuf = this._positions.length;
-    }
-
-    _buildOcclusionTestList() {
-        const canvas = this._scene.canvas;
-        const near = this._scene.camera.perspective.near; // Assume near enough to ortho near
-        let marker;
-        let canvasPos;
-        let viewPos;
-        let canvasX;
-        let canvasY;
-        let lenPixels = 0;
-        let i;
-        const boundary = canvas.boundary;
-        const canvasWidth = boundary[2];
-        const canvasHeight = boundary[3];
-        this._lenOcclusionTestList = 0;
-        for (i = 0; i < this._numMarkers; i++) {
-            marker = this._markerList[i];
-            viewPos = marker.viewPos;
-            if (viewPos[2] > -near) { // Clipped by near plane
-                marker._setVisible(false);
-                continue;
-            }
-            canvasPos = marker.canvasPos;
-            canvasX = canvasPos[0];
-            canvasY = canvasPos[1];
-            if ((canvasX + 10) < 0 || (canvasY + 10) < 0 || (canvasX - 10) > canvasWidth || (canvasY - 10) > canvasHeight) {
-                marker._setVisible(false);
-                continue;
-            }
-            if (marker.entity && !marker.entity.visible) {
-                marker._setVisible(false);
-                continue;
-            }
-            if (marker.occludable) {
-                this._occlusionTestList[this._lenOcclusionTestList++] = marker;
-                this._pixels[lenPixels++] = canvasX;
-                this._pixels[lenPixels++] = canvasY;
-                continue;
-            }
-            marker._setVisible(true);
-        }
-    }
-
     /**
      * Draws {@link Marker}s to the render buffer.
-     * @param frameCtx
      */
-    drawMarkers(frameCtx) {
+    drawMarkers() {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
         const sectionPlanesState = scene._sectionPlanesState;
         const camera = scene.camera;
-        const cameraState = camera._state;
+
         program.bind();
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+
+        gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+
+        for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
+
+            const occlusionLayer = this._occlusionLayersList[i];
+
+            occlusionLayer.update();
+
+            if (occlusionLayer.culledBySectionPlanes) {
+                continue;
+            }
+
+            const rtcCenter = occlusionLayer.rtcCenter;
+
+            gl.uniformMatrix4fv(this._uViewMatrix, false, createRTCViewMat(camera.viewMatrix, rtcCenter));
+
+            const numSectionPlanes = sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = sectionPlanesState.sectionPlanes;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = occlusionLayer.sectionPlanesActive[sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        gl.uniform3fv(sectionPlaneUniforms.pos, getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$1));
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
                 }
             }
+
+            this._aPosition.bindArrayBuffer(occlusionLayer.positionsBuf);
+
+            const indicesBuf = occlusionLayer.indicesBuf;
+            indicesBuf.bind();
+            gl.drawElements(gl.POINTS, indicesBuf.numItems, indicesBuf.itemType, 0);
         }
-        gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
-        gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        this._aPosition.bindArrayBuffer(this._positionsBuf);
-        this._indicesBuf.bind();
-        gl.drawElements(gl.POINTS, this._indicesBuf.numItems, this._indicesBuf.itemType, 0);
     }
 
     /**
-     * Reads render buffer and updates visibility states of {@link Marker}s if they can be found in the buffer.
+     * Sets visibilities of {@link Marker}s according to whether or not they are obscured by anything in the render buffer.
      */
     doOcclusionTest() {
+
         {
+
             const markerR = MARKER_COLOR[0] * 255;
             const markerG = MARKER_COLOR[1] * 255;
             const markerB = MARKER_COLOR[2] * 255;
-            for (var i = 0; i < this._lenOcclusionTestList; i++) {
-                const marker = this._occlusionTestList[i];
-                const j = i * 2;
-                const color = this._readPixelBuf.read(this._pixels[j], this._pixels[j + 1]);
-                const visible = (color[0] === markerR) && (color[1] === markerG) && (color[2] === markerB);
-                marker._setVisible(visible);
+
+            for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
+
+                const occlusionLayer = this._occlusionLayersList[i];
+
+                for (let i = 0; i < occlusionLayer.lenOcclusionTestList; i++) {
+
+                    const marker = occlusionLayer.occlusionTestList[i];
+                    const j = i * 2;
+                    const color = this._readPixelBuf.read(occlusionLayer.pixels[j], occlusionLayer.pixels[j + 1]);
+                    const visible = (color[0] === markerR) && (color[1] === markerG) && (color[2] === markerB);
+
+                    marker._setVisible(visible);
+                }
             }
         }
     }
@@ -9665,18 +9769,22 @@ class OcclusionTester {
      * Destroys this OcclusionTester.
      */
     destroy() {
-        this._markers = {};
-        this._markerList.length = 0;
+        if (this.destroyed) {
+            return;
+        }
+        for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
+            const occlusionLayer = this._occlusionLayersList[i];
+            occlusionLayer.destroy();
+        }
 
-        if (this._positionsBuf) {
-            this._positionsBuf.destroy();
-        }
-        if (this._indicesBuf) {
-            this._indicesBuf.destroy();
-        }
         if (this._program) {
             this._program.destroy();
         }
+
+        this._scene.camera.off(this._onCameraViewMatrix);
+        this._scene.camera.off(this._onCameraProjMatrix);
+        this._scene.canvas.off(this._onCanvasBoundary);
+        this.destroyed = true;
     }
 }
 
@@ -10428,8 +10536,8 @@ const Renderer = function (scene, options) {
 
     const pickIDs = new Map({});
 
-    var drawableTypeInfo = {};
-    var drawables = {};
+    let drawableTypeInfo = {};
+    let drawables = {};
 
     let drawableListDirty = true;
     let stateSortDirty = true;
@@ -10449,8 +10557,6 @@ const Renderer = function (scene, options) {
     const saoBlendRenderer = new SAOBlendRenderer(scene);
 
     this._occlusionTester = null; // Lazy-created in #addMarker()
-
-    const renderFlags = new RenderFlags();
 
     this.needStateSort = function () {
         stateSortDirty = true;
@@ -10486,12 +10592,12 @@ const Renderer = function (scene, options) {
      *  @private
      */
     this.addDrawable = function (id, drawable) {
-        var type = drawable.type;
+        const type = drawable.type;
         if (!type) {
             console.error("Renderer#addDrawable() : drawable with ID " + id + " has no 'type' - ignoring");
             return;
         }
-        var drawableInfo = drawableTypeInfo[type];
+        let drawableInfo = drawableTypeInfo[type];
         if (!drawableInfo) {
             drawableInfo = {
                 type: drawable.type,
@@ -10499,8 +10605,8 @@ const Renderer = function (scene, options) {
                 isStateSortable: drawable.isStateSortable,
                 stateSortCompare: drawable.stateSortCompare,
                 drawableMap: {},
-                drawableList: [],
-                lenDrawableList: 0
+                drawableListPreCull: [],
+                drawableList: []
             };
             drawableTypeInfo[type] = drawableInfo;
         }
@@ -10569,8 +10675,11 @@ const Renderer = function (scene, options) {
      */
     this.render = function (params) {
         params = params || {};
+        if (params.force) {
+            imageDirty = true;
+        }
         updateDrawlist();
-        if (imageDirty || params.force) {
+        if (imageDirty) {
             draw(params);
             stats.frame.frameCount++;
             imageDirty = false;
@@ -10588,33 +10697,54 @@ const Renderer = function (scene, options) {
             stateSortDirty = false;
             imageDirty = true;
         }
+        if (imageDirty) { // Image is usually dirty because the camera moved
+            cullDrawableList();
+        }
     }
 
     function buildDrawableList() {
-        for (var type in drawableTypeInfo) {
+        for (let type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
                 const drawableInfo = drawableTypeInfo[type];
                 const drawableMap = drawableInfo.drawableMap;
-                const drawableList = drawableInfo.drawableList;
-                var lenDrawableList = 0;
-                for (var id in drawableMap) {
+                const drawableListPreCull = drawableInfo.drawableListPreCull;
+                let lenDrawableList = 0;
+                for (let id in drawableMap) {
                     if (drawableMap.hasOwnProperty(id)) {
-                        drawableList[lenDrawableList++] = drawableMap[id];
+                        drawableListPreCull[lenDrawableList++] = drawableMap[id];
                     }
                 }
-                drawableList.length = lenDrawableList;
-                drawableInfo.lenDrawableList = lenDrawableList;
+                drawableListPreCull.length = lenDrawableList;
             }
         }
     }
 
     function sortDrawableList() {
-        for (var type in drawableTypeInfo) {
+        for (let type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
                 const drawableInfo = drawableTypeInfo[type];
                 if (drawableInfo.isStateSortable) {
-                    drawableInfo.drawableList.sort(drawableInfo.stateSortCompare);
+                    drawableInfo.drawableListPreCull.sort(drawableInfo.stateSortCompare);
                 }
+            }
+        }
+    }
+
+    function cullDrawableList() {
+        for (let type in drawableTypeInfo) {
+            if (drawableTypeInfo.hasOwnProperty(type)) {
+                const drawableInfo = drawableTypeInfo[type];
+                const drawableListPreCull = drawableInfo.drawableListPreCull;
+                const drawableList = drawableInfo.drawableList;
+                let lenDrawableList = 0;
+                for (let i = 0, len = drawableListPreCull.length; i < len; i++) {
+                    const drawable = drawableListPreCull[i];
+                    drawable.rebuildRenderFlags();
+                    if (!drawable.renderFlags.culled) {
+                        drawableList[lenDrawableList++] = drawable;
+                    }
+                }
+                drawableList.length = lenDrawableList;
             }
         }
     }
@@ -10630,7 +10760,6 @@ const Renderer = function (scene, options) {
         if (sao.possible) {
             drawSAOBuffers(params);
         }
-
 
         drawShadowMaps();
 
@@ -10704,9 +10833,7 @@ const Renderer = function (scene, options) {
                         continue;
                     }
 
-                    drawable.getRenderFlags(renderFlags);
-
-                    if (renderFlags.normalFillOpaque) {
+                    if (drawable.renderFlags.normalFillOpaque) {
                         drawable.drawDepth(frameCtx);
                     }
                 }
@@ -10779,9 +10906,7 @@ const Renderer = function (scene, options) {
                         continue;
                     }
 
-                    drawable.getRenderFlags(renderFlags);
-
-                    if (renderFlags.normalFillOpaque) { // Transparent objects don't cast shadows (yet)
+                    if (drawable.renderFlags.normalFillOpaque) { // Transparent objects don't cast shadows (yet)
                         drawable.drawShadow(frameCtx);
                     }
                 }
@@ -10874,7 +10999,7 @@ const Renderer = function (scene, options) {
             // Render normal opaque solids, defer others to bins to render after
             //------------------------------------------------------------------------------------------------------
 
-            for (var type in drawableTypeInfo) {
+            for (let type in drawableTypeInfo) {
                 if (drawableTypeInfo.hasOwnProperty(type)) {
 
                     const drawableInfo = drawableTypeInfo[type];
@@ -10888,7 +11013,7 @@ const Renderer = function (scene, options) {
                             continue;
                         }
 
-                        drawable.getRenderFlags(renderFlags);
+                        const renderFlags = drawable.renderFlags;
 
                         if (renderFlags.normalFillOpaque) {
                             if (saoPossible && drawable.saoEnabled) {
@@ -11148,8 +11273,10 @@ const Renderer = function (scene, options) {
 
         const tempVec3a = math.vec3();
         const tempMat4a = math.mat4();
+        const tempMat4b = math.mat4();
+
         const up = math.vec3([0, 1, 0]);
-        const pickFrustumMatrix = math.frustumMat4(-1, 1, -1, 1, 0.1, 10000);
+        const pickFrustumMatrix = math.frustumMat4(-1, 1, -1, 1, 0.1, 2000);
         const _pickResult = new PickResult();
 
         return function (params, pickResult = _pickResult) {
@@ -11187,6 +11314,8 @@ const Renderer = function (scene, options) {
                 // Picking with arbitrary World-space ray
                 // Align camera along ray and fire ray through center of canvas
 
+                const pickFrustumMatrix = math.frustumMat4(-1, 1, -1, 1, 0.1, scene.camera.project.far, tempMat4a);
+
                 if (params.matrix) {
 
                     pickViewMatrix = params.matrix;
@@ -11198,7 +11327,7 @@ const Renderer = function (scene, options) {
                     direction = params.direction || math.vec3([0, 0, 1]);
                     look = math.addVec3(origin, direction, tempVec3a);
 
-                    pickViewMatrix = math.lookAtMat4v(origin, look, up, tempMat4a);
+                    pickViewMatrix = math.lookAtMat4v(origin, look, up, tempMat4b);
                     pickProjMatrix = pickFrustumMatrix;
 
                     pickResult.origin = origin;
@@ -11215,6 +11344,12 @@ const Renderer = function (scene, options) {
 
             if (!pickable) {
                 pickBuffer.unbind();
+                return null;
+            }
+
+            const pickedEntity = (pickable.delegatePickedEntity) ? pickable.delegatePickedEntity() : pickable;
+
+            if (!pickedEntity) {
                 return null;
             }
 
@@ -11235,11 +11370,7 @@ const Renderer = function (scene, options) {
 
             pickBuffer.unbind();
 
-            pickResult.entity = (pickable.delegatePickedEntity) ? pickable.delegatePickedEntity() : pickable;
-
-            if (!pickResult.entity) {
-                return null;
-            }
+            pickResult.entity = pickedEntity;
 
             return pickResult;
         };
@@ -11267,7 +11398,7 @@ const Renderer = function (scene, options) {
         const includeEntityIds = params.includeEntityIds;
         const excludeEntityIds = params.excludeEntityIds;
 
-        for (var type in drawableTypeInfo) {
+        for (let type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
 
                 const drawableInfo = drawableTypeInfo[type];
@@ -11336,7 +11467,7 @@ const Renderer = function (scene, options) {
         pickResult.primIndex = primIndex;
     }
 
-    var pickWorldPos = (function () {
+    const pickWorldPos = (function () {
 
         const tempVec4a = math.vec4();
         const tempVec4b = math.vec4();
@@ -11391,7 +11522,7 @@ const Renderer = function (scene, options) {
             tempVec4a[2] = -1;
             tempVec4a[3] = 1;
 
-            var world1 = math.transformVec4(pvMatInverse, tempVec4a);
+            let world1 = math.transformVec4(pvMatInverse, tempVec4a);
             world1 = math.mulVec4Scalar(world1, 1 / world1[3]);
 
             tempVec4b[0] = x;
@@ -11399,7 +11530,7 @@ const Renderer = function (scene, options) {
             tempVec4b[2] = 1;
             tempVec4b[3] = 1;
 
-            var world2 = math.transformVec4(pvMatInverse, tempVec4b);
+            let world2 = math.transformVec4(pvMatInverse, tempVec4b);
             world2 = math.mulVec4Scalar(world2, 1 / world2[3]);
 
             const dir = math.subVec3(world2, world1, tempVec4c);
@@ -11414,8 +11545,8 @@ const Renderer = function (scene, options) {
     })();
 
     function unpackDepth(depthZ) {
-        var vec = [depthZ[0] / 256.0, depthZ[1] / 256.0, depthZ[2] / 256.0, depthZ[3] / 256.0];
-        var bitShift = [1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0];
+        const vec = [depthZ[0] / 256.0, depthZ[1] / 256.0, depthZ[2] / 256.0, depthZ[3] / 256.0];
+        const bitShift = [1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0];
         return math.dotVec4(vec, bitShift);
     }
 
@@ -11477,7 +11608,7 @@ const Renderer = function (scene, options) {
      */
     this.doOcclusionTest = function () {
 
-        if (this._occlusionTester) {
+        if (this._occlusionTester && this._occlusionTester.needOcclusionTest) {
 
             updateDrawlist();
 
@@ -11494,17 +11625,16 @@ const Renderer = function (scene, options) {
             gl.disable(gl.BLEND);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            for (var type in drawableTypeInfo) {
+            for (let type in drawableTypeInfo) {
                 if (drawableTypeInfo.hasOwnProperty(type)) {
                     const drawableInfo = drawableTypeInfo[type];
                     const drawableList = drawableInfo.drawableList;
-                    for (var i = 0, len = drawableList.length; i < len; i++) {
+                    for (let i = 0, len = drawableList.length; i < len; i++) {
                         const drawable = drawableList[i];
-                        if (!drawable.drawOcclusion || drawable.culled === true || drawable.visible === false || drawable.pickable === false) {
-
-                            // nTODO: Exclude transpArent
+                        if (!drawable.drawOcclusion || drawable.culled === true || drawable.visible === false || drawable.pickable === false) { // TODO: Option to exclude transparent?
                             continue;
                         }
+
                         drawable.drawOcclusion(frameCtx);
                     }
                 }
@@ -19086,7 +19216,7 @@ class Metrics extends Component {
  * }
  *
  * sao.enabled = true; // Enable SAO - only works if supported (see above)
- * sao.intensity = 0.25;
+ * sao.intensity = 0.20;
  * sao.bias = 0.5;
  * sao.scale = 500.0;
  * sao.minResolution = 0.0;
@@ -19331,13 +19461,13 @@ class SAO extends Component {
     /**
      * Sets the degree of darkening (ambient obscurance) produced by the SAO effect.
      *
-     * Default value is ````0.25````.
+     * Default value is ````0.20````.
      *
      * @type {Number}
      */
     set intensity(value) {
         if (value === undefined || value === null) {
-            value = 0.25;
+            value = 0.20;
         }
         if (this._intensity === value) {
             return;
@@ -22494,7 +22624,7 @@ class CameraFlightAnimation extends Component {
 const screenPos = math.vec4();
 const viewPos = math.vec4();
 const worldPos = math.vec4();
-const tempVec3a = math.vec3();
+const tempVec3a$2 = math.vec3();
 
 /**
  * @private
@@ -22597,7 +22727,7 @@ class PanController {
     dollyToWorldPos(worldPos, dollyDist) {
         
         const camera = this._scene.camera;
-        const eyeToWorldPosVec = math.subVec3(worldPos, camera.eye, tempVec3a);
+        const eyeToWorldPosVec = math.subVec3(worldPos, camera.eye, tempVec3a$2);
         
         const dist = math.lenVec3(eyeToWorldPosVec);
         
@@ -23404,7 +23534,7 @@ class MousePanRotateDollyHandler {
 }
 
 const center = math.vec3();
-const tempVec3a$1 = math.vec3();
+const tempVec3a$3 = math.vec3();
 const tempVec3b$1 = math.vec3();
 const tempVec3c$1 = math.vec3();
 const tempVec3d$1 = math.vec3();
@@ -23456,37 +23586,37 @@ class KeyboardAxisViewHandler {
 
             if (axisViewRight) {
 
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldRight, dist, tempVec3a$1), tempVec3d$1));
+                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldRight, dist, tempVec3a$3), tempVec3d$1));
                 tempCameraTarget.look.set(center);
                 tempCameraTarget.up.set(camera.worldUp);
 
             } else if (axisViewBack) {
 
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldForward, dist, tempVec3a$1), tempVec3d$1));
+                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldForward, dist, tempVec3a$3), tempVec3d$1));
                 tempCameraTarget.look.set(center);
                 tempCameraTarget.up.set(camera.worldUp);
 
             } else if (axisViewLeft) {
 
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldRight, -dist, tempVec3a$1), tempVec3d$1));
+                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldRight, -dist, tempVec3a$3), tempVec3d$1));
                 tempCameraTarget.look.set(center);
                 tempCameraTarget.up.set(camera.worldUp);
 
             } else if (axisViewFront) {
 
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldForward, -dist, tempVec3a$1), tempVec3d$1));
+                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldForward, -dist, tempVec3a$3), tempVec3d$1));
                 tempCameraTarget.look.set(center);
                 tempCameraTarget.up.set(camera.worldUp);
 
             } else if (axisViewTop) {
 
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldUp, dist, tempVec3a$1), tempVec3d$1));
+                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldUp, dist, tempVec3a$3), tempVec3d$1));
                 tempCameraTarget.look.set(center);
                 tempCameraTarget.up.set(math.normalizeVec3(math.mulVec3Scalar(camera.worldForward, 1, tempVec3b$1), tempVec3c$1));
 
             } else if (axisViewBottom) {
 
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldUp, -dist, tempVec3a$1), tempVec3d$1));
+                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldUp, -dist, tempVec3a$3), tempVec3d$1));
                 tempCameraTarget.look.set(center);
                 tempCameraTarget.up.set(math.normalizeVec3(math.mulVec3Scalar(camera.worldForward, -1, tempVec3b$1)));
             }
@@ -28438,7 +28568,7 @@ function buildFragment(scene, withSAO) {
 }
 
 const tempVec4$1 = math.vec4();
-const viewNormalMatrix$1 = math.mat4();
+const tempVec3a$4 = math.vec3();
 
 /**
  * @private
@@ -28446,10 +28576,12 @@ const viewNormalMatrix$1 = math.mat4();
 class BatchingDrawRenderer {
 
     constructor(scene, withSAO) {
+
         this._scene = scene;
         this._withSAO = withSAO;
         this._hash = this._getHash();
         this._shaderSource = new BatchingDrawShaderSource(this._scene, this._withSAO);
+
         this._allocate();
     }
 
@@ -28463,68 +28595,118 @@ class BatchingDrawRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer, renderPass) {
+
         const scene = this._scene;
         const model = batchingLayer.model;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate();
+            if (this.errors) {
+                return;
+            }
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
+            loadSectionPlanes = true;
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
 
-        const rtcCenter = batchingLayer._state.rtcCenter;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
 
         if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
 
-            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
-            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
-
-            math.inverseMat4(viewMatrix, viewNormalMatrix$1);
-            math.transposeMat4(viewNormalMatrix$1);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix$1);
-
-        } else {
-
-            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$4);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
+
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(state.normalsBuf);
         }
+
         if (this._aColor) {
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
+
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
+
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
+
         if (this._aOffset) {
             this._aOffset.bindArrayBuffer(state.offsetsBuf);
         }
+
         state.indicesBuf.bind();
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
     _allocate() {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const lightsState = scene._lightsState;
         const sectionPlanesState = scene._sectionPlanesState;
+
         this._program = new Program(gl, this._shaderSource);
+
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
+
         const program = this._program;
+
         this._uRenderPass = program.getLocation("renderPass");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
@@ -28535,6 +28717,7 @@ class BatchingDrawRenderer {
         this._uLightDir = [];
         this._uLightPos = [];
         this._uLightAttenuation = [];
+
         const lights = lightsState.lights;
         let light;
 
@@ -28563,7 +28746,9 @@ class BatchingDrawRenderer {
                     break;
             }
         }
+
         this._uSectionPlanes = [];
+
         const sectionPlanes = sectionPlanesState.sectionPlanes;
         for (let i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
@@ -28572,32 +28757,36 @@ class BatchingDrawRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
+
         this._aPosition = program.getAttribute("position");
         this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
+
         if (this._withSAO) {
-            this._uSAOEnabled = program.getLocation("uSAOEnabled");
             this._uOcclusionTexture = "uOcclusionTexture";
             this._uSAOParams = program.getLocation("uSAOParams");
         }
     }
 
     _bindProgram(frameCtx) {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const lightsState = scene._lightsState;
-        const sectionPlanesState = scene._sectionPlanesState;
-        const lights = lightsState.lights;
-        let light;
-        program.bind();
+        const lights = scene._lightsState.lights;
         const camera = scene.camera;
+
+        program.bind();
+
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+
         for (let i = 0, len = lights.length; i < len; i++) {
-            light = lights[i];
+
+            const light = lights[i];
+
             if (this._uLightAmbient[i]) {
                 gl.uniform4f(this._uLightAmbient[i], light.color[0], light.color[1], light.color[2], light.intensity);
             } else {
@@ -28615,30 +28804,7 @@ class BatchingDrawRenderer {
                 }
             }
         }
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+
         if (this._withSAO) {
             const sao = scene.sao;
             const saoEnabled = sao.possible;
@@ -28779,6 +28945,7 @@ function buildFragment$1(scene) {
 }
 
 const defaultColor = new Float32Array([1, 1, 1]);
+const tempVec3a$5 = math.vec3();
 
 /**
  * @private
@@ -28801,36 +28968,74 @@ class BatchingFillRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer, renderPass) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate();
             if (this.errors) {
                 return;
             }
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+
+        const viewMat = (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix;
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
-        gl.uniform1i(this._uRenderPass, renderPass);
+
         gl.uniformMatrix4fv(this._uModelMatrix, false, model.worldMatrix);
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
         }
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$5);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-        state.indicesBuf.bind();
+
+        gl.uniform1i(this._uRenderPass, renderPass);
+
         if (renderPass === RENDER_PASSES.XRAYED) {
             const material = scene.xrayMaterial._state;
             const fillColor = material.fillColor;
@@ -28849,6 +29054,25 @@ class BatchingFillRenderer {
         } else {
             gl.uniform4fv(this._uColor, defaultColor);
         }
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
+        this._aPosition.bindArrayBuffer(state.positionsBuf);
+
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
+
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
+        }
+
+        if (this._aFlags2) {
+            this._aFlags2.bindArrayBuffer(state.flags2Buf);
+        }
+
+        state.indicesBuf.bind();
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -28869,8 +29093,8 @@ class BatchingFillRenderer {
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uColor = program.getLocation("color");
         this._uSectionPlanes = [];
-        const clips = sectionPlanesState.sectionPlanes;
-        for (let i = 0, len = clips.length; i < len; i++) {
+        const sectionPlanes = sectionPlanesState.sectionPlanes;
+        for (let i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
                 pos: program.getLocation("sectionPlanePos" + i),
@@ -28887,34 +29111,9 @@ class BatchingFillRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -29051,6 +29250,8 @@ function buildFragment$2(scene) {
     return src;
 }
 
+const tempVec3a$6 = math.vec3();
+
 /**
  * @private
  */
@@ -29072,21 +29273,72 @@ class BatchingEdgesRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer, renderPass) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
-            this._allocate();
+            this._allocate(batchingLayer);
             if (this.errors) {
                 return;
             }
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
+
+        const viewMat = (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$6);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
+
         let material;
+
         if (renderPass === RENDER_PASSES.XRAYED) {
             material = scene.xrayMaterial._state;
         } else if (renderPass === RENDER_PASSES.HIGHLIGHTED) {
@@ -29096,17 +29348,20 @@ class BatchingEdgesRenderer {
         } else {
             material = scene.edgeMaterial._state;
         }
+
         const edgeColor = material.edgeColor;
         const edgeAlpha = material.edgeAlpha;
         gl.uniform4f(this._uColor, edgeColor[0], edgeColor[1], edgeColor[2], edgeAlpha);
+
         if (frameCtx.lineWidth !== material.edgeWidth) {
             gl.lineWidth(material.edgeWidth);
             frameCtx.lineWidth = material.edgeWidth;
         }
+
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+
         gl.uniform1i(this._uRenderPass, renderPass);
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         if (this._aOffset) {
             this._aOffset.bindArrayBuffer(state.offsetsBuf);
@@ -29118,6 +29373,7 @@ class BatchingEdgesRenderer {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
         state.edgeIndicesBuf.bind();
+
         gl.drawElements(gl.LINES, state.edgeIndicesBuf.numItems, state.edgeIndicesBuf.itemType, 0);
     }
 
@@ -29155,34 +29411,9 @@ class BatchingEdgesRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -29295,6 +29526,8 @@ function buildFragment$3(scene) {
     return src;
 }
 
+const tempVec3a$7 = math.vec3();
+
 /**
  * @private
  */
@@ -29316,58 +29549,117 @@ class BatchingPickMeshRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate(batchingLayer);
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
+            loadSectionPlanes = true;
+        }
+
+        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
+        const viewMatrix = rtcCenter ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$7);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
 
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
 
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const viewMatrix = batchingLayer._state.rtcCenter ? createRTCViewMat(pickViewMatrix, batchingLayer._state.rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
-
         this._aPosition.bindArrayBuffer(state.positionsBuf);
+
         if (this._aOffset) {
             this._aOffset.bindArrayBuffer(state.offsetsBuf);
         }
+
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
+
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
+
         if (this._aPickColor) {
             this._aPickColor.bindArrayBuffer(state.pickColorsBuf);
         }
+
         state.indicesBuf.bind();
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
     _allocate() {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
+
         this._program = new Program(gl, this._shaderSource);
+
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
+
         const program = this._program;
+
         this._uPickInvisible = program.getLocation("pickInvisible");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
+
         const sectionPlanes = sectionPlanesState.sectionPlanes;
+
         for (var i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
@@ -29375,6 +29667,7 @@ class BatchingPickMeshRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
+
         this._aPosition = program.getAttribute("position");
         this._aOffset = program.getAttribute("offset");
         this._aPickColor = program.getAttribute("pickColor");
@@ -29383,38 +29676,16 @@ class BatchingPickMeshRenderer {
     }
 
     _bindProgram(frameCtx) {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         const camera = scene.camera;
+
         program.bind();
+
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix || camera.project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -29533,6 +29804,8 @@ function buildFragment$4(scene) {
     return src;
 }
 
+const tempVec3a$8 = math.vec3();
+
 /**
  * @private
  */
@@ -29554,43 +29827,97 @@ class BatchingPickDepthRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
         const projectState = scene.camera.project._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate();
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
+
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
 
         const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const viewMatrix = batchingLayer._state.rtcCenter ? createRTCViewMat(pickViewMatrix, batchingLayer._state.rtcCenter) : pickViewMatrix;
+        const viewMatrix = rtcCenter ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
 
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
+
         gl.uniform1f(this._uZNear, projectState.near);
         gl.uniform1f(this._uZFar, projectState.far);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
         }
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$8);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-        state.indicesBuf.bind();
 
         //=============================================================
         // TODO: Use drawElements count and offset to draw only one entity
         //=============================================================
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
+        this._aPosition.bindArrayBuffer(state.positionsBuf);
+
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
+
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
+        }
+
+        if (this._aFlags2) {
+            this._aFlags2.bindArrayBuffer(state.flags2Buf);
+        }
+
+        state.indicesBuf.bind();
 
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
@@ -29627,36 +29954,8 @@ class BatchingPickDepthRenderer {
     }
 
     _bindProgram() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        const camera = scene.camera;
-        program.bind();
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+        this._program.bind();
+
     }
 
     webglContextRestored() {
@@ -29771,6 +30070,8 @@ function buildFragment$5(scene) {
     return src;
 }
 
+const tempVec3a$9 = math.vec3();
+
 /**
  * @private
  */
@@ -29792,43 +30093,97 @@ class BatchingPickNormalsRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate(batchingLayer);
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
-        // In practice, these binds will only happen once per frame
-        // because we pick normals on a single previously-picked mesh
+
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
+
         const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const viewMatrix = batchingLayer._state.rtcCenter ? createRTCViewMat(pickViewMatrix, batchingLayer._state.rtcCenter) : pickViewMatrix;
+        const viewMatrix = rtcCenter ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
+
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
         }
-        if (this._aNormal) {
-            this._aNormal.bindArrayBuffer(state.normalsBuf);
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$9);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
-        }
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-        state.indicesBuf.bind();
 
         //=============================================================
         // TODO: Use drawElements count and offset to draw only one entity
         //=============================================================
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
+        this._aPosition.bindArrayBuffer(state.positionsBuf);
+
+        if (this._aOffset) {
+            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        }
+
+        if (this._aNormal) {
+            this._aNormal.bindArrayBuffer(state.normalsBuf);
+        }
+
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
+        }
+
+        if (this._aFlags2) {
+            this._aFlags2.bindArrayBuffer(state.flags2Buf);
+        }
+
+        state.indicesBuf.bind();
 
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
@@ -29864,36 +30219,7 @@ class BatchingPickNormalsRenderer {
     }
 
     _bindProgram() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        const camera = scene.camera;
-        program.bind();
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+        this._program.bind();
     }
 
     webglContextRestored() {
@@ -29996,6 +30322,8 @@ function buildFragment$6(scene) {
     return src;
 }
 
+const tempVec3a$a = math.vec3();
+
 /**
  * @private
  */
@@ -30017,34 +30345,92 @@ class BatchingOcclusionRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
         const camera = scene.camera;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate(batchingLayer);
+            if (this.errors) {
+                return;
+            }
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
-        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
+
+        const viewMat = (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix;
         gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$a);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
+
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
+
         if (this._aOffset) {
             this._aOffset.bindArrayBuffer(state.offsetsBuf);
         }
+
         if (this._aColor) {
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
+
         this._aFlags.bindArrayBuffer(state.flagsBuf);
+
         if (this._aFlags2) { // Won't be in shader when not clipping
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
+
         state.indicesBuf.bind();
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -30078,35 +30464,7 @@ class BatchingOcclusionRenderer {
     }
 
     _bindProgram() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        program.bind();
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+        this._program.bind();
     }
 
     webglContextRestored() {
@@ -30220,6 +30578,8 @@ function buildFragment$7(scene) {
     return src;
 }
 
+const tempVec3a$b = math.vec3();
+
 /**
  * @private
  */
@@ -30241,52 +30601,111 @@ class BatchingDepthRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
+        const rtcCenter = batchingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate();
+            if (this.errors) {
+                return;
+            }
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
-            this._bindProgram(frameCtx);
+            this._bindProgram();
+            loadSectionPlanes = true;
         }
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$b);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
+
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        const viewMat = (batchingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, batchingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
+
         if (this._aOffset) {
             this._aOffset.bindArrayBuffer(state.offsetsBuf);
         }
-        if (this._aColor) { // Needed for masking out transparent entities using alpha channel
-            this._aColor.bindArrayBuffer(state.colorsBuf);
-        }
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
-        }
+
+        this._aColor.bindArrayBuffer(state.colorsBuf); // Needed for masking out transparent entities using alpha channel
+
+        this._aFlags.bindArrayBuffer(state.flagsBuf);
+
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
+
         state.indicesBuf.bind();
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
     _allocate() {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
+
         this._program = new Program(gl, this._shaderSource);
+
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
+
         const program = this._program;
+
         this._uRenderPass = program.getLocation("renderPass");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
+
         const sectionPlanes = sectionPlanesState.sectionPlanes;
         for (let i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
@@ -30295,6 +30714,7 @@ class BatchingDepthRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
+
         this._aPosition = program.getAttribute("position");
         this._aOffset = program.getAttribute("offset");
         this._aColor = program.getAttribute("color");
@@ -30305,35 +30725,8 @@ class BatchingDepthRenderer {
     _bindProgram() {
         const scene = this._scene;
         const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        program.bind();
-        const camera = scene.camera;
-        gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+        this._program.bind();
+        gl.uniformMatrix4fv(this._uProjMatrix, false, scene.camera.projMatrix);
     }
 
     webglContextRestored() {
@@ -30455,6 +30848,9 @@ function buildFragment$8(scene) {
     return src;
 }
 
+const tempVec3a$c = math.vec3();
+const tempMat4a = math.mat4();
+
 /**
  * @private
  */
@@ -30475,36 +30871,73 @@ class BatchingNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
+    drawLayer( frameCtx, batchingLayer) {
+
         const model = batchingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
-        if (!this._program) {
-            this._allocate(batchingLayer);
-        }
-        if (frameCtx.lastProgramId !== this._program.id) {
-            frameCtx.lastProgramId = this._program.id;
-            this._bindProgram();
-        }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
         const rtcCenter = batchingLayer._state.rtcCenter;
 
-        if (rtcCenter) {
-
-            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
-            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
-
-            math.inverseMat4(viewMatrix, viewNormalMatrix);
-            math.transposeMat4(viewNormalMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix);
-
-        } else {
-
-            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+        if (!this._program) {
+            this._allocate(batchingLayer);
+            if (this.errors) {
+                return;
+            }
         }
+
+        let loadSectionPlanes = false;
+
+        if (frameCtx.lastProgramId !== this._program.id) {
+            frameCtx.lastProgramId = this._program.id;
+            this._bindProgram(batchingLayer);
+            loadSectionPlanes = true;
+        }
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$c);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aOffset.bindArrayBuffer(state.offsetsBuf);
@@ -30515,6 +30948,7 @@ class BatchingNormalsRenderer {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
         state.indicesBuf.bind();
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -30557,34 +30991,9 @@ class BatchingNormalsRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -30694,6 +31103,8 @@ function buildFragment$9(scene) {
     return src;
 }
 
+const tempVec3a$d = math.vec3();
+
 /**
  * Renders BatchingLayer fragment depths to a shadow map.
  *
@@ -30716,7 +31127,7 @@ class BatchingShadowRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
+    drawLayer( frameCtx, batchingLayer) {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const state = batchingLayer._state;
@@ -30742,6 +31153,32 @@ class BatchingShadowRenderer {
             this._aOffset.bindArrayBuffer(state.offsetsBuf);
         }
         state.indicesBuf.bind();
+
+        // TODO: Section planes need to be set if RTC center has changed since last RTC center recorded on frameCtx
+
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
+            const renderFlags = model.renderFlags;
+            const rtcCenter = batchingLayer._state.rtcCenter;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    if (rtcCenter) {
+                        const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$d);
+                        gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                    } else {
+                        gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                    }
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
+
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -30778,34 +31215,9 @@ class BatchingShadowRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         gl.uniformMatrix4fv(this._uShadowViewMatrix, false, frameCtx.shadowViewMatrix);
         gl.uniformMatrix4fv(this._uShadowProjMatrix, false, frameCtx.shadowProjMatrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = sectionPlanes[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
         this._lastLightId = null;
     }
 
@@ -31010,6 +31422,7 @@ class BatchingLayer {
     /**
      * @param model
      * @param cfg
+     * @param cfg.layerIndex
      * @param cfg.positionsDecodeMatrix
      * @param cfg.rtcCenter
      * @param cfg.buffer
@@ -31017,6 +31430,13 @@ class BatchingLayer {
      * @param cfg.primitive
      */
     constructor(model, cfg) {
+
+        /**
+         * Index of this BatchingLayer in {@link PerformanceModel#_layerList}.
+         * @type {Number}
+         */
+        this.layerIndex = cfg.layerIndex;
+
         this._batchingRenderers = getBatchingRenderers(model.scene);
         this.model = model;
         this._buffer = new BatchingBuffer();
@@ -31064,7 +31484,7 @@ class BatchingLayer {
             indicesBuf: null,
             edgeIndicesBuf: null,
             positionsDecodeMatrix: math.mat4(),
-            rtcCenter : null
+            rtcCenter: null
         });
 
         // These counts are used to avoid unnecessary render passes
@@ -31074,6 +31494,7 @@ class BatchingLayer {
         this._numXRayedLayerPortions = 0;
         this._numSelectedLayerPortions = 0;
         this._numHighlightedLayerPortions = 0;
+        this._numClippableLayerPortions = 0;
         this._numEdgesLayerPortions = 0;
         this._numPickableLayerPortions = 0;
         this._numCulledLayerPortions = 0;
@@ -31088,6 +31509,12 @@ class BatchingLayer {
         if (cfg.rtcCenter) {
             this._state.rtcCenter = math.vec3(cfg.rtcCenter);
         }
+
+        /**
+         * The axis-aligned World-space boundary of this BatchingLayer's positions.
+         * @type {*|Float64Array}
+         */
+        this.aabb = math.collapseAABB3();
     }
 
     /**
@@ -31105,8 +31532,7 @@ class BatchingLayer {
     }
 
     /**
-     *
-     * Creates a new portion within this InstancingLayer, returns the new portion ID.
+     * Creates a new portion within this BatchingLayer, returns the new portion ID.
      *
      * Gives the portion the specified geometry, flags, color and matrix.
      *
@@ -31221,6 +31647,8 @@ class BatchingLayer {
             worldAABB[5] += rtcCenter[2];
         }
 
+        math.expandAABB3(this.aabb, worldAABB);
+
         if (normals) {
 
             if (this._preCompressed) {
@@ -31280,6 +31708,10 @@ class BatchingLayer {
             if (selected) {
                 this._numSelectedLayerPortions++;
                 this.model.numSelectedLayerPortions++;
+            }
+            if (clippable) {
+                this._numClippableLayerPortions++;
+                this.model.numClippableLayerPortions++;
             }
             if (edges) {
                 this._numEdgesLayerPortions++;
@@ -31426,7 +31858,7 @@ class BatchingLayer {
         this._finalized = true;
     }
 
-    // The following setters are called by PerformanceModelMesh, in turn called by PerformanceModelNode, only after the layer is finalized.
+    // The following setters are called by PerformanceMesh, in turn called by PerformanceNode, only after the layer is finalized.
     // It's important that these are called after finalize() in order to maintain integrity of counts like _numVisibleLayerPortions etc.
 
     initFlags(portionId, flags) {
@@ -31445,6 +31877,10 @@ class BatchingLayer {
         if (flags & RENDER_FLAGS.SELECTED) {
             this._numSelectedLayerPortions++;
             this.model.numSelectedLayerPortions++;
+        }
+        if (flags & RENDER_FLAGS.CLIPPABLE) {
+            this._numClippableLayerPortions++;
+            this.model.numClippableLayerPortions++;
         }
         if (flags & RENDER_FLAGS.EDGES) {
             this._numEdgesLayerPortions++;
@@ -31535,6 +31971,13 @@ class BatchingLayer {
     setClippable(portionId, flags) {
         if (!this._finalized) {
             throw "Not finalized";
+        }
+        if (flags & RENDER_FLAGS.CLIPPABLE) {
+            this._numClippableLayerPortions++;
+            this.model.numClippableLayerPortions++;
+        } else {
+            this._numClippableLayerPortions--;
+            this.model.numClippableLayerPortions--;
         }
         this._setFlags2(portionId, flags);
     }
@@ -31959,8 +32402,7 @@ var quantizePositions = (function () { // http://cg.postech.ac.kr/research/mesh_
         const xMultiplier = maxInt / xwid;
         const yMultiplier = maxInt / ywid;
         const zMultiplier = maxInt / zwid;
-        let i;
-        for (i = 0; i < lenPositions; i += 3) {
+        for (let i = 0; i < lenPositions; i += 3) {
             quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
             quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
             quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
@@ -32285,7 +32727,11 @@ function buildFragment$a(scene, withSAO) {
 }
 
 const tempVec4$2 = math.vec4();
-const viewNormalMatrix$2 = math.mat4();
+const tempVec3a$e = math.vec3();
+
+const tempMat4a$1 = math.mat4();
+const tempMat4b$1 = math.mat4();
+
 
 /**
  * @private
@@ -32296,7 +32742,7 @@ class InstancingDrawRenderer {
         this._scene = scene;
         this._withSAO = withSAO;
         this._hash = this._getHash();
-        this._shaderSource = new InstancingDrawShaderSource(this._scene);
+        this._shaderSource = new InstancingDrawShaderSource(this._scene, this._withSAO);
         this._allocate();
     }
 
@@ -32306,15 +32752,17 @@ class InstancingDrawRenderer {
 
     _getHash() {
         const scene = this._scene;
-        return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this.withSAO ? "sao" : "nosao")].join(";");
+        return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
     }
 
     drawLayer(frameCtx, instancingLayer, renderPass) {
+
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -32323,31 +32771,60 @@ class InstancingDrawRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
+            loadSectionPlanes = true;
+        }
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$e);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
 
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
-
-        const rtcCenter = instancingLayer._state.rtcCenter;
-
-        if (rtcCenter) {
-
-            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
-            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
-
-            math.inverseMat4(viewMatrix, viewNormalMatrix$2);
-            math.transposeMat4(viewNormalMatrix$2);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix$2);
-
-        } else {
-
-            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-        }
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -32396,6 +32873,7 @@ class InstancingDrawRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelNormalMatrixCol2.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
+
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
@@ -32488,7 +32966,6 @@ class InstancingDrawRenderer {
         this._aModelNormalMatrixCol1 = program.getAttribute("modelNormalMatrixCol1");
         this._aModelNormalMatrixCol2 = program.getAttribute("modelNormalMatrixCol2");
 
-        this._uSAOEnabled = program.getLocation("uSAOEnabled");
         this._uOcclusionTexture = "uOcclusionTexture";
         this._uSAOParams = program.getLocation("uSAOParams");
     }
@@ -32498,7 +32975,6 @@ class InstancingDrawRenderer {
         const gl = scene.canvas.gl;
         const program = this._program;
         const lightsState = scene._lightsState;
-        const sectionPlanesState = scene._sectionPlanesState;
         const lights = lightsState.lights;
         let light;
         program.bind();
@@ -32520,30 +32996,6 @@ class InstancingDrawRenderer {
                 }
                 if (this._uLightDir[i]) {
                     gl.uniform3fv(this._uLightDir[i], light.dir);
-                }
-            }
-        }
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
                 }
             }
         }
@@ -32690,6 +33142,8 @@ function buildFragment$b(scene) {
     return src;
 }
 
+const tempVec3a$f = math.vec3();
+
 /**
  * @private
  */
@@ -32710,13 +33164,14 @@ class InstancingFillRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer, renderPass) {
+    drawLayer( frameCtx, instancingLayer, renderPass) {
 
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate(instancingLayer.model.scene);
@@ -32725,17 +33180,57 @@ class InstancingFillRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
+        }
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$f);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
-
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
-
-        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -32781,7 +33276,7 @@ class InstancingFillRenderer {
             gl.uniform4f(this._uColor, fillColor[0], fillColor[1], fillColor[2], fillAlpha);
 
         } else {
-            gl.uniform4fv(this._uColor, defaultColorize);
+            gl.uniform4fv(this._uColor, math.vec3([1, 1, 1]));
         }
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
@@ -32838,35 +33333,9 @@ class InstancingFillRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
-        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -32991,6 +33460,8 @@ function buildFragment$c(scene) {
     return src;
 }
 
+const tempVec3a$g = math.vec3();
+
 /**
  * @private
  */
@@ -33011,12 +33482,14 @@ class InstancingEdgesRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer, renderPass) {
+    drawLayer( frameCtx, instancingLayer, renderPass) {
+
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate(instancingLayer);
@@ -33025,9 +33498,53 @@ class InstancingEdgesRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
+        }
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$g);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
 
         let material;
@@ -33043,6 +33560,7 @@ class InstancingEdgesRenderer {
 
         const edgeColor = material.edgeColor;
         const edgeAlpha = material.edgeAlpha;
+
         gl.uniform4f(this._uColor, edgeColor[0], edgeColor[1], edgeColor[2], edgeAlpha);
 
         if (frameCtx.lineWidth !== material.edgeWidth) {
@@ -33053,12 +33571,10 @@ class InstancingEdgesRenderer {
         gl.uniform1i(this._uRenderPass, renderPass);
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
-        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
-
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
         this._aModelMatrixCol2.bindArrayBuffer(state.modelMatrixCol2Buf);
+
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 1);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 1);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 1);
@@ -33081,6 +33597,7 @@ class InstancingEdgesRenderer {
         }
 
         state.edgeIndicesBuf.bind();
+
         instanceExt.drawElementsInstancedANGLE(gl.LINES, state.edgeIndicesBuf.numItems, state.edgeIndicesBuf.itemType, 0, state.numInstances);
 
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 0); // TODO: Is this needed
@@ -33140,33 +33657,7 @@ class InstancingEdgesRenderer {
         const program = this._program;
         program.bind();
         const camera = scene.camera;
-        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        const sectionPlanesState = scene._sectionPlanesState;
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -33284,15 +33775,19 @@ function buildFragment$d(scene) {
     return src;
 }
 
+const tempVec3a$h = math.vec3();
+
 /**
  * @private
  */
 class InstancingPickMeshRenderer {
 
     constructor(scene) {
+
         this._scene = scene;
         this._hash = this._getHash();
         this._shaderSource = new InstancingPickMeshShaderSource(this._scene);
+
         this._allocate();
     }
 
@@ -33304,13 +33799,14 @@ class InstancingPickMeshRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
+    drawLayer( frameCtx, instancingLayer) {
 
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -33319,16 +33815,18 @@ class InstancingPickMeshRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
+            loadSectionPlanes = true;
         }
 
         const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const rtcPickViewMatrix = (instancingLayer._state.rtcCenter) ? createRTCViewMat(pickViewMatrix, instancingLayer._state.rtcCenter) : pickViewMatrix;
+        const rtcPickViewMatrix = (rtcCenter) ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
 
         gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
-
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
@@ -33359,6 +33857,45 @@ class InstancingPickMeshRenderer {
 
         state.indicesBuf.bind();
 
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$h);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
+
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
 
         // Cleanup
@@ -33368,31 +33905,41 @@ class InstancingPickMeshRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aPickColor.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
+
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
+
         if (this._aOffset) {
             instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
     _allocate() {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
+
         this._program = new Program(gl, this._shaderSource);
+
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
+
         this._instanceExt = gl.getExtension("ANGLE_instanced_arrays");
+
         const program = this._program;
+
         this._uPickInvisible = program.getLocation("pickInvisible");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
+
         const clips = sectionPlanesState.sectionPlanes;
+
         for (let i = 0, len = clips.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
@@ -33400,6 +33947,7 @@ class InstancingPickMeshRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
+
         this._aPosition = program.getAttribute("position");
         this._aOffset = program.getAttribute("offset");
         this._aPickColor = program.getAttribute("pickColor");
@@ -33414,37 +33962,10 @@ class InstancingPickMeshRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const lightsState = scene._lightsState;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
-        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -33562,6 +34083,8 @@ function buildFragment$e(scene) {
     return src;
 }
 
+const tempVec3a$i = math.vec3();
+
 /**
  * @private
  */
@@ -33582,13 +34105,14 @@ class InstancingPickDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
+    drawLayer( frameCtx, instancingLayer) {
 
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate(instancingLayer);
@@ -33597,25 +34121,66 @@ class InstancingPickDepthRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
 
         const camera = scene.camera;
         const projectState = camera.project._state;
 
-        // In practice, these binds will only happen once per frame because we pick normals on a single previously-picked mesh
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
 
         const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const rtcPickViewMatrix = (instancingLayer._state.rtcCenter) ? createRTCViewMat(pickViewMatrix, instancingLayer._state.rtcCenter) : pickViewMatrix;
+        const rtcPickViewMatrix = (rtcCenter) ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
 
         gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
 
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
         gl.uniform1f(this._uZNear, projectState.near);
         gl.uniform1f(this._uZFar, projectState.far);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$i);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
 
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
@@ -33663,29 +34228,38 @@ class InstancingPickDepthRenderer {
     }
 
     _allocate() {
+
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
+
         this._program = new Program(gl, this._shaderSource);
+
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
+
         this._instanceExt = gl.getExtension("ANGLE_instanced_arrays");
+
         const program = this._program;
+
         this._uPickInvisible = program.getLocation("pickInvisible");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
+
         const clips = sectionPlanesState.sectionPlanes;
-        for (var i = 0, len = clips.length; i < len; i++) {
+
+        for (let i = 0, len = clips.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
                 pos: program.getLocation("sectionPlanePos" + i),
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
+
         this._aPosition = program.getAttribute("position");
         this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
@@ -33698,35 +34272,8 @@ class InstancingPickDepthRenderer {
     }
 
     _bindProgram() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        program.bind();
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+        this._program.bind();
+
     }
 
     webglContextRestored() {
@@ -33846,6 +34393,8 @@ function buildFragment$f(scene) {
     return src;
 }
 
+const tempVec3a$j = math.vec3();
+
 /**
  * @private
  */
@@ -33866,12 +34415,14 @@ class InstancingPickNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
+    drawLayer( frameCtx, instancingLayer) {
+
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate(instancingLayer);
@@ -33880,9 +34431,12 @@ class InstancingPickNormalsRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
-            this._bindProgram(frameCtx);
+            this._bindProgram();
+            loadSectionPlanes = true;
         }
 
         // In practice, these binds will only happen once per frame
@@ -33891,10 +34445,49 @@ class InstancingPickNormalsRenderer {
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
 
         const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const rtcPickViewMatrix = (instancingLayer._state.rtcCenter) ? createRTCViewMat(pickViewMatrix, instancingLayer._state.rtcCenter) : pickViewMatrix;
+        const rtcPickViewMatrix = (rtcCenter) ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
 
         gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$j);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
 
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
@@ -33998,35 +34591,7 @@ class InstancingPickNormalsRenderer {
     }
 
     _bindProgram() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        program.bind();
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+        this._program.bind();
     }
 
     webglContextRestored() {
@@ -34132,6 +34697,8 @@ function buildFragment$g(scene) {
     return src;
 }
 
+const tempVec3a$k = math.vec3();
+
 /**
  * @private
  */
@@ -34152,13 +34719,14 @@ class InstancingOcclusionRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
+    drawLayer( frameCtx, instancingLayer) {
 
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -34167,15 +34735,56 @@ class InstancingOcclusionRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
+        }
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$k);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
         }
 
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
-
-        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34263,35 +34872,9 @@ class InstancingOcclusionRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
-        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -34417,6 +35000,8 @@ function buildFragment$h(scene) {
     return src;
 }
 
+const tempVec3a$l = math.vec3();
+
 /**
  * @private
  */
@@ -34438,11 +35023,13 @@ class InstancingDepthRenderer {
     }
 
     drawLayer(frameCtx, instancingLayer) {
+
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -34451,15 +35038,54 @@ class InstancingDepthRenderer {
             }
         }
 
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
 
-        const viewMat = (instancingLayer._state.rtcCenter) ? createRTCViewMat(model.viewMatrix, instancingLayer._state.rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
+        }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$l);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34469,6 +35095,8 @@ class InstancingDepthRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 1);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 1);
 
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+
         this._aPosition.bindArrayBuffer(state.positionsBuf);
 
         if (this._aOffset) {
@@ -34476,7 +35104,7 @@ class InstancingDepthRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
         }
 
-        this._aColor.bindArrayBuffer(state.colorsBuf);
+        this._aColor.bindArrayBuffer(state.colorsBuf); // Needed for masking out transparent entities using alpha channel
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
 
         this._aFlags.bindArrayBuffer(state.flagsBuf);
@@ -34500,6 +35128,7 @@ class InstancingDepthRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
+
         if (this._aOffset) {
             instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
@@ -34541,36 +35170,9 @@ class InstancingDepthRenderer {
     _bindProgram() {
         const scene = this._scene;
         const gl = scene.canvas.gl;
-        const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        const projectState = scene.camera.project._state;
-        program.bind();
+        this._program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -34694,6 +35296,9 @@ function buildFragment$i(scene) {
     return src;
 }
 
+const tempVec3a$m = math.vec3();
+const tempMat4a$2 = math.mat4();
+
 /**
  * @private
  */
@@ -34714,40 +35319,73 @@ class InstancingNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
+    drawLayer( frameCtx, instancingLayer) {
+
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
         const state = instancingLayer._state;
         const instanceExt = this._instanceExt;
+        const rtcCenter = instancingLayer._state.rtcCenter;
+
         if (!this._program) {
             this._allocate(instancingLayer);
             if (this.errors) {
                 return;
             }
         }
+
+        let loadSectionPlanes = false;
+
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
+            loadSectionPlanes = true;
         }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
-        const rtcCenter = instancingLayer._state.rtcCenter;
+        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
 
         if (rtcCenter) {
-
-            const viewMatrix = createRTCViewMat(model.viewMatrix, rtcCenter);
-            gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
-
-            math.inverseMat4(viewMatrix, viewNormalMatrix);
-            math.transposeMat4(viewNormalMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, viewNormalMatrix);
-
-        } else {
-
-            gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
-            gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
+            loadSectionPlanes = true;
         }
+
+        if (loadSectionPlanes) {
+            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+            if (numSectionPlanes > 0) {
+                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+                const renderFlags = model.renderFlags;
+                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                    if (active) {
+                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                        if (rtcCenter) {
+                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$m);
+                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                        } else {
+                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                        }
+                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                    }
+                }
+            }
+        }
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34779,6 +35417,7 @@ class InstancingNormalsRenderer {
         state.indicesBuf.bind();
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
+
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
@@ -34842,34 +35481,9 @@ class InstancingNormalsRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
     }
 
     webglContextRestored() {
@@ -34988,6 +35602,8 @@ function buildFragment$j(scene) {
     return src;
 }
 
+const tempVec3a$n = math.vec3();
+
 /**
  * Renders InstancingLayer fragment depths to a shadow map.
  *
@@ -35011,7 +35627,7 @@ class InstancingShadowRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
+    drawLayer( frameCtx, instancingLayer) {
         const model = instancingLayer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
@@ -35027,7 +35643,7 @@ class InstancingShadowRenderer {
 
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
-            this._bindProgram(frameCtx);
+            this._bindProgram(frameCtx, instancingLayer);
         }
 
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
@@ -35056,6 +35672,31 @@ class InstancingShadowRenderer {
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
+        }
+
+        // TODO: Section planes need to be set if RTC center has changed since last RTC center recorded on frameCtx
+
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
+            const renderFlags = model.renderFlags;
+            const rtcCenter = instancingLayer._state.rtcCenter;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    if (rtcCenter) {
+                        const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$n);
+                        gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
+                    } else {
+                        gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                    }
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
         }
 
         state.indicesBuf.bind();
@@ -35110,39 +35751,13 @@ class InstancingShadowRenderer {
         this._aModelMatrixCol2 = program.getAttribute("modelMatrixCol2");
     }
 
-    _bindProgram(frameCtx) {
+    _bindProgram(frameCtx, instancingLayer) {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const sectionPlanesState = scene._sectionPlanesState;
-        const projectState = scene.camera.project._state;
         program.bind();
         gl.uniformMatrix4fv(this._uShadowViewMatrix, false, frameCtx.shadowViewMatrix);
         gl.uniformMatrix4fv(this._uShadowProjMatrix, false, frameCtx.shadowProjMatrix);
-        if (sectionPlanesState.sectionPlanes.length > 0) {
-            const clips = scene._sectionPlanesState.sectionPlanes;
-            let sectionPlaneUniforms;
-            let uSectionPlaneActive;
-            let sectionPlane;
-            let uSectionPlanePos;
-            let uSectionPlaneDir;
-            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-                sectionPlaneUniforms = this._uSectionPlanes[i];
-                uSectionPlaneActive = sectionPlaneUniforms.active;
-                sectionPlane = clips[i];
-                if (uSectionPlaneActive) {
-                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-                }
-                uSectionPlanePos = sectionPlaneUniforms.pos;
-                if (uSectionPlanePos) {
-                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                }
-                uSectionPlaneDir = sectionPlaneUniforms.dir;
-                if (uSectionPlaneDir) {
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
         this._lastLightId = null;
     }
 
@@ -35314,7 +35929,7 @@ const MAX_VERTS$1 = bigIndicesSupported$2 ? 5000000 : 65530;
 const quantizedPositions = new Uint16Array(MAX_VERTS$1 * 3);
 const compressedNormals = new Int8Array(MAX_VERTS$1 * 3);
 const tempUint8Vec4 = new Uint8Array(4);
-const tempVec3a$2 = math.vec3();
+const tempVec3a$o = math.vec3();
 const tempVec4a$1 = math.vec4([0, 0, 0, 1]);
 const tempVec4b$1 = math.vec4([0, 0, 0, 1]);
 const tempVec4c$1 = math.vec4([0, 0, 0, 1]);
@@ -35327,6 +35942,7 @@ class InstancingLayer {
     /**
      * @param model
      * @param cfg
+     * @param cfg.layerIndex
      * @param cfg.primitive
      * @param cfg.positions Flat float Local-space positions array.
      * @param cfg.normals Flat float normals array.
@@ -35336,12 +35952,22 @@ class InstancingLayer {
      * @param cfg.rtcCenter
      */
     constructor(model, cfg) {
+
+        /**
+         * Index of this InstancingLayer in PerformanceModel#_layerList
+         * @type {Number}
+         */
+        this.layerIndex = cfg.layerIndex;
+
         this._instancingRenderers = getInstancingRenderers(model.scene);
         this.model = model;
         this._aabb = math.collapseAABB3();
-        var primitiveName = cfg.primitive || "triangles";
-        var primitive;
+
+        let primitiveName = cfg.primitive || "triangles";
+        let primitive;
+
         const gl = model.scene.canvas.gl;
+
         switch (primitiveName) {
             case "points":
                 primitive = gl.POINTS;
@@ -35369,13 +35995,14 @@ class InstancingLayer {
                 primitive = gl.TRIANGLES;
                 primitiveName = "triangles";
         }
-        var stateCfg = {
+
+        const stateCfg = {
             primitiveName: primitiveName,
             primitive: primitive,
             positionsDecodeMatrix: math.mat4(),
             numInstances: 0,
             obb: math.OBB3(),
-            rtcCenter : null
+            rtcCenter: null
         };
 
         const preCompressed = (!!cfg.positionsDecodeMatrix);
@@ -35404,17 +36031,18 @@ class InstancingLayer {
                 stateCfg.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, quantizedPositions, lenPositions, 3, gl.STATIC_DRAW, normalized);
             }
         }
+
         if (cfg.normals) {
 
             if (preCompressed) {
 
-                let normalized = true; // For oct-encoded UInt8
+                const normalized = true; // For oct-encoded UInt8
                 stateCfg.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, cfg.normals, cfg.normals.length, 3, gl.STATIC_DRAW, normalized);
 
             } else {
 
-                var lenCompressedNormals = octEncodeNormals(cfg.normals, cfg.normals.length, compressedNormals, 0);
-                let normalized = true; // For oct-encoded UInt8
+                const lenCompressedNormals = octEncodeNormals(cfg.normals, cfg.normals.length, compressedNormals, 0);
+                const normalized = true; // For oct-encoded UInt8
                 stateCfg.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, compressedNormals, lenCompressedNormals, 3, gl.STATIC_DRAW, normalized);
             }
         }
@@ -35423,7 +36051,7 @@ class InstancingLayer {
             stateCfg.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, bigIndicesSupported$2 ? new Uint32Array(cfg.indices) : new Uint16Array(cfg.indices), cfg.indices.length, 1, gl.STATIC_DRAW);
         }
 
-        var edgeIndices = cfg.edgeIndices;
+        let edgeIndices = cfg.edgeIndices;
         if (!edgeIndices) {
             edgeIndices = buildEdgeIndices(cfg.positions, cfg.indices, null, cfg.edgeThreshold || 10);
         }
@@ -35439,6 +36067,7 @@ class InstancingLayer {
         this._numXRayedLayerPortions = 0;
         this._numHighlightedLayerPortions = 0;
         this._numSelectedLayerPortions = 0;
+        this._numClippableLayerPortions = 0;
         this._numEdgesLayerPortions = 0;
         this._numPickableLayerPortions = 0;
         this._numCulledLayerPortions = 0;
@@ -35470,6 +36099,12 @@ class InstancingLayer {
         }
 
         this._finalized = false;
+
+        /**
+         * The axis-aligned World-space boundary of this InstancingLayer's positions.
+         * @type {*|Float64Array}
+         */
+        this.aabb = math.collapseAABB3();
     }
 
     /**
@@ -35496,14 +36131,14 @@ class InstancingLayer {
 
         // TODO: find AABB for portion by transforming the geometry local AABB by the given meshMatrix?
 
-        var visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
-        var xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
-        var highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
-        var selected = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
-        var clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
-        var edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
-        var pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
-        var culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
+        const visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
+        const xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
+        const highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
+        const selected = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
+        const clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
+        const edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
+        const pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
+        const culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
 
         this._flags.push(visible);
         this._flags.push(xrayed);
@@ -35531,6 +36166,10 @@ class InstancingLayer {
             this._numSelectedLayerPortions++;
             this.model.numSelectedLayerPortions++;
         }
+        if (clippable) {
+            this._numClippableLayerPortions++;
+            this.model.numClippableLayerPortions++;
+        }
         if (edges) {
             this._numEdgesLayerPortions++;
             this.model.numEdgesLayerPortions++;
@@ -35548,10 +36187,12 @@ class InstancingLayer {
         const g = rgbaInt[1];
         const b = rgbaInt[2];
         const a = rgbaInt[3];
+
         if (opacity < 255) {
             this._numTransparentLayerPortions++;
             this.model.numTransparentLayerPortions++;
         }
+
         this._colors.push(r);
         this._colors.push(g);
         this._colors.push(b);
@@ -35606,9 +36247,9 @@ class InstancingLayer {
         // Expand AABB
 
         math.collapseAABB3(worldAABB);
-        var obb = this._state.obb;
-        var lenPositions = obb.length;
-        for (var i = 0; i < lenPositions; i += 4) {
+        const obb = this._state.obb;
+        const lenPositions = obb.length;
+        for (let i = 0; i < lenPositions; i += 4) {
             tempVec4a$1[0] = obb[i + 0];
             tempVec4a$1[1] = obb[i + 1];
             tempVec4a$1[2] = obb[i + 2];
@@ -35631,9 +36272,11 @@ class InstancingLayer {
             worldAABB[5] += rtcCenter[2];
         }
 
+        math.expandAABB3(this.aabb, worldAABB);
+
         this._state.numInstances++;
 
-        var portionId = this._portions.length;
+        const portionId = this._portions.length;
         this._portions.push({});
 
         this._numPortions++;
@@ -35648,25 +36291,25 @@ class InstancingLayer {
         }
         const gl = this.model.scene.canvas.gl;
         if (this._colors.length > 0) {
-            let normalized = false;
+            const normalized = false;
             this._state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._colors), this._colors.length, 4, gl.DYNAMIC_DRAW, normalized);
             this._colors = []; // Release memory
         }
         if (this._flags.length > 0) {
-            let normalized = true;
+            const normalized = true;
             this._state.flagsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._flags), this._flags.length, 4, gl.DYNAMIC_DRAW, normalized);
             this._state.flags2Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._flags2), this._flags2.length, 4, gl.DYNAMIC_DRAW, normalized);
             this._flags = [];
             this._flags2 = [];
         }
         if (this._offsets.length > 0) {
-            let normalized = false;
+            const normalized = false;
             this._state.offsetsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._offsets), this._offsets.length, 3, gl.DYNAMIC_DRAW, normalized);
             this._offsets = []; // Release memory
         }
         if (this._modelMatrixCol0.length > 0) {
 
-            let normalized = false;
+            const normalized = false;
 
             this._state.modelMatrixCol0Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._modelMatrixCol0), this._modelMatrixCol0.length, 4, gl.STATIC_DRAW, normalized);
             this._state.modelMatrixCol1Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._modelMatrixCol1), this._modelMatrixCol1.length, 4, gl.STATIC_DRAW, normalized);
@@ -35683,14 +36326,14 @@ class InstancingLayer {
             this._modelNormalMatrixCol2 = [];
         }
         if (this._pickColors.length > 0) {
-            let normalized = false;
+            const normalized = false;
             this._state.pickColorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._pickColors), this._pickColors.length, 4, gl.STATIC_DRAW, normalized);
             this._pickColors = []; // Release memory
         }
         this._finalized = true;
     }
 
-    // The following setters are called by PerformanceMesh, in turn called by PerformanceModelNode, only after the layer is finalized.
+    // The following setters are called by PerformanceMesh, in turn called by PerformanceNode, only after the layer is finalized.
     // It's important that these are called after finalize() in order to maintain integrity of counts like _numVisibleLayerPortions etc.
 
     initFlags(portionId, flags) {
@@ -35709,6 +36352,10 @@ class InstancingLayer {
         if (flags & RENDER_FLAGS.SELECTED) {
             this._numSelectedLayerPortions++;
             this.model.numSelectedLayerPortions++;
+        }
+        if (flags & RENDER_FLAGS.CLIPPABLE) {
+            this._numClippableLayerPortions++;
+            this.model.numClippableLayerPortions++;
         }
         if (flags & RENDER_FLAGS.EDGES) {
             this._numEdgesLayerPortions++;
@@ -35799,6 +36446,13 @@ class InstancingLayer {
     setClippable(portionId, flags) {
         if (!this._finalized) {
             throw "Not finalized";
+        }
+        if (flags & RENDER_FLAGS.CLIPPABLE) {
+            this._numClippableLayerPortions++;
+            this.model.numClippableLayerPortions++;
+        } else {
+            this._numClippableLayerPortions--;
+            this.model.numClippableLayerPortions--;
         }
         this._setFlags2(portionId, flags);
     }
@@ -35892,10 +36546,10 @@ class InstancingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        var visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
-        var xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
-        var highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
-        var selected = !!(flags & RENDER_FLAGS.SELECTED) ? 255 : 0;
+        const visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
+        const xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
+        const highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
+        const selected = !!(flags & RENDER_FLAGS.SELECTED) ? 255 : 0;
         tempUint8Vec4[0] = visible;
         tempUint8Vec4[1] = xrayed;
         tempUint8Vec4[2] = highlighted;
@@ -35907,10 +36561,10 @@ class InstancingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        var clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
-        var edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
-        var pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
-        var culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
+        const clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
+        const edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
+        const pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
+        const culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
         tempUint8Vec4[0] = clippable;
         tempUint8Vec4[1] = edges;
         tempUint8Vec4[2] = pickable;
@@ -35922,10 +36576,10 @@ class InstancingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        tempVec3a$2[0] = offset[0];
-        tempVec3a$2[1] = offset[1];
-        tempVec3a$2[2] = offset[2];
-        this._state.offsetsBuf.setData(tempVec3a$2, portionId * 3, 3);
+        tempVec3a$o[0] = offset[0];
+        tempVec3a$o[1] = offset[1];
+        tempVec3a$o[2] = offset[2];
+        this._state.offsetsBuf.setData(tempVec3a$o, portionId * 3, 3);
     }
 
     //-- NORMAL --------------------------------------------------------------------------------------------------------
@@ -36223,7 +36877,7 @@ class InstancingLayer {
     }
 }
 
-var quantizePositions$1 = (function () { // http://cg.postech.ac.kr/research/mesh_comp_mobile/mesh_comp_mobile_conference.pdf
+const quantizePositions$1 = (function () { // http://cg.postech.ac.kr/research/mesh_comp_mobile/mesh_comp_mobile_conference.pdf
     const translate = math.mat4();
     const scale = math.mat4();
     const scalar = math.vec3();
@@ -36241,8 +36895,8 @@ var quantizePositions$1 = (function () { // http://cg.postech.ac.kr/research/mes
         const xMultiplier = xmax !== xmin ? 65535 / (xmax - xmin) : 0;
         const yMultiplier = ymax !== ymin ? 65535 / (ymax - ymin) : 0;
         const zMultiplier = zmax !== zmin ? 65535 / (zmax - zmin) : 0;
-        let i;
-        for (i = 0; i < lenPositions; i += 3) {
+
+        for (let i = 0; i < lenPositions; i += 3) {
             quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
             quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
             quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
@@ -36333,9 +36987,203 @@ function dot$2(array, i, vec3) { // Dot product of a normal in an array against 
     return array[i] * vec3[0] + array[i + 1] * vec3[1] + array[i + 2] * vec3[2];
 }
 
+/**
+ * Indicates what rendering needs to be done for the layers within a {@link Drawable}.
+ *
+ * Each Drawable has a RenderFlags in {@link Drawable#renderFlags}.
+ *
+ * Before rendering each frame, {@link Renderer} will call {@link Drawable#rebuildRenderFlags} on each {@link Drawable}.
+ *
+ * Then, when rendering a frame, Renderer will apply rendering passes to each Drawable according on what flags are set in {@link Drawable#renderFlags}.
+ *
+ * @private
+ */
+class RenderFlags {
+
+    /**
+     * @private
+     */
+    constructor() {
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate which layers are visible within the {@link Drawable}.
+         *
+         * This is a list of IDs of visible layers within the {@link Drawable}. The IDs will be whatever the
+         * {@link Drawable} uses to identify its layers, usually integers.
+         *
+         * @property visibleLayers
+         * @type {Number[]}
+         */
+        this.visibleLayers = [];
+
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate which {@link SectionPlane}s are active within each layer of the {@link Drawable}.
+         *
+         * Layout is as follows:
+         *
+         * ````[
+         *      false, false, true, // Layer 0, SectionPlanes 0, 1, 2
+         *      false, true, true,  // Layer 1, SectionPlanes 0, 1, 2
+         *      true, false, true   // Layer 2, SectionPlanes 0, 1, 2
+         * ]````
+         *
+         * @property sectionPlanesActivePerLayer
+         * @type {Boolean[]}
+         */
+        this.sectionPlanesActivePerLayer = [];
+
+        this.reset();
+    }
+
+    /**
+     * @private
+     */
+    reset() {
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate whether the {@link Drawable} is culled.
+         * 
+         * When this is ````false````, then all of the other properties on ````RenderFlags```` will remain at their default values.
+         * 
+         * @property culled
+         * @type {Boolean}
+         */
+        this.culled = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the number of layers within the {@link Drawable}.
+         *
+         * @property numLayers
+         * @type {Number}
+         */
+        this.numLayers = 0;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the number of visible layers within the {@link Drawable}.
+         *
+         * @property numVisibleLayers
+         * @type {Number}
+         */
+        this.numVisibleLayers = 0;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillOpaque}.
+         * @property normalFillOpaque
+         * @type {boolean}
+         */
+        this.normalFillOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesOpaque}.
+         * @property normalEdgesOpaque
+         * @type {boolean}
+         */
+        this.normalEdgesOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillTransparent}.
+         * @property normalFillTransparent
+         * @type {boolean}
+         */
+        this.normalFillTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesTransparent}.
+         * @property normalEdgesTransparent
+         * @type {boolean}
+         */
+        this.normalEdgesTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillOpaque}.
+         * @property xrayedFillOpaque
+         * @type {boolean}
+         */
+        this.xrayedFillOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedEdgesOpaque}.
+         * @property xrayedEdgesOpaque
+         * @type {boolean}
+         */
+        this.xrayedEdgesOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillTransparent}.
+         * @property xrayedFillTransparent
+         * @type {boolean}
+         */
+        this.xrayedFillTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #xrayedEdgesTransparent}.
+         * @property xrayedEdgesTransparent
+         * @type {boolean}
+         */
+        this.xrayedEdgesTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawHighlightedFillOpaque}.
+         * @property highlightedFillOpaque
+         * @type {boolean}
+         */
+        this.highlightedFillOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesOpaque}.
+         * @property highlightedEdgesOpaque
+         * @type {boolean}
+         */
+        this.highlightedEdgesOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedFillTransparent}.
+         * @property highlightedFillTransparent
+         * @type {boolean}
+         */
+        this.highlightedFillTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesTransparent}.
+         * @property highlightedEdgesTransparent
+         * @type {boolean}
+         */
+        this.highlightedEdgesTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillOpaque}.
+         * @property selectedFillOpaque
+         * @type {boolean}
+         */
+        this.selectedFillOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesOpaque}.
+         * @property selectedEdgesOpaque
+         * @type {boolean}
+         */
+        this.selectedEdgesOpaque = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillTransparent}.
+         * @property selectedFillTransparent
+         * @type {boolean}
+         */
+        this.selectedFillTransparent = false;
+
+        /**
+         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesTransparent}.
+         * @property selectedEdgesTransparent
+         * @type {boolean}
+         */
+        this.selectedEdgesTransparent = false;
+    }
+}
+
 const instancedArraysSupported = WEBGL_INFO.SUPPORTED_EXTENSIONS["ANGLE_instanced_arrays"];
 
-var tempMat4$1 = math.mat4();
+const tempMat4$1 = math.mat4();
 
 const defaultScale = math.vec3([1, 1, 1]);
 const defaultPosition = math.vec3([0, 0, 0]);
@@ -37161,6 +38009,7 @@ class PerformanceModel extends Component {
         this._aabbDirty = false;
         this._layerList = []; // For GL state efficiency when drawing, InstancingLayers are in first part, BatchingLayers are in second
         this._nodeList = [];
+
         this._lastDecodeMatrix = null;
 
         this._instancingLayers = {};
@@ -37169,6 +38018,9 @@ class PerformanceModel extends Component {
 
         this._meshes = {};
         this._nodes = {};
+
+        /** @private **/
+        this.renderFlags = new RenderFlags();
 
         /**
          * @private
@@ -37220,6 +38072,11 @@ class PerformanceModel extends Component {
         /**
          * @private
          */
+        this.numClippableLayerPortions = 0;
+
+        /**
+         * @private
+         */
         this.numCulledLayerPortions = 0;
 
         /** @private */
@@ -37243,7 +38100,6 @@ class PerformanceModel extends Component {
         this.edges = cfg.edges;
         this.colorize = cfg.colorize;
         this.opacity = cfg.opacity;
-
         this.backfaces = cfg.backfaces;
 
         // Build static matrix
@@ -37437,7 +38293,7 @@ class PerformanceModel extends Component {
      * @param {Number[]} cfg.indices Array of triangle indices.
      * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. These are automatically generated internally if not supplied, using the ````edgeThreshold```` given to the ````PerformanceModel```` constructor.
      * @param {Number[]} [cfg.positionsDecodeMatrix] A 4x4 matrix for decompressing ````positions````.
-     * @param {Number[]} [cfg.rtcCenter] When the positions are relative-to-center (RTC) coordinates, this is the origin of their RTC coordinate system.
+     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center. When this is given, then ````positions```` are assumed to be relative to this center.
      */
     createGeometry(cfg) {
         if (!instancedArraysSupported) {
@@ -37453,7 +38309,10 @@ class PerformanceModel extends Component {
             this.error("Geometry already created: " + geometryId);
             return;
         }
-        const instancingLayer = new InstancingLayer(this, utils.apply({edgeThreshold: this._edgeThreshold}, cfg));
+        const instancingLayer = new InstancingLayer(this, utils.apply({
+            layerIndex: 0, // This is set in #finalize()
+            edgeThreshold: this._edgeThreshold
+        }, cfg));
         this._instancingLayers[geometryId] = instancingLayer;
         this._layerList.push(instancingLayer);
         this.numGeometries++;
@@ -37495,7 +38354,7 @@ class PerformanceModel extends Component {
      * @param {Number[]} [cfg.positions] Flat array of geometry positions. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.normals] Flat array of normal vectors. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.positionsDecodeMatrix] A 4x4 matrix for decompressing ````positions````.
-     * @param {Number[]} [cfg.rtcCenter] When ````positions```` are given and they are in relative-to-center (RTC) coordinates, this is the origin of their RTC coordinate system.
+     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center. When this is given, then ````positions```` are assumed to be relative to this center.
      * @param {Number[]} [cfg.indices] Array of triangle indices. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. If ````geometryId```` is not given, edge line indices are
      * automatically generated internally if not given, using the ````edgeThreshold```` given to the ````PerformanceModel````
@@ -37533,9 +38392,9 @@ class PerformanceModel extends Component {
             }
         }
 
-        var flags = 0;
-        var layer;
-        var portionId;
+        let flags = 0;
+        let layer;
+        let portionId;
 
         const color = (cfg.color) ? new Uint8Array([Math.floor(cfg.color[0] * 255), Math.floor(cfg.color[1] * 255), Math.floor(cfg.color[2] * 255)]) : [255, 255, 255];
         const opacity = (cfg.opacity !== undefined && cfg.opacity !== null) ? Math.floor(cfg.opacity * 255) : 255;
@@ -37585,24 +38444,24 @@ class PerformanceModel extends Component {
 
         } else { // Batching
 
-            var primitive = cfg.primitive || "triangles";
+            let primitive = cfg.primitive || "triangles";
             if (primitive !== "points" && primitive !== "lines" && primitive !== "line-loop" &&
                 primitive !== "line-strip" && primitive !== "triangles" && primitive !== "triangle-strip" && primitive !== "triangle-fan") {
                 this.error(`Unsupported value for 'primitive': '${primitive}' - supported values are 'points', 'lines', 'line-loop', 'line-strip', 'triangles', 'triangle-strip' and 'triangle-fan'. Defaulting to 'triangles'.`);
                 primitive = "triangles";
             }
 
-            var indices = cfg.indices;
-            var edgeIndices = cfg.edgeIndices;
+            let indices = cfg.indices;
+            let edgeIndices = cfg.edgeIndices;
 
-            var positions = cfg.positions;
+            let positions = cfg.positions;
 
             if (!positions) {
                 this.error("Config missing: positions (no meshIds provided, so expecting geometry arrays instead)");
                 return null;
             }
 
-            var normals = cfg.normals;
+            let normals = cfg.normals;
 
             if (!normals) {
                 this.error("Config missing: normals (no meshIds provided, so expecting geometry arrays instead)");
@@ -37655,8 +38514,8 @@ class PerformanceModel extends Component {
             }
 
             if (!this._currentBatchingLayer) {
-                // console.log("New batching layer");
                 this._currentBatchingLayer = new BatchingLayer(this, {
+                    layerIndex: 0, // This is set in #finalize()
                     primitive: "triangles",
                     scratchMemory: this._batchingScratchMemory,
                     positionsDecodeMatrix: cfg.positionsDecodeMatrix,  // Can be undefined
@@ -37746,11 +38605,11 @@ class PerformanceModel extends Component {
             this.error("Config missing: meshIds");
             return;
         }
-        var i;
-        var len;
-        var meshId;
-        var mesh;
-        var meshes = [];
+        let i;
+        let len;
+        let meshId;
+        let mesh;
+        let meshes = [];
         for (i = 0, len = meshIds.length; i < len; i++) {
             meshId = meshIds[i];
             mesh = this._meshes[meshId];
@@ -37765,7 +38624,7 @@ class PerformanceModel extends Component {
             meshes.push(mesh);
         }
         // Create PerformanceModelNode flags
-        var flags = 0;
+        let flags = 0;
         if (this._visible && cfg.visible !== false) {
             flags = flags | RENDER_FLAGS.VISIBLE;
         }
@@ -37795,7 +38654,7 @@ class PerformanceModel extends Component {
         }
 
         // Create PerformanceModelNode AABB
-        var aabb;
+        let aabb;
         if (meshes.length === 1) {
             aabb = meshes[0].aabb;
         } else {
@@ -37820,20 +38679,42 @@ class PerformanceModel extends Component {
      * Once finalized, you can't add anything more to this PerformanceModel.
      */
     finalize() {
+
         if (this._currentBatchingLayer) {
             this._currentBatchingLayer.finalize();
             this._currentBatchingLayer = null;
         }
+
         for (const geometryId in this._instancingLayers) {
             if (this._instancingLayers.hasOwnProperty(geometryId)) {
                 this._instancingLayers[geometryId].finalize();
             }
         }
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             const node = this._nodeList[i];
             node._finalize();
         }
+
+        // Support WebGL batching by grouping BatchingLayers and InstancingLayers into two runs within layerList
+
+        const sortedLayerList = [];
+        for (let i = 0, len = this._layerList.length; i < len; i++) {
+            const layer = this._layerList[i];
+            if (layer instanceof BatchingLayer) {
+                sortedLayerList.push(layer);
+            } else {
+                sortedLayerList.unshift(layer);
+            }
+        }
+        for (let i = 0, len = sortedLayerList.length; i < len; i++) {
+            const layer = sortedLayerList[i];
+            this._layerList[i] = layer;
+            layer.layerIndex = i;
+        }
+
         this.glRedraw();
+
         this.scene._aabbDirty = true;
     }
 
@@ -37950,7 +38831,7 @@ class PerformanceModel extends Component {
     set visible(visible) {
         visible = visible !== false;
         this._visible = visible;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].visible = visible;
         }
         this.glRedraw();
@@ -37975,7 +38856,7 @@ class PerformanceModel extends Component {
     set xrayed(xrayed) {
         xrayed = !!xrayed;
         this._xrayed = xrayed;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].xrayed = xrayed;
         }
         this.glRedraw();
@@ -37998,7 +38879,7 @@ class PerformanceModel extends Component {
     set highlighted(highlighted) {
         highlighted = !!highlighted;
         this._highlighted = highlighted;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].highlighted = highlighted;
         }
         this.glRedraw();
@@ -38021,7 +38902,7 @@ class PerformanceModel extends Component {
     set selected(selected) {
         selected = !!selected;
         this._selected = selected;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].selected = selected;
         }
         this.glRedraw();
@@ -38044,7 +38925,7 @@ class PerformanceModel extends Component {
     set edges(edges) {
         edges = !!edges;
         this._edges = edges;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].edges = edges;
         }
         this.glRedraw();
@@ -38069,7 +38950,7 @@ class PerformanceModel extends Component {
     set culled(culled) {
         culled = !!culled;
         this._culled = culled;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].culled = culled;
         }
         this.glRedraw();
@@ -38096,7 +38977,7 @@ class PerformanceModel extends Component {
     set clippable(clippable) {
         clippable = clippable !== false;
         this._clippable = clippable;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].clippable = clippable;
         }
         this.glRedraw();
@@ -38121,7 +39002,7 @@ class PerformanceModel extends Component {
     set collidable(collidable) {
         collidable = collidable !== false;
         this._collidable = collidable;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].collidable = collidable;
         }
     }
@@ -38145,7 +39026,7 @@ class PerformanceModel extends Component {
     set pickable(pickable) {
         pickable = pickable !== false;
         this._pickable = pickable;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].pickable = pickable;
         }
     }
@@ -38172,7 +39053,7 @@ class PerformanceModel extends Component {
      */
     set colorize(colorize) {
         this._colorize = colorize;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].colorize = colorize;
         }
     }
@@ -38197,7 +39078,7 @@ class PerformanceModel extends Component {
      */
     set opacity(opacity) {
         this._opacity = opacity;
-        for (var i = 0, len = this._nodeList.length; i < len; i++) {
+        for (let i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].opacity = opacity;
         }
     }
@@ -38292,9 +39173,74 @@ class PerformanceModel extends Component {
     }
 
     /** @private */
-    getRenderFlags(renderFlags) {
+    rebuildRenderFlags() {
+        this.renderFlags.reset();
+        this._updateRenderFlagsVisibleLayers();
+        if (this.renderFlags.numLayers > 0 && this.renderFlags.numVisibleLayers === 0) {
+            this.renderFlags.culled = true;
+            return;
+        }
+        this._updateRenderFlags();
+    }
 
-        renderFlags.reset();
+    /**
+     * @private
+     */
+    _updateRenderFlagsVisibleLayers() {
+        const renderFlags = this.renderFlags;
+        renderFlags.numLayers = this._layerList.length;
+        renderFlags.numVisibleLayers = 0;
+        for (let layerIndex = 0, len = this._layerList.length; layerIndex < len; layerIndex++) {
+            const layer = this._layerList[layerIndex];
+            const layerVisible = this._getActiveSectionPlanesForLayer(layer);
+            if (layerVisible) {
+                renderFlags.visibleLayers[renderFlags.numVisibleLayers++] = layerIndex;
+            }
+        }
+    }
+
+    /** @private */
+    _getActiveSectionPlanesForLayer(layer) {
+
+        const renderFlags = this.renderFlags;
+        const sectionPlanes = this.scene._sectionPlanesState.sectionPlanes;
+        const numSectionPlanes = sectionPlanes.length;
+        const baseIndex = layer.layerIndex * numSectionPlanes;
+
+        if (numSectionPlanes > 0) {
+            for (let i = 0; i < numSectionPlanes; i++) {
+
+                const sectionPlane = sectionPlanes[i];
+
+                if (!sectionPlane.active) {
+                    renderFlags.sectionPlanesActivePerLayer[baseIndex + i] = false;
+
+                } else {
+
+                    const intersect = math.planeAABB3Intersect(sectionPlane.dir, sectionPlane.dist, layer.aabb);
+                    const outside = (intersect === -1);
+
+                    if (outside) {
+
+                        if (layer._numClippableLayerPortions < layer._numPortions) {
+                            // Layer has objects that cannot be clipped by SectionPlanes
+                            renderFlags.sectionPlanesActivePerLayer[baseIndex + i] = true;
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    const intersecting = (intersect === 0);
+                    renderFlags.sectionPlanesActivePerLayer[baseIndex + i] = intersecting;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /** @private */
+    _updateRenderFlags() {
 
         if (this.numVisibleLayerPortions === 0) {
             return;
@@ -38303,6 +39249,8 @@ class PerformanceModel extends Component {
         if (this.numCulledLayerPortions === this.numPortions) {
             return;
         }
+
+        const renderFlags = this.renderFlags;
 
         renderFlags.normalFillOpaque = true;
 
@@ -38431,8 +39379,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (let i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawNormalFillOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawNormalFillOpaque(frameCtx);
         }
     }
 
@@ -38447,8 +39397,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawDepth(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawDepth(frameCtx);
         }
     }
 
@@ -38463,113 +39415,145 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawNormals(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawNormals(frameCtx);
         }
     }
 
     /** @private */
     drawNormalEdgesOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawNormalEdgesOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawNormalEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawNormalFillTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawNormalFillTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawNormalFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawNormalEdgesTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawNormalEdgesTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawNormalEdgesTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedFillOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawXRayedFillOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawXRayedFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedEdgesOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawXRayedEdgesOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawXRayedEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedFillTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawXRayedFillTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawXRayedFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedEdgesTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawXRayedEdgesTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawXRayedEdgesTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedFillOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawHighlightedFillOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawHighlightedFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedEdgesOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawHighlightedEdgesOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawHighlightedEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedFillTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawHighlightedFillTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawHighlightedFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedEdgesTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawHighlightedEdgesTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawHighlightedEdgesTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedFillOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawSelectedFillOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawSelectedFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedEdgesOpaque(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawSelectedEdgesOpaque(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawSelectedEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedFillTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawSelectedFillTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawSelectedFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedEdgesTransparent(frameCtx) {
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawSelectedEdgesTransparent(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawSelectedEdgesTransparent(frameCtx);
         }
     }
 
@@ -38587,8 +39571,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawPickMesh(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawPickMesh(frameCtx);
         }
     }
 
@@ -38609,8 +39595,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawPickDepths(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawPickDepths(frameCtx);
         }
     }
 
@@ -38631,8 +39619,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawPickNormals(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawPickNormals(frameCtx);
         }
     }
 
@@ -38652,8 +39642,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (var i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawOcclusion(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawOcclusion(frameCtx);
         }
     }
 
@@ -38673,8 +39665,10 @@ class PerformanceModel extends Component {
             }
             frameCtx.backfaces = this.backfaces;
         }
-        for (let i = 0, len = this._layerList.length; i < len; i++) {
-            this._layerList[i].drawShadow(frameCtx);
+        const renderFlags = this.renderFlags;
+        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
+            const layerIndex = renderFlags.visibleLayers[i];
+            this._layerList[layerIndex].drawShadow(frameCtx);
         }
     }
 
@@ -47112,6 +48106,47 @@ function load$5(viewer, options, inflatedData, performanceModel) {
 
             const meshIds = [];
 
+            const metaObject = viewer.metaScene.metaObjects[entityId];
+            const entityDefaults = {};
+            const meshDefaults = {};
+
+            if (metaObject) {
+
+                // Mask loading of object types
+
+                if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
+                    continue;
+                }
+
+                if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
+                    continue;
+                }
+
+                // Get initial property values for object types
+
+                const props = options.objectDefaults ? options.objectDefaults[metaObject.type] || options.objectDefaults["DEFAULT"] : null;
+
+                if (props) {
+                    if (props.visible === false) {
+                        entityDefaults.visible = false;
+                    }
+                    if (props.pickable === false) {
+                        entityDefaults.pickable = false;
+                    }
+                    if (props.colorize) {
+                        meshDefaults.color = props.colorize;
+                    }
+                    if (props.opacity !== undefined && props.opacity !== null) {
+                        meshDefaults.opacity = props.opacity;
+                    }
+                }
+
+            } else {
+                if (options.excludeUnclassifiedObjects) {
+                    continue;
+                }
+            }
+
             // Iterate each entity's primitive instances
 
             for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex < lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
@@ -47131,8 +48166,6 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                 const opacity = eachPrimitiveColorAndOpacity[(primitiveIndex * 4) + 3] / 255.0;
 
                 const meshId = nextMeshId++;
-
-                const meshDefaults = {}; // TODO: get from lookup from entity IDs
 
                 if (isReusedPrimitive) {
 
@@ -47187,11 +48220,9 @@ function load$5(viewer, options, inflatedData, performanceModel) {
 
             if (meshIds.length > 0) {
 
-                const entityDefaults = {}; // TODO: get from lookup from entity IDs
-
                 performanceModel.createEntity(utils.apply(entityDefaults, {
                     id: entityId,
-                    isObject: true, // TODO: If metaobject exists
+                    isObject: true,
                     meshIds: meshIds
                 }));
             }
@@ -48014,6 +49045,7 @@ class Node extends Component {
      * @param {Boolean} [cfg.isModel] Specify ````true```` if this Mesh represents a model, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#models} and may also have a corresponding {@link MetaModel} with matching {@link MetaModel#id}, registered by that ID in {@link MetaScene#metaModels}.
      * @param {Boolean} [cfg.isObject] Specify ````true```` if this Mesh represents an object, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#objects} and may also have a corresponding {@link MetaObject} with matching {@link MetaObject#id}, registered by that ID in {@link MetaScene#metaObjects}.
      * @param {Node} [cfg.parent] The parent Node.
+     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center for this Node.
      * @param {Number[]} [cfg.position=[0,0,0]] Local 3D position.
      * @param {Number[]} [cfg.scale=[1,1,1]] Local scale.
      * @param {Number[]} [cfg.rotation=[0,0,0]] Local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
@@ -48081,6 +49113,7 @@ class Node extends Component {
             this.scene._registerObject(this);
         }
 
+        this.rtcCenter = cfg.rtcCenter;
         this.visible = cfg.visible;
         this.culled = cfg.culled;
         this.pickable = cfg.pickable;
@@ -48172,6 +49205,36 @@ class Node extends Component {
             this._updateAABB();
         }
         return this._aabb;
+    }
+
+    /**
+     * Sets the center of the relative-to-center (RTC) coordinate system for this Node and all child Nodes and {@link Mesh}s.
+     *
+     * @type {Float64Array}
+     */
+    set rtcCenter(rtcCenter) {
+        if (rtcCenter) {
+            if (!this._rtcCenter) {
+                this._rtcCenter = math.vec3();
+            }
+            this._rtcCenter.set(rtcCenter);
+        } else {
+            if (this._rtcCenter) {
+                this._rtcCenter = null;
+            }
+        }
+        for (let i = 0, len = this._children.length; i < len; i++) {
+            this._children[i].rtcCenter = rtcCenter;
+        }
+    }
+
+    /**
+     *  Gets the center of the relative-to-center (RTC) coordinate system for this Node and all child Nodes and {@link Mesh}s.
+     *
+     * @type {Float64Array}
+     */
+    get rtcCenter() {
+        return this._rtcCenter;
     }
 
     /**
@@ -50699,6 +51762,8 @@ function buildFragmentDraw(mesh) {
  * @author xeolabs / https://github.com/xeolabs
  */
 
+const tempVec3a$p = math.vec3();
+
 const ids$2 = new Map({});
 
 /**
@@ -50756,9 +51821,11 @@ DrawRenderer.prototype.webglContextRestored = function () {
 };
 
 DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
+
     if (!this._program) {
         this._allocate(mesh);
     }
+
     const maxTextureUnits = WEBGL_INFO.MAX_TEXTURE_UNITS;
     const scene = mesh.scene;
     const material = mesh._material;
@@ -50768,22 +51835,32 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     const materialState = mesh._material._state;
     const geometryState = mesh._geometry._state;
     const camera = scene.camera;
+    const rtcCenter = mesh.rtcCenter;
 
     if (frameCtx.lastProgramId !== this._program.id) {
         frameCtx.lastProgramId = this._program.id;
         this._bindProgram(frameCtx);
     }
 
-    const rtcCenter = mesh.rtcCenter;
-    if (rtcCenter) {
-        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
-        const rtcViewMat = rtcMatrices[0];
-        const rtcViewNormalMat = rtcMatrices[1];
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, rtcViewNormalMat);
-    } else {
-        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
+    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
+    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
+
+    if (meshState.clippable) {
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const renderFlags = mesh.renderFlags;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$p) : sectionPlane.pos);
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     if (materialState.id !== this._lastMaterialId) {
@@ -51279,11 +52356,13 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
 };
 
 DrawRenderer.prototype._allocate = function (mesh) {
+
     const gl = mesh.scene.canvas.gl;
     const material = mesh._material;
     const lightsState = mesh.scene._lightsState;
     const sectionPlanesState = mesh.scene._sectionPlanesState;
     const materialState = mesh._material._state;
+
     this._program = new Program(gl, this._shaderSource);
     if (this._program.errors) {
         this.errors = this._program.errors;
@@ -51556,8 +52635,6 @@ DrawRenderer.prototype._bindProgram = function (frameCtx) {
     const scene = this._scene;
     const gl = scene.canvas.gl;
     const lightsState = scene._lightsState;
-    const sectionPlanesState = scene._sectionPlanesState;
-    const lights = lightsState.lights;
     let light;
 
     const program = this._program;
@@ -51631,31 +52708,6 @@ DrawRenderer.prototype._bindProgram = function (frameCtx) {
         program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frameCtx.textureUnit);
         frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
         frameCtx.bindTexture++;
-    }
-
-    if (sectionPlanesState.sectionPlanes.length > 0) {
-        const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-        let sectionPlaneUniforms;
-        let uSectionPlaneActive;
-        let sectionPlane;
-        let uSectionPlanePos;
-        let uSectionPlaneDir;
-        for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-            sectionPlaneUniforms = this._uSectionPlanes[i];
-            uSectionPlaneActive = sectionPlaneUniforms.active;
-            sectionPlane = sectionPlanes[i];
-            if (uSectionPlaneActive) {
-                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-            }
-            uSectionPlanePos = sectionPlaneUniforms.pos;
-            if (uSectionPlanePos) {
-                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-            }
-            uSectionPlaneDir = sectionPlaneUniforms.dir;
-            if (uSectionPlaneDir) {
-                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-            }
-        }
     }
 
     if (this._uGammaFactor) {
@@ -51912,6 +52964,8 @@ function buildFragment$k(mesh) {
 
 const ids$3 = new Map({});
 
+const tempVec3a$q = math.vec3();
+
 /**
  * @private
  */
@@ -51961,27 +53015,45 @@ EmphasisFillRenderer.prototype.webglContextRestored = function () {
 };
 
 EmphasisFillRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
+
     if (!this._program) {
         this._allocate(mesh);
     }
+
     const scene = this._scene;
     const camera = scene.camera;
     const gl = scene.canvas.gl;
     const materialState = mode === 0 ? mesh._xrayMaterial._state : (mode === 1 ? mesh._highlightMaterial._state : mesh._selectedMaterial._state);
     const meshState = mesh._state;
     const geometryState = mesh._geometry._state;
+    const rtcCenter = mesh.rtcCenter;
+
     if (frameCtx.lastProgramId !== this._program.id) {
         frameCtx.lastProgramId = this._program.id;
         this._bindProgram(frameCtx);
     }
-    const rtcCenter = mesh.rtcCenter;
-    if (rtcCenter) {
-        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
-        const rtcViewMat = rtcMatrices[0];
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
-    } else {
-        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
+
+    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
+    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
+
+    if (meshState.clippable) {
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const renderFlags = mesh.renderFlags;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$q) : sectionPlane.pos);
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
+
     if (materialState.id !== this._lastMaterialId) {
         const fillColor = materialState.fillColor;
         const backfaces = materialState.backfaces;
@@ -51996,14 +53068,18 @@ EmphasisFillRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
         gl.uniform4f(this._uFillColor, fillColor[0], fillColor[1], fillColor[2], materialState.fillAlpha);
         this._lastMaterialId = materialState.id;
     }
+
     gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
     if (this._uModelNormalMatrix) {
         gl.uniformMatrix4fv(this._uModelNormalMatrix, gl.FALSE, mesh.worldNormalMatrix);
     }
+
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, meshState.clippable);
     }
+
     gl.uniform3fv(this._uOffset, meshState.offset);
+
     // Bind VBOs
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
@@ -52028,6 +53104,7 @@ EmphasisFillRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
         } else if (geometryState.positionsBuf) ;
         this._lastGeometryId = geometryState.id;
     }
+
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
         frameCtx.drawElements++;
@@ -52099,7 +53176,6 @@ EmphasisFillRenderer.prototype._allocate = function (mesh) {
 EmphasisFillRenderer.prototype._bindProgram = function (frameCtx) {
     const scene = this._scene;
     const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
     const lightsState = scene._lightsState;
     const camera = scene.camera;
     const cameraState = camera._state;
@@ -52130,30 +53206,6 @@ EmphasisFillRenderer.prototype._bindProgram = function (frameCtx) {
             }
             if (this._uLightDir[i]) {
                 gl.uniform3fv(this._uLightDir[i], light.dir);
-            }
-        }
-    }
-    if (sectionPlanesState.sectionPlanes.length > 0) {
-        const clips = scene._sectionPlanesState.sectionPlanes;
-        let sectionPlaneUniforms;
-        let uSectionPlaneActive;
-        let sectionPlane;
-        let uSectionPlanePos;
-        let uSectionPlaneDir;
-        for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-            sectionPlaneUniforms = this._uSectionPlanes[i];
-            uSectionPlaneActive = sectionPlaneUniforms.active;
-            sectionPlane = clips[i];
-            if (uSectionPlaneActive) {
-                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-            }
-            uSectionPlanePos = sectionPlaneUniforms.pos;
-            if (uSectionPlanePos) {
-                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-            }
-            uSectionPlaneDir = sectionPlaneUniforms.dir;
-            if (uSectionPlaneDir) {
-                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
             }
         }
     }
@@ -52306,6 +53358,8 @@ function buildFragment$l(mesh) {
 
 const ids$4 = new Map({});
 
+const tempVec3a$r = math.vec3();
+
 /**
  * @private
  */
@@ -52354,9 +53408,11 @@ EmphasisEdgesRenderer.prototype.webglContextRestored = function () {
 };
 
 EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
+
     if (!this._program) {
         this._allocate(mesh);
     }
+
     const scene = this._scene;
     const camera = scene.camera;
     const gl = scene.canvas.gl;
@@ -52364,18 +53420,34 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
     const meshState = mesh._state;
     const geometry = mesh._geometry;
     const geometryState = geometry._state;
+    const rtcCenter = mesh.rtcCenter;
+
     if (frameCtx.lastProgramId !== this._program.id) {
         frameCtx.lastProgramId = this._program.id;
         this._bindProgram(frameCtx);
     }
-    const rtcCenter = mesh.rtcCenter;
-    if (rtcCenter) {
-        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
-        const rtcViewMat = rtcMatrices[0];
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
-    } else {
-        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
+
+    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
+    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
+
+    if (meshState.clippable) {
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const renderFlags = mesh.renderFlags;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$r) : sectionPlane.pos);
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
+
     switch (mode) {
         case 0:
             materialState = mesh._xrayMaterial._state;
@@ -52391,6 +53463,7 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
             materialState = mesh._edgeMaterial._state;
             break;
     }
+
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
         if (frameCtx.backfaces !== backfaces) {
@@ -52412,10 +53485,12 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
         }
         this._lastMaterialId = materialState.id;
     }
+
     gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
     if (this._uModelNormalMatrix) {
         gl.uniformMatrix4fv(this._uModelNormalMatrix, gl.FALSE, mesh.worldNormalMatrix);
     }
+
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, meshState.clippable);
     }
@@ -52429,6 +53504,7 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
     } else if (geometryState.primitive === gl.LINES) {
         indicesBuf = geometryState.indicesBuf;
     }
+
     if (indicesBuf) {
         if (geometryState.id !== this._lastGeometryId) {
             if (this._uPositionsDecodeMatrix) {
@@ -52442,20 +53518,27 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
             frameCtx.bindArray++;
             this._lastGeometryId = geometryState.id;
         }
+
         gl.drawElements(gl.LINES, indicesBuf.numItems, indicesBuf.itemType, 0);
+
         frameCtx.drawElements++;
     }
 };
 
 EmphasisEdgesRenderer.prototype._allocate = function (mesh) {
+
     const gl = mesh.scene.canvas.gl;
     const sectionPlanesState = mesh.scene._sectionPlanesState;
+
     this._program = new Program(gl, this._shaderSource);
+
     if (this._program.errors) {
         this.errors = this._program.errors;
         return;
     }
+
     const program = this._program;
+
     this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
     this._uModelMatrix = program.getLocation("modelMatrix");
     this._uViewMatrix = program.getLocation("viewMatrix");
@@ -52473,48 +53556,29 @@ EmphasisEdgesRenderer.prototype._allocate = function (mesh) {
     this._uClippable = program.getLocation("clippable");
     this._uGammaFactor = program.getLocation("gammaFactor");
     this._uOffset = program.getLocation("offset");
+
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
 };
 
 EmphasisEdgesRenderer.prototype._bindProgram = function (frameCtx) {
+
     const program = this._program;
     const scene = this._scene;
     const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
     const camera = scene.camera;
-    const cameraState = camera._state;
+
     program.bind();
+
     frameCtx.useProgram++;
+
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
+
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera.project._state.matrix);
-    if (sectionPlanesState.sectionPlanes.length > 0) {
-        const clips = sectionPlanesState.sectionPlanes;
-        let sectionPlaneUniforms;
-        let uSectionPlaneActive;
-        let sectionPlane;
-        let uSectionPlanePos;
-        let uSectionPlaneDir;
-        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-            sectionPlaneUniforms = this._uSectionPlanes[i];
-            uSectionPlaneActive = sectionPlaneUniforms.active;
-            sectionPlane = clips[i];
-            if (uSectionPlaneActive) {
-                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-            }
-            uSectionPlanePos = sectionPlaneUniforms.pos;
-            if (uSectionPlanePos) {
-                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-            }
-            uSectionPlaneDir = sectionPlaneUniforms.dir;
-            if (uSectionPlaneDir) {
-                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-            }
-        }
-    }
+
     if (this._uGammaFactor) {
         gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
     }
@@ -52641,6 +53705,8 @@ function buildFragment$m(mesh) {
  * @author xeolabs / https://github.com/xeolabs
  */
 
+const tempVec3a$s = math.vec3();
+
 // No ID, because there is exactly one PickMeshRenderer per scene
 
 /**
@@ -52692,17 +53758,43 @@ PickMeshRenderer.prototype.webglContextRestored = function () {
 };
 
 PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
+
     if (!this._program) {
         this._allocate(mesh);
     }
+
     const scene = this._scene;
     const gl = scene.canvas.gl;
+    const meshState = mesh._state;
     const materialState = mesh._material._state;
     const geometryState = mesh._geometry._state;
+    const rtcCenter = mesh.rtcCenter;
+
     if (frameCtx.lastProgramId !== this._program.id) {
         frameCtx.lastProgramId = this._program.id;
         this._bindProgram(frameCtx);
     }
+
+    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCPickViewMatrix(meshState.rtcCenterHash, rtcCenter) : frameCtx.pickViewMatrix);
+
+    if (meshState.clippable) {
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const renderFlags = mesh.renderFlags;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$s) : sectionPlane.pos);
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
+    }
+
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
         if (frameCtx.backfaces !== backfaces) {
@@ -52724,19 +53816,14 @@ PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
         }
         this._lastMaterialId = materialState.id;
     }
-    const rtcCenter = mesh.rtcCenter;
-    if (rtcCenter) {
-        const rtcPickViewMat = frameCtx.getRTCPickViewMatrix(rtcCenter);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMat);
-    } else {
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix);
-    }
+
     gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
     gl.uniformMatrix4fv(this._uModelMatrix, false, mesh.worldMatrix);
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
     }
     gl.uniform3fv(this._uOffset, mesh._state.offset);
+
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
             gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
@@ -52751,6 +53838,7 @@ PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
         }
         this._lastGeometryId = geometryState.id;
     }
+
     // Mesh-indexed color
     var pickID = mesh._state.pickID;
     const a = pickID >> 24 & 0xFF;
@@ -52758,6 +53846,7 @@ PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     const g = pickID >> 8 & 0xFF;
     const r = pickID & 0xFF;
     gl.uniform4f(this._uPickColor, r / 255, g / 255, b / 255, a / 255);
+
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
         frameCtx.drawElements++;
@@ -52792,42 +53881,14 @@ PickMeshRenderer.prototype._allocate = function (mesh) {
     this._uPickColor = program.getLocation("pickColor");
     this._uOffset = program.getLocation("offset");
     this._lastMaterialId = null;
-    this._lastVertexBufsId = null;
     this._lastGeometryId = null;
 };
 
 PickMeshRenderer.prototype._bindProgram = function (frameCtx) {
-    const scene = this._scene;
-    const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
     this._program.bind();
     frameCtx.useProgram++;
     this._lastMaterialId = null;
-    this._lastVertexBufsId = null;
     this._lastGeometryId = null;
-    if (sectionPlanesState.sectionPlanes.length > 0) {
-        let sectionPlaneUniforms;
-        let uSectionPlaneActive;
-        let sectionPlane;
-        let uSectionPlanePos;
-        let uSectionPlaneDir;
-        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-            sectionPlaneUniforms = this._uSectionPlanes[i];
-            uSectionPlaneActive = sectionPlaneUniforms.active;
-            sectionPlane = sectionPlanesState.sectionPlanes[i];
-            if (uSectionPlaneActive) {
-                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-            }
-            uSectionPlanePos = sectionPlaneUniforms.pos;
-            if (uSectionPlanePos) {
-                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-            }
-            uSectionPlaneDir = sectionPlaneUniforms.dir;
-            if (uSectionPlaneDir) {
-                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-            }
-        }
-    }
 };
 
 /**
@@ -52929,6 +53990,8 @@ function buildFragment$n(mesh) {
  * @author xeolabs / https://github.com/xeolabs
  */
 
+const tempVec3a$t = math.vec3();
+
 /**
  * @private
  */
@@ -52978,53 +54041,49 @@ PickTriangleRenderer.prototype.webglContextRestored = function () {
 };
 
 PickTriangleRenderer.prototype.drawMesh = function (frameCtx, mesh) {
+
     if (!this._program) {
         this._allocate(mesh);
     }
+
     const scene = this._scene;
     const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
+    const meshState = mesh._state;
     const materialState = mesh._material._state;
     const geometry = mesh._geometry;
     const geometryState = mesh._geometry._state;
+    const rtcCenter = mesh.rtcCenter;
     const backfaces = materialState.backfaces;
     const frontface = materialState.frontface;
     const positionsBuf = geometry._getPickTrianglePositions();
     const pickColorsBuf = geometry._getPickTriangleColors();
+
     this._program.bind();
+
     frameCtx.useProgram++;
-    const rtcCenter = mesh.rtcCenter;
-    if (rtcCenter) {
-        const rtcPickViewMat = frameCtx.getRTCPickViewMatrix(rtcCenter);
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMat);
-    } else {
-        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix);
-    }
-    gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
-    if (sectionPlanesState.sectionPlanes.length > 0) {
-        const sectionPlanes = sectionPlanesState.sectionPlanes;
-        let sectionPlaneUniforms;
-        let uSectionPlaneActive;
-        let sectionPlane;
-        let uSectionPlanePos;
-        let uSectionPlaneDir;
-        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-            sectionPlaneUniforms = this._uSectionPlanes[i];
-            uSectionPlaneActive = sectionPlaneUniforms.active;
-            sectionPlane = sectionPlanes[i];
-            if (uSectionPlaneActive) {
-                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-            }
-            uSectionPlanePos = sectionPlaneUniforms.pos;
-            if (uSectionPlanePos) {
-                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-            }
-            uSectionPlaneDir = sectionPlaneUniforms.dir;
-            if (uSectionPlaneDir) {
-                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+
+    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCPickViewMatrix(meshState.rtcCenterHash, rtcCenter) : frameCtx.pickViewMatrix);
+
+    if (meshState.clippable) {
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const renderFlags = mesh.renderFlags;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$t) : sectionPlane.pos);
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
             }
         }
     }
+
+    gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
+
     if (frameCtx.backfaces !== backfaces) {
         if (backfaces) {
             gl.disable(gl.CULL_FACE);
@@ -53041,7 +54100,7 @@ PickTriangleRenderer.prototype.drawMesh = function (frameCtx, mesh) {
         }
         frameCtx.frontface = frontface;
     }
-    this._lastMaterialId = materialState.id;
+
     gl.uniformMatrix4fv(this._uModelMatrix, false, mesh.worldMatrix);
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
@@ -53206,6 +54265,8 @@ function buildFragment$o(mesh) {
  * @author xeolabs / https://github.com/xeolabs
  */
 
+const tempVec3a$u = math.vec3();
+
 // No ID, because there is exactly one PickMeshRenderer per scene
 
 /**
@@ -53257,17 +54318,23 @@ OcclusionRenderer.prototype.webglContextRestored = function () {
 };
 
 OcclusionRenderer.prototype.drawMesh = function (frameCtx, mesh) {
+
     if (!this._program) {
         this._allocate(mesh);
     }
+
     const scene = this._scene;
     const gl = scene.canvas.gl;
     const materialState = mesh._material._state;
+    const meshState = mesh._state;
     const geometryState = mesh._geometry._state;
+    const rtcCenter = mesh.rtcCenter;
+
     if (frameCtx.lastProgramId !== this._program.id) {
         frameCtx.lastProgramId = this._program.id;
         this._bindProgram(frameCtx);
     }
+
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
         if (frameCtx.backfaces !== backfaces) {
@@ -53292,13 +54359,24 @@ OcclusionRenderer.prototype.drawMesh = function (frameCtx, mesh) {
 
     const camera = scene.camera;
 
-    const rtcCenter = mesh.rtcCenter;
-    if (rtcCenter) {
-        const rtcMatrices = frameCtx.getRTCViewMatrices(rtcCenter);
-        const rtcViewMat = rtcMatrices[0];
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcViewMat);
-    } else {
-        gl.uniformMatrix4fv(this._uViewMatrix, false, camera.viewMatrix);
+    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
+
+    if (meshState.clippable) {
+        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
+        if (numSectionPlanes > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            const renderFlags = mesh.renderFlags;
+            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
+                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
+                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
+                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
+                if (active) {
+                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
+                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$u) : sectionPlane.pos);
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
@@ -53363,36 +54441,11 @@ OcclusionRenderer.prototype._allocate = function (mesh) {
 
 OcclusionRenderer.prototype._bindProgram = function (frameCtx) {
     const scene = this._scene;
-    const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
     this._program.bind();
     frameCtx.useProgram++;
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
-    if (sectionPlanesState.sectionPlanes.length > 0) {
-        let sectionPlaneUniforms;
-        let uSectionPlaneActive;
-        let sectionPlane;
-        let uSectionPlanePos;
-        let uSectionPlaneDir;
-        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
-            sectionPlaneUniforms = this._uSectionPlanes[i];
-            uSectionPlaneActive = sectionPlaneUniforms.active;
-            sectionPlane = sectionPlanesState.sectionPlanes[i];
-            if (uSectionPlaneActive) {
-                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
-            }
-            uSectionPlanePos = sectionPlaneUniforms.pos;
-            if (uSectionPlanePos) {
-                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-            }
-            uSectionPlaneDir = sectionPlaneUniforms.dir;
-            if (uSectionPlaneDir) {
-                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-            }
-        }
-    }
 };
 
 /**
@@ -53870,6 +54923,7 @@ class Mesh extends Component {
      * @param {Boolean} [cfg.isModel] Specify ````true```` if this Mesh represents a model, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#models} and may also have a corresponding {@link MetaModel} with matching {@link MetaModel#id}, registered by that ID in {@link MetaScene#metaModels}.
      * @param {Boolean} [cfg.isObject] Specify ````true```` if this Mesh represents an object, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#objects} and may also have a corresponding {@link MetaObject} with matching {@link MetaObject#id}, registered by that ID in {@link MetaScene#metaObjects}.
      * @param {Node} [cfg.parent] The parent Node.
+     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center for this Mesh. When this is given, then ````matrix````, ````position```` and ````geometry```` are all assumed to be relative to this center.
      * @param {Number[]} [cfg.position=[0,0,0]] Local 3D position.
      * @param {Number[]} [cfg.scale=[1,1,1]] Local scale.
      * @param {Number[]} [cfg.rotation=[0,0,0]] Local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
@@ -53900,6 +54954,9 @@ class Mesh extends Component {
 
         super(owner, cfg);
 
+        /** @private **/
+        this.renderFlags = new RenderFlags();
+
         this._state = new RenderState({ // NOTE: Renderer gets modeling and normal matrices from Mesh#matrix and Mesh.#normalWorldMatrix
             visible: true,
             culled: false,
@@ -53920,7 +54977,8 @@ class Mesh extends Component {
             drawHash: "",
             pickHash: "",
             offset: math.vec3(),
-            rtcCenter: null
+            rtcCenter: null,
+            rtcCenterHash: null
         });
 
         this._drawRenderer = null;
@@ -53961,6 +55019,7 @@ class Mesh extends Component {
 
         if (cfg.rtcCenter) {
             this._state.rtcCenter = math.vec3(cfg.rtcCenter);
+            this._state.rtcCenterHash = cfg.rtcCenter.join();
         }
 
         if (cfg.matrix) {
@@ -54634,9 +55693,9 @@ class Mesh extends Component {
     }
 
     /**
-     * Sets the 3D origin of the Mesh's {@link Geometry}'s vertex positions.
+     * Center of the relative-to-center (RTC) coordinate system for this Mesh.
      *
-     * When this is defined, then the positions are RTC, which means that they are relative to this position.
+     * When this is given, then {@link Mesh#matrix}, {@link Mesh#position} and {@link Mesh#geometry} are all assumed to be relative to this center position.
      *
      * @type {Float64Array}
      */
@@ -54646,11 +55705,13 @@ class Mesh extends Component {
                 this._state.rtcCenter = math.vec3();
             }
             this._state.rtcCenter.set(rtcCenter);
+            this._state.rtcCenterHash = rtcCenter.join();
             this._setAABBDirty();
             this.scene._aabbDirty = true;
         } else {
             if (this._state.rtcCenter) {
                 this._state.rtcCenter = null;
+                this._state.rtcCenterHash = null;
                 this._setAABBDirty();
                 this.scene._aabbDirty = true;
             }
@@ -55218,15 +56279,25 @@ class Mesh extends Component {
             || (mesh1._geometry._state.id - mesh2._geometry._state.id); // Geometry state
     }
 
+    /** @private */
+    rebuildRenderFlags() {
+        this.renderFlags.reset();
+        if (!this._getActiveSectionPlanes()) {
+            this.renderFlags.culled = true;
+            return;
+        }
+        this.renderFlags.numLayers = 1;
+        this.renderFlags.numVisibleLayers = 1;
+        this.renderFlags.visibleLayers[0] = 0;
+        this._updateRenderFlags();
+    }
+
     /**
-     * Called by xeokit when about to render this Mesh, to get flags indicating what rendering effects to apply for it.
-     *
-     * @param {RenderFlags} renderFlags Returns the rendering flags.
+     * @private
      */
-    getRenderFlags(renderFlags) {
+    _updateRenderFlags() {
 
-        renderFlags.reset();
-
+        const renderFlags = this.renderFlags;
         const state = this._state;
 
         if (state.xrayed) {
@@ -55294,6 +56365,47 @@ class Mesh extends Component {
                 }
             }
         }
+    }
+
+    _getActiveSectionPlanes() {
+
+        if (this._state.clippable) {
+
+            const sectionPlanes = this.scene._sectionPlanesState.sectionPlanes;
+            const numSectionPlanes = sectionPlanes.length;
+
+            if (numSectionPlanes > 0) {
+                for (let i = 0; i < numSectionPlanes; i++) {
+
+                    const sectionPlane = sectionPlanes[i];
+                    const renderFlags = this.renderFlags;
+
+                    if (!sectionPlane.active) {
+                        renderFlags.sectionPlanesActivePerLayer[i] = false;
+
+                    } else {
+
+                        if (this._state.rtcCenter) {
+
+                            const intersect = math.planeAABB3Intersect(sectionPlane.dir, sectionPlane.dist, this.aabb);
+                            const outside = (intersect === -1);
+
+                            if (outside) {
+                                return false;
+                            }
+
+                            const intersecting = (intersect === 0);
+                            renderFlags.sectionPlanesActivePerLayer[i] = intersecting;
+
+                        } else {
+                            renderFlags.sectionPlanesActivePerLayer[i] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
