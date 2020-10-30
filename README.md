@@ -228,7 +228,7 @@ utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
 
 ## Building 
 
-Building the binaries in [````./dist````](https://xeokit.github.io/xeokit-xkt-utils/dist)):
+Building the binaries in [````./dist````](https://xeokit.github.io/xeokit-xkt-utils/dist):
 
 ````bash
 npm update
