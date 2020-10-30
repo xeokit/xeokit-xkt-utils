@@ -8,7 +8,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
 const XKT_VERSION = 6; // XKT format version
 
 /**
- * Serializes an {@link XKTModel} to an {@link ArrayBuffer}.
+ * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
  *
  * @param {XKTModel} xktModel The {@link XKTModel}.
  * @returns {ArrayBuffer} The {@link ArrayBuffer}.

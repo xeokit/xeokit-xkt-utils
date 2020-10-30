@@ -37,14 +37,13 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel-lib">XKTModel/lib</a><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-pako">pako</a></span></span></li>
 </ul>
 </div>
 </nav>
 
 <div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
-<p><code>xeokit-xkt-utils</code> is a library of JavaScript tools for creating <code>XKT</code> model geometry files, which we then can load 
-into <a href="http://xeokit.io">xeokit</a>. Using this library in either browser or node, we can convert glTF into <code>XKT</code>, and can even programmatically generate <code>XKT</code> files.</p>
+<p><strong><code>xeokit-xkt-utils</code></strong> is a library of JavaScript tools for creating <code>XKT</code> model geometry files, which we then can load 
+into <a href="http://xeokit.io">xeokit</a>. Using this library in either browser or node, we can convert glTF into <code>XKT</code>, and can even generate <code>XKT</code> files programmatically.</p>
 <p>This library is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to convert glTF to <code>XKT</code>.    </p>
 <p><img src="http://xeokit.io/img/BimdataViewerCroppedNarrow.jpg" alt="Spatial partitioning"></p>
 <h2 id="contents">Contents</h2><ul>
@@ -68,10 +67,11 @@ into <a href="http://xeokit.io">xeokit</a>. Using this library in either browser
 <li><a href="https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils">npm</a></li>
 </ul>
 <h2 id="features">Features</h2><ul>
-<li>Generate XKT files programmatically, in browser and node.  </li>
+<li>Generate XKT files programmatically.  </li>
 <li>Convert glTF into XKT files.</li>
 <li>Full-precision geometry without the cost of storing double-precision values.</li>
-<li>Geometry compression using instancing, quantization, oct-encoding and gzip.   </li>
+<li>Geometry compression using instancing, quantization, oct-encoding and gzip.</li>
+<li>Works in browser and node.   </li>
 </ul>
 <h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel">XKTModel</h4><p>At the center of <code>xeokit-xkt-utils</code> is the  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a> 
 class, which represents an <code>XKT</code> model. </p>
@@ -218,7 +218,7 @@ utils.loadJSON(&quot;./models/gltf/MAP/MAP.gltf&quot;, (json) =&gt; {
     },
     (errMsg) =&gt; {  });</code>
 </code></pre>
-<h2 id="building">Building</h2><p>Building the binaries in <a href="https://xeokit.github.io/xeokit-xkt-utils/dist"><code>./dist</code></a>):</p>
+<h2 id="building">Building</h2><p>Building the binaries in <a href="https://xeokit.github.io/xeokit-xkt-utils/dist"><code>./dist</code></a>:</p>
 <pre><code class="lang-bash"><code class="source-code prettyprint">npm update
 npm run build</code>
 </code></pre>

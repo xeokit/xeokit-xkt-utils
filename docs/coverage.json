@@ -1,6 +1,6 @@
 {
-  "coverage": "48.83%",
-  "expectCount": 129,
+  "coverage": "50.4%",
+  "expectCount": 125,
   "actualCount": 63,
   "files": {
     "src/XKTModel/KDNode.js": {
@@ -89,15 +89,6 @@
         8
       ]
     },
-    "src/XKTModel/lib/pako.es.js": {
-      "expectCount": 3,
-      "actualCount": 0,
-      "undocumentLines": [
-        1,
-        11,
-        15
-      ]
-    },
     "src/XKTModel/lib/utils.js": {
       "expectCount": 2,
       "actualCount": 1,
@@ -106,28 +97,27 @@
       ]
     },
     "src/XKTModel/loadGLTFIntoXKTModel.js": {
-      "expectCount": 20,
+      "expectCount": 19,
       "actualCount": 1,
       "undocumentLines": [
-        14,
-        23,
+        13,
+        22,
+        58,
+        65,
         73,
-        96,
-        108,
-        147,
-        156,
-        165,
-        173,
-        182,
-        195,
+        98,
+        107,
+        116,
+        124,
+        133,
+        146,
+        190,
+        200,
+        213,
         240,
-        251,
-        264,
-        291,
-        304,
-        447,
-        471,
-        484
+        253,
+        396,
+        420
       ]
     },
     "src/XKTModel/validateXKTArrayBuffer.js": {
@@ -136,9 +126,9 @@
       "undocumentLines": [
         31,
         52,
-        74,
-        84,
-        282
+        73,
+        83,
+        281
       ]
     },
     "src/XKTModel/writeXKTModelToArrayBuffer.js": {
@@ -148,9 +138,9 @@
         3,
         8,
         27,
-        193,
-        225,
-        254
+        195,
+        227,
+        256
       ]
     }
   }

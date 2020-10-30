@@ -37,7 +37,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel-lib">XKTModel/lib</a><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-pako">pako</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -53,7 +52,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
 const XKT_VERSION = 6; // XKT format version
 
 /**
- * Serializes an {@link XKTModel} to an {@link ArrayBuffer}.
+ * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
  *
  * @param {XKTModel} xktModel The {@link XKTModel}.
  * @returns {ArrayBuffer} The {@link ArrayBuffer}.
@@ -124,7 +123,9 @@ function getModelData(xktModel) {
         eachPrimitiveEdgeIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.edgeIndices
         eachPrimitiveColorAndOpacity: new Uint8Array(lenColors), // For each primitive, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
 
-        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each entity, a collective index into eachPrimitivePositionsAndNormalsPortion, eachPrimitiveIndicesPortion, eachPrimitiveEdgeIndicesPortion, eachPrimitiveDecodeMatricesPortion and eachPrimitiveColorAndOpacity
+        // Primitive instances are grouped in runs that are shared by the same entities
+
+        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each primitive instance, an index into the eachPrimitive* arrays
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 

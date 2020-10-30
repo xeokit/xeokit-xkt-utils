@@ -36,12 +36,6 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "@xeokit/xeokit-xkt-utils/src/xktmodel/lib/pako.es.js~pako",
-    "variable/index.html#static-variable-pako",
-    "<span>pako</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/lib/pako.es.js</span>",
-    "variable"
-  ],
-  [
     "@xeokit/xeokit-xkt-utils/src/xktmodel/validatexktarraybuffer.js~validatexktarraybuffer",
     "function/index.html#static-function-validateXKTArrayBuffer",
     "<span>validateXKTArrayBuffer</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/validateXKTArrayBuffer.js</span>",
@@ -603,18 +597,6 @@ window.esdocSearchIndex = [
     "src/xktmodel/lib/math.js",
     "file/src/XKTModel/lib/math.js.html",
     "src/XKTModel/lib/math.js",
-    "file"
-  ],
-  [
-    "src/xktmodel/lib/pako.es.js",
-    "file/src/XKTModel/lib/pako.es.js.html",
-    "src/XKTModel/lib/pako.es.js",
-    "file"
-  ],
-  [
-    "src/xktmodel/lib/pako.js",
-    "file/src/XKTModel/lib/pako.js.html",
-    "src/XKTModel/lib/pako.js",
     "file"
   ],
   [

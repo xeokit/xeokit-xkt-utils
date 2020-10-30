@@ -37,7 +37,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel-lib">XKTModel/lib</a><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-pako">pako</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -96,8 +95,7 @@ function extract(elements) {
 
 function inflate(deflatedData) {
     return {
-        //positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
-        positions: new Float32Array(pako.inflate(deflatedData.positions).buffer),
+        positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
         normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
         indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
         edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
