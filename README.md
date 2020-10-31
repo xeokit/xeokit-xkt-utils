@@ -3,10 +3,10 @@
 
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-**````xeokit-xkt-utils````** is a library of JavaScript tools for creating ````XKT```` model geometry files, which we then can load 
-into [xeokit](http://xeokit.io). Using this library in either browser or node, we can convert glTF into ````XKT````, and can even generate ````XKT```` files programmatically.
+**````xeokit-xkt-utils````** is a JavaScript toolkit for creating [````XKT````](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V6.md) model geometry files, which we then can load 
+into [xeokit](http://xeokit.io) (v1.4.8+). Using this toolkit in either browser or node, we can convert glTF into ````XKT````, and can even generate ````XKT```` files programmatically.
 
-This library is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to convert glTF to ````XKT````.    
+This toolkit is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to convert glTF to ````XKT````.    
 
 ![Spatial partitioning](http://xeokit.io/img/BimdataViewerCroppedNarrow.jpg)
 
@@ -25,18 +25,21 @@ This library is currently used within the [xeokit-gltf-to-xkt](https://github.co
 
 ## Links
 
-* [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
-* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
-* [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
 * [npm](https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils)
+* [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
+* [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
+* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
+* [XKT Format Specification (V6)](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V6.md)
 
 ## Features
 
-* Generate XKT files programmatically.  
-* Convert glTF into XKT files.
-* Full-precision geometry without the cost of storing double-precision values.
-* Geometry compression using instancing, quantization, oct-encoding and gzip.
+* Generate ````XKT```` files programmatically with JavaScript.  
+* Convert glTF files into ````XKT```` files.
+* Full-precision geometry, without the cost of storing double-precision values.
+* Geometry compression, using instancing, quantization, oct-encoding and gzip.
 * Works in browser and node.   
+
+````XKT```` files created with this toolkit can be loaded into ````xeokit-sdk```` version ````1.4.8```` and later.
 
 ## JavaScript API
 
