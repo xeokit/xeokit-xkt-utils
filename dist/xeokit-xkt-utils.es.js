@@ -12905,10 +12905,10 @@ function getModelData(xktModel) {
         data.eachPrimitivePositionsAndNormalsPortion [primitiveIndex] = countPositions;
         data.eachPrimitiveIndicesPortion [primitiveIndex] = countIndices;
         data.eachPrimitiveEdgeIndicesPortion [primitiveIndex] = countEdgeIndices;
-        data.eachPrimitiveColorAndOpacity[countColors + 0] = Math.floor(primitive.color[0]);
-        data.eachPrimitiveColorAndOpacity[countColors + 1] = Math.floor(primitive.color[1]);
-        data.eachPrimitiveColorAndOpacity[countColors + 2] = Math.floor(primitive.color[2]);
-        data.eachPrimitiveColorAndOpacity[countColors + 3] = Math.floor(primitive.opacity);
+        data.eachPrimitiveColorAndOpacity[countColors + 0] = Math.floor(primitive.color[0] * 255);
+        data.eachPrimitiveColorAndOpacity[countColors + 1] = Math.floor(primitive.color[1] * 255);
+        data.eachPrimitiveColorAndOpacity[countColors + 2] = Math.floor(primitive.color[2] * 255);
+        data.eachPrimitiveColorAndOpacity[countColors + 3] = Math.floor(primitive.opacity * 255);
 
         countPositions += primitive.positions.length;
         countNormals += primitive.normalsOctEncoded.length;
