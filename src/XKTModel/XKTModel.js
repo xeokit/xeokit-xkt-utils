@@ -629,7 +629,17 @@ class XKTModel {
         }
 
         if (countReusedPrimitives > 0) {
+
             geometryCompression.createPositionsDecodeMatrix(reusedPrimitivesAABB, this.reusedPrimitivesDecodeMatrix);
+
+            for (let primitiveIndex = 0, numPrimitives = this.primitivesList.length; primitiveIndex < numPrimitives; primitiveIndex++) {
+
+                const primitive = this.primitivesList [primitiveIndex];
+
+                if (primitive.reused) {
+                    geometryCompression.quantizePositions(primitive.positions, primitive.positions.length, reusedPrimitivesAABB, primitive.positionsQuantized);
+                }
+            }
 
         } else {
             math.identityMat4(this.reusedPrimitivesDecodeMatrix); // No need for this matrix, but we'll be tidy and set it to identity
