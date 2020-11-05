@@ -12,8 +12,8 @@ const tempVec4 = new FloatArrayType(4);
  */
 const math = {
 
-    MAX_DOUBLE: Number.MAX_VALUE,
-    MIN_DOUBLE: Number.MIN_VALUE,
+    MIN_DOUBLE: -Number.MAX_SAFE_INTEGER,
+    MAX_DOUBLE:  Number.MAX_SAFE_INTEGER,
 
     /**
      * The number of radiians in a degree (0.0174532925).
