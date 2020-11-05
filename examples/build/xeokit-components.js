@@ -22626,6 +22626,10 @@ const viewPos = math.vec4();
 const worldPos = math.vec4();
 const tempVec3a$2 = math.vec3();
 
+const tempVec4a = math.vec4();
+const tempVec4b = math.vec4();
+const tempVec4c = math.vec4();
+
 /**
  * @private
  */
@@ -22634,15 +22638,24 @@ class PanController {
     constructor(scene) {
 
         this._scene = scene;
+
         this._inverseProjectMat = math.mat4();
         this._transposedProjectMat = math.mat4();
+
+        this._inverseOrthoProjectMat = math.mat4();
+        this._transposedOrthoProjectMat = math.mat4();
+
         this._inverseViewMat = math.mat4();
         this._projMatDirty = true;
         this._viewMatDirty = true;
         this._sceneDiagSizeDirty = true;
         this._sceneDiagSize = 1;
 
-        this._onCameraProjMatrix = this._scene.camera.on("projMatrix", () => {
+        this._onCameraOrthoProjMatrix = this._scene.camera.ortho.on("matrix", () => {
+            this._projMatDirty = true;
+        });
+
+        this._onCameraPerspectiveProjMatrix = this._scene.camera.perspective.on("matrix", () => {
             this._projMatDirty = true;
         });
 
@@ -22655,18 +22668,34 @@ class PanController {
         });
     }
 
-    _getInverseProjectMat() {
+    _updateProjMatrices() {
         if (this._projMatDirty) {
-            math.inverseMat4(this._scene.camera.projMatrix, this._inverseProjectMat);
+            math.inverseMat4(this._scene.camera.perspective.matrix, this._inverseProjectMat);
+            math.inverseMat4(this._scene.camera.ortho.matrix, this._inverseOrthoProjectMat);
+            math.transposeMat4(this._scene.camera.perspective.matrix, this._transposedProjectMat);
+            math.transposeMat4(this._scene.camera.ortho.matrix, this._transposedOrthoProjectMat);
+            this._projMatDirty = false;
         }
+    }
+
+    _getInverseProjectMat() {
+        this._updateProjMatrices();
         return this._inverseProjectMat;
     }
 
     _getTransposedProjectMat() {
-        if (this._projMatDirty) {
-            math.transposeMat4(this._scene.camera.projMatrix, this._transposedProjectMat);
-        }
+        this._updateProjMatrices();
         return this._transposedProjectMat;
+    }
+
+    _getInverseOrthoProjectMat() {
+        this._updateProjMatrices();
+        return this._inverseOrthoProjectMat;
+    }
+
+    _getTransposedOrthoProjectMat() {
+        this._updateProjMatrices();
+        return this._transposedOrthoProjectMat;
     }
 
     _getInverseViewMat() {
@@ -22683,22 +22712,76 @@ class PanController {
         return this._sceneDiagSize;
     }
 
-    _unproject(canvasPos, screenZ, viewPos, worldPos) {
+    _unproject(canvasPos, viewPos, worldPos) {
+
         const canvas = this._scene.canvas.canvas;
+        const transposedProjectMat = this._getTransposedProjectMat();
+        const Pt3 = transposedProjectMat.subarray(8, 12);
+        const Pt4 = transposedProjectMat.subarray(12);
+        const D = [0, 0, -this._getSceneDiagSize(), 1];
+        const screenZ = math.dotVec4(D, Pt3) / math.dotVec4(D, Pt4);
         const inverseProjMat = this._getInverseProjectMat();
         const inverseViewMat = this._getInverseViewMat();
         const halfCanvasWidth = canvas.offsetWidth / 2.0;
         const halfCanvasHeight = canvas.offsetHeight / 2.0;
+
         screenPos[0] = (canvasPos[0] - halfCanvasWidth) / halfCanvasWidth;
         screenPos[1] = (canvasPos[1] - halfCanvasHeight) / halfCanvasHeight;
         screenPos[2] = screenZ;
         screenPos[3] = 1.0;
+
         math.mulMat4v4(inverseProjMat, screenPos, viewPos);
         math.mulVec3Scalar(viewPos, 1.0 / viewPos[3]); // Normalize homogeneous coord
+
         viewPos[3] = 1.0;
         viewPos[1] *= -1; // TODO: Why is this reversed?
-        math.mulMat4v4(inverseViewMat,viewPos, worldPos);
+
+        math.mulMat4v4(inverseViewMat, viewPos, worldPos);
     }
+
+    _unprojectOrtho(canvasPos, viewPos, worldPos) {
+
+        const canvas = this._scene.canvas.canvas;
+        const transposedProjectMat = this._getTransposedOrthoProjectMat();
+        const Pt3 = transposedProjectMat.subarray(8, 12);
+        const Pt4 = transposedProjectMat.subarray(12);
+        const D = [0, 0, -this._getSceneDiagSize(), 1];
+        const screenZ = math.dotVec4(D, Pt3) / math.dotVec4(D, Pt4);
+        const inverseProjMat = this._getInverseOrthoProjectMat();
+        const inverseViewMat = this._getInverseViewMat();
+        const halfCanvasWidth = canvas.offsetWidth / 2.0;
+        const halfCanvasHeight = canvas.offsetHeight / 2.0;
+
+        screenPos[0] = (canvasPos[0] - halfCanvasWidth) / halfCanvasWidth;
+        screenPos[1] = (canvasPos[1] - halfCanvasHeight) / halfCanvasHeight;
+        screenPos[2] = screenZ;
+        screenPos[3] = 1.0;
+
+        math.mulMat4v4(inverseProjMat, screenPos, viewPos);
+        math.mulVec3Scalar(viewPos, 1.0 / viewPos[3]); // Normalize homogeneous coord
+
+        viewPos[3] = 1.0;
+        viewPos[1] *= -1; // TODO: Why is this reversed?
+
+        math.mulMat4v4(inverseViewMat, viewPos, worldPos);
+    }
+
+
+    /**
+     * Pans the Camera towards the given 2D canvas coordinates.
+     * @param canvasPos
+     * @param dollyDist
+     */
+    dollyToCanvasPosOLD(canvasPos, dollyDist) {
+
+        this._unprojectOrtho(canvasPos, viewPos, worldPos);
+
+        if (camera.projection === "perspective") {
+            this.dollyToWorldPos(worldPos, dollyDist);
+
+        }
+    }
+
 
     /**
      * Pans the Camera towards the given 2D canvas coordinates.
@@ -22707,16 +22790,26 @@ class PanController {
      */
     dollyToCanvasPos(canvasPos, dollyDist) {
 
-        // Get last two columns of projection matrix
-        const transposedProjectMat = this._getTransposedProjectMat();
-        const Pt3 = transposedProjectMat.subarray(8, 12);
-        const Pt4 = transposedProjectMat.subarray(12);
-        const D = [0, 0, -this._getSceneDiagSize(), 1];
-        const screenZ = math.dotVec4(D, Pt3) / math.dotVec4(D, Pt4);
+        this._unprojectOrtho(canvasPos, viewPos, tempVec4a);
 
-        this._unproject(canvasPos, screenZ, viewPos, worldPos);
+        const camera = this._scene.camera;
+        if (camera.projection === "perspective") {
 
-        this.dollyToWorldPos(worldPos, dollyDist);
+            camera.ortho.scale = camera.ortho.scale - dollyDist;
+             this.dollyToWorldPos(tempVec4a, dollyDist);
+
+        } else {
+
+            camera.ortho.scale = camera.ortho.scale - dollyDist;
+            camera.ortho._update(); // HACK
+
+            this._unprojectOrtho(canvasPos, viewPos, tempVec4b);
+
+            const offset = math.subVec3(tempVec4b, tempVec4a, tempVec4c);
+            console.log(offset);
+            camera.eye = [camera.eye[0] - offset[0], camera.eye[1] - offset[1], camera.eye[2] - offset[2]];
+            camera.look = [camera.look[0] - offset[0], camera.look[1] - offset[1], camera.look[2] - offset[2]];
+        }
     }
 
     /**
@@ -22725,31 +22818,32 @@ class PanController {
      * @param dollyDist
      */
     dollyToWorldPos(worldPos, dollyDist) {
-        
+
         const camera = this._scene.camera;
         const eyeToWorldPosVec = math.subVec3(worldPos, camera.eye, tempVec3a$2);
-        
+
         const dist = math.lenVec3(eyeToWorldPosVec);
-        
+
         if (dist < dollyDist) {
             return;
         }
-        
+
         math.normalizeVec3(eyeToWorldPosVec);
-        
+
         const px = eyeToWorldPosVec[0] * dollyDist;
         const py = eyeToWorldPosVec[1] * dollyDist;
         const pz = eyeToWorldPosVec[2] * dollyDist;
-        
+
         const eye = camera.eye;
         const look = camera.look;
-        
+
         camera.eye = [eye[0] + px, eye[1] + py, eye[2] + pz];
         camera.look = [look[0] + px, look[1] + py, look[2] + pz];
     }
 
     destroy() {
-        this._scene.camera.off(this._onCameraProjMatrix);
+        this._scene.camera.perspective.off(this._onCameraPerspectiveProjMatrix);
+        this._scene.camera.ortho.off(this._onCameraOrthoProjMatrix);
         this._scene.camera.off(this._onCameraViewMatrix);
         this._scene.scene.off(this._onSceneBoundary);
     }
@@ -23411,8 +23505,14 @@ class MousePanRotateDollyHandler {
 
                 if (!configs.planView) { // No rotating in plan-view mode
 
-                    updates.rotateDeltaY -= ((x - lastX) / canvasWidth) * configs.dragRotationRate / 2; // Full horizontal rotation
-                    updates.rotateDeltaX += ((y - lastY) / canvasHeight) * (configs.dragRotationRate / 4); // Half vertical rotation
+                    if (configs.firstPerson) {
+                        updates.rotateDeltaY -= ((x - lastX) / canvasWidth) * configs.dragRotationRate / 2;
+                        updates.rotateDeltaX += ((y - lastY) / canvasHeight) * (configs.dragRotationRate / 4);
+
+                    } else {
+                        updates.rotateDeltaY -= ((x - lastX) / canvasWidth) * configs.dragRotationRate;
+                        updates.rotateDeltaX += ((y - lastY) / canvasHeight) * (configs.dragRotationRate);
+                    }
                 }
             }
 
@@ -23479,8 +23579,8 @@ class MousePanRotateDollyHandler {
             this._down = false;
         });
 
-        const maxElapsed = 1/20;
-        const minElapsed = 1/60;
+        const maxElapsed = 1 / 20;
+        const minElapsed = 1 / 60;
 
         let secsNowLast = null;
 
@@ -24457,13 +24557,21 @@ class CameraUpdater {
                 } else { // Orbiting
 
                     if (configs.followPointer) {
-                        panController.dollyToWorldPos(pivotController.getPivotPos(), -dollyDeltaForDist); // FIXME: What about when pivotPos undefined?
+
+                        if (camera.projection === "perspective") {
+                            camera.ortho.scale = camera.ortho.scale + dollyDeltaForDist;
+                            panController.dollyToWorldPos(pivotController.getPivotPos(), -dollyDeltaForDist); // FIXME: What about when pivotPos undefined?
+                        } else {
+                            panController.dollyToCanvasPos(states.pointerCanvasPos, -dollyDeltaForDist);
+                        }
+
+
                     } else {
                         camera.zoom(dollyDeltaForDist);
                     }
                 }
 
-                camera.ortho.scale = camera.ortho.scale + (.5 * dollyDeltaForDist);
+                //  camera.ortho.scale = camera.ortho.scale + (.5 * dollyDeltaForDist);
 
                 updates.dollyDelta *= configs.dollyInertia;
             }
@@ -25412,9 +25520,9 @@ class CameraControl extends Component {
             // Dollying
 
             keyboardDollyRate: 10,
-            mouseWheelDollyRate: 10,
+            mouseWheelDollyRate: 100,
             touchDollyRate: 0.05,
-            dollyInertia: 0.75,
+            dollyInertia: 0,
             dollyProximityThreshold: 30.0,
             dollyMinSpeed: 1.0
         };
@@ -26161,19 +26269,19 @@ class CameraControl extends Component {
     /**
      * Sets how much the {@link Camera} dollys each second while the mouse wheel is spinning.
      *
-     * Default is ````15.0````, to dolly the {@link Camera} ````15.0```` World-space units per second as we spin
+     * Default is ````100.0````, to dolly the {@link Camera} ````10.0```` World-space units per second as we spin
      * the mouse wheel.
      *
      * @param {Number} mouseWheelDollyRate The new mouse wheel dolly rate.
      */
     set mouseWheelDollyRate(mouseWheelDollyRate) {
-        this._configs.mouseWheelDollyRate = (mouseWheelDollyRate !== null && mouseWheelDollyRate !== undefined) ? mouseWheelDollyRate : 15.0;
+        this._configs.mouseWheelDollyRate = (mouseWheelDollyRate !== null && mouseWheelDollyRate !== undefined) ? mouseWheelDollyRate : 100.0;
     }
 
     /**
      * Gets how much the {@link Camera} dollys each second while the mouse wheel is spinning.
      *
-     * Default is ````15.0````.
+     * Default is ````100.0````.
      *
      * @returns {Number} The current mouseWheel dolly rate.
      */
@@ -26194,18 +26302,18 @@ class CameraControl extends Component {
      * without interference from inertia. This also means that xeokit renders less frames while dollying the Camera,
      * which can improve rendering performance.
      *
-     * Default is ````0.75````.
+     * Default is ````0````.
      *
      * @param {Number} dollyInertia New dolly inertia factor.
      */
     set dollyInertia(dollyInertia) {
-        this._configs.dollyInertia = (dollyInertia !== undefined && dollyInertia !== null) ? dollyInertia : 0.75;
+        this._configs.dollyInertia = (dollyInertia !== undefined && dollyInertia !== null) ? dollyInertia : 0;
     }
 
     /**
      * Gets the dolly inertia factor.
      *
-     * Default is ````0.75````.
+     * Default is ````0````.
      *
      * @returns {Number} The current dolly inertia factor.
      */
@@ -31409,9 +31517,9 @@ class BatchingBuffer {
 
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
-const tempVec4a = math.vec4([0, 0, 0, 1]);
-const tempVec4b = math.vec4([0, 0, 0, 1]);
-const tempVec4c = math.vec4([0, 0, 0, 1]);
+const tempVec4a$1 = math.vec4([0, 0, 0, 1]);
+const tempVec4b$1 = math.vec4([0, 0, 0, 1]);
+const tempVec4c$1 = math.vec4([0, 0, 0, 1]);
 const tempOBB3 = math.OBB3();
 
 /**
@@ -31597,23 +31705,23 @@ class BatchingLayer {
 
                 for (let i = positionsBase, len = positionsBase + lenPositions; i < len; i += 3) {
 
-                    tempVec4a[0] = buffer.positions[i + 0];
-                    tempVec4a[1] = buffer.positions[i + 1];
-                    tempVec4a[2] = buffer.positions[i + 2];
+                    tempVec4a$1[0] = buffer.positions[i + 0];
+                    tempVec4a$1[1] = buffer.positions[i + 1];
+                    tempVec4a$1[2] = buffer.positions[i + 2];
 
-                    math.transformPoint4(meshMatrix, tempVec4a, tempVec4b);
+                    math.transformPoint4(meshMatrix, tempVec4a$1, tempVec4b$1);
 
-                    buffer.positions[i + 0] = tempVec4b[0];
-                    buffer.positions[i + 1] = tempVec4b[1];
-                    buffer.positions[i + 2] = tempVec4b[2];
+                    buffer.positions[i + 0] = tempVec4b$1[0];
+                    buffer.positions[i + 1] = tempVec4b$1[1];
+                    buffer.positions[i + 2] = tempVec4b$1[2];
 
-                    math.expandAABB3Point3(this._modelAABB, tempVec4b);
+                    math.expandAABB3Point3(this._modelAABB, tempVec4b$1);
 
                     if (worldMatrix) {
-                        math.transformPoint4(worldMatrix, tempVec4b, tempVec4c);
-                        math.expandAABB3Point3(worldAABB, tempVec4c);
+                        math.transformPoint4(worldMatrix, tempVec4b$1, tempVec4c$1);
+                        math.expandAABB3Point3(worldAABB, tempVec4c$1);
                     } else {
-                        math.expandAABB3Point3(worldAABB, tempVec4b);
+                        math.expandAABB3Point3(worldAABB, tempVec4b$1);
                     }
                 }
 
@@ -31621,17 +31729,17 @@ class BatchingLayer {
 
                 for (let i = positionsBase, len = positionsBase + lenPositions; i < len; i += 3) {
 
-                    tempVec4a[0] = buffer.positions[i + 0];
-                    tempVec4a[1] = buffer.positions[i + 1];
-                    tempVec4a[2] = buffer.positions[i + 2];
+                    tempVec4a$1[0] = buffer.positions[i + 0];
+                    tempVec4a$1[1] = buffer.positions[i + 1];
+                    tempVec4a$1[2] = buffer.positions[i + 2];
 
-                    math.expandAABB3Point3(this._modelAABB, tempVec4a);
+                    math.expandAABB3Point3(this._modelAABB, tempVec4a$1);
 
                     if (worldMatrix) {
-                        math.transformPoint4(worldMatrix, tempVec4a, tempVec4b);
-                        math.expandAABB3Point3(worldAABB, tempVec4b);
+                        math.transformPoint4(worldMatrix, tempVec4a$1, tempVec4b$1);
+                        math.expandAABB3Point3(worldAABB, tempVec4b$1);
                     } else {
-                        math.expandAABB3Point3(worldAABB, tempVec4a);
+                        math.expandAABB3Point3(worldAABB, tempVec4a$1);
                     }
                 }
             }
@@ -32782,21 +32890,21 @@ class InstancingDrawRenderer {
         gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
 
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-        //
-        // if (rtcCenter) {
-        //     if (frameCtx.lastRTCCenter) {
-        //         if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-        //             frameCtx.lastRTCCenter = rtcCenter;
-        //             loadSectionPlanes = true;
-        //         }
-        //     } else {
-        //         frameCtx.lastRTCCenter = rtcCenter;
-        //         loadSectionPlanes = true;
-        //     }
-        // } else if (frameCtx.lastRTCCenter) {
-        //     frameCtx.lastRTCCenter = null;
+
+        if (rtcCenter) {
+            if (frameCtx.lastRTCCenter) {
+                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+                    frameCtx.lastRTCCenter = rtcCenter;
+                    loadSectionPlanes = true;
+                }
+            } else {
+                frameCtx.lastRTCCenter = rtcCenter;
+                loadSectionPlanes = true;
+            }
+        } else if (frameCtx.lastRTCCenter) {
+            frameCtx.lastRTCCenter = null;
             loadSectionPlanes = true;
-   //     }
+        }
 
         if (loadSectionPlanes) {
             const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
@@ -35930,9 +36038,9 @@ const quantizedPositions = new Uint16Array(MAX_VERTS$1 * 3);
 const compressedNormals = new Int8Array(MAX_VERTS$1 * 3);
 const tempUint8Vec4 = new Uint8Array(4);
 const tempVec3a$o = math.vec3();
-const tempVec4a$1 = math.vec4([0, 0, 0, 1]);
-const tempVec4b$1 = math.vec4([0, 0, 0, 1]);
-const tempVec4c$1 = math.vec4([0, 0, 0, 1]);
+const tempVec4a$2 = math.vec4([0, 0, 0, 1]);
+const tempVec4b$2 = math.vec4([0, 0, 0, 1]);
+const tempVec4c$2 = math.vec4([0, 0, 0, 1]);
 
 /**
  * @private
@@ -36250,15 +36358,15 @@ class InstancingLayer {
         const obb = this._state.obb;
         const lenPositions = obb.length;
         for (let i = 0; i < lenPositions; i += 4) {
-            tempVec4a$1[0] = obb[i + 0];
-            tempVec4a$1[1] = obb[i + 1];
-            tempVec4a$1[2] = obb[i + 2];
-            math.transformPoint4(meshMatrix, tempVec4a$1, tempVec4b$1);
+            tempVec4a$2[0] = obb[i + 0];
+            tempVec4a$2[1] = obb[i + 1];
+            tempVec4a$2[2] = obb[i + 2];
+            math.transformPoint4(meshMatrix, tempVec4a$2, tempVec4b$2);
             if (worldMatrix) {
-                math.transformPoint4(worldMatrix, tempVec4b$1, tempVec4c$1);
-                math.expandAABB3Point3(worldAABB, tempVec4c$1);
+                math.transformPoint4(worldMatrix, tempVec4b$2, tempVec4c$2);
+                math.expandAABB3Point3(worldAABB, tempVec4c$2);
             } else {
-                math.expandAABB3Point3(worldAABB, tempVec4b$1);
+                math.expandAABB3Point3(worldAABB, tempVec4b$2);
             }
         }
 
@@ -48193,8 +48301,8 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                         id: meshId,
                         geometryId: geometryId,
                         matrix: entityMatrix,
-                        color: [1,0,0],
-                        opacity: 1
+                        color: color,
+                        opacity: opacity
                     }));
 
                     meshIds.push(meshId);
@@ -48742,6 +48850,7 @@ class XKTLoaderPlugin extends Plugin {
      */
     load(params = {}) {
 
+        console.log("XKTLoaderPlugin NEW VERSION");
         if (params.id && this.viewer.scene.components[params.id]) {
             this.error("Component with this ID already exists in viewer: " + params.id + " - will autogenerate this ID");
             delete params.id;
