@@ -9,7 +9,7 @@
   "author": "Lindsay Kay",
   "license": "ISC",
   "dependencies": {
-    "@xeokit/xeokit-sdk": "^1.4.7-fullprecision-rc1",
+    "@xeokit/xeokit-sdk": "^1.4.9",
     "rollup": "^1.32.1",
     "rollup-plugin-minify-es": "^1.1.1",
     "rollup-plugin-node-resolve": "^5.2.0"
