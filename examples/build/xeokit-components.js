@@ -832,8 +832,8 @@ const tempVec4 = new FloatArrayType(4);
  */
 const math = {
 
-    MAX_DOUBLE: Number.MAX_VALUE,
-    MIN_DOUBLE: Number.MIN_VALUE,
+    MIN_DOUBLE: -Number.MAX_SAFE_INTEGER,
+    MAX_DOUBLE:  Number.MAX_SAFE_INTEGER,
 
     /**
      * The number of radiians in a degree (0.0174532925).
@@ -4222,9 +4222,9 @@ const math = {
         aabb[0] = math.MAX_DOUBLE;
         aabb[1] = math.MAX_DOUBLE;
         aabb[2] = math.MAX_DOUBLE;
-        aabb[3] = -math.MAX_DOUBLE;
-        aabb[4] = -math.MAX_DOUBLE;
-        aabb[5] = -math.MAX_DOUBLE;
+        aabb[3] = math.MIN_DOUBLE;
+        aabb[4] = math.MIN_DOUBLE;
+        aabb[5] = math.MIN_DOUBLE;
 
         return aabb;
     },
@@ -4294,9 +4294,9 @@ const math = {
             let xmin = math.MAX_DOUBLE;
             let ymin = math.MAX_DOUBLE;
             let zmin = math.MAX_DOUBLE;
-            let xmax = -math.MAX_DOUBLE;
-            let ymax = -math.MAX_DOUBLE;
-            let zmax = -math.MAX_DOUBLE;
+            let xmax = math.MIN_DOUBLE;
+            let ymax = math.MIN_DOUBLE;
+            let zmax = math.MIN_DOUBLE;
 
             let x;
             let y;
@@ -4367,9 +4367,9 @@ const math = {
         let xmin = math.MAX_DOUBLE;
         let ymin = math.MAX_DOUBLE;
         let zmin = math.MAX_DOUBLE;
-        let xmax = -math.MAX_DOUBLE;
-        let ymax = -math.MAX_DOUBLE;
-        let zmax = -math.MAX_DOUBLE;
+        let xmax = math.MIN_DOUBLE;
+        let ymax = math.MIN_DOUBLE;
+        let zmax = math.MIN_DOUBLE;
 
         let x;
         let y;
@@ -4425,9 +4425,9 @@ const math = {
         let xmin = math.MAX_DOUBLE;
         let ymin = math.MAX_DOUBLE;
         let zmin = math.MAX_DOUBLE;
-        let xmax = -math.MAX_DOUBLE;
-        let ymax = -math.MAX_DOUBLE;
-        let zmax = -math.MAX_DOUBLE;
+        let xmax = math.MIN_DOUBLE;
+        let ymax = math.MIN_DOUBLE;
+        let zmax = math.MIN_DOUBLE;
 
         let x;
         let y;
@@ -4756,8 +4756,8 @@ const math = {
     collapseAABB2(aabb = math.AABB2()) {
         aabb[0] = math.MAX_DOUBLE;
         aabb[1] = math.MAX_DOUBLE;
-        aabb[2] = -math.MAX_DOUBLE;
-        aabb[3] = -math.MAX_DOUBLE;
+        aabb[2] = math.MIN_DOUBLE;
+        aabb[3] = math.MIN_DOUBLE;
 
         return aabb;
     },
@@ -4817,8 +4817,8 @@ const math = {
     OBB3ToAABB2(points, aabb = math.AABB2()) {
         let xmin = math.MAX_DOUBLE;
         let ymin = math.MAX_DOUBLE;
-        let xmax = -math.MAX_DOUBLE;
-        let ymax = -math.MAX_DOUBLE;
+        let xmax = math.MIN_DOUBLE;
+        let ymax = math.MIN_DOUBLE;
 
         let x;
         let y;
@@ -21388,9 +21388,9 @@ class Scene extends Component {
             let xmin = math.MAX_DOUBLE;
             let ymin = math.MAX_DOUBLE;
             let zmin = math.MAX_DOUBLE;
-            let xmax = -math.MAX_DOUBLE;
-            let ymax = -math.MAX_DOUBLE;
-            let zmax = -math.MAX_DOUBLE;
+            let xmax = math.MIN_DOUBLE;
+            let ymax = math.MIN_DOUBLE;
+            let zmax = math.MIN_DOUBLE;
             let aabb;
             const collidables = this._collidables;
             let collidable;
@@ -21656,12 +21656,12 @@ class Scene extends Component {
         if (ids.length === 0) {
             return this.aabb;
         }
-        let xmin = 100000;
-        let ymin = 100000;
-        let zmin = 100000;
-        let xmax = -100000;
-        let ymax = -100000;
-        let zmax = -100000;
+        let xmin = math.MAX_DOUBLE;
+        let ymin = math.MAX_DOUBLE;
+        let zmin = math.MAX_DOUBLE;
+        let xmax = math.MIN_DOUBLE;
+        let ymax = math.MIN_DOUBLE;
+        let zmax = math.MIN_DOUBLE;
         let valid;
         this._withEntities(ids, this.objects, entity => {
                 if (entity.collidable) {
@@ -32782,21 +32782,21 @@ class InstancingDrawRenderer {
         gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
 
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
+        //
+        // if (rtcCenter) {
+        //     if (frameCtx.lastRTCCenter) {
+        //         if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
+        //             frameCtx.lastRTCCenter = rtcCenter;
+        //             loadSectionPlanes = true;
+        //         }
+        //     } else {
+        //         frameCtx.lastRTCCenter = rtcCenter;
+        //         loadSectionPlanes = true;
+        //     }
+        // } else if (frameCtx.lastRTCCenter) {
+        //     frameCtx.lastRTCCenter = null;
             loadSectionPlanes = true;
-        }
+   //     }
 
         if (loadSectionPlanes) {
             const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
@@ -48193,8 +48193,8 @@ function load$5(viewer, options, inflatedData, performanceModel) {
                         id: meshId,
                         geometryId: geometryId,
                         matrix: entityMatrix,
-                        color: color,
-                        opacity: opacity
+                        color: [1,0,0],
+                        opacity: 1
                     }));
 
                     meshIds.push(meshId);
@@ -54796,6 +54796,8 @@ const identityMat$1 = math.identityMat4();
  * import {Mesh} from "../src/scene/mesh/Mesh.js";
  * import {Node} from "../src/scene/nodes/Node.js";
  * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
+ * import {buildBoxGeometry} from "../src/viewer/scene/geometry/builders/buildBoxGeometry.js";
+ * import {ReadableGeometry} from "../src/viewer/scene/geometry/ReadableGeometry.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas"
@@ -54804,6 +54806,12 @@ const identityMat$1 = math.identityMat4();
  * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
  * viewer.scene.camera.look = [0, -5.75, 0];
  * viewer.scene.camera.up = [0.37, 0.91, -0.11];
+ *
+ * const boxGeometry = new ReadableGeometry(viewer.scene, buildBoxGeometry({
+ *      xSize: 1,
+ *      ySize: 1,
+ *      zSize: 1
+ * }));
  *
  * new Node(viewer.scene, {
  *      id: "table",
@@ -54822,7 +54830,8 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [1, 0.3, 0.3]
- *              })
+ *              }),
+ *              geometry: boxGeometry
  *          }),
  *
  *          new Mesh(viewer.scene, { // Green table leg
@@ -54833,7 +54842,8 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [0.3, 1.0, 0.3]
- *              })
+ *              }),
+ *              geometry: boxGeometry
  *          }),
  *
  *          new Mesh(viewer.scene, {// Blue table leg
@@ -54844,7 +54854,8 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [0.3, 0.3, 1.0]
- *              })
+ *              }),
+ *              geometry: boxGeometry
  *          }),
  *
  *          new Mesh(viewer.scene, {  // Yellow table leg
@@ -54855,7 +54866,8 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                   diffuse: [1.0, 1.0, 0.0]
- *              })
+ *              }),
+ *              geometry: boxGeometry
  *          }),
  *
  *          new Mesh(viewer.scene, { // Purple table top
@@ -54866,7 +54878,8 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [1.0, 0.3, 1.0]
- *              })
+ *              }),
+ *              geometry: boxGeometry
  *          })
  *      ]
  *  });
