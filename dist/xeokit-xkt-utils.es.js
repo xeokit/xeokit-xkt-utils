@@ -10,8 +10,8 @@ const tempVec4 = new FloatArrayType(4);
  */
 const math = {
 
-    MAX_DOUBLE: Number.MAX_VALUE,
-    MIN_DOUBLE: Number.MIN_VALUE,
+    MIN_DOUBLE: -Number.MAX_SAFE_INTEGER,
+    MAX_DOUBLE:  Number.MAX_SAFE_INTEGER,
 
     /**
      * The number of radiians in a degree (0.0174532925).
@@ -4968,7 +4968,17 @@ class XKTModel {
         }
 
         if (countReusedPrimitives > 0) {
+
             geometryCompression.createPositionsDecodeMatrix(reusedPrimitivesAABB, this.reusedPrimitivesDecodeMatrix);
+
+            for (let primitiveIndex = 0, numPrimitives = this.primitivesList.length; primitiveIndex < numPrimitives; primitiveIndex++) {
+
+                const primitive = this.primitivesList [primitiveIndex];
+
+                if (primitive.reused) {
+                    geometryCompression.quantizePositions(primitive.positions, primitive.positions.length, reusedPrimitivesAABB, primitive.positionsQuantized);
+                }
+            }
 
         } else {
             math.identityMat4(this.reusedPrimitivesDecodeMatrix); // No need for this matrix, but we'll be tidy and set it to identity
@@ -12786,7 +12796,7 @@ if (!pako$2.inflate) {  // See https://github.com/nodeca/pako/issues/97
 const XKT_VERSION = 6; // XKT format version
 
 /**
- * Serializes an {@link XKTModel} to an {@link ArrayBuffer}.
+ * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
  *
  * @param {XKTModel} xktModel The {@link XKTModel}.
  * @returns {ArrayBuffer} The {@link ArrayBuffer}.
@@ -12895,10 +12905,10 @@ function getModelData(xktModel) {
         data.eachPrimitivePositionsAndNormalsPortion [primitiveIndex] = countPositions;
         data.eachPrimitiveIndicesPortion [primitiveIndex] = countIndices;
         data.eachPrimitiveEdgeIndicesPortion [primitiveIndex] = countEdgeIndices;
-        data.eachPrimitiveColorAndOpacity[countColors + 0] = Math.floor(primitive.color[0] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 1] = Math.floor(primitive.color[1] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 2] = Math.floor(primitive.color[2] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 3] = Math.floor(primitive.opacity * 255);
+        data.eachPrimitiveColorAndOpacity[countColors + 0] = Math.floor(primitive.color[0]);
+        data.eachPrimitiveColorAndOpacity[countColors + 1] = Math.floor(primitive.color[1]);
+        data.eachPrimitiveColorAndOpacity[countColors + 2] = Math.floor(primitive.color[2]);
+        data.eachPrimitiveColorAndOpacity[countColors + 3] = Math.floor(primitive.opacity);
 
         countPositions += primitive.positions.length;
         countNormals += primitive.normalsOctEncoded.length;
