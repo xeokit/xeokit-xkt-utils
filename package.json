@@ -1,6 +1,6 @@
 {
   "name": "@xeokit/xeokit-xkt-utils",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "JavaScript utilities to create .XKT files",
   "main": "index.js",
   "directories": {},
