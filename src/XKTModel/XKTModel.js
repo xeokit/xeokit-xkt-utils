@@ -132,6 +132,7 @@ class XKTModel {
      * @param {Number} params.opacity Opacity factor for the {@link XKTPrimitive}, in range [0..1].
      * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
      * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTPrimitive}.
+     * @param {Uint8Array} params.vertexColors Vertex colors for the {@link XKTPrimitive}.
      * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTPrimitive}.
      * @returns {XKTPrimitive} The new {@link XKTPrimitive}.
      */
@@ -218,7 +219,7 @@ class XKTModel {
 
         const primitiveIndex = this.primitivesList.length;
 
-        const primitive = new XKTPrimitive(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices);
+        const primitive = new XKTPrimitive(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, params.vertexColors, indices, edgeIndices);
 
         this.primitives[primitiveId] = primitive;
         this.primitivesList.push(primitive);

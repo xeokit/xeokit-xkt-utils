@@ -7,6 +7,8 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
 
 const XKT_VERSION = 6; // XKT format version
 
+const VERTEX_COLORS = true;
+
 /**
  * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
  *
@@ -67,6 +69,7 @@ function getModelData(xktModel) {
 
         positions: new Uint16Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
+        vertexColors: (VERTEX_COLORS) ? new Uint8Array(lenPositions) : null,
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
 
@@ -99,6 +102,7 @@ function getModelData(xktModel) {
 
     let countPositions = 0;
     let countNormals = 0;
+    let countVertexColors = 0;
     let countIndices = 0;
     let countEdgeIndices = 0;
     let countColors = 0;
@@ -111,6 +115,9 @@ function getModelData(xktModel) {
 
         data.positions.set(primitive.positionsQuantized, countPositions);
         data.normals.set(primitive.normalsOctEncoded, countNormals);
+        if (VERTEX_COLORS) {
+            data.vertexColors.set(primitive.vertexColors, countVertexColors);
+        }
         data.indices.set(primitive.indices, countIndices);
         data.edgeIndices.set(primitive.edgeIndices, countEdgeIndices);
 
@@ -124,6 +131,9 @@ function getModelData(xktModel) {
 
         countPositions += primitive.positions.length;
         countNormals += primitive.normalsOctEncoded.length;
+        if (VERTEX_COLORS) {
+            countVertexColors += primitive.vertexColors.length;
+        }
         countIndices += primitive.indices.length;
         countEdgeIndices += primitive.edgeIndices.length;
         countColors += 4;
@@ -198,6 +208,7 @@ function deflateData(data) {
 
         positions: pako.deflate(data.positions.buffer),
         normals: pako.deflate(data.normals.buffer),
+        vertexColors: (VERTEX_COLORS) ? pako.deflate(data.vertexColors.buffer) : null,
         indices: pako.deflate(data.indices.buffer),
         edgeIndices: pako.deflate(data.edgeIndices.buffer),
 
@@ -226,10 +237,16 @@ function deflateData(data) {
 
 function createArrayBuffer(deflatedData) {
 
-    return toArrayBuffer([
-
+    let elements = [
         deflatedData.positions,
-        deflatedData.normals,
+        deflatedData.normals
+    ];
+
+    if (VERTEX_COLORS) {
+        elements.push(deflatedData.vertexColors);
+    }
+
+    elements = elements.concat([
         deflatedData.indices,
         deflatedData.edgeIndices,
 
@@ -251,6 +268,8 @@ function createArrayBuffer(deflatedData) {
         deflatedData.eachTileAABB,
         deflatedData.eachTileEntitiesPortion
     ]);
+
+    return toArrayBuffer(elements);
 }
 
 function toArrayBuffer(elements) {
