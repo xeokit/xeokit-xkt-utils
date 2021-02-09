@@ -41,10 +41,14 @@ const WEBGL_TYPE_SIZES = {
 async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
         gltf: gltf,
-        getAttachment: getAttachment || (() => {throw new Error('You must define getAttachment() method to convert glTF with external resources')}),
+        getAttachment: getAttachment || (() => {
+            throw new Error('You must define getAttachment() method to convert glTF with external resources')
+        }),
         model: model,
-        numPrimitivesCreated: 0,
-        numEntitiesCreated: 0,
+        geometryCreated: {},
+        nextGeometryId: 0,
+        nextMeshId: 0,
+        nextDefaultEntityId: 0,
         nodes: [],
         meshInstanceCounts: {},
         _meshPrimitiveIds: {}
@@ -55,6 +59,7 @@ async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     parseMaterials(parsingCtx);
     parseDefaultScene(parsingCtx);
 }
+
 async function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
     const buffers = parsingCtx.gltf.buffers;
     if (buffers) {
@@ -293,88 +298,92 @@ function parseNode(parsingCtx, glTFNode, matrix) {
         }
     }
 
-    const meshId = glTFNode.mesh;
+    const gltfMeshId = glTFNode.mesh;
 
-    if (meshId !== undefined) {
+    if (gltfMeshId !== undefined) {
 
-        const meshInfo = gltf.meshes[meshId];
+        const meshInfo = gltf.meshes[gltfMeshId];
 
         if (meshInfo) {
 
-            let primitivesReused = (parsingCtx.meshInstanceCounts [meshId] > 1);
+            let primitivesReused = (parsingCtx.meshInstanceCounts [gltfMeshId] > 1);
 
-            let primitiveModelingMatrix;
-            let entityModelingMatrix;
+            let geometryMatrix;
+            let meshMatrix;
 
             if (primitivesReused) {
 
                 // Primitives in a mesh that is shared are left in Model-space
-                // Entities that instance those primitives will use their matrix to transform the primitives into World-space
+                // Entities that instance those geometries will use their matrix to transform the primitives into World-space
 
-                primitiveModelingMatrix = math.identityMat4();
-                entityModelingMatrix = matrix ? matrix.slice() : math.identityMat4();
+                geometryMatrix = math.identityMat4();
+                meshMatrix = matrix ? matrix.slice() : math.identityMat4();
 
             } else {
 
-                // glTF meshes do not share primitives - each primitive belongs to one mesh
+                // glTF meshes do not share primitives - each geometry belongs to one mesh
                 // Primitives in a mesh that's not shared get baked into World-space
 
-                primitiveModelingMatrix = matrix ? matrix.slice() : math.identityMat4();
-                entityModelingMatrix = math.identityMat4();
+                geometryMatrix = matrix ? matrix.slice() : math.identityMat4();
+                meshMatrix = math.identityMat4();
             }
 
             const numPrimitivesInMesh = meshInfo.primitives.length;
 
             if (numPrimitivesInMesh > 0) {
 
-                let primitiveIds = parsingCtx._meshPrimitiveIds[meshId];
+                const meshIds = [];
 
-                if (!primitiveIds) {
+                for (let i = 0; i < numPrimitivesInMesh; i++) {
 
-                    primitiveIds = [];
+                    const primitiveInfo = meshInfo.primitives[i];
+                    const materialIndex = primitiveInfo.material;
+                    const materialInfo = (materialIndex !== null && materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
+                    const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
+                    const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
 
-                    for (let i = 0; i < numPrimitivesInMesh; i++) {
+                    const geometryId = glTFNode.mesh + "." + i;
 
-                        const primitiveInfo = meshInfo.primitives[i];
-                        const materialIndex = primitiveInfo.material;
-                        const materialInfo = (materialIndex !== null && materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
-                        const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
-                        const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
+                    // TODO: Reuse unique glTF geometries, not glTF meshes
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                    if (!parsingCtx.geometryCreated[geometryId]) {
 
                         const geometryArrays = {};
-
                         parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
 
-                        const primitiveId = parsingCtx.numPrimitivesCreated;
-
-                        model.createPrimitive({
-                            primitiveId: primitiveId,
+                        model.createGeometry({
+                            geometryId: geometryId,
                             primitiveType: "triangles",
-                            matrix: primitiveModelingMatrix,
-                            color: color,
-                            opacity: opacity,
-                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused primitive positions
+                            matrix: geometryMatrix,
+                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused geometry positions
                             normals: geometryArrays.normals,
                             indices: geometryArrays.indices
                         });
 
-                        primitiveIds.push(primitiveId);
-
-                        parsingCtx.numPrimitivesCreated++;
+                        parsingCtx.geometryCreated[geometryId] = true;
                     }
 
-                    parsingCtx._meshPrimitiveIds [meshId] = primitiveIds;
+                    const meshId = parsingCtx.nextMeshId++;
+                    
+                    model.createMesh({
+                        meshId: meshId,
+                        geometryId: geometryId,
+                        matrix: meshMatrix,
+                        color: color,
+                        opacity: opacity
+                    });
+                    
+                    meshIds.push(meshId);
                 }
-
-                const entityId = glTFNode.name || "entity" + parsingCtx.numEntitiesCreated;
+                
+                const entityId = glTFNode.name || ("entity" + parsingCtx.nextDefaultEntityId++);
 
                 model.createEntity({
                     entityId: entityId,
-                    matrix: entityModelingMatrix,
-                    primitiveIds: primitiveIds
+                    meshIds: meshIds
                 });
-
-                parsingCtx.numEntitiesCreated++;
             }
         }
     }

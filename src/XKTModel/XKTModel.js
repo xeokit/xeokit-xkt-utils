@@ -1,8 +1,10 @@
 import {math} from "./lib/math.js";
 import {geometryCompression} from "./lib/geometryCompression.js";
 import {buildEdgeIndices} from "./lib/buildEdgeIndices.js";
-import {XKTPrimitiveInstance} from './XKTPrimitiveInstance.js';
-import {XKTPrimitive} from './XKTPrimitive.js';
+import {isTriangleMeshSolid} from "./lib/isTriangleMeshSolid.js";
+
+import {XKTMesh} from './XKTMesh.js';
+import {XKTGeometry} from './XKTGeometry.js';
 import {XKTEntity} from './XKTEntity.js';
 import {XKTTile} from './XKTTile.js';
 import {KDNode} from "./KDNode.js";
@@ -17,13 +19,13 @@ const MIN_TILE_DIAG = 10000;
 const kdTreeDimLength = new Float32Array(3);
 
 /**
- * A document model that represents the contents of an .XKT V6 file.
+ * A document model that represents the contents of an .XKT file.
  *
  * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
- * * Each {@link XKTEntity} has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
+ * * Each {@link XKTEntity} has {@link XKTMesh}s, which indicate the {@link XKTGeometry}s that comprise the {@link XKTEntity}.
  * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
- * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
+ * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *
  * ## Usage
@@ -42,45 +44,58 @@ class XKTModel {
     constructor(cfg = {}) {
 
         /**
-         * The positions of all shared {@link XKTPrimitive}s are de-quantized using this singular
+         * The positions of all shared {@link XKTGeometry}s are de-quantized using this singular
          * de-quantization matrix.
          *
-         * This de-quantization matrix is which is generated from the collective boundary of the
-         * positions of all shared {@link XKTPrimitive}s.
+         * This de-quantization matrix is which is generated from the collective Local-space boundary of the
+         * positions of all shared {@link XKTGeometry}s.
          *
          * @type {Float32Array}
          */
-        this.reusedPrimitivesDecodeMatrix = new Float32Array(16);
+        this.reusedGeometriesDecodeMatrix = new Float32Array(16);
 
         /**
-         * {@link XKTPrimitive}s within this XKTModel, each mapped to {@link XKTPrimitive#primitiveId}.
+         * Map of {@link XKTGeometry}s within this XKTModel, each mapped to {@link XKTGeometry#geometryId}.
          *
-         * Created by {@link XKTModel#createPrimitive}.
+         * Created by {@link XKTModel#createGeometry}.
          *
-         * @type {{Number:XKTPrimitive}}
+         * @type {{Number:XKTGeometry}}
          */
-        this.primitives = {};
+        this.geometries = {};
 
         /**
-         * {@link XKTPrimitive}s within this XKTModel, in the order they were created.
+         * List of {@link XKTGeometry}s within this XKTModel, in the order they were created.
          *
-         * Created by {@link XKTModel#createPrimitive}.
+         * Each XKTGeometry holds its position in this list in {@link XKTGeometry#geometryIndex}.
          *
-         * @type {XKTPrimitive[]}
+         * Created by {@link XKTModel#createGeometry}.
+         *
+         * @type {XKTGeometry[]}
          */
-        this.primitivesList = [];
+        this.geometriesList = [];
 
         /**
-         * {@link XKTPrimitiveInstance}s within this XKTModel, in the order they were created.
+         * Map of {@link XKTMesh}s within this XKTModel, each mapped to {@link XKTMesh#meshId}.
          *
-         * Created by {@link XKTModel#createEntity}.
+         * Created by {@link XKTModel#createMesh}.
          *
-         * @type {XKTPrimitiveInstance[]}
+         * @type {{Number:XKTMesh}}
          */
-        this.primitiveInstancesList = [];
+        this.meshes = {};
 
         /**
-         * {@link XKTEntity}s within this XKTModel, each mapped to {@link XKTEntity#entityId}.
+         * List of {@link XKTMesh}s within this XKTModel, in the order they were created.
+         *
+         * Each XKTMesh holds its position in this list in {@link XKTMesh#meshIndex}.
+         *
+         * Created by {@link XKTModel#createMesh}.
+         *
+         * @type {XKTMesh[]}
+         */
+        this.meshesList = [];
+
+        /**
+         * Map of {@link XKTEntity}s within this XKTModel, each mapped to {@link XKTEntity#entityId}.
          *
          * Created by {@link XKTModel#createEntity}.
          *
@@ -90,6 +105,8 @@ class XKTModel {
 
         /**
          * {@link XKTEntity}s within this XKTModel.
+         *
+         * Each XKTEntity holds its position in this list in {@link XKTMesh#entityIndex}.
          *
          * Created by {@link XKTModel#finalize}.
          *
@@ -117,44 +134,34 @@ class XKTModel {
     }
 
     /**
-     * Creates an {@link XKTPrimitive} within this XKTModel.
+     * Creates an {@link XKTGeometry} within this XKTModel.
      *
-     * Logs error and does nothing if this XKTModel has been (see {@link XKTModel#finalized}).
+     * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
      *
      * @param {*} params Method parameters.
-     * @param {Number} params.primitiveId Unique ID for the {@link XKTPrimitive}.
-     * @param {String} params.primitiveType The type of {@link XKTPrimitive}: "triangles", "lines" or "points"
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTPrimitive}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
-     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTPrimitive}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTPrimitive}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTPrimitive} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
-     * @param {Uint8Array} params.color RGB color for the {@link XKTPrimitive}, with each color component in range [0..1].
-     * @param {Number} params.opacity Opacity factor for the {@link XKTPrimitive}, in range [0..1].
-     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
-     * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTPrimitive}.
-     * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTPrimitive}.
-     * @returns {XKTPrimitive} The new {@link XKTPrimitive}.
+     * @param {Number} params.geometryId Unique ID for the {@link XKTGeometry}.
+     * @param {String} params.primitiveType The type of {@link XKTGeometry}: "triangles", "lines" or "points".
+     * @param {Float32Array} [params.matrix] Optional modeling transformation to immediately apply to ````positions````. Overrides ````position````, ````scale```` and ````rotation```` parameters.
+     * @param {Number[]} [params.position=[0,0,0]] Optional translation to immediately apply to ````positions````. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.scale=[1,1,1]] Optional scaling to immediately apply to ````positions````. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.rotation=[0,0,0]] Optional rotations to immediately apply to ````positions````, given as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
+     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}.
+     * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTGeometry}.
+     * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTGeometry}.
+     * @returns {XKTGeometry} The new {@link XKTGeometry}.
      */
-    createPrimitive(params) {
+    createGeometry(params) {
 
         if (!params) {
             throw "Parameters missing: params";
         }
 
-        if (params.primitiveId === null || params.primitiveId === undefined) {
-            throw "Parameter missing: params.primitiveId";
+        if (params.geometryId === null || params.geometryId === undefined) {
+            throw "Parameter missing: params.geometryId";
         }
 
         if (!params.primitiveType) {
             throw "Parameter missing: params.primitiveType";
-        }
-
-        if (!params.color) {
-            throw "Parameter missing: params.color";
-        }
-
-        if (params.opacity === null || params.opacity === undefined) {
-            throw "Parameter missing: params.opacity";
         }
 
         if (!params.positions) {
@@ -170,18 +177,21 @@ class XKTModel {
         }
 
         if (this.finalized) {
-            console.error("XKTModel has been finalized, can't add more primitives");
+            console.error("XKTModel has been finalized, can't add more geometries");
             return;
         }
 
-        const primitiveId = params.primitiveId;
+        if (this.geometries[params.geometryId]) {
+            console.error("XKTGeometry already exists with this ID: " + params.geometryId);
+            return;
+        }
+
+        const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
         let matrix = params.matrix;
         const position = params.position;
         const scale = params.scale;
         const rotation = params.rotation;
-        const color = params.color;
-        const opacity = params.opacity;
         const positions = params.positions.slice(); // May modify in #finalize
         const normals = params.normals.slice(); // Will modify
         const indices = params.indices;
@@ -197,7 +207,7 @@ class XKTModel {
 
         matrix = matrix || math.identityMat4();
 
-        if (matrix && (!math.isIdentityMat4(matrix))) { // Bake positions into World-space
+        if (matrix && (!math.isIdentityMat4(matrix))) {
             for (let i = 0, len = positions.length; i < len; i += 3) {
                 tempVec4a[0] = positions[i + 0];
                 tempVec4a[1] = positions[i + 1];
@@ -216,14 +226,94 @@ class XKTModel {
 
         geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, normalsOctEncoded, 0);
 
-        const primitiveIndex = this.primitivesList.length;
+        const geometryIndex = this.geometriesList.length;
 
-        const primitive = new XKTPrimitive(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices);
+        const geometry = new XKTGeometry(geometryId, primitiveType, geometryIndex, positions, normalsOctEncoded, indices, edgeIndices);
 
-        this.primitives[primitiveId] = primitive;
-        this.primitivesList.push(primitive);
+        this.geometries[geometryId] = geometry;
+        this.geometriesList.push(geometry);
 
-        return primitive;
+        return geometry;
+    }
+
+    /**
+     * Creates an {@link XKTMesh} within this XKTModel.
+     *
+     * An {@link XKTMesh} can be owned by one {@link XKTEntity}, which can own multiple {@link XKTMesh}es.
+     *
+     * @param {*} params Method parameters.
+     * @param {Number} params.meshId Unique ID for the {@link XKTMesh}.
+     * @param {Number} params.geometryId ID of an existing {@link XKTGeometry} in {@link XKTModel#geometries}.
+     * @param {Uint8Array} params.color RGB color for the {@link XKTMesh}, with each color component in range [0..1].
+     * @param {Number} params.opacity Opacity factor for the {@link XKTMesh}, in range [0..1].
+     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTMesh}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
+     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTMesh} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
+     * @returns {XKTMesh} The new {@link XKTMesh}.
+     */
+    createMesh(params) {
+
+        if (params.meshId === null || params.meshId === undefined) {
+            throw "Parameter missing: params.meshId";
+        }
+
+        if (params.geometryId === null || params.geometryId === undefined) {
+            throw "Parameter missing: params.geometryId";
+        }
+
+        if (!params.color) {
+            throw "Parameter missing: params.color";
+        }
+
+        if (params.opacity === null || params.opacity === undefined) {
+            throw "Parameter missing: params.opacity";
+        }
+
+        if (this.finalized) {
+            throw "XKTModel has been finalized, can't add more meshes";
+        }
+
+        if (this.meshes[params.meshId]) {
+            console.error("XKTMesh already exists with this ID: " + params.meshId);
+            return;
+        }
+
+        const geometry = this.geometries[params.geometryId];
+
+        if (!geometry) {
+            console.error("XKTGeometry not found: " + params.geometryId);
+            return;
+        }
+
+        geometry.numInstances++;
+
+        let matrix = params.matrix;
+
+        if (!matrix) {
+
+            const position = params.position;
+            const scale = params.scale;
+            const rotation = params.rotation;
+
+            if (position || scale || rotation) {
+                matrix = math.identityMat4();
+                const quaternion = math.eulerToQuaternion(rotation || [0, 0, 0], "XYZ", math.identityQuaternion());
+                math.composeMat4(position || [0, 0, 0], quaternion, scale || [1, 1, 1], matrix)
+
+            } else {
+                matrix = math.identityMat4();
+            }
+        }
+
+        const meshIndex = this.meshesList.length;
+
+        const mesh = new XKTMesh(params.meshId, meshIndex, matrix, geometry, params.color, params.opacity);
+
+        this.meshes[mesh.meshId] = mesh;
+        this.meshesList.push(mesh);
+
+        return mesh;
     }
 
     /**
@@ -233,12 +323,7 @@ class XKTModel {
      *
      * @param {*} params Method parameters.
      * @param {String} params.entityId Unique ID for the {@link XKTEntity}.
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTEntity}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
-     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTEntity}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTEntity}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTEntity} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
-
-     * @param {String[]} params.primitiveIds IDs of {@link XKTPrimitive}s used by the {@link XKTEntity}.
+     * @param {String[]} params.meshIds IDs of {@link XKTMesh}es used by the {@link XKTEntity}. Note that each {@link XKTMesh} can only be used by one {@link XKTEntity}.
      * @returns {XKTEntity} The new {@link XKTEntity}.
      */
     createEntity(params) {
@@ -251,8 +336,8 @@ class XKTModel {
             throw "Parameter missing: params.entityId";
         }
 
-        if (!params.primitiveIds) {
-            throw "Parameter missing: params.primitiveIds";
+        if (!params.meshIds) {
+            throw "Parameter missing: params.meshIds";
         }
 
         if (this.finalized) {
@@ -260,52 +345,42 @@ class XKTModel {
             return;
         }
 
-        const entityId = params.entityId;
-        let matrix = params.matrix;
-        const position = params.position;
-        const scale = params.scale;
-        const rotation = params.rotation;
-        const primitiveIds = params.primitiveIds;
-        const primitiveInstances = [];
-
-        if (!matrix) {
-            if (position || scale || rotation) {
-                matrix = math.identityMat4();
-                const quaternion = math.eulerToQuaternion(rotation || [0, 0, 0], "XYZ", math.identityQuaternion());
-                math.composeMat4(position || [0, 0, 0], quaternion, scale || [1, 1, 1], matrix)
-            } else {
-                matrix = math.identityMat4();
-            }
+        if (this.entities[params.entityId]) {
+            console.error("XKTEntity already exists with this ID: " + params.entityId);
+            return;
         }
 
-        for (let primitiveIdIdx = 0, primitiveIdLen = primitiveIds.length; primitiveIdIdx < primitiveIdLen; primitiveIdIdx++) {
+        const entityId = params.entityId;
+        const meshIds = params.meshIds;
+        const meshes = [];
 
-            const primitiveId = primitiveIds[primitiveIdIdx];
-            const primitive = this.primitives[primitiveId];
+        for (let meshIdIdx = 0, meshIdLen = meshIds.length; meshIdIdx < meshIdLen; meshIdIdx++) {
 
-            if (!primitive) {
-                console.error("Primitive not found: " + primitiveId);
+            const meshId = meshIds[meshIdIdx];
+            const mesh = this.meshes[meshId];
+
+            if (!mesh) {
+                console.error("XKTMesh found: " + meshId);
                 continue;
             }
 
-            primitive.numInstances++;
+            if (mesh.entity) {
+                console.error("XKTMesh " + meshId + " already used by XKTEntity " + mesh.entity.entityId);
+                continue;
+            }
 
-            const primitiveInstanceIndex = this.primitiveInstancesList.length;
-            const primitiveInstance = new XKTPrimitiveInstance(primitiveInstanceIndex, primitive);
-
-            primitiveInstances.push(primitiveInstance);
-
-            this.primitiveInstancesList.push(primitiveInstance);
+            meshes.push(mesh);
         }
 
-        const entity = new XKTEntity(entityId, matrix, primitiveInstances);
+        const entity = new XKTEntity(entityId, meshes);
 
-        for (let i = 0, len = primitiveInstances.length; i < len; i++) {
-            const primitiveInstance = primitiveInstances[i];
-            primitiveInstance.entity = entity;
+        for (let i = 0, len = meshes.length; i < len; i++) {
+            const mesh = meshes[i];
+            mesh.entity = entity;
         }
 
         this.entities[entityId] = entity;
+        this.entitiesList.push(entity);
 
         return entity;
     }
@@ -319,7 +394,7 @@ class XKTModel {
      *
      * Internally, this method:
      *
-     * * sets each {@link XKTEntity}'s {@link XKTEntity#hasReusedPrimitives} true if it shares its {@link XKTPrimitive}s with other {@link XKTEntity}s,
+     * * sets each {@link XKTEntity}'s {@link XKTEntity#hasReusedGeometries} true if it shares its {@link XKTGeometry}s with other {@link XKTEntity}s,
      * * creates each {@link XKTEntity}'s {@link XKTEntity#aabb},
      * * creates {@link XKTTile}s in {@link XKTModel#tilesList}, and
      * * sets {@link XKTModel#finalized} ````true````.
@@ -331,7 +406,9 @@ class XKTModel {
             return;
         }
 
-        this._flagEntitiesThatReusePrimitives();
+        this._bakeSingleUseGeometryTransforms();
+
+        this._flagEntitiesThatReuseGeometries();
 
         this._createEntityAABBs();
 
@@ -339,27 +416,59 @@ class XKTModel {
 
         this._createTilesFromKDTree(rootKDNode);
 
-        this._createReusedPrimitivesDecodeMatrix();
+        this._createReusedGeometriesDecodeMatrix();
+
+        this._flagSolidGeometries();
 
         this.finalized = true;
     }
 
-    _flagEntitiesThatReusePrimitives() {
+    _bakeSingleUseGeometryTransforms() {
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
+        for (let j = 0, lenj = this.meshesList.length; j < lenj; j++) {
 
-                const entity = this.entities[entityId];
-                const primitiveInstances = entity.primitiveInstances;
+            const mesh = this.meshesList[j];
+            const geometry = mesh.geometry;
 
-                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+            if (geometry.numInstances === 1) {
 
-                    const primitiveInstance = primitiveInstances[j];
-                    const primitive = primitiveInstance.primitive;
+                const matrix = mesh.matrix;
 
-                    if (primitive.numInstances > 1) {
-                        entity.hasReusedPrimitives = true;
+                if (matrix && (!math.isIdentityMat4(matrix))) {
+
+                    const positions = geometry.positions;
+
+                    for (let i = 0, len = positions.length; i < len; i += 3) {
+
+                        tempVec4a[0] = positions[i + 0];
+                        tempVec4a[1] = positions[i + 1];
+                        tempVec4a[2] = positions[i + 2];
+
+                        math.transformPoint4(matrix, tempVec4a, tempVec4b);
+
+                        positions[i + 0] = tempVec4b[0];
+                        positions[i + 1] = tempVec4b[1];
+                        positions[i + 2] = tempVec4b[2];
                     }
+                }
+            }
+        }
+    }
+
+    _flagEntitiesThatReuseGeometries() {
+
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+
+            const entity = this.entitiesList[i];
+            const meshes = entity.meshes;
+
+            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
+
+                const mesh = meshes[j];
+                const geometry = mesh.geometry;
+
+                if (geometry.numInstances > 1) {
+                    entity.hasReusedGeometries = true;
                 }
             }
         }
@@ -367,39 +476,39 @@ class XKTModel {
 
     _createEntityAABBs() {
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
 
-                const entity = this.entities[entityId];
-                const primitiveInstances = entity.primitiveInstances;
+            const entity = this.entitiesList[i];
+            const entityAABB = entity.aabb;
+            const meshes = entity.meshes;
 
-                math.collapseAABB3(entity.aabb);
+            math.collapseAABB3(entityAABB);
 
-                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
 
-                    const primitiveInstance = primitiveInstances[j];
-                    const primitive = primitiveInstance.primitive;
+                const mesh = meshes[j];
+                const geometry = mesh.geometry;
+                const matrix = mesh.matrix;
 
-                    if (primitive.numInstances > 1) {
+                if (geometry.numInstances > 1) {
 
-                        const positions = primitive.positions;
-                        for (let i = 0, len = positions.length; i < len; i += 3) {
-                            tempVec4a[0] = positions[i + 0];
-                            tempVec4a[1] = positions[i + 1];
-                            tempVec4a[2] = positions[i + 2];
-                            math.transformPoint4(entity.matrix, tempVec4a, tempVec4b);
-                            math.expandAABB3Point3(entity.aabb, tempVec4b);
-                        }
+                    const positions = geometry.positions;
+                    for (let i = 0, len = positions.length; i < len; i += 3) {
+                        tempVec4a[0] = positions[i + 0];
+                        tempVec4a[1] = positions[i + 1];
+                        tempVec4a[2] = positions[i + 2];
+                        math.transformPoint4(matrix, tempVec4a, tempVec4b);
+                        math.expandAABB3Point3(entityAABB, tempVec4b);
+                    }
 
-                    } else {
+                } else {
 
-                        const positions = primitive.positions;
-                        for (let i = 0, len = positions.length; i < len; i += 3) {
-                            tempVec4a[0] = positions[i + 0];
-                            tempVec4a[1] = positions[i + 1];
-                            tempVec4a[2] = positions[i + 2];
-                            math.expandAABB3Point3(entity.aabb, tempVec4a);
-                        }
+                    const positions = geometry.positions;
+                    for (let i = 0, len = positions.length; i < len; i += 3) {
+                        tempVec4a[0] = positions[i + 0];
+                        tempVec4a[1] = positions[i + 1];
+                        tempVec4a[2] = positions[i + 2];
+                        math.expandAABB3Point3(entityAABB, tempVec4a);
                     }
                 }
             }
@@ -410,20 +519,16 @@ class XKTModel {
 
         const aabb = math.collapseAABB3();
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
-                const entity = this.entities[entityId];
-                math.expandAABB3(aabb, entity.aabb);
-            }
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+            const entity = this.entitiesList[i];
+            math.expandAABB3(aabb, entity.aabb);
         }
 
         const rootKDNode = new KDNode(aabb);
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
-                const entity = this.entities[entityId];
-                this._insertEntityIntoKDTree(rootKDNode, entity);
-            }
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+            const entity = this.entitiesList[i];
+            this._insertEntityIntoKDTree(rootKDNode, entity);
         }
 
         return rootKDNode;
@@ -516,7 +621,7 @@ class XKTModel {
     /**
      * Creates a tile from the given entities.
      *
-     * For each single-use {@link XKTPrimitive}, this method centers {@link XKTPrimitive#positions} to make them relative to the
+     * For each single-use {@link XKTGeometry}, this method centers {@link XKTGeometry#positions} to make them relative to the
      * tile's center, then quantizes the positions to unsigned 16-bit integers, relative to the tile's boundary.
      *
      * @param entities
@@ -549,45 +654,38 @@ class XKTModel {
 
             const entity = entities [i];
 
-            const primitiveInstances = entity.primitiveInstances;
+            const meshes = entity.meshes;
 
-            if (entity.hasReusedPrimitives) {
+            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
 
-                // Post-multiply a translation to the entity's modeling matrix
-                // to center the entity's primitive instances to the tile RTC center
+                const mesh = meshes[j];
+                const geometry = mesh.geometry;
 
-                math.translateMat4v(tileCenterNeg, entity.matrix);
+                if (!geometry.reused) {
 
-            } else {
+                    const positions = geometry.positions;
 
-                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+                    // Center positions relative to their tile's World-space center
 
-                    const primitiveInstance = primitiveInstances[j];
-                    const primitive = primitiveInstance.primitive;
+                    for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
 
-                    if (!primitive.reused) {
-
-                        const positions = primitive.positions;
-
-                        // Center positions relative to their tile's World-space center
-
-                        for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
-
-                            positions[k + 0] -= tileCenter[0];
-                            positions[k + 1] -= tileCenter[1];
-                            positions[k + 2] -= tileCenter[2];
-                        }
-
-                        // Quantize positions relative to tile's RTC-space boundary
-
-                        geometryCompression.quantizePositions(positions, positions.length, rtcAABB, primitive.positionsQuantized);
-
-                        numBatchingEntities++;
-
-                    } else {
-
-
+                        positions[k + 0] -= tileCenter[0];
+                        positions[k + 1] -= tileCenter[1];
+                        positions[k + 2] -= tileCenter[2];
                     }
+
+                    // Quantize positions relative to tile's RTC-space boundary
+
+                    geometryCompression.quantizePositions(positions, positions.length, rtcAABB, geometry.positionsQuantized);
+
+                    numBatchingEntities++;
+
+                } else {
+
+                    // Post-multiply a translation to the mesh's modeling matrix
+                    // to center the entity's geometry instances to the tile RTC center
+
+                    math.translateMat4v(tileCenterNeg, mesh.matrix);
                 }
             }
 
@@ -601,19 +699,19 @@ class XKTModel {
         this.tilesList.push(tile);
     }
 
-    _createReusedPrimitivesDecodeMatrix() {
+    _createReusedGeometriesDecodeMatrix() {
 
         const tempVec3a = math.vec3();
-        const reusedPrimitivesAABB = math.collapseAABB3(math.AABB3());
-        let countReusedPrimitives = 0;
+        const reusedGeometriesAABB = math.collapseAABB3(math.AABB3());
+        let countReusedGeometries = 0;
 
-        for (let primitiveIndex = 0, numPrimitives = this.primitivesList.length; primitiveIndex < numPrimitives; primitiveIndex++) {
+        for (let geometryIndex = 0, numGeometries = this.geometriesList.length; geometryIndex < numGeometries; geometryIndex++) {
 
-            const primitive = this.primitivesList [primitiveIndex];
+            const geometry = this.geometriesList [geometryIndex];
 
-            if (primitive.reused) {
+            if (geometry.reused) {
 
-                const positions = primitive.positions;
+                const positions = geometry.positions;
 
                 for (let i = 0, len = positions.length; i < len; i += 3) {
 
@@ -621,28 +719,37 @@ class XKTModel {
                     tempVec3a[1] = positions[i + 1];
                     tempVec3a[2] = positions[i + 2];
 
-                    math.expandAABB3Point3(reusedPrimitivesAABB, tempVec3a);
+                    math.expandAABB3Point3(reusedGeometriesAABB, tempVec3a);
                 }
 
-                countReusedPrimitives++;
+                countReusedGeometries++;
             }
         }
 
-        if (countReusedPrimitives > 0) {
+        if (countReusedGeometries > 0) {
 
-            geometryCompression.createPositionsDecodeMatrix(reusedPrimitivesAABB, this.reusedPrimitivesDecodeMatrix);
+            geometryCompression.createPositionsDecodeMatrix(reusedGeometriesAABB, this.reusedGeometriesDecodeMatrix);
 
-            for (let primitiveIndex = 0, numPrimitives = this.primitivesList.length; primitiveIndex < numPrimitives; primitiveIndex++) {
+            for (let geometryIndex = 0, numGeometries = this.geometriesList.length; geometryIndex < numGeometries; geometryIndex++) {
 
-                const primitive = this.primitivesList [primitiveIndex];
+                const geometry = this.geometriesList [geometryIndex];
 
-                if (primitive.reused) {
-                    geometryCompression.quantizePositions(primitive.positions, primitive.positions.length, reusedPrimitivesAABB, primitive.positionsQuantized);
+                if (geometry.reused) {
+                    geometryCompression.quantizePositions(geometry.positions, geometry.positions.length, reusedGeometriesAABB, geometry.positionsQuantized);
                 }
             }
 
         } else {
-            math.identityMat4(this.reusedPrimitivesDecodeMatrix); // No need for this matrix, but we'll be tidy and set it to identity
+            math.identityMat4(this.reusedGeometriesDecodeMatrix); // No need for this matrix, but we'll be tidy and set it to identity
+        }
+    }
+
+    _flagSolidGeometries() {
+        for (let i = 0, len = this.geometriesList.length; i < len; i++) {
+            const geometry = this.geometriesList[i];
+            if (geometry.primitiveType === "triangles") {
+                geometry.solid = isTriangleMeshSolid(geometry.indices, geometry.positionsQuantized); // Better memory/cpu performance with quantized values
+            }
         }
     }
 }

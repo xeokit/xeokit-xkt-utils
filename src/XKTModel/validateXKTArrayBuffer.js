@@ -29,42 +29,58 @@ function validateXKTArrayBuffer(arrayBuffer, xktModel) {
 }
 
 function extract(elements) {
+
     return {
+
         positions: elements[0],
         normals: elements[1],
         indices: elements[2],
         edgeIndices: elements[3],
+
         matrices: elements[4],
-        reusedPrimitivesDecodeMatrix: elements[5],
-        eachPrimitivePositionsAndNormalsPortion: elements[6],
-        eachPrimitiveIndicesPortion: elements[7],
-        eachPrimitiveEdgeIndicesPortion: elements[8],
-        eachPrimitiveColorAndOpacity: elements[9],
-        primitiveInstances: elements[10],
-        eachEntityId: elements[11],
-        eachEntityPrimitiveInstancesPortion: elements[12],
-        eachEntityMatricesPortion: elements[13],
-        eachTileAABB: elements[14],
-        eachTileEntitiesPortion: elements[15]
+        reusedGeometriesDecodeMatrix: elements[5],
+
+        eachGeometryPrimitiveType: elements[6],
+        eachGeometryVerticesPortion: elements[7],
+        eachGeometryIndicesPortion: elements[8],
+        eachGeometryEdgeIndicesPortion: elements[9],
+
+        eachMeshGeometriesPortion: elements[10],
+        eachMeshMatricesPortion: elements[11],
+        eachMeshColorAndOpacity: elements[12],
+
+        eachEntityId: elements[13],
+        eachEntityMeshesPortion: elements[14],
+
+        eachTileAABB: elements[15],
+        eachTileEntitiesPortion: elements[16]
     };
 }
 
 function inflate(deflatedData) {
+
     return {
+
         positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
         normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
         indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
         edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
+
         matrices: new Float32Array(pako.inflate(deflatedData.matrices).buffer),
-        reusedPrimitivesDecodeMatrix: new Float32Array(pako.inflate(deflatedData.reusedPrimitivesDecodeMatrix).buffer),
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
-        eachPrimitiveIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
-        eachPrimitiveColorAndOpacity: new Uint8Array(pako.inflate(deflatedData.eachPrimitiveColorAndOpacity).buffer),
-        primitiveInstances: new Uint32Array(pako.inflate(deflatedData.primitiveInstances).buffer),
+        reusedGeometriesDecodeMatrix: new Float32Array(pako.inflate(deflatedData.reusedGeometriesDecodeMatrix).buffer),
+
+        eachGeometryPrimitiveType: new Uint8Array(pako.inflate(deflatedData.eachGeometryPrimitiveType).buffer),
+        eachGeometryVerticesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryVerticesPortion).buffer),
+        eachGeometryIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryIndicesPortion).buffer),
+        eachGeometryEdgeIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryEdgeIndicesPortion).buffer),
+
+        eachMeshGeometriesPortion: new Uint32Array(pako.inflate(deflatedData.eachMeshGeometriesPortion).buffer),
+        eachMeshMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachMeshMatricesPortion).buffer),
+        eachMeshColorAndOpacity: new Uint8Array(pako.inflate(deflatedData.eachMeshColorAndOpacity).buffer),
+
         eachEntityId: pako.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
-        eachEntityMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMatricesPortion).buffer),
+        eachEntityMeshesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMeshesPortion).buffer),
+
         eachTileAABB: new Float64Array(pako.inflate(deflatedData.eachTileAABB).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako.inflate(deflatedData.eachTileEntitiesPortion).buffer),
     };
@@ -88,26 +104,25 @@ function validateData(inflatedData, xktModel) {
     const edgeIndices = inflatedData.edgeIndices;
 
     const matrices = inflatedData.matrices;
+    const reusedGeometriesDecodeMatrix = inflatedData.reusedGeometriesDecodeMatrix;
 
-    const reusedPrimitivesDecodeMatrix = inflatedData.reusedPrimitivesDecodeMatrix;
+    const eachGeometryPrimitiveType = inflatedData.eachGeometryPrimitiveType;
+    const eachGeometryVerticesPortion = inflatedData.eachGeometryVerticesPortion;
+    const eachGeometryIndicesPortion = inflatedData.eachGeometryIndicesPortion;
+    const eachGeometryEdgeIndicesPortion = inflatedData.eachGeometryEdgeIndicesPortion;
 
-    const eachPrimitivePositionsAndNormalsPortion = inflatedData.eachPrimitivePositionsAndNormalsPortion;
-    const eachPrimitiveIndicesPortion = inflatedData.eachPrimitiveIndicesPortion;
-    const eachPrimitiveEdgeIndicesPortion = inflatedData.eachPrimitiveEdgeIndicesPortion;
-    const eachPrimitiveColorAndOpacity = inflatedData.eachPrimitiveColorAndOpacity;
-
-    const primitiveInstances = inflatedData.primitiveInstances;
+    const eachMeshGeometriesPortion = inflatedData.eachMeshGeometriesPortion;
+    const eachMeshColorAndOpacity = inflatedData.eachMeshColorAndOpacity;
+    const eachMeshMatricesPortion = inflatedData.eachMeshMatricesPortion;
 
     const eachEntityId = JSON.parse(inflatedData.eachEntityId);
-    const eachEntityPrimitiveInstancesPortion = inflatedData.eachEntityPrimitiveInstancesPortion;
-    const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
+    const eachEntityMeshesPortion = inflatedData.eachEntityMeshesPortion;
 
     const eachTileAABB = inflatedData.eachTileAABB;
-    const eachTileDecodeMatrix = inflatedData.eachTileDecodeMatrix;
     const eachTileEntitiesPortion = inflatedData.eachTileEntitiesPortion;
 
-    const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
-    const numPrimitiveInstances = primitiveInstances.length;
+    const numGeometries = eachGeometryVerticesPortion.length;
+    const numMeshes = eachMeshGeometriesPortion.length;
     const numEntities = eachEntityId.length;
     const numTiles = eachTileEntitiesPortion.length;
 
@@ -118,16 +133,53 @@ function validateData(inflatedData, xktModel) {
         return false;
     }
 
-    // Count instances of each primitive
+    // Count instances of each geometry
 
-    const primitiveReuseCounts = new Uint32Array(numPrimitives);
+    const geometryReuseCounts = new Uint32Array(numGeometries);
 
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
-        if (primitiveReuseCounts[primitiveIndex] !== undefined) {
-            primitiveReuseCounts[primitiveIndex]++;
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+        const geometryIndex = eachMeshGeometriesPortion[meshIndex];
+        if (geometryReuseCounts[geometryIndex] !== undefined) {
+            geometryReuseCounts[geometryIndex]++;
         } else {
-            primitiveReuseCounts[primitiveIndex] = 1;
+            geometryReuseCounts[geometryIndex] = 1;
+        }
+    }
+
+    // ASSERTIONS
+    // Check mesh --> geometry reuse counts
+
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+        const geometryIndex = eachMeshGeometriesPortion[meshIndex];
+        const xktGeometry = xktModel.geometriesList[geometryIndex];
+        if (!xktGeometry) {
+            console.error("xktModel.geometriesList[geometryIndex] not found");
+            return false;
+        }
+        if (xktGeometry.numInstances !== geometryReuseCounts[geometryIndex]) {
+            console.error("xktGeometry.numInstances !== geometryReuseCounts[geometryIndex]");
+            return false;
+        }
+    }
+
+    // ASSERTIONS
+    // Check geometry primitive types
+
+    for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
+        const xktGeometry = xktModel.geometriesList[geometryIndex];
+        if (!xktGeometry) {
+            console.error("xktModel.geometriesList[geometryIndex] not found");
+            return false;
+        }
+        switch (xktGeometry.primitiveType) {
+            case 0:
+                break;
+            case 1:
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
         }
     }
 
@@ -141,7 +193,6 @@ function validateData(inflatedData, xktModel) {
         const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
         const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
 
-        const tileDecodeMatrixIndex = tileIndex * 16;
         const tileAABBIndex = tileIndex * 6;
 
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
@@ -171,14 +222,10 @@ function validateData(inflatedData, xktModel) {
         for (let tileEntityIndex = firstTileEntityIndex; tileEntityIndex < lastTileEntityIndex; tileEntityIndex++) {
 
             const entityId = eachEntityId[tileEntityIndex];
-
-            const entityMatrixIndex = eachEntityMatricesPortion[tileEntityIndex];
-            const entityMatrix = matrices.slice(entityMatrixIndex, entityMatrixIndex + 16);
-
             const lastTileEntityIndex = (numEntities - 1);
             const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
-            const firstPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
-            const lastPrimitiveInstanceIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
+            const firstMeshIndex = eachEntityMeshesPortion [tileEntityIndex];
+            const lastMeshIndex = atLastTileEntity ? eachMeshGeometriesPortion.length : eachEntityMeshesPortion[tileEntityIndex + 1];
 
             // ASSERTIONS
 
@@ -194,81 +241,84 @@ function validateData(inflatedData, xktModel) {
                 return false;
             }
 
-            if (!compareArrays(entityMatrix, xktEntity.matrix)) {
-                console.error("compareArrays(entityMatrix, xktEntity.matrix) === false");
-                return false;
-            }
+            // Iterate each entity's meshes
 
-            // Iterate each entity's primitive instances
+            for (let meshIndex = firstMeshIndex; meshIndex < lastMeshIndex; meshIndex++) {
 
-            for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex < lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
+                const meshMatrixIndex = eachMeshMatricesPortion[meshIndex];
+                const meshMatrix = matrices.slice(meshMatrixIndex, meshMatrixIndex + 16);
 
-                const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-                const primitiveReuseCount = primitiveReuseCounts[primitiveIndex];
-                const isReusedPrimitive = (primitiveReuseCount > 1);
+                const color = decompressColor(eachMeshColorAndOpacity.subarray((meshIndex * 4), (meshIndex * 4) + 3));
+                const opacity = eachMeshColorAndOpacity[(meshIndex * 4) + 3] / 255.0;
 
-                const atLastPrimitive = (primitiveIndex === (numPrimitives - 1));
+                const geometryIndex = eachMeshGeometriesPortion[meshIndex];
+                const geometryReuseCount = geometryReuseCounts[geometryIndex];
+                const isReusedGeometry = (geometryReuseCount > 1);
 
-                const primitivePositions = positions.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? positions.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-                const primitiveNormals = normals.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? normals.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-                const primitiveIndices = indices.subarray(eachPrimitiveIndicesPortion [primitiveIndex], atLastPrimitive ? indices.length : eachPrimitiveIndicesPortion [primitiveIndex + 1]);
-                const primitiveEdgeIndices = edgeIndices.subarray(eachPrimitiveEdgeIndicesPortion [primitiveIndex], atLastPrimitive ? edgeIndices.length : eachPrimitiveEdgeIndicesPortion [primitiveIndex + 1]);
+                const atLastGeometry = (geometryIndex === (numGeometries - 1));
 
-                const color = decompressColor(eachPrimitiveColorAndOpacity.subarray((primitiveIndex * 4), (primitiveIndex * 4) + 3));
-                const opacity = eachPrimitiveColorAndOpacity[(primitiveIndex * 4) + 3] / 255.0;
+                const geometryPositions = positions.subarray(eachGeometryVerticesPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryVerticesPortion [geometryIndex + 1]);
+                const geometryNormals = normals.subarray(eachGeometryVerticesPortion [geometryIndex], atLastGeometry ? normals.length : eachGeometryVerticesPortion [geometryIndex + 1]);
+                const geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                const geometryEdgeIndices = edgeIndices.subarray(eachGeometryEdgeIndicesPortion [geometryIndex], atLastGeometry ? edgeIndices.length : eachGeometryEdgeIndicesPortion [geometryIndex + 1]);
 
                 // ASSERTIONS
 
-                const xktPrimitiveInstance = xktModel.primitiveInstancesList[primitiveInstancesIndex];
-                const xktPrimitive = xktModel.primitivesList[primitiveIndex];
+                const xktMesh = xktModel.meshesList[meshIndex];
+                const xktGeometry = xktModel.geometriesList[geometryIndex];
 
-                if (!xktPrimitiveInstance) {
-                    console.error("xktModel.primitiveInstancesList[primitiveInstancesIndex] not found");
+                if (!xktMesh) {
+                    console.error("xktModel.meshesList[meshIndex] not found");
                     return false;
                 }
 
-                if (!xktPrimitive) {
-                    console.error("xktModel.primitivesList[primitiveIndex] not found");
+                if (!xktGeometry) {
+                    console.error("xktModel.geometriesList[geometryIndex] not found");
                     return false;
                 }
 
-                if (xktPrimitiveInstance.primitive !== xktPrimitive) {
-                    console.error("xktPrimitiveInstance.primitive !== xktPrimitive");
+                if (!compareArrays(meshMatrix, xktMesh.matrix)) {
+                    console.error("compareArrays(meshMatrix, xktMesh.matrix) === false");
                     return false;
                 }
 
-                if (!compareArrays(primitivePositions, xktPrimitive.positions)) {
-                    console.error("compareArrays(primitivePositions, xktPrimitive.positions) === false");
+                if (!compareArrays(color, xktMesh.color)) {
+                    console.error("compareArrays(color, xktMesh.color) === false");
                     return false;
                 }
 
-                if (!compareArrays(primitiveNormals, xktPrimitive.normalsOctEncoded)) {
-                    console.error("compareArrays(primitiveNormals, xktPrimitive.normals) === false");
+                if (opacity !== xktMesh.opacity) {
+                    console.error("opacity !== xktMesh.opacity");
                     return false;
                 }
 
-                if (!compareArrays(primitiveIndices, xktPrimitive.indices)) {
-                    console.error("compareArrays(primitiveIndices, xktPrimitive.indices) === false");
+                if (xktMesh.geometry !== xktGeometry) {
+                    console.error("xktMesh.geometry !== xktGeometry");
                     return false;
                 }
 
-                if (!compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices)) {
-                    console.error("compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false");
+                if (!compareArrays(geometryPositions, xktGeometry.positionsQuantized)) {
+                    console.error("compareArrays(geometryPositions, xktGeometry.positions) === false");
                     return false;
                 }
 
-                if (!compareArrays(color, xktPrimitive.color)) {
-                    console.error("compareArrays(color, xktPrimitive.color) === false");
+                if (!compareArrays(geometryNormals, xktGeometry.normalsOctEncoded)) {
+                    console.error("compareArrays(geometryNormals, xktGeometry.normals) === false");
                     return false;
                 }
 
-                if (opacity !== xktPrimitive.opacity) {
-                    console.error("opacity !== xktPrimitive.opacity");
+                if (!compareArrays(geometryIndices, xktGeometry.indices)) {
+                    console.error("compareArrays(geometryIndices, xktGeometry.indices) === false");
                     return false;
                 }
 
-                if (primitiveReuseCount !== xktPrimitive.numInstances) {
-                    console.error("primitiveReuseCount !== xktPrimitive.numInstances");
+                if (!compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices)) {
+                    console.error("compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices) === false");
+                    return false;
+                }
+
+                if (geometryReuseCount !== xktGeometry.numInstances) {
+                    console.error("geometryReuseCount !== xktGeometry.numInstances");
                     return false;
                 }
             }
