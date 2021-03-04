@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>buildGridGeometry</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"/>
+
+    <style>
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+            background: lightBlue;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas id="myCanvas"></canvas>
+<div id="info">
+    <h1>buildGridGeometry</h1><br>
+
+    <div id="log">Loading JavaScript modules...</div>
+
+</div>
+</body>
+<script type="module">
+
+    import {
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "./../dist/xeokit-xkt-utils.es.js";
+
+    import {buildGridGeometry} from "../src/geometryBuilders/buildGridGeometry.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.camera.eye = [-10.59, 0.05, 13.57];
+    viewer.camera.look = [0, -5.75, 0];
+    viewer.camera.up = [0.18, 0.93, -0.25];
+
+    viewer.cameraControl.navMode = "orbit";
+    viewer.cameraControl.followPointer = true;
+
+    function log(msg) {
+        document.getElementById("log").innerHTML += "<br>" + msg;
+    }
+
+    log("Generating XKTModel..");
+
+    const xktModel = new XKTModel();
+
+    const grid = buildGridGeometry({
+        size: 1000,
+        divisions: 500
+    });
+
+    const xktGeometry = xktModel.createGeometry({
+        geometryId: "gridGeometry",
+        primitiveType: grid.primitiveType, // Will be "lines"
+        positions: grid.positions,
+        indices: grid.indices
+    });
+
+    const xktMesh = xktModel.createMesh({
+        meshId: "redGridMesh",
+        geometryId: "gridGeometry",
+        position: [-4, -6, -4],
+        scale: [1, 3, 1],
+        rotation: [0, 0, 0],
+        color: [1, 0, 0],
+        opacity: 1
+    });
+
+    const xktEntity = xktModel.createEntity({
+        entityId: "redGrid",
+        meshIds: ["redGridMesh"]
+    });
+
+    xktModel.finalize();
+
+    log("Writing XKTModel to array buffer..");
+
+    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+    log("Validating array buffer..");
+
+    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+
+    log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
+
+    log("Loading array buffer with XKTLoaderPlugin..");
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    const model = xktLoader.load({
+        id: "myModel",
+        xkt: xktArrayBuffer,
+        edges: true
+    });
+
+    viewer.cameraFlight.flyTo(viewer.scene);
+
+</script>
+</html>
