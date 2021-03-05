@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Composing an XKTModel from multiple files and geometries</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"/>
+
+    <style>
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+            background: lightBlue;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas id="myCanvas"></canvas>
+<div id="info">
+    <h1>Composing an XKTModel from multiple files and geometries</h1><br>
+
+    <div id="log">Loading JavaScript modules...</div>
+
+</div>
+</body>
+<script type="module">
+
+    import {
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "./../dist/xeokit-xkt-utils.es.js";
+
+    const {parseGLTFIntoXKTModel} = require("../dist/xeokit-xkt-utils.es.js");
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.camera.eye = [-10.59, 0.05, 13.57];
+    viewer.camera.look = [0, -5.75, 0];
+    viewer.camera.up = [0.18, 0.93, -0.25];
+
+    viewer.cameraControl.navMode = "orbit";
+    viewer.cameraControl.followPointer = true;
+
+    function log(msg) {
+        document.getElementById("log").innerHTML += "<br>" + msg;
+    }
+
+    log("Generating XKTModel..");
+
+    const xktModel = new XKTModel();
+
+    utils.loadJSON("./models/gltf/duplex/scene.gltf", async (json) => {
+        await parseGLTFIntoXKTModel(json, xktModel);
+    });
+
+    xktModel.finalize();
+
+    log("Writing XKTModel to array buffer..");
+
+    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+    log("Validating array buffer..");
+
+    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+
+    log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
+
+    log("Loading array buffer with XKTLoaderPlugin..");
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    const model = xktLoader.load({
+        id: "myModel",
+        xkt: xktArrayBuffer,
+        edges: true
+    });
+
+    viewer.cameraFlight.flyTo(viewer.scene);
+
+</script>
+</html>

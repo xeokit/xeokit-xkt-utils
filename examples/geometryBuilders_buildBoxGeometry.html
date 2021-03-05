@@ -33,12 +33,10 @@
 
     import {
         XKTModel,
+        buildBoxGeometry,
         writeXKTModelToArrayBuffer,
         validateXKTArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
-
-    import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
-    import {buildBoxGeometry} from "../src/geometryBuilders/buildBoxGeometry.js";
 
     const viewer = new Viewer({
         canvasId: "myCanvas",

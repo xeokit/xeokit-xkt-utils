@@ -11,42 +11,38 @@ class XKTGeometry {
 
     /**
      * @private
-     * @param {Number} geometryId Unique ID of the geometry in {@link XKTModel#geometries}.
-     * @param {String} primitiveType Type of this geometry - "triangles" so far.
-     * @param {Number} geometryIndex Index of this XKTGeometry in {@link XKTModel#geometriesList}.
-     * @param {Float64Array} positions Non-quantized 3D vertex positions.
-     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.
-     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.
-     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.
+     * @param {*} cfg Configuration for the XKTGeometry.
+     * @param {Number} cfg.geometryId Unique ID of the geometry in {@link XKTModel#geometries}.
+     * @param {String} cfg.primitiveType Type of this geometry - "triangles", "points" or "lines" so far.
+     * @param {Number} cfg.geometryIndex Index of this XKTGeometry in {@link XKTModel#geometriesList}.
+     * @param {Float64Array} cfg.positions Non-quantized 3D vertex positions.
+     * @param {Int8Array} cfg.normalsOctEncoded Oct-encoded vertex normals.
+     * @param {Uint8Array} cfg.colorsCompressed Integer RGB vertex colors.
+     * @param {Uint32Array} cfg.indices Indices to organize the vertex positions and normals into triangles.
+     * @param {Uint32Array} cfg.edgeIndices Indices to organize the vertex positions into edges.
      */
-    constructor(geometryId,
-                primitiveType,
-                geometryIndex,
-                positions,
-                normalsOctEncoded,
-                indices,
-                edgeIndices) {
+    constructor(cfg) {
 
         /**
          * Unique ID of this XKTGeometry in {@link XKTModel#geometries}.
          *
          * @type {Number}
          */
-        this.geometryId = geometryId;
+        this.geometryId = cfg.geometryId;
 
         /**
          * The type of primitive - "triangles" | "points" | "lines".
          *
          * @type {String}
          */
-        this.primitiveType = primitiveType;
+        this.primitiveType = cfg.primitiveType;
 
         /**
          * Index of this XKTGeometry in {@link XKTModel#geometriesList}.
          *
          * @type {Number}
          */
-        this.geometryIndex = geometryIndex;
+        this.geometryIndex = cfg.geometryIndex;
 
         /**
          * The number of {@link XKTMesh}s that reference this XKTGeometry.
@@ -58,42 +54,63 @@ class XKTGeometry {
         /**
          * Non-quantized 3D vertex positions.
          *
+         * Defined for all primitive types.
+         *
          * @type {Float64Array}
          */
-        this.positions = positions;
+        this.positions = cfg.positions;
 
         /**
          * Quantized vertex positions.
+         *
+         * Defined for all primitive types.
          *
          * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.
          *
          * @type {Uint16Array}
          */
-        this.positionsQuantized = new Uint16Array(positions.length);
+        this.positionsQuantized = new Uint16Array(cfg.positions.length);
 
         /**
          * Oct-encoded vertex normals.
          *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
          * @type {Int8Array}
          */
-        this.normalsOctEncoded = normalsOctEncoded;
+        this.normalsOctEncoded = cfg.normalsOctEncoded;
+
+        /**
+         * Compressed RGB vertex colors.
+         *
+         * Defined only for point primitives. Ignored for triangles and lines.
+         *
+         * @type {Float32Array}
+         */
+        this.colorsCompressed = cfg.colorsCompressed;
 
         /**
          * Indices that organize the vertex positions and normals as triangles.
          *
+         * Defined only for triangle and lines primitives. Ignored for points.
+         *
          * @type {Uint32Array}
          */
-        this.indices = indices;
+        this.indices = cfg.indices;
 
         /**
          * Indices that organize the vertex positions as edges.
          *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
          * @type {Uint32Array}
          */
-        this.edgeIndices = edgeIndices;
+        this.edgeIndices = cfg.edgeIndices;
 
         /**
          * When {@link XKTGeometry#primitiveType} is "triangles", this is ````true```` when this geometry is a watertight mesh.
+         *
+         * Defined only for triangle primitives. Ignored for points and lines.
          *
          * Set by {@link XKTModel#finalize}.
          *

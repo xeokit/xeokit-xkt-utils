@@ -42,16 +42,28 @@ function getModelData(xktModel) {
 
     let lenPositions = 0;
     let lenNormals = 0;
+    let lenColors = 0;
     let lenIndices = 0;
     let lenEdgeIndices = 0;
     let lenMatrices = 0;
 
     for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
         const geometry = geometriesList [geometryIndex];
-        lenPositions += geometry.positionsQuantized.length;
-        lenNormals += geometry.normalsOctEncoded.length;
-        lenIndices += geometry.indices.length;
-        lenEdgeIndices += geometry.edgeIndices.length;
+        if (geometry.positionsQuantized) {
+            lenPositions += geometry.positionsQuantized.length;
+        }
+        if (geometry.normalsOctEncoded) {
+            lenNormals += geometry.normalsOctEncoded.length;
+        }
+        if (geometry.colorsCompressed) {
+            lenColors += geometry.colorsCompressed.length;
+        }
+        if (geometry.indices) {
+            lenIndices += geometry.indices.length;
+        }
+        if (geometry.edgeIndices) {
+            lenEdgeIndices += geometry.edgeIndices.length;
+        }
     }
 
     for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
@@ -67,8 +79,9 @@ function getModelData(xktModel) {
 
         positions: new Uint16Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
+        colors: new Uint8Array(lenColors),
 
-        // Triangle and edge indices
+        // Indices
 
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
@@ -79,15 +92,19 @@ function getModelData(xktModel) {
 
         reusedGeometriesDecodeMatrix: new Float32Array(xktModel.reusedGeometriesDecodeMatrix), // A single, global vertex position de-quantization matrix for all reused geometries. Reused geometries are quantized to their collective Local-space AABB, and this matrix is derived from that AABB.
 
+        // Geometries
+
         eachGeometryPrimitiveType: new Uint8Array(numGeometries), // Primitive type for each geometry (0=solid triangles, 1=surface triangles, 2=lines, 3=points)
-        eachGeometryVerticesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.positions and data.normals
-        eachGeometryIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.indices
-        eachGeometryEdgeIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.edgeIndices
+        eachGeometryPositionsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.positions. Every primitive type has positions.
+        eachGeometryNormalsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.normals. If the next geometry has the same index, then this geometry has no normals.
+        eachGeometryColorsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.colors. If the next geometry has the same index, then this geometry has no colors.
+        eachGeometryIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.indices. If the next geometry has the same index, then this geometry has no indices.
+        eachGeometryEdgeIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.edgeIndices. If the next geometry has the same index, then this geometry has no edge indices.
 
         // Meshes are grouped in runs that are shared by the same entities
 
         eachMeshGeometriesPortion: new Uint32Array(numMeshes), // For each mesh, an index into the eachGeometry* arrays
-        eachMeshMatricesPortion: new Uint32Array(numEntities), // For each mesh that shares its geometry, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared geometry Local-space vertex positions. This is ignored for meshes that don't share geometries, because the vertex positions of non-shared geometries are pre-transformed into World-space.
+        eachMeshMatricesPortion: new Uint32Array(numMeshes), // For each mesh that shares its geometry, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared geometry Local-space vertex positions. This is ignored for meshes that don't share geometries, because the vertex positions of non-shared geometries are pre-transformed into World-space.
         eachMeshColorAndOpacity: new Uint8Array(numMeshes * 4), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
@@ -105,9 +122,10 @@ function getModelData(xktModel) {
 
     let countPositions = 0;
     let countNormals = 0;
+    let countColors = 0;
     let countIndices = 0;
     let countEdgeIndices = 0;
-    let countColors = 0;
+    let countMeshColors = 0;
 
     // Geometries
 
@@ -117,30 +135,38 @@ function getModelData(xktModel) {
 
         const geometry = geometriesList [geometryIndex];
 
-        data.positions.set(geometry.positionsQuantized, countPositions);
-        data.normals.set(geometry.normalsOctEncoded, countNormals);
-
-        data.indices.set(geometry.indices, countIndices);
-        data.edgeIndices.set(geometry.edgeIndices, countEdgeIndices);
-
-        let primitiveType = 0;
-        if (geometry.primitiveType === "triangles") {
-            primitiveType = (geometry.solid) ? 0 : 1;
-        } else if (geometry.primitiveType === "points") {
-            primitiveType = 2;
-        } else if (geometry.primitiveType === "lines") {
-            primitiveType = 3;
-        }
+        const primitiveType
+            = (geometry.primitiveType === "triangles")
+            ? (geometry.solid ? 0 : 1)
+            : (geometry.primitiveType === "points" ? 2 : 3)
 
         data.eachGeometryPrimitiveType [geometryIndex] = primitiveType;
-        data.eachGeometryVerticesPortion [geometryIndex] = countPositions;
+        data.eachGeometryPositionsPortion [geometryIndex] = countPositions;
+        data.eachGeometryNormalsPortion [geometryIndex] = countNormals;
+        data.eachGeometryColorsPortion [geometryIndex] = countColors;
         data.eachGeometryIndicesPortion [geometryIndex] = countIndices;
         data.eachGeometryEdgeIndicesPortion [geometryIndex] = countEdgeIndices;
 
-        countPositions += geometry.positions.length;
-        countNormals += geometry.normalsOctEncoded.length;
-        countIndices += geometry.indices.length;
-        countEdgeIndices += geometry.edgeIndices.length;
+        if (geometry.positionsQuantized) {
+            data.positions.set(geometry.positionsQuantized, countPositions);
+            countPositions += geometry.positionsQuantized.length;
+        }
+        if (geometry.normalsOctEncoded) {
+            data.normals.set(geometry.normalsOctEncoded, countNormals);
+            countNormals += geometry.normalsOctEncoded.length;
+        }
+        if (geometry.colorsCompressed) {
+            data.colors.set(geometry.colorsCompressed, countColors);
+            countColors += geometry.colorsCompressed.length;
+        }
+        if (geometry.indices) {
+            data.indices.set(geometry.indices, countIndices);
+            countIndices += geometry.indices.length;
+        }
+        if (geometry.edgeIndices) {
+            data.edgeIndices.set(geometry.edgeIndices, countEdgeIndices);
+            countEdgeIndices += geometry.edgeIndices.length;
+        }
     }
 
     // Meshes
@@ -157,12 +183,12 @@ function getModelData(xktModel) {
             matricesIndex += 16;
         }
 
-        data.eachMeshColorAndOpacity[countColors + 0] = Math.floor(mesh.color[0] * 255);
-        data.eachMeshColorAndOpacity[countColors + 1] = Math.floor(mesh.color[1] * 255);
-        data.eachMeshColorAndOpacity[countColors + 2] = Math.floor(mesh.color[2] * 255);
-        data.eachMeshColorAndOpacity[countColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshColorAndOpacity[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
+        data.eachMeshColorAndOpacity[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
+        data.eachMeshColorAndOpacity[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
+        data.eachMeshColorAndOpacity[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
 
-        countColors += 4;
+        countMeshColors += 4;
     }
 
     // Entities, geometry instances, and tiles
@@ -211,7 +237,6 @@ function getModelData(xktModel) {
         }
 
         const tileAABBIndex = tileIndex * 6;
-        const tileDecodeMatrixIndex = tileIndex * 16;
 
         data.eachTileAABB.set(tileAABB, tileAABBIndex);
     }
@@ -225,6 +250,7 @@ function deflateData(data) {
 
         positions: pako.deflate(data.positions.buffer),
         normals: pako.deflate(data.normals.buffer),
+        colors: pako.deflate(data.colors.buffer),
         indices: pako.deflate(data.indices.buffer),
         edgeIndices: pako.deflate(data.edgeIndices.buffer),
 
@@ -232,7 +258,9 @@ function deflateData(data) {
         reusedGeometriesDecodeMatrix: pako.deflate(data.reusedGeometriesDecodeMatrix.buffer),
 
         eachGeometryPrimitiveType: pako.deflate(data.eachGeometryPrimitiveType.buffer),
-        eachGeometryVerticesPortion: pako.deflate(data.eachGeometryVerticesPortion.buffer),
+        eachGeometryPositionsPortion: pako.deflate(data.eachGeometryPositionsPortion.buffer),
+        eachGeometryNormalsPortion: pako.deflate(data.eachGeometryNormalsPortion.buffer),
+        eachGeometryColorsPortion: pako.deflate(data.eachGeometryColorsPortion.buffer),
         eachGeometryIndicesPortion: pako.deflate(data.eachGeometryIndicesPortion.buffer),
         eachGeometryEdgeIndicesPortion: pako.deflate(data.eachGeometryEdgeIndicesPortion.buffer),
 
@@ -257,6 +285,8 @@ function createArrayBuffer(deflatedData) {
 
         deflatedData.positions,
         deflatedData.normals,
+        deflatedData.colors,
+
         deflatedData.indices,
         deflatedData.edgeIndices,
 
@@ -264,7 +294,9 @@ function createArrayBuffer(deflatedData) {
         deflatedData.reusedGeometriesDecodeMatrix,
 
         deflatedData.eachGeometryPrimitiveType,
-        deflatedData.eachGeometryVerticesPortion,
+        deflatedData.eachGeometryPositionsPortion,
+        deflatedData.eachGeometryNormalsPortion,
+        deflatedData.eachGeometryColorsPortion,
         deflatedData.eachGeometryIndicesPortion,
         deflatedData.eachGeometryEdgeIndicesPortion,
 

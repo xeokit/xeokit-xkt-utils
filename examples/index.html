@@ -32,17 +32,43 @@
     };
     var files = {
 
-        "XKTModel": [
-            "# Parse glTF into an XKTModel, serialize to XKT, then load into a xeokit Viewer",
-            "XKTModel_load_glTF_MAP",
-            "XKTModel_load_glTF_Duplex",
-            "XKTModel_load_glTF_Schependomlaan",
+        "File parsers": [
 
-            "# Programmatically build an XKTModel, serialize to XKT, then load into a xeokit Viewer",
-            "XKTModel_generate",
+            "# Using parser functions to convert files to XKT",
 
-            "# Jittering examples for reference",
-            "GLTFLoaderPlugin_load_glTF_MAP_jitter"
+            "parsers_glTF_MAP",
+            "parsers_glTF_MAP_jitter",
+            "parsers_glTF_Duplex",
+            "parsers_glTF_Schependomlaan",
+
+            "# Loading primitives from glTF",
+
+            "parsers_glTF_lines",
+            "parsers_glTF_points"
+        ],
+
+        "Generating geometry": [
+
+            "# Low-level tests that procedurally generate geometry within XKT files",
+
+            "generate_batching_triangles",
+            "generate_batching_points",
+            "generate_batching_lines",
+            "generate_instancing_triangles",
+            "generate_instancing_points",
+            "generate_instancing_lines"
+        ],
+
+        "Geometry generation helpers": [
+
+            "# Using helper functions to create primitive geometric shapes within XKT files",
+
+            "geometryBuilders_buildBoxGeometry",
+            "geometryBuilders_buildGridGeometry",
+            "geometryBuilders_buildPlaneGeometry",
+            "geometryBuilders_buildSphereGeometry",
+            "geometryBuilders_buildTorusGeometry",
+            "geometryBuilders_buildVectorTextGeometry"
         ]
     };
 

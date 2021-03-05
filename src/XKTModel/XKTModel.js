@@ -1,4 +1,4 @@
-import {math} from "./lib/math.js";
+import {math} from "../lib/math.js";
 import {geometryCompression} from "./lib/geometryCompression.js";
 import {buildEdgeIndices} from "./lib/buildEdgeIndices.js";
 import {isTriangleMeshSolid} from "./lib/isTriangleMeshSolid.js";
@@ -24,7 +24,7 @@ const kdTreeDimLength = new Float32Array(3);
  * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
  * * Each {@link XKTEntity} has {@link XKTMesh}s, which indicate the {@link XKTGeometry}s that comprise the {@link XKTEntity}.
- * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
+ * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}
  * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *
@@ -145,35 +145,57 @@ class XKTModel {
      * @param {Number[]} [params.position=[0,0,0]] Optional translation to immediately apply to ````positions````. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.scale=[1,1,1]] Optional scaling to immediately apply to ````positions````. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.rotation=[0,0,0]] Optional rotations to immediately apply to ````positions````, given as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
-     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}.
-     * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTGeometry}.
-     * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTGeometry}.
+     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}. Required for all primitive types.
+     * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Required for triangles primitives. Ignored for points and lines.
+     * @param {Number[]} [params.colors] RGB vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
+     * @param {Uint32Array} [params.indices] Indices for the {@link XKTGeometry}. Required for triangles and lines primitives. Ignored for points.
      * @returns {XKTGeometry} The new {@link XKTGeometry}.
      */
     createGeometry(params) {
 
         if (!params) {
-            throw "Parameters missing: params";
+            throw "Parameters expected: params";
         }
 
         if (params.geometryId === null || params.geometryId === undefined) {
-            throw "Parameter missing: params.geometryId";
+            throw "Parameter expected: params.geometryId";
         }
 
         if (!params.primitiveType) {
-            throw "Parameter missing: params.primitiveType";
+            throw "Parameter expected: params.primitiveType";
         }
 
         if (!params.positions) {
-            throw "Parameter missing: params.positions";
+            throw "Parameter expected: params.positions";
         }
 
-        if (!params.normals) {
-            throw "Parameter missing: params.normals";
+        const triangles = params.primitiveType === "triangles";
+        const points = params.primitiveType === "points";
+        const lines = params.primitiveType === "lines";
+
+        if (!triangles && !points && !lines) {
+            throw "Unsupported value for params.primitiveType: " + params.primitiveType + "' - supported values are 'triangles', 'points' and 'lines'";
         }
 
-        if (!params.indices) {
-            throw "Parameter missing: params.indices";
+        if (triangles) {
+            if (!params.normals) {
+                throw "Parameter expected for 'triangles' primitive: params.normals";
+            }
+            if (!params.indices) {
+                throw "Parameter expected for 'triangles' primitive: params.indices";
+            }
+        }
+
+        if (points) {
+            if (!params.colors) {
+                throw "Parameter expected for 'points' primitive: params.colors";
+            }
+        }
+
+        if (lines) {
+            if (!params.indices) {
+                throw "Parameter expected for 'lines' primitive: params.indices";
+            }
         }
 
         if (this.finalized) {
@@ -193,9 +215,6 @@ class XKTModel {
         const scale = params.scale;
         const rotation = params.rotation;
         const positions = params.positions.slice(); // May modify in #finalize
-        const normals = params.normals.slice(); // Will modify
-        const indices = params.indices;
-        const edgeIndices = buildEdgeIndices(positions, indices, null, 10);
 
         if (!matrix) {
             if (position || scale || rotation) {
@@ -219,16 +238,39 @@ class XKTModel {
             }
         }
 
-        // TODO: Oct-encode normals, in World-space if not reused, otherwise in Model-space?
+        const xktGeometryCfg = {
+            geometryId: geometryId,
+            geometryIndex: this.geometriesList.length,
+            primitiveType: primitiveType,
+            positions: positions
+        }
 
-        const modelNormalMatrix = math.inverseMat4(math.transposeMat4(matrix, tempMat4b), tempMat4);
-        const normalsOctEncoded = new Int8Array(normals.length);
+        if (triangles) {
+            xktGeometryCfg.normals = params.normals.slice(); // Will modify
+            xktGeometryCfg.normalsOctEncoded = new Int8Array(xktGeometryCfg.normals.length);
+            xktGeometryCfg.indices = params.indices;
+            xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, 10);
 
-        geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, normalsOctEncoded, 0);
+            const modelNormalMatrix = math.inverseMat4(math.transposeMat4(matrix, tempMat4b), tempMat4);
+            geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, xktGeometryCfg.normals, xktGeometryCfg.normals.length, xktGeometryCfg.normalsOctEncoded, 0); // TODO: Oct-encode normals, in World-space if not reused, otherwise in Model-space?
+        }
 
-        const geometryIndex = this.geometriesList.length;
+        if (points) {
+            const colors = params.colors;
+            const colorsCompressed = new Uint8Array(colors.length);
+            for (let i = 0, len = colors.length; i < len; i++) {
+                colorsCompressed[i] = Math.floor(colors[i] * 255);
+            }
+            xktGeometryCfg.colorsCompressed = colorsCompressed;
 
-        const geometry = new XKTGeometry(geometryId, primitiveType, geometryIndex, positions, normalsOctEncoded, indices, edgeIndices);
+            xktGeometryCfg.colorsCompressed = colors;
+        }
+
+        if (lines) {
+            xktGeometryCfg.indices = params.indices;
+        }
+
+        const geometry = new XKTGeometry(xktGeometryCfg);
 
         this.geometries[geometryId] = geometry;
         this.geometriesList.push(geometry);
@@ -255,20 +297,20 @@ class XKTModel {
     createMesh(params) {
 
         if (params.meshId === null || params.meshId === undefined) {
-            throw "Parameter missing: params.meshId";
+            throw "Parameter expected: params.meshId";
         }
 
         if (params.geometryId === null || params.geometryId === undefined) {
-            throw "Parameter missing: params.geometryId";
+            throw "Parameter expected: params.geometryId";
         }
 
-        if (!params.color) {
-            throw "Parameter missing: params.color";
-        }
-
-        if (params.opacity === null || params.opacity === undefined) {
-            throw "Parameter missing: params.opacity";
-        }
+        // if (!params.color) {
+        //     throw "Parameter expected: params.color";
+        // }
+        //
+        // if (params.opacity === null || params.opacity === undefined) {
+        //     throw "Parameter expected: params.opacity";
+        // }
 
         if (this.finalized) {
             throw "XKTModel has been finalized, can't add more meshes";
@@ -308,7 +350,14 @@ class XKTModel {
 
         const meshIndex = this.meshesList.length;
 
-        const mesh = new XKTMesh(params.meshId, meshIndex, matrix, geometry, params.color, params.opacity);
+        const mesh = new XKTMesh({
+            meshId: params.meshId,
+            meshIndex: meshIndex,
+            matrix: matrix,
+            geometry: geometry,
+            color: params.color,
+            opacity: params.opacity
+        });
 
         this.meshes[mesh.meshId] = mesh;
         this.meshesList.push(mesh);
@@ -329,15 +378,15 @@ class XKTModel {
     createEntity(params) {
 
         if (!params) {
-            throw "Parameters missing: params";
+            throw "Parameters expected: params";
         }
 
         if (params.entityId === null || params.entityId === undefined) {
-            throw "Parameter missing: params.entityId";
+            throw "Parameter expected: params.entityId";
         }
 
         if (!params.meshIds) {
-            throw "Parameter missing: params.meshIds";
+            throw "Parameter expected: params.meshIds";
         }
 
         if (this.finalized) {

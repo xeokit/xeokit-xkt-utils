@@ -24,7 +24,7 @@
 
 </div>
 </body>
-<script type="module">
+<script type="module" id="source">
 
     import {
         Viewer,
@@ -33,11 +33,10 @@
 
     import {
         XKTModel,
+        buildVectorTextGeometry,
         writeXKTModelToArrayBuffer,
         validateXKTArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
-
-    import {buildVectorTextGeometry} from "../src/geometryBuilders/buildVectorTextGeometry.js";
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
@@ -51,6 +50,8 @@
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
 
+    viewer.scene.linesMaterial.lineWidth = 1;
+
     function log(msg) {
         document.getElementById("log").innerHTML += "<br>" + msg;
     }
@@ -61,7 +62,7 @@
 
     const text = buildVectorTextGeometry({
         origin: [0, 0, 0],
-        text: "On the other side of the screen, it all looked so easy"
+        text: document.getElementById("source").innerText,
     });
 
     const xktGeometry = xktModel.createGeometry({
@@ -75,7 +76,7 @@
         meshId: "redTextMesh",
         geometryId: "textGeometry",
         position: [-4, -6, -4],
-        scale: [1, 3, 1],
+        scale: [1, 1, 1],
         rotation: [0, 0, 0],
         color: [1, 0, 0],
         opacity: 1

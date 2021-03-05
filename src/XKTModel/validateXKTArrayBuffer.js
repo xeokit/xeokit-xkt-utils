@@ -32,28 +32,46 @@ function extract(elements) {
 
     return {
 
+        // vertex attributes
+
         positions: elements[0],
         normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
+        colors: elements[2],
 
-        matrices: elements[4],
-        reusedGeometriesDecodeMatrix: elements[5],
+        // Indices
 
-        eachGeometryPrimitiveType: elements[6],
-        eachGeometryVerticesPortion: elements[7],
-        eachGeometryIndicesPortion: elements[8],
-        eachGeometryEdgeIndicesPortion: elements[9],
+        indices: elements[3],
+        edgeIndices: elements[4],
 
-        eachMeshGeometriesPortion: elements[10],
-        eachMeshMatricesPortion: elements[11],
-        eachMeshColorAndOpacity: elements[12],
+        // Transform matrices
 
-        eachEntityId: elements[13],
-        eachEntityMeshesPortion: elements[14],
+        matrices: elements[5],
 
-        eachTileAABB: elements[15],
-        eachTileEntitiesPortion: elements[16]
+        reusedGeometriesDecodeMatrix: elements[6],
+
+        // Geometries
+
+        eachGeometryPrimitiveType: elements[7],
+        eachGeometryPositionsPortion: elements[8],
+        eachGeometryNormalsPortion: elements[9],
+        eachGeometryColorsPortion: elements[10],
+
+        eachGeometryIndicesPortion: elements[11],
+        eachGeometryEdgeIndicesPortion: elements[12],
+
+        // Meshes are grouped in runs that are shared by the same entities
+
+        eachMeshGeometriesPortion: elements[13],
+        eachMeshMatricesPortion: elements[14],
+        eachMeshColorAndOpacity: elements[15],
+
+        // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
+
+        eachEntityId: elements[16],
+        eachEntityMeshesPortion: elements[17],
+
+        eachTileAABB: elements[18],
+        eachTileEntitiesPortion: elements[19]
     };
 }
 
@@ -63,6 +81,8 @@ function inflate(deflatedData) {
 
         positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
         normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
+        colors: new Uint8Array(pako.inflate(deflatedData.colors).buffer),
+
         indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
         edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
 
@@ -70,7 +90,9 @@ function inflate(deflatedData) {
         reusedGeometriesDecodeMatrix: new Float32Array(pako.inflate(deflatedData.reusedGeometriesDecodeMatrix).buffer),
 
         eachGeometryPrimitiveType: new Uint8Array(pako.inflate(deflatedData.eachGeometryPrimitiveType).buffer),
-        eachGeometryVerticesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryVerticesPortion).buffer),
+        eachGeometryPositionsPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryPositionsPortion).buffer),
+        eachGeometryNormalsPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryNormalsPortion).buffer),
+        eachGeometryColorsPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryColorsPortion).buffer),
         eachGeometryIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryIndicesPortion).buffer),
         eachGeometryEdgeIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryEdgeIndicesPortion).buffer),
 
@@ -100,6 +122,8 @@ function validateData(inflatedData, xktModel) {
 
     const positions = inflatedData.positions;
     const normals = inflatedData.normals;
+    const colors = inflatedData.colors;
+
     const indices = inflatedData.indices;
     const edgeIndices = inflatedData.edgeIndices;
 
@@ -107,7 +131,9 @@ function validateData(inflatedData, xktModel) {
     const reusedGeometriesDecodeMatrix = inflatedData.reusedGeometriesDecodeMatrix;
 
     const eachGeometryPrimitiveType = inflatedData.eachGeometryPrimitiveType;
-    const eachGeometryVerticesPortion = inflatedData.eachGeometryVerticesPortion;
+    const eachGeometryPositionsPortion = inflatedData.eachGeometryPositionsPortion;
+    const eachGeometryNormalsPortion = inflatedData.eachGeometryNormalsPortion;
+    const eachGeometryColorsPortion = inflatedData.eachGeometryColorsPortion;
     const eachGeometryIndicesPortion = inflatedData.eachGeometryIndicesPortion;
     const eachGeometryEdgeIndicesPortion = inflatedData.eachGeometryEdgeIndicesPortion;
 
@@ -121,7 +147,7 @@ function validateData(inflatedData, xktModel) {
     const eachTileAABB = inflatedData.eachTileAABB;
     const eachTileEntitiesPortion = inflatedData.eachTileEntitiesPortion;
 
-    const numGeometries = eachGeometryVerticesPortion.length;
+    const numGeometries = eachGeometryPositionsPortion.length;
     const numMeshes = eachMeshGeometriesPortion.length;
     const numEntities = eachEntityId.length;
     const numTiles = eachTileEntitiesPortion.length;
@@ -171,15 +197,35 @@ function validateData(inflatedData, xktModel) {
             console.error("xktModel.geometriesList[geometryIndex] not found");
             return false;
         }
-        switch (xktGeometry.primitiveType) {
+        const geometryPrimitiveType = eachGeometryPrimitiveType[geometryIndex];
+        switch (geometryPrimitiveType) {
             case 0:
+                if (xktGeometry.primitiveType !== "triangles") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
                 break;
             case 1:
+                if (xktGeometry.primitiveType !== "triangles") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
+                break;
+            case 2:
+                if (xktGeometry.primitiveType !== "points") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
                 break;
             case 3:
+                if (xktGeometry.primitiveType !== "lines") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
                 break;
-            case 4:
-                break;
+            default:
+                console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                return false;
         }
     }
 
@@ -257,10 +303,7 @@ function validateData(inflatedData, xktModel) {
 
                 const atLastGeometry = (geometryIndex === (numGeometries - 1));
 
-                const geometryPositions = positions.subarray(eachGeometryVerticesPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryVerticesPortion [geometryIndex + 1]);
-                const geometryNormals = normals.subarray(eachGeometryVerticesPortion [geometryIndex], atLastGeometry ? normals.length : eachGeometryVerticesPortion [geometryIndex + 1]);
-                const geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
-                const geometryEdgeIndices = edgeIndices.subarray(eachGeometryEdgeIndicesPortion [geometryIndex], atLastGeometry ? edgeIndices.length : eachGeometryEdgeIndicesPortion [geometryIndex + 1]);
+                const primitiveType = eachGeometryPrimitiveType[geometryIndex];
 
                 // ASSERTIONS
 
@@ -277,7 +320,7 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                if (!compareArrays(meshMatrix, xktMesh.matrix)) {
+                if (isReusedGeometry && !compareArrays(meshMatrix, xktMesh.matrix)) {
                     console.error("compareArrays(meshMatrix, xktMesh.matrix) === false");
                     return false;
                 }
@@ -297,22 +340,63 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                if (!compareArrays(geometryPositions, xktGeometry.positionsQuantized)) {
-                    console.error("compareArrays(geometryPositions, xktGeometry.positions) === false");
+                let primitiveName;
+                let geometryPositions;
+                let geometryNormals;
+                let geometryColors;
+                let geometryIndices;
+                let geometryEdgeIndices;
+
+                switch (primitiveType) {
+                    case 0: // Solid
+                        primitiveName = "triangles";
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryNormals = normals.subarray(eachGeometryNormalsPortion [geometryIndex], atLastGeometry ? normals.length : eachGeometryNormalsPortion [geometryIndex + 1]);
+                        geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                        geometryEdgeIndices = edgeIndices.subarray(eachGeometryEdgeIndicesPortion [geometryIndex], atLastGeometry ? edgeIndices.length : eachGeometryEdgeIndicesPortion [geometryIndex + 1]);
+                        break;
+                    case 1: // Surface
+                        primitiveName = "triangles";
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryNormals = normals.subarray(eachGeometryNormalsPortion [geometryIndex], atLastGeometry ? normals.length : eachGeometryNormalsPortion [geometryIndex + 1]);
+                        geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                        geometryEdgeIndices = edgeIndices.subarray(eachGeometryEdgeIndicesPortion [geometryIndex], atLastGeometry ? edgeIndices.length : eachGeometryEdgeIndicesPortion [geometryIndex + 1]);
+                        break;
+                    case 2:
+                        primitiveName = "points";
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryColors = colors.subarray(eachGeometryColorsPortion [geometryIndex], atLastGeometry ? colors.length : eachGeometryColorsPortion [geometryIndex + 1]);
+                        break;
+                    case 3:
+                        primitiveName = "lines";
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                        break;
+                    default:
+                        continue;
+                }
+
+                if (geometryPositions && !compareArrays(geometryPositions, xktGeometry.positionsQuantized)) {
+                    console.error("compareArrays(geometryPositions, xktGeometry.positionsQuantized) === false");
                     return false;
                 }
 
-                if (!compareArrays(geometryNormals, xktGeometry.normalsOctEncoded)) {
-                    console.error("compareArrays(geometryNormals, xktGeometry.normals) === false");
+                if (geometryNormals && !compareArrays(geometryNormals, xktGeometry.normalsOctEncoded)) {
+                    console.error("compareArrays(geometryNormals, xktGeometry.normalsOctEncoded) === false");
                     return false;
                 }
 
-                if (!compareArrays(geometryIndices, xktGeometry.indices)) {
+                if (geometryColors && !compareArrays(geometryColors, xktGeometry.colorsCompressed)) {
+                    console.error("compareArrays(geometryColors, xktGeometry.colorsCompressed) === false");
+                    return false;
+                }
+
+                if (geometryIndices && !compareArrays(geometryIndices, xktGeometry.indices)) {
                     console.error("compareArrays(geometryIndices, xktGeometry.indices) === false");
                     return false;
                 }
 
-                if (!compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices)) {
+                if (geometryEdgeIndices && !compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices)) {
                     console.error("compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices) === false");
                     return false;
                 }

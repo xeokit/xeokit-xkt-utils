@@ -12,21 +12,21 @@ class XKTMesh {
     /**
      * @private
      */
-    constructor(meshId, meshIndex, matrix, geometry, color, opacity) {
+    constructor(cfg) {
 
         /**
          * Unique ID of this XKTMesh in {@link XKTModel#meshes}.
          *
          * @type {Number}
          */
-        this.meshId = meshId;
+        this.meshId = cfg.meshId;
 
         /**
          * Index of this XKTMesh in {@link XKTModel#meshesList};
          *
          * @type {Number}
          */
-        this.meshIndex = meshIndex;
+        this.meshIndex = cfg.meshIndex;
 
         /**
          * The 4x4 modeling transform matrix.
@@ -40,28 +40,28 @@ class XKTMesh {
          *
          * @type {Number[]}
          */
-        this.matrix = matrix;
+        this.matrix = cfg.matrix;
 
         /**
          * The instanced {@link XKTGeometry}.
          *
          * @type {XKTGeometry}
          */
-        this.geometry = geometry;
+        this.geometry = cfg.geometry;
 
         /**
          * RGB color of this XKTMesh.
          *
          * @type {Uint8Array}
          */
-        this.color = color;
+        this.color = cfg.color || new Uint8Array(3);
 
         /**
          * Opacity of this XKTMesh.
          *
          * @type {Number}
          */
-        this.opacity = opacity;
+        this.opacity = (cfg.opacity !== undefined && cfg.opacity !== null) ? cfg.opacity : 1.0;
 
         /**
          * The owner {@link XKTEntity}.

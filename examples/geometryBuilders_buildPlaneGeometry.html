@@ -33,11 +33,10 @@
 
     import {
         XKTModel,
+        buildPlaneGeometry,
         writeXKTModelToArrayBuffer,
         validateXKTArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
-
-    import {buildPlaneGeometry} from "../src/geometryBuilders/buildPlaneGeometry.js";
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
@@ -69,8 +68,9 @@
 
     const xktGeometry = xktModel.createGeometry({
         geometryId: "planeGeometry",
-        primitiveType: plane.primitiveType, // Will be "lines"
+        primitiveType: plane.primitiveType, // Will be "triangles"
         positions: plane.positions,
+        normals: plane.normals,
         indices: plane.indices
     });
 

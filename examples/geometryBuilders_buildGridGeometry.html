@@ -33,11 +33,10 @@
 
     import {
         XKTModel,
+        buildGridGeometry,
         writeXKTModelToArrayBuffer,
         validateXKTArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
-
-    import {buildGridGeometry} from "../src/geometryBuilders/buildGridGeometry.js";
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
@@ -61,7 +60,7 @@
 
     const grid = buildGridGeometry({
         size: 1000,
-        divisions: 500
+        divisions: 50
     });
 
     const xktGeometry = xktModel.createGeometry({
