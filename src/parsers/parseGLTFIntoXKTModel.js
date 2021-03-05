@@ -1,5 +1,5 @@
-import {utils} from "./lib/utils.js";
-import {math} from "./lib/math.js";
+import {utils} from "../XKTModel/lib/utils.js";
+import {math} from "../lib/math.js";
 
 // HACK: Allows node.js to find atob()
 let atob2;
@@ -32,13 +32,11 @@ const WEBGL_TYPE_SIZES = {
 /**
  * Parses glTF JSON into an {@link XKTModel}.
  *
- * Expects the XKTModel to be freshly instantiated, and calls {@link XKTModel#finalize} on the XKTModel before returning.
- *
  * @param {Object} gltf The glTF JSON.
  * @param {XKTModel} model XKTModel to parse into
  * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
  */
-async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
+async function parseGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
         gltf: gltf,
         getAttachment: getAttachment || (() => {
@@ -351,14 +349,16 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                     if (!parsingCtx.geometryCreated[geometryId]) {
 
                         const geometryArrays = {};
+
                         parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
 
                         model.createGeometry({
                             geometryId: geometryId,
-                            primitiveType: "triangles",
+                            primitiveType: geometryArrays.primitive,
                             matrix: geometryMatrix,
                             positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused geometry positions
                             normals: geometryArrays.normals,
+                            colors: geometryArrays.colors,
                             indices: geometryArrays.indices
                         });
 
@@ -407,7 +407,33 @@ function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
     if (!attributes) {
         return;
     }
-    geometryArrays.primitive = "triangles";
+    switch (primitiveInfo.mode) {
+        case 0: // POINTS
+            geometryArrays.primitive = "points";
+            break;
+        case 1: // LINES
+            geometryArrays.primitive = "lines";
+            break;
+        case 2: // LINE_LOOP
+            // TODO: convert
+            geometryArrays.primitive = "lines";
+            break;
+        case 3: // LINE_STRIP
+            // TODO: convert
+            geometryArrays.primitive = "lines";
+            break;
+        case 4: // TRIANGLES
+            geometryArrays.primitive = "triangles";
+            break;
+        case 5: // TRIANGLE_STRIP
+            // TODO: convert
+            geometryArrays.primitive = "triangles";
+            break;
+        case 6: // TRIANGLE_FAN
+            // TODO: convert
+            geometryArrays.primitive = "triangles";
+            break;
+    }
     const accessors = parsingCtx.gltf.accessors;
     const indicesIndex = primitiveInfo.indices;
     if (indicesIndex !== null && indicesIndex !== undefined) {
@@ -423,6 +449,11 @@ function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
     if (normalsIndex !== null && normalsIndex !== undefined) {
         const accessorInfo = accessors[normalsIndex];
         geometryArrays.normals = parseAccessorTypedArray(parsingCtx, accessorInfo);
+    }
+    const colorsIndex = attributes.COLOR_0;
+    if (colorsIndex !== null && colorsIndex !== undefined) {
+        const accessorInfo = accessors[colorsIndex];
+        geometryArrays.colors = parseAccessorTypedArray(parsingCtx, accessorInfo);
     }
 }
 
@@ -440,4 +471,4 @@ function parseAccessorTypedArray(parsingCtx, accessorInfo) {
 }
 
 
-export {loadGLTFIntoXKTModel};
+export {parseGLTFIntoXKTModel};

@@ -1,4 +1,4 @@
-import {math} from "./math.js";
+import {math} from "../../lib/math.js";
 
 var quantizePositions = function (positions, lenPositions, aabb, quantizedPositions) {
     const xmin = aabb[0];
