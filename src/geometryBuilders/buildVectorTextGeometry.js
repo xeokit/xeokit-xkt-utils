@@ -1632,10 +1632,7 @@ function buildVectorTextGeometry(cfg = {}) {
 
     var positions = [];
     var indices = [];
-    var text = cfg.text;
-    if (utils.isNumeric(text)) {
-        text = "" + text;
-    }
+    var text = "" + cfg.text;
     var lines = (text || "").split("\n");
     var countVerts = 0;
     var y = 0;
@@ -1715,11 +1712,11 @@ function buildVectorTextGeometry(cfg = {}) {
         y -= 35 * mag * size;
     }
 
-    return utils.apply(cfg, {
-        primitive: "lines",
+    return {
+        primitiveType: "lines",
         positions: positions,
         indices: indices
-    });
+    };
 }
 
 
