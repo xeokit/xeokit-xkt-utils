@@ -325,7 +325,7 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                if (!compareArrays(color, xktMesh.color)) {
+                if (xktMesh.color && !compareArrays(color, xktMesh.color)) {
                     console.error("compareArrays(color, xktMesh.color) === false");
                     return false;
                 }

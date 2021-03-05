@@ -147,7 +147,8 @@ class XKTModel {
      * @param {Number[]} [params.rotation=[0,0,0]] Optional rotations to immediately apply to ````positions````, given as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
      * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}. Required for all primitive types.
      * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Required for triangles primitives. Ignored for points and lines.
-     * @param {Number[]} [params.colors] RGB vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
+     * @param {Number[]} [params.colors] Floating-point RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
+     * @param {Number[]} [params.colorsCompressed] Integer RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Uint32Array} [params.indices] Indices for the {@link XKTGeometry}. Required for triangles and lines primitives. Ignored for points.
      * @returns {XKTGeometry} The new {@link XKTGeometry}.
      */
@@ -187,8 +188,8 @@ class XKTModel {
         }
 
         if (points) {
-            if (!params.colors) {
-                throw "Parameter expected for 'points' primitive: params.colors";
+            if (!params.colors && !params.colorsCompressed) {
+                throw "Parameter expected for 'points' primitive: params.colors or params.colorsCompressed";
             }
         }
 
@@ -256,14 +257,16 @@ class XKTModel {
         }
 
         if (points) {
-            const colors = params.colors;
-            const colorsCompressed = new Uint8Array(colors.length);
-            for (let i = 0, len = colors.length; i < len; i++) {
-                colorsCompressed[i] = Math.floor(colors[i] * 255);
+            if (params.colorsCompressed) {
+                xktGeometryCfg.colorsCompressed = new Uint8Array(params.colorsCompressed);
+            } else {
+                const colors = params.colors;
+                const colorsCompressed = new Uint8Array(colors.length);
+                for (let i = 0, len = colors.length; i < len; i++) {
+                    colorsCompressed[i] = Math.floor(colors[i] * 255);
+                }
+                xktGeometryCfg.colorsCompressed = colorsCompressed;
             }
-            xktGeometryCfg.colorsCompressed = colorsCompressed;
-
-            xktGeometryCfg.colorsCompressed = colors;
         }
 
         if (lines) {

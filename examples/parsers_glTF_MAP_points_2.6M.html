@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>XKTModel - Loading point primitives from glTF</title>
+    <title>XKTModel - Loading point cloud from glTF - 2.6M points</title>
     <link href="css/styles.css" type="text/css" rel="stylesheet"/>
 
     <style>
         #myCanvas {
             width: 100%;
             height: 100%;
-            background: #000000;
+            background: #ffffff;
         }
     </style>
 
@@ -18,9 +18,9 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Loading point primitives
-        from glTF</h1><br>
-
+    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Loading point cloud
+        from glTF - 2.6M points</h1><br>
+    <p>Model courtesy of <a href="https://bimdata.io">BIMData</a></p><br>
     <div id="log">Loading JavaScript modules...</div>
 
 </div>
@@ -51,7 +51,7 @@
     const viewer = new Viewer({
         canvasId: "myCanvas",
         transparent: true,
-        logarithmicDepthBuffer:false
+        logarithmicDepthBuffer: false
     });
 
     viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
