@@ -1,5 +1,5 @@
 /**
- * @desc Creates box-shaped geometry arrays.
+ * @desc Creates box-shaped triangle mesh geometry arrays.
  *
  * ## Usage
  *
@@ -11,6 +11,7 @@
  * const xktModel = new XKTModel();
  *
  * const box = buildBoxGeometry({
+ *     primitiveType: "triangles" // or "lines"
  *     center: [0,0,0],
  *     xSize: 1,  // Half-size on each axis
  *     ySize: 1,

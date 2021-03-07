@@ -30,26 +30,40 @@ const WEBGL_TYPE_SIZES = {
 };
 
 /**
- * Parses glTF JSON into an {@link XKTModel}.
+ * @desc Parses glTF JSON into an {@link XKTModel}.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then load a glTF model into it.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_glTF_Duplex)]
+ *
+ * ````javascript
+ * utils.loadJSON("./models/gltf/duplex/scene.gltf", async (json) => {
+ *
+ *     const xktModel = new XKTModel();
+ *
+ *     parseGLTFIntoXKTModel(json, xktModel);
+ *
+ *     xktModel.finalize();
+ * });
+ * ````
  *
  * @param {Object} gltf The glTF JSON.
- * @param {XKTModel} model XKTModel to parse into
+ * @param {XKTModel} xktModel XKTModel to parse into
  * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
  */
-async function parseGLTFIntoXKTModel(gltf, model, getAttachment) {
+async function parseGLTFIntoXKTModel(gltf, xktModel, getAttachment) {
     const parsingCtx = {
         gltf: gltf,
         getAttachment: getAttachment || (() => {
             throw new Error('You must define getAttachment() method to convert glTF with external resources')
         }),
-        model: model,
+        xktModel: xktModel,
         geometryCreated: {},
         nextGeometryId: 0,
         nextMeshId: 0,
-        nextDefaultEntityId: 0,
-        nodes: [],
-        meshInstanceCounts: {},
-        _meshPrimitiveIds: {}
+        nextDefaultEntityId: 0
     };
     await parseBuffers(parsingCtx);
     parseBufferViews(parsingCtx);
@@ -74,8 +88,7 @@ async function parseBuffer(parsingCtx, bufferInfo) {
 }
 
 async function parseArrayBuffer(parsingCtx, uri) {
-    // Check for data: URI
-    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
     const dataUriRegexResult = uri.match(dataUriRegex);
     if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
         const isBase64 = !!dataUriRegexResult[2];
@@ -90,17 +103,15 @@ async function parseArrayBuffer(parsingCtx, uri) {
             view[i] = data.charCodeAt(i);
         }
         return buffer;
-
-    } else {
-        // Uri is a path to a file
+    } else { // Uri is a path to a file
         const contents = await parsingCtx.getAttachment(uri);
         return toArrayBuffer(contents);
     }
 }
 
 function toArrayBuffer(buf) {
-    var ab = new ArrayBuffer(buf.length);
-    var view = new Uint8Array(ab);
+    const ab = new ArrayBuffer(buf.length);
+    const view = new Uint8Array(ab);
     for (let i = 0; i < buf.length; ++i) {
         view[i] = buf[i];
     }
@@ -110,7 +121,7 @@ function toArrayBuffer(buf) {
 function parseBufferViews(parsingCtx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
     const bufferViewsInfo = parsingCtx.gltf.bufferViews;
     if (bufferViewsInfo) {
-        for (var i = 0, len = bufferViewsInfo.length; i < len; i++) {
+        for (let i = 0, len = bufferViewsInfo.length; i < len; i++) {
             parseBufferView(parsingCtx, bufferViewsInfo[i]);
         }
     }
@@ -127,7 +138,7 @@ function parseBufferView(parsingCtx, bufferViewInfo) {
 function freeBuffers(parsingCtx) { // Deletes the "_buffer" properties from the glTF "buffer" elements, to save memory
     const buffers = parsingCtx.gltf.buffers;
     if (buffers) {
-        for (var i = 0, len = buffers.length; i < len; i++) {
+        for (let i = 0, len = buffers.length; i < len; i++) {
             buffers[i]._buffer = null;
         }
     }
@@ -136,11 +147,9 @@ function freeBuffers(parsingCtx) { // Deletes the "_buffer" properties from the 
 function parseMaterials(parsingCtx) {
     const materialsInfo = parsingCtx.gltf.materials;
     if (materialsInfo) {
-        var materialInfo;
-        var material;
-        for (var i = 0, len = materialsInfo.length; i < len; i++) {
-            materialInfo = materialsInfo[i];
-            material = parseMaterialColor(parsingCtx, materialInfo);
+        for (let i = 0, len = materialsInfo.length; i < len; i++) {
+            const materialInfo = materialsInfo[i];
+            const material = parseMaterialColor(parsingCtx, materialInfo);
             materialInfo._rgbaColor = material;
         }
     }
@@ -196,56 +205,16 @@ function parseDefaultScene(parsingCtx) {
     if (!defaultSceneInfo) {
         throw new Error("glTF has no default scene");
     }
-    prepareSceneCountMeshes(parsingCtx, defaultSceneInfo);
     parseScene(parsingCtx, defaultSceneInfo);
 }
 
-function prepareSceneCountMeshes(parsingCtx, sceneInfo) {
-    const nodes = sceneInfo.nodes;
-    if (!nodes) {
-        return;
-    }
-    for (var i = 0, len = nodes.length; i < len; i++) {
-        const glTFNode = parsingCtx.gltf.nodes[nodes[i]];
-        if (glTFNode) {
-            prepareNodeCountMeshes(parsingCtx, glTFNode);
-        }
-    }
-}
-
-function prepareNodeCountMeshes(parsingCtx, glTFNode) {
-
-    const gltf = parsingCtx.gltf;
-
-    const meshId = glTFNode.mesh;
-
-    if (meshId !== undefined) {
-        if (parsingCtx.meshInstanceCounts[meshId] !== undefined) {
-            parsingCtx.meshInstanceCounts [meshId]++;
-        } else {
-            parsingCtx.meshInstanceCounts [meshId] = 1;
-        }
-    }
-
-    if (glTFNode.children) {
-        const children = glTFNode.children;
-        for (let i = 0, len = children.length; i < len; i++) {
-            const childNodeIdx = children[i];
-            const childGLTFNode = gltf.nodes[childNodeIdx];
-            if (!childGLTFNode) {
-                continue;
-            }
-            prepareNodeCountMeshes(parsingCtx, childGLTFNode);
-        }
-    }
-}
 
 function parseScene(parsingCtx, sceneInfo) {
     const nodes = sceneInfo.nodes;
     if (!nodes) {
         return;
     }
-    for (var i = 0, len = nodes.length; i < len; i++) {
+    for (let i = 0, len = nodes.length; i < len; i++) {
         const glTFNode = parsingCtx.gltf.nodes[nodes[i]];
         if (glTFNode) {
             parseNode(parsingCtx, glTFNode, null);
@@ -253,10 +222,12 @@ function parseScene(parsingCtx, sceneInfo) {
     }
 }
 
+let count = 0;
+
 function parseNode(parsingCtx, glTFNode, matrix) {
 
     const gltf = parsingCtx.gltf;
-    const model = parsingCtx.model;
+    const xktModel = parsingCtx.xktModel;
 
     let localMatrix;
 
@@ -304,33 +275,11 @@ function parseNode(parsingCtx, glTFNode, matrix) {
 
         if (meshInfo) {
 
-            let primitivesReused = (parsingCtx.meshInstanceCounts [gltfMeshId] > 1);
-
-            let geometryMatrix;
-            let meshMatrix;
-
-            if (primitivesReused) {
-
-                // Primitives in a mesh that is shared are left in Model-space
-                // Entities that instance those geometries will use their matrix to transform the primitives into World-space
-
-                geometryMatrix = math.identityMat4();
-                meshMatrix = matrix ? matrix.slice() : math.identityMat4();
-
-            } else {
-
-                // glTF meshes do not share primitives - each geometry belongs to one mesh
-                // Primitives in a mesh that's not shared get baked into World-space
-
-                geometryMatrix = matrix ? matrix.slice() : math.identityMat4();
-                meshMatrix = math.identityMat4();
-            }
-
             const numPrimitivesInMesh = meshInfo.primitives.length;
 
             if (numPrimitivesInMesh > 0) {
 
-                const meshIds = [];
+                const xktMeshIds = [];
 
                 for (let i = 0; i < numPrimitivesInMesh; i++) {
 
@@ -340,49 +289,57 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                     const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
                     const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
 
-                    const geometryId = glTFNode.mesh + "." + i;
+                    const xktGeometryId = createPrimitiveGeometryHash(primitiveInfo);
 
-                    ////////////////////////////////////////////////////////////////////////////////////////////////////
-                    // TODO: Reuse unique glTF geometries, not glTF meshes
-                    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                    if (!parsingCtx.geometryCreated[geometryId]) {
+                    if (!parsingCtx.geometryCreated[xktGeometryId]) {
 
                         const geometryArrays = {};
 
                         parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
 
-                        model.createGeometry({
-                            geometryId: geometryId,
+                        const colors = geometryArrays.colors;
+                        
+                        let colorsCompressed;
+                        
+                        if (geometryArrays.colors) {
+                            colorsCompressed = [];
+                            for (let j = 0, lenj = colors.length; j < lenj; j += 4) {
+                                colorsCompressed.push(colors[j + 0]);
+                                colorsCompressed.push(colors[j + 1]);
+                                colorsCompressed.push(colors[j + 2]);
+                            }
+                        }
+
+                        xktModel.createGeometry({
+                            geometryId: xktGeometryId,
                             primitiveType: geometryArrays.primitive,
-                            matrix: geometryMatrix,
-                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused geometry positions
+                            positions: geometryArrays.positions,
                             normals: geometryArrays.normals,
-                            colors: geometryArrays.colors,
+                            colorsCompressed: colorsCompressed,
                             indices: geometryArrays.indices
                         });
 
-                        parsingCtx.geometryCreated[geometryId] = true;
+                        parsingCtx.geometryCreated[xktGeometryId] = true;
                     }
 
-                    const meshId = parsingCtx.nextMeshId++;
-                    
-                    model.createMesh({
-                        meshId: meshId,
-                        geometryId: geometryId,
-                        matrix: meshMatrix,
+                    const xktMeshId = parsingCtx.nextMeshId++;
+
+                    xktModel.createMesh({
+                        meshId: xktMeshId,
+                        geometryId: xktGeometryId,
+                        matrix: matrix ? matrix.slice() : math.identityMat4(),
                         color: color,
                         opacity: opacity
                     });
-                    
-                    meshIds.push(meshId);
-                }
-                
-                const entityId = glTFNode.name || ("entity" + parsingCtx.nextDefaultEntityId++);
 
-                model.createEntity({
-                    entityId: entityId,
-                    meshIds: meshIds
+                    xktMeshIds.push(xktMeshId);
+                }
+
+                const xktEntityId = glTFNode.name || ("entity" + parsingCtx.nextDefaultEntityId++);
+
+                xktModel.createEntity({
+                    entityId: xktEntityId,
+                    meshIds: xktMeshIds
                 });
             }
         }
@@ -400,6 +357,20 @@ function parseNode(parsingCtx, glTFNode, matrix) {
             parseNode(parsingCtx, childGLTFNode, matrix);
         }
     }
+}
+
+function createPrimitiveGeometryHash(primitiveInfo) {
+    const attributes = primitiveInfo.attributes;
+    if (!attributes) {
+        return "empty";
+    }
+    return [
+        primitiveInfo.mode,
+        (primitiveInfo.indices !== null && primitiveInfo.indices !== undefined) ? primitiveInfo.indices : "-",
+        (primitiveInfo.positions !== null && primitiveInfo.positions !== undefined) ? primitiveInfo.positions : "-",
+        (primitiveInfo.normals !== null && primitiveInfo.normals !== undefined) ? primitiveInfo.normals : "-",
+        (primitiveInfo.colors !== null && primitiveInfo.colors !== undefined) ? primitiveInfo.colors : "-"
+    ].join(";");
 }
 
 function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {

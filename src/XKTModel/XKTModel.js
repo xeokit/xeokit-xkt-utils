@@ -11,6 +11,8 @@ import {KDNode} from "./KDNode.js";
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
+
+const identityMat4 = math.identityMat4();
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
@@ -39,15 +41,22 @@ class XKTModel {
     /**
      * Constructs a new XKTModel.
      *
-     * @param {*} cfg Configuration
+     * @param {*} [cfg] Configuration
+     * @param {Number} [cfg.edgeThreshold=10]
      */
     constructor(cfg = {}) {
+
+        /**
+         *
+         * @type {Number|number}
+         */
+        this.edgeThreshold = cfg.edgeThreshold || 10;
 
         /**
          * The positions of all shared {@link XKTGeometry}s are de-quantized using this singular
          * de-quantization matrix.
          *
-         * This de-quantization matrix is which is generated from the collective Local-space boundary of the
+         * This de-quantization matrix is generated from the collective Local-space boundary of the
          * positions of all shared {@link XKTGeometry}s.
          *
          * @type {Float32Array}
@@ -141,15 +150,12 @@ class XKTModel {
      * @param {*} params Method parameters.
      * @param {Number} params.geometryId Unique ID for the {@link XKTGeometry}.
      * @param {String} params.primitiveType The type of {@link XKTGeometry}: "triangles", "lines" or "points".
-     * @param {Float32Array} [params.matrix] Optional modeling transformation to immediately apply to ````positions````. Overrides ````position````, ````scale```` and ````rotation```` parameters.
-     * @param {Number[]} [params.position=[0,0,0]] Optional translation to immediately apply to ````positions````. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.scale=[1,1,1]] Optional scaling to immediately apply to ````positions````. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.rotation=[0,0,0]] Optional rotations to immediately apply to ````positions````, given as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
      * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}. Required for all primitive types.
      * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Required for triangles primitives. Ignored for points and lines.
      * @param {Number[]} [params.colors] Floating-point RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Number[]} [params.colorsCompressed] Integer RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Uint32Array} [params.indices] Indices for the {@link XKTGeometry}. Required for triangles and lines primitives. Ignored for points.
+     * @param {Number} [params.edgeThreshold=10]
      * @returns {XKTGeometry} The new {@link XKTGeometry}.
      */
     createGeometry(params) {
@@ -211,33 +217,7 @@ class XKTModel {
 
         const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
-        let matrix = params.matrix;
-        const position = params.position;
-        const scale = params.scale;
-        const rotation = params.rotation;
-        const positions = params.positions.slice(); // May modify in #finalize
-
-        if (!matrix) {
-            if (position || scale || rotation) {
-                matrix = math.identityMat4();
-                const quaternion = math.eulerToQuaternion(rotation || [0, 0, 0], "XYZ", math.identityQuaternion());
-                math.composeMat4(position || [0, 0, 0], quaternion, scale || [1, 1, 1], matrix)
-            }
-        }
-
-        matrix = matrix || math.identityMat4();
-
-        if (matrix && (!math.isIdentityMat4(matrix))) {
-            for (let i = 0, len = positions.length; i < len; i += 3) {
-                tempVec4a[0] = positions[i + 0];
-                tempVec4a[1] = positions[i + 1];
-                tempVec4a[2] = positions[i + 2];
-                math.transformPoint4(matrix, tempVec4a, tempVec4b);
-                positions[i + 0] = tempVec4b[0];
-                positions[i + 1] = tempVec4b[1];
-                positions[i + 2] = tempVec4b[2];
-            }
-        }
+        const positions = new Float32Array(params.positions); // May modify in #finalize
 
         const xktGeometryCfg = {
             geometryId: geometryId,
@@ -247,13 +227,10 @@ class XKTModel {
         }
 
         if (triangles) {
-            xktGeometryCfg.normals = params.normals.slice(); // Will modify
-            xktGeometryCfg.normalsOctEncoded = new Int8Array(xktGeometryCfg.normals.length);
+            xktGeometryCfg.normals = new Float32Array(params.normals); // May modify in #finalize
             xktGeometryCfg.indices = params.indices;
-            xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, 10);
+            xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
 
-            const modelNormalMatrix = math.inverseMat4(math.transposeMat4(matrix, tempMat4b), tempMat4);
-            geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, xktGeometryCfg.normals, xktGeometryCfg.normals.length, xktGeometryCfg.normalsOctEncoded, 0); // TODO: Oct-encode normals, in World-space if not reused, otherwise in Model-space?
         }
 
         if (points) {
@@ -458,7 +435,9 @@ class XKTModel {
             return;
         }
 
-        this._bakeSingleUseGeometryTransforms();
+        this._bakeSingleUseGeometryPositions();
+
+        this._bakeAndOctEncodeNormals();
 
         this._flagEntitiesThatReuseGeometries();
 
@@ -475,11 +454,12 @@ class XKTModel {
         this.finalized = true;
     }
 
-    _bakeSingleUseGeometryTransforms() {
+    _bakeSingleUseGeometryPositions() {
 
         for (let j = 0, lenj = this.meshesList.length; j < lenj; j++) {
 
             const mesh = this.meshesList[j];
+
             const geometry = mesh.geometry;
 
             if (geometry.numInstances === 1) {
@@ -503,6 +483,24 @@ class XKTModel {
                         positions[i + 2] = tempVec4b[2];
                     }
                 }
+            }
+        }
+    }
+
+    _bakeAndOctEncodeNormals() {
+
+        for (let i = 0, len = this.meshesList.length; i < len; i++) {
+
+            const mesh = this.meshesList[i];
+            const geometry = mesh.geometry;
+
+            if (geometry.normals && !geometry.normalsOctEncoded) {
+
+                geometry.normalsOctEncoded = new Int8Array(geometry.normals.length);
+
+                const modelNormalMatrix = math.inverseMat4(math.transposeMat4(mesh.matrix || identityMat4, tempMat4), tempMat4b);
+
+                geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
             }
         }
     }

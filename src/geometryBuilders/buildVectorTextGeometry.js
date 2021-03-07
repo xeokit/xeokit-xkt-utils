@@ -1632,7 +1632,7 @@ function buildVectorTextGeometry(cfg = {}) {
 
     var positions = [];
     var indices = [];
-    var text = "" + cfg.text;
+    var text = ("" + cfg.text).trim();
     var lines = (text || "").split("\n");
     var countVerts = 0;
     var y = 0;

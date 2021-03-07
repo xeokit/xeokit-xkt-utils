@@ -16,7 +16,7 @@ class XKTGeometry {
      * @param {String} cfg.primitiveType Type of this geometry - "triangles", "points" or "lines" so far.
      * @param {Number} cfg.geometryIndex Index of this XKTGeometry in {@link XKTModel#geometriesList}.
      * @param {Float64Array} cfg.positions Non-quantized 3D vertex positions.
-     * @param {Int8Array} cfg.normalsOctEncoded Oct-encoded vertex normals.
+     * @param {Float32Array} cfg.normals Non-compressed vertex normals.
      * @param {Uint8Array} cfg.colorsCompressed Integer RGB vertex colors.
      * @param {Uint32Array} cfg.indices Indices to organize the vertex positions and normals into triangles.
      * @param {Uint32Array} cfg.edgeIndices Indices to organize the vertex positions into edges.
@@ -72,13 +72,24 @@ class XKTGeometry {
         this.positionsQuantized = new Uint16Array(cfg.positions.length);
 
         /**
-         * Oct-encoded vertex normals.
+         * Non-compressed 3D vertex normals.
          *
          * Defined only for triangle primitives. Ignored for points and lines.
          *
+         * @type {Float32Array}
+         */
+        this.normals = cfg.normals;
+
+        /**
+         * Compressed vertex normals.
+         *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
+         * This array is later created from {@link XKTGeometry#normals} by {@link XKTModel#finalize}.
+         *
          * @type {Int8Array}
          */
-        this.normalsOctEncoded = cfg.normalsOctEncoded;
+        this.normalsOctEncoded = null;
 
         /**
          * Compressed RGB vertex colors.
