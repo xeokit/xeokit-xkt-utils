@@ -40,7 +40,7 @@
         buildGridGeometry,
         buildBoxGeometry,
         buildBoxLinesGeometry,
-        buildVectorTextGeometry
+        buildVectorTextGeometry, buildCylinderGeometry
     } from "./../dist/xeokit-xkt-utils.es.js";
 
     const viewer = new Viewer({
@@ -121,6 +121,20 @@
 
     xktModel.createGeometry(
         apply({
+                geometryId: "cylinderGeometry"
+            },
+            buildCylinderGeometry({
+                center: [0, 0, 0],
+                radiusTop: 1.0,
+                radiusBottom: 2.0,
+                height: 2.5,
+                radialSegments: 20,
+                heightSegments: 1,
+                openEnded: false
+            })));
+
+    xktModel.createGeometry(
+        apply({
                 geometryId: "gridGeometry"
             },
             buildGridGeometry({
@@ -166,16 +180,23 @@
     });
 
     xktModel.createMesh({
+        meshId: "cylinderMesh",
+        geometryId: "cylinderGeometry",
+        position: [16, 0, 0],
+        color: [1, .6, 0]
+    });
+
+    xktModel.createMesh({
         meshId: "gridMesh",
         geometryId: "gridGeometry",
-        position: [19, 0, 0],
+        position: [25, 0, 0],
         color: [0, 1, 0]
     });
 
     xktModel.createMesh({
         meshId: "textMesh",
         geometryId: "textGeometry",
-        position: [0, 5, 0],
+        position: [0, 6, 0],
         color: [0, 0, 0]
     });
 
@@ -224,8 +245,8 @@
     });
 
     const xktEntity = xktModel.createEntity({
-        entityId: "redSphere",
-        meshIds: ["boxMesh", "boxLinesMesh", "sphereMesh", "torusMesh", "gridMesh", "textMesh", "pointsMesh"]
+        entityId: "geometries",
+        meshIds: ["boxMesh", "boxLinesMesh", "sphereMesh", "torusMesh", "cylinderMesh", "gridMesh", "textMesh", "pointsMesh"]
     });
 
     xktModel.finalize();
