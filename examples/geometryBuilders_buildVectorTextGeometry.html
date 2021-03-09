@@ -43,9 +43,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [-10.59, 0.05, 13.57];
-    viewer.camera.look = [0, -5.75, 0];
-    viewer.camera.up = [0.18, 0.93, -0.25];
+    viewer.scene.camera.eye = [-54.444744739330474, -23.398537594767127, 93.52025339421073];
+    viewer.scene.camera.look = [21.65985978864974, -65.08000183105469, -4];
+    viewer.scene.camera.up = [0.18, 0.93, -0.25];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
@@ -78,7 +78,7 @@
         position: [-4, -6, -4],
         scale: [1, 1, 1],
         rotation: [0, 0, 0],
-        color: [1, 0, 0],
+        color: [0, 0, 0.5],
         opacity: 1
     });
 
@@ -108,8 +108,6 @@
         xkt: xktArrayBuffer,
         edges: true
     });
-
-    viewer.cameraFlight.flyTo(viewer.scene);
 
 </script>
 </html>

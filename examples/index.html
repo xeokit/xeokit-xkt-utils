@@ -32,9 +32,9 @@
     };
     var files = {
 
-        "Converting files": [
+        "Converting Files to XKT": [
 
-            "# Using parser functions to convert files to XKT",
+            "# Converting glTF files to XKT",
 
             "parsers_glTF_MAP",
             "parsers_glTF_MAP_jitter",
@@ -47,26 +47,30 @@
 
             "# Parsing point clouds from glTF",
 
-            "parsers_glTF_MAP_points_2.6M",
+            "parsers_glTF_MAP_points_2.6M"
         ],
 
-        "Generating geometry": [
+        "Generating XKT": [
 
-            "# Low-level tests that procedurally generate geometry within XKT files",
+            "# Low-level tests that programmatically generate geometry within XKT files",
 
             "generate_batching_triangles",
             "generate_batching_points",
             "generate_batching_lines",
             "generate_instancing_triangles",
             "generate_instancing_points",
-            "generate_instancing_lines"
+            "generate_instancing_lines",
+
+            "generate_instancing_batching_triangles",
         ],
 
-        "Geometry generation helpers": [
+        "Generation Helpers": [
 
             "# Using helper functions to create primitive geometric shapes within XKT files",
 
+            "geometryBuilders_buildGeometries",
             "geometryBuilders_buildBoxGeometry",
+            "geometryBuilders_buildBoxLinesGeometry",
             "geometryBuilders_buildGridGeometry",
             "geometryBuilders_buildPlaneGeometry",
             "geometryBuilders_buildSphereGeometry",

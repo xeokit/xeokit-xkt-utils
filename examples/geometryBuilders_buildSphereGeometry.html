@@ -43,9 +43,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [-10.59, 0.05, 13.57];
-    viewer.camera.look = [0, -5.75, 0];
-    viewer.camera.up = [0.18, 0.93, -0.25];
+    viewer.scene.camera.eye=[-7.0294582029901065, -4.340806649920433, -0.11805969645176972];
+    viewer.scene.camera.look = [-4, -6, -4];
+    viewer.scene.camera.up = [0.18, 0.93, -0.25];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
@@ -56,7 +56,9 @@
 
     log("Generating XKTModel..");
 
-    const xktModel = new XKTModel();
+    const xktModel = new XKTModel({
+        edgeThreshold: 0.01
+    });
 
     const sphere = buildSphereGeometry({
         center: [0, 0, 0],
@@ -79,7 +81,7 @@
         position: [-4, -6, -4],
         scale: [1, 1, 1],
         rotation: [0, 0, 0],
-        color: [1, 0, 0],
+        color: [0, 0, 1],
         opacity: 1
     });
 
@@ -109,8 +111,6 @@
         xkt: xktArrayBuffer,
         edges: false
     });
-
-    viewer.cameraFlight.flyTo(viewer.scene);
 
 </script>
 </html>

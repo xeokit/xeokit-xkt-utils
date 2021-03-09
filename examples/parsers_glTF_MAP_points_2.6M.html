@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>XKTModel - Loading point cloud from glTF - 2.6M points</title>
+    <title>XKTModel - Converting point cloud from glTF - 2.6M points</title>
     <link href="css/styles.css" type="text/css" rel="stylesheet"/>
 
     <style>
         #myCanvas {
             width: 100%;
             height: 100%;
-            background: #ffffff;
+            background: white;
         }
     </style>
 
@@ -18,7 +18,7 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Loading point cloud
+    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Converting point cloud
         from glTF - 2.6M points</h1><br>
     <p>Model courtesy of <a href="https://bimdata.io">BIMData</a></p><br>
     <div id="log">Loading JavaScript modules...</div>
@@ -54,18 +54,22 @@
         logarithmicDepthBuffer: false
     });
 
-    viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
-    viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
-    viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
+    viewer.scene.camera.eye = [-33.39743204455115, 19.860110907372498, 16.48115773938317];
+    viewer.scene.camera.look = [8.299331277378364, 8.283975908229408, 0.3147773451193281];
+    viewer.scene.camera.up = [0.23364630883536058, 0.9680925914793489, -0.09058772924855642];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
+
+    //----------------------------------------------------------------------------------------------------------------------
+    // Configure point cloud appearance
+    //----------------------------------------------------------------------------------------------------------------------
 
     viewer.scene.pointsMaterial.pointSize = 2;
     viewer.scene.pointsMaterial.roundPoints = true;
     viewer.scene.pointsMaterial.perspectivePoints = true;
     viewer.scene.pointsMaterial.minPerspectivePointSize = 1;
-    viewer.scene.pointsMaterial.maxPerspectivePointSize = 5;
+    viewer.scene.pointsMaterial.maxPerspectivePointSize = 6;
 
     //----------------------------------------------------------------------------------------------------------------------
     // Create a xeokit loader plugin, load a model, fit to view
@@ -86,7 +90,9 @@
             const xktModel = new XKTModel();
 
             await parseGLTFIntoXKTModel(json, xktModel);
+
             xktModel.finalize();
+
             log("Writing XKTModel to array buffer..");
 
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
@@ -105,16 +111,10 @@
                 id: "myModel",
                 xkt: xktArrayBuffer
             });
-
-            model.on("loaded", () => {
-                viewer.cameraFlight.flyTo(viewer.scene);
-            });
         },
         function (errMsg) {
             log("ERROR: " + errMsg);
         });
-
-    window.viewer = viewer; // For debugging
 
 </script>
 </html>

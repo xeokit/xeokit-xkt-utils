@@ -45,12 +45,20 @@
         transparent: true
     });
 
-    viewer.camera.eye = [-10.59, 0.05, 13.57];
-    viewer.camera.look = [0, -5.75, 0];
-    viewer.camera.up = [0.18, 0.93, -0.25];
+    viewer.scene.camera.eye = [-1725.5651570375667, 945.0757263203204, 2211.1357051658474];
+    viewer.scene.camera.look = [-0.00091552734375, 0.0074920654296875, 0.001922607421875];
+    viewer.scene.camera.up = [0.18, 0.93, -0.25];
+
+    viewer.camera.perspective.far = 10000;
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
+
+    viewer.scene.pointsMaterial.roundPoints = true;
+    viewer.scene.pointsMaterial.perspectivePoints = true;
+    viewer.scene.pointsMaterial.pointSize = 2;
+    viewer.scene.pointsMaterial.minPerspectivePointSize = 2;
+    viewer.scene.pointsMaterial.maxPerspectivePointSize = 6;
 
     function log(msg) {
         document.getElementById("log").innerHTML += "<br>" + msg;
@@ -145,8 +153,6 @@
         xkt: xktArrayBuffer,
         edges: true
     });
-
-    viewer.cameraFlight.flyTo(viewer.scene);
 
 </script>
 </html>

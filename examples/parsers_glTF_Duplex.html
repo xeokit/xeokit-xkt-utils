@@ -53,9 +53,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
-    viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
-    viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
+    viewer.camera.eye = [-3.933, 2.855, 27.018];
+    viewer.camera.look = [4.400, 3.724, 8.899];
+    viewer.camera.up = [-0.018, 0.999, 0.039];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
@@ -114,8 +114,6 @@
         function (errMsg) {
             log("ERROR: " + errMsg);
         });
-
-    window.viewer = viewer; // For debugging
 
 </script>
 </html>

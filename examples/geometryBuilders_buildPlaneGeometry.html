@@ -43,9 +43,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [-10.59, 0.05, 13.57];
-    viewer.camera.look = [0, -5.75, 0];
-    viewer.camera.up = [0.18, 0.93, -0.25];
+    viewer.scene.camera.eye = [-12.327672513102073, -1.5092277802506349, 6.511081585774621];
+    viewer.scene.camera.look = [-4, -6, -4];
+    viewer.scene.camera.up = [0.19719459811194973, 0.9482430198602119, -0.24889649608191022];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
@@ -60,8 +60,8 @@
 
     const plane = buildPlaneGeometry({
         center: [0, 0, 0],
-        xSize: 2,
-        zSize: 2,
+        xSize: 10,
+        zSize: 10,
         xSegments: 10,
         zSegments: 10
     });
@@ -110,8 +110,6 @@
         xkt: xktArrayBuffer,
         edges: true
     });
-
-    viewer.cameraFlight.flyTo(viewer.scene);
 
 </script>
 </html>

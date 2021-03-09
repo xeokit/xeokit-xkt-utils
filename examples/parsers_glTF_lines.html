@@ -18,7 +18,8 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Loading line primitives from glTF</h1><br>
+    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Loading line primitives
+        from glTF</h1><br>
 
     <div id="log">Loading JavaScript modules...</div>
 
@@ -52,9 +53,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
-    viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
-    viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
+    viewer.scene.camera.eye = [-12.540927979237452, 15.988486241570747, 28.859347224794597];
+    viewer.scene.camera.look = [16.556260061405922, 0.1250000074505806, -8.144299463011757];
+    viewer.scene.camera.up = [0.19739609782146572, 0.9476375098947823, -0.2510337236414158];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
@@ -105,8 +106,6 @@
         function (errMsg) {
             log("ERROR: " + errMsg);
         });
-
-    window.viewer = viewer; // For debugging
 
 </script>
 </html>

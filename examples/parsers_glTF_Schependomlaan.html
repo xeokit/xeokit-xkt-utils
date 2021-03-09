@@ -53,9 +53,9 @@
         transparent: true
     });
 
-    viewer.camera.eye = [136.27810668945312, 29.578109741210938, 32.587806701660156];
-    viewer.camera.look = [159.20425415039062, 17.020320892333984, 3.210799217224121];
-    viewer.camera.up = [0.1899999976158142, 0.9399999976158142, -0.25];
+    viewer.scene.camera.eye = [-11.381089789355286, 17.573731335163558, 16.355102174765943];
+    viewer.scene.camera.look = [10.975000381469727, 5.828129693268, -11.232500076293945];
+    viewer.scene.camera.up = [0.19772129251691872, 0.949407869567796, -0.24398972865302776];
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
@@ -79,7 +79,11 @@
             const xktModel = new XKTModel();
 
             await parseGLTFIntoXKTModel(json, xktModel);
+
             xktModel.finalize();
+
+            console.log(xktModel.geometriesList.length);
+
             log("Writing XKTModel to array buffer..");
 
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
@@ -105,15 +109,10 @@
                 viewer.cameraFlight.flyTo(viewer.scene);
             });
 
-            log("Visualizing tile boundaries..");
-
-            //  visualizeXKTModelTileAABBs(viewer.scene, xktModel);
         },
         function (errMsg) {
             log("ERROR: " + errMsg);
         });
-
-    window.viewer = viewer; // For debugging
 
 </script>
 </html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>buildTorusGeometry</title>
+    <title>buildBoxGeometry</title>
     <link href="css/styles.css" type="text/css" rel="stylesheet"/>
 
     <style>
@@ -18,7 +18,7 @@
 <body>
 <canvas id="myCanvas"></canvas>
 <div id="info">
-    <h1>buildTorusGeometry</h1><br>
+    <h1>buildBoxGeometry</h1><br>
 
     <div id="log">Loading JavaScript modules...</div>
 
@@ -33,17 +33,18 @@
 
     import {
         XKTModel,
-        buildTorusGeometry,
+        buildBoxLinesGeometry,
         writeXKTModelToArrayBuffer,
         validateXKTArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
+
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
         transparent: true
     });
 
-    viewer.scene.camera.eye = [-6.541323095683128, -4.608151656755227, -0.7435548245117989];
+    viewer.scene.camera.eye = [-6.019638801993405, -4.893871099946955, -1.4120397976345131];
     viewer.scene.camera.look = [-4, -6, -4];
     viewer.scene.camera.up = [0.18, 0.93, -0.25];
 
@@ -56,40 +57,35 @@
 
     log("Generating XKTModel..");
 
-    const xktModel = new XKTModel({
-        edgeThreshold: 0.01
-    });
+    const xktModel = new XKTModel();
 
-    const torus = buildTorusGeometry({
+    const box = buildBoxLinesGeometry({
         center: [0, 0, 0],
-        radius: 1.0,
-        tube: 0.5,
-        radialSegments: 32,
-        tubeSegments: 24,
-        arc: Math.PI * 2.0
+        xSize: 1,  // Half-size on each axis
+        ySize: 1,
+        zSize: 1
     });
 
     const xktGeometry = xktModel.createGeometry({
-        geometryId: "torusGeometry",
-        primitiveType: torus.primitiveType, // Will be "lines"
-        positions: torus.positions,
-        normals: torus.normals,
-        indices: torus.indices
+        geometryId: "boxGeometry",
+        primitiveType: box.primitiveType, // Will be "triangles"
+        positions: box.positions,
+        indices: box.indices
     });
 
     const xktMesh = xktModel.createMesh({
-        meshId: "redTorusMesh",
-        geometryId: "torusGeometry",
+        meshId: "redBoxMesh",
+        geometryId: "boxGeometry",
         position: [-4, -6, -4],
         scale: [1, 1, 1],
         rotation: [0, 0, 0],
-        color: [0.5, 0, 1],
+        color: [1, 0, 0],
         opacity: 1
     });
 
     const xktEntity = xktModel.createEntity({
-        entityId: "redTorus",
-        meshIds: ["redTorusMesh"]
+        entityId: "redBox",
+        meshIds: ["redBoxMesh"]
     });
 
     xktModel.finalize();
