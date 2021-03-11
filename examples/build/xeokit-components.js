@@ -7891,7 +7891,7 @@ class FrameContext {
          * @default false
          * @type {Boolean}
          */
-        this.quality = false;
+        this.pbrEnabled = false;
 
         /**
          * Whether SAO is currently enabled during the current frame.
@@ -10861,7 +10861,7 @@ const Renderer = function (scene, options) {
             gl.getExtension("OES_element_index_uint");
         }
 
-        if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"] ) {
+        if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             gl.getExtension('EXT_frag_depth');
         }
 
@@ -11055,6 +11055,7 @@ const Renderer = function (scene, options) {
             frameCtx.reset();
             frameCtx.pass = params.pass;
             frameCtx.withSAO = false;
+            frameCtx.pbrEnabled = !!scene.pbrEnabled;
 
             gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
@@ -11403,7 +11404,7 @@ const Renderer = function (scene, options) {
                 gl.getExtension("OES_element_index_uint");
             }
 
-            if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"] ) {
+            if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
                 gl.getExtension('EXT_frag_depth');
             }
 
@@ -21302,6 +21303,8 @@ class Scene extends Component {
         this._entityOffsetsEnabled = !!cfg.entityOffsetsEnabled;
         this._logarithmicDepthBufferEnabled = !!cfg.logarithmicDepthBufferEnabled;
 
+        this._pbrEnabled = !!cfg.pbrEnabled;
+
         // Register Scene on xeokit
         // Do this BEFORE we add components below
         core._addScene(this);
@@ -21618,6 +21621,29 @@ class Scene extends Component {
         return this._logarithmicDepthBufferEnabled;
     }
 
+    /**
+     * Sets whether quality rendering is enabled.
+     *
+     * Default is ````true````.
+     *
+     * @returns {Boolean} True if quality rendering is enabled.
+     */
+    set pbrEnabled(pbrEnabled) {
+        this._pbrEnabled = (pbrEnabled !== false);
+        this.glRedraw();
+    }
+    
+    /**
+     * Sets whether quality rendering is enabled.
+     *
+     * Default is ````false````.
+     *
+     * @returns {Boolean} True if quality rendering is enabled.
+     */
+    get pbrEnabled() {
+        return this._pbrEnabled;
+    }
+    
     /**
      * Performs an occlusion test on all {@link Marker}s in this {@link Scene}.
      *
@@ -22025,6 +22051,7 @@ class Scene extends Component {
         }
         this._renderer.gammaInput = value;
         this._needRecompile = true;
+        this.glRedraw();
     }
 
     /**
@@ -22052,6 +22079,7 @@ class Scene extends Component {
         }
         this._renderer.gammaOutput = value;
         this._needRecompile = true;
+        this.glRedraw();
     }
 
     /**
@@ -28002,6 +28030,7 @@ class Viewer {
      * @param {Boolean} [cfg.logarithmicDepthBufferEnabled=false] Whether to enable logarithmic depth buffer. When this is true,
      * you can set huge values for {@link Perspective#far} and {@link Ortho#far}, to push the far clipping plane back so
      * that it does not clip huge models.
+     * @param {Boolean} [cfg.pbrEnabled=false] Whether to enable physically-based rendering.
      */
     constructor(cfg) {
 
@@ -28039,7 +28068,8 @@ class Viewer {
             saoEnabled: cfg.saoEnabled,
             alphaDepthMask: (cfg.alphaDepthMask !== false),
             entityOffsetsEnabled: (!!cfg.entityOffsetsEnabled),
-            logarithmicDepthBufferEnabled: (!!cfg.logarithmicDepthBufferEnabled)
+            logarithmicDepthBufferEnabled: (!!cfg.logarithmicDepthBufferEnabled),
+            pbrEnabled: (!!cfg.pbrEnabled)
         });
 
         /**
@@ -32504,6 +32534,12 @@ class TrianglesBatchingShadowRenderer {
 const tempVec4$2 = math.vec4();
 const tempVec3a$f = math.vec3();
 
+const TEXTURE_DECODE_FUNCS = {
+    "linear": "linearToLinear",
+    "sRGB": "sRGBToLinear",
+    "gamma": "gammaToLinear"
+};
+
 /**
  * @private
  */
@@ -32522,7 +32558,7 @@ class TrianglesBatchingColorQualityRenderer {
 
     _getHash() {
         const scene = this._scene;
-        return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
+        return [scene.gammaOutput, scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
     }
 
     drawLayer(frameCtx, batchingLayer, renderPass) {
@@ -32588,6 +32624,10 @@ class TrianglesBatchingColorQualityRenderer {
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
 
+        if (this._aMetallicRoughness) {
+            this._aMetallicRoughness.bindArrayBuffer(state.metallicRoughnessBuf);
+        }
+
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
@@ -32628,6 +32668,8 @@ class TrianglesBatchingColorQualityRenderer {
         this._uViewNormalMatrix = program.getLocation("viewNormalMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
 
+        this._uGammaFactor = program.getLocation("gammaFactor");
+
         this._uLightAmbient = program.getLocation("lightAmbient");
         this._uLightColor = [];
         this._uLightDir = [];
@@ -32660,6 +32702,14 @@ class TrianglesBatchingColorQualityRenderer {
             }
         }
 
+        if (lightsState.reflectionMaps.length > 0) {
+            this._uReflectionMap = "reflectionMap";
+        }
+
+        if (lightsState.lightMaps.length > 0) {
+            this._uLightMap = "lightMap";
+        }
+
         this._uSectionPlanes = [];
 
         for (let i = 0, len = scene._sectionPlanesState.sectionPlanes.length; i < len; i++) {
@@ -32674,6 +32724,7 @@ class TrianglesBatchingColorQualityRenderer {
         this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aColor = program.getAttribute("color");
+        this._aMetallicRoughness = program.getAttribute("metallicRoughness");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
 
@@ -32689,10 +32740,12 @@ class TrianglesBatchingColorQualityRenderer {
 
     _bindProgram(frameCtx) {
 
+        const maxTextureUnits = WEBGL_INFO$1.MAX_TEXTURE_UNITS;
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const lights = scene._lightsState.lights;
+        const lightsState = scene._lightsState;
+        const lights = lightsState.lights;
         const project = scene.camera.project;
 
         program.bind();
@@ -32722,6 +32775,18 @@ class TrianglesBatchingColorQualityRenderer {
             }
         }
 
+        if (lightsState.reflectionMaps.length > 0 && lightsState.reflectionMaps[0].texture && this._uReflectionMap) {
+            program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frameCtx.textureUnit);
+            frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+            frameCtx.bindTexture++;
+        }
+
+        if (lightsState.lightMaps.length > 0 && lightsState.lightMaps[0].texture && this._uLightMap) {
+            program.bindTexture(this._uLightMap, lightsState.lightMaps[0].texture, frameCtx.textureUnit);
+            frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+            frameCtx.bindTexture++;
+        }
+
         if (this._withSAO) {
             const sao = scene.sao;
             const saoEnabled = sao.possible;
@@ -32733,13 +32798,19 @@ class TrianglesBatchingColorQualityRenderer {
                 tempVec4$2[2] = sao.blendCutoff;
                 tempVec4$2[3] = sao.blendFactor;
                 gl.uniform4fv(this._uSAOParams, tempVec4$2);
-                this._program.bindTexture(this._uOcclusionTexture, frameCtx.occlusionTexture, 0);
+                this._program.bindTexture(this._uOcclusionTexture, frameCtx.occlusionTexture, frameCtx.textureUnit);
+                frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                frameCtx.bindTexture++;
             }
         }
 
         if (scene.logarithmicDepthBufferEnabled) {
             const logDepthBufFC = 2.0 / (Math.log(project.far + 1.0) / Math.LN2);
             gl.uniform1f(this._uLogDepthBufFC, logDepthBufFC);
+        }
+
+        if (this._uGammaFactor) {
+            gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
         }
     }
 
@@ -32770,6 +32841,7 @@ class TrianglesBatchingColorQualityRenderer {
         src.push("attribute vec3 position;");
         src.push("attribute vec3 normal;");
         src.push("attribute vec4 color;");
+        src.push("attribute vec2 metallicRoughness;");
         src.push("attribute vec4 flags;");
         src.push("attribute vec4 flags2;");
 
@@ -32803,6 +32875,11 @@ class TrianglesBatchingColorQualityRenderer {
         src.push("varying vec4 vViewPosition;");
         src.push("varying vec3 vViewNormal;");
         src.push("varying vec4 vColor;");
+        src.push("varying vec2 vMetallicRoughness;");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("varying vec3 vWorldNormal;");
+        }
 
         if (clipping) {
             src.push("varying vec4 vWorldPosition;");
@@ -32843,6 +32920,12 @@ class TrianglesBatchingColorQualityRenderer {
         src.push("vViewPosition = viewPosition;");
         src.push("vViewNormal = viewNormal;");
         src.push("vColor = color;");
+        src.push("vMetallicRoughness = metallicRoughness;");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("vWorldNormal = worldNormal.xyz;");
+        }
+
         src.push("gl_Position = clipPos;");
         src.push("}");
 
@@ -32853,6 +32936,7 @@ class TrianglesBatchingColorQualityRenderer {
     _buildFragmentShader() {
 
         const scene = this._scene;
+        const gammaOutput = scene.gammaOutput; // If set, then it expects that all textures and colors need to be outputted in premultiplied gamma. Default is false.
         const sectionPlanesState = scene._sectionPlanesState;
         const lightsState = scene._lightsState;
         const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -32880,8 +32964,21 @@ class TrianglesBatchingColorQualityRenderer {
         src.push("varying vec4 vViewPosition;");
         src.push("varying vec3 vViewNormal;");
         src.push("varying vec4 vColor;");
+        src.push("varying vec2 vMetallicRoughness;");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("varying vec3 vWorldNormal;");
+        }
 
         src.push("uniform mat4 viewMatrix;");
+
+        if (lightsState.reflectionMaps.length > 0) {
+            src.push("uniform samplerCube reflectionMap;");
+        }
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("uniform samplerCube lightMap;");
+        }
 
         src.push("uniform vec4 lightAmbient;");
 
@@ -32916,21 +33013,184 @@ class TrianglesBatchingColorQualityRenderer {
             src.push("    return dot( v, unPackFactors );");
             src.push("}");
         }
+
+        src.push("uniform float gammaFactor;");
+        src.push("vec4 linearToLinear( in vec4 value ) {");
+        src.push("  return value;");
+        src.push("}");
+        src.push("vec4 sRGBToLinear( in vec4 value ) {");
+        src.push("  return vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );");
+        src.push("}");
+        src.push("vec4 gammaToLinear( in vec4 value) {");
+        src.push("  return vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );");
+        src.push("}");
+        if (gammaOutput) {
+            src.push("vec4 linearToGamma( in vec4 value, in float gammaFactor ) {");
+            src.push("  return vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );");
+            src.push("}");
+        }
+
         if (clipping) {
             src.push("varying vec4 vWorldPosition;");
             src.push("varying vec4 vFlags2;");
-            for (i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
+            for (let i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
                 src.push("uniform bool sectionPlaneActive" + i + ";");
                 src.push("uniform vec3 sectionPlanePos" + i + ";");
                 src.push("uniform vec3 sectionPlaneDir" + i + ";");
             }
         }
+
+        // CONSTANT DEFINITIONS
+
+        src.push("#define PI 3.14159265359");
+        src.push("#define RECIPROCAL_PI 0.31830988618");
+        src.push("#define RECIPROCAL_PI2 0.15915494");
+        src.push("#define EPSILON 1e-6");
+
+        src.push("#define saturate(a) clamp( a, 0.0, 1.0 )");
+
+        // UTILITY DEFINITIONS
+
+        src.push("vec3 inverseTransformDirection(in vec3 dir, in mat4 matrix) {");
+        src.push("   return normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );");
+        src.push("}");
+
+        // STRUCTURES
+
+        src.push("struct IncidentLight {");
+        src.push("   vec3 color;");
+        src.push("   vec3 direction;");
+        src.push("};");
+
+        src.push("struct ReflectedLight {");
+        src.push("   vec3 diffuse;");
+        src.push("   vec3 specular;");
+        src.push("};");
+
+        src.push("struct Geometry {");
+        src.push("   vec3 position;");
+        src.push("   vec3 viewNormal;");
+        src.push("   vec3 worldNormal;");
+        src.push("   vec3 viewEyeDir;");
+        src.push("};");
+
+        src.push("struct Material {");
+        src.push("   vec3    diffuseColor;");
+        src.push("   float   specularRoughness;");
+        src.push("   vec3    specularColor;");
+        src.push("   float   shine;"); // Only used for Phong
+        src.push("};");
+
+        // IRRADIANCE EVALUATION
+
+        src.push("float GGXRoughnessToBlinnExponent(const in float ggxRoughness) {");
+        src.push("   float r = ggxRoughness + 0.0001;");
+        src.push("   return (2.0 / (r * r) - 2.0);");
+        src.push("}");
+
+        src.push("float getSpecularMIPLevel(const in float blinnShininessExponent, const in int maxMIPLevel) {");
+        src.push("   float maxMIPLevelScalar = float( maxMIPLevel );");
+        src.push("   float desiredMIPLevel = maxMIPLevelScalar - 0.79248 - 0.5 * log2( ( blinnShininessExponent * blinnShininessExponent ) + 1.0 );");
+        src.push("   return clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );");
+        src.push("}");
+
+        if (lightsState.reflectionMaps.length > 0) {
+            src.push("vec3 getLightProbeIndirectRadiance(const in vec3 reflectVec, const in float blinnShininessExponent, const in int maxMIPLevel) {");
+            src.push("   float mipLevel = 0.5 * getSpecularMIPLevel(blinnShininessExponent, maxMIPLevel);"); //TODO: a random factor - fix this
+            src.push("   vec3 envMapColor = " + TEXTURE_DECODE_FUNCS[lightsState.reflectionMaps[0].encoding] + "(textureCube(reflectionMap, reflectVec, mipLevel)).rgb;");
+            src.push("  return envMapColor;");
+            src.push("}");
+        }
+
+        // SPECULAR BRDF EVALUATION
+
+        src.push("vec3 F_Schlick(const in vec3 specularColor, const in float dotLH) {");
+        src.push("   float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );");
+        src.push("   return ( 1.0 - specularColor ) * fresnel + specularColor;");
+        src.push("}");
+
+        src.push("float G_GGX_Smith(const in float alpha, const in float dotNL, const in float dotNV) {");
+        src.push("   float a2 = ( alpha * alpha );");
+        src.push("   float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * ( dotNL * dotNL ) );");
+        src.push("   float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * ( dotNV * dotNV ) );");
+        src.push("   return 1.0 / ( gl * gv );");
+        src.push("}");
+
+        src.push("float G_GGX_SmithCorrelated(const in float alpha, const in float dotNL, const in float dotNV) {");
+        src.push("   float a2 = ( alpha * alpha );");
+        src.push("   float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * ( dotNV * dotNV ) );");
+        src.push("   float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * ( dotNL * dotNL ) );");
+        src.push("   return 0.5 / max( gv + gl, EPSILON );");
+        src.push("}");
+
+        src.push("float D_GGX(const in float alpha, const in float dotNH) {");
+        src.push("   float a2 = ( alpha * alpha );");
+        src.push("   float denom = ( dotNH * dotNH) * ( a2 - 1.0 ) + 1.0;");
+        src.push("   return RECIPROCAL_PI * a2 / ( denom * denom);");
+        src.push("}");
+
+        src.push("vec3 BRDF_Specular_GGX(const in IncidentLight incidentLight, const in Geometry geometry, const in vec3 specularColor, const in float roughness) {");
+        src.push("   float alpha = ( roughness * roughness );");
+        src.push("   vec3 halfDir = normalize( incidentLight.direction + geometry.viewEyeDir );");
+        src.push("   float dotNL = saturate( dot( geometry.viewNormal, incidentLight.direction ) );");
+        src.push("   float dotNV = saturate( dot( geometry.viewNormal, geometry.viewEyeDir ) );");
+        src.push("   float dotNH = saturate( dot( geometry.viewNormal, halfDir ) );");
+        src.push("   float dotLH = saturate( dot( incidentLight.direction, halfDir ) );");
+        src.push("   vec3  F = F_Schlick( specularColor, dotLH );");
+        src.push("   float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );");
+        src.push("   float D = D_GGX( alpha, dotNH );");
+        src.push("   return F * (G * D);");
+        src.push("}");
+
+        src.push("vec3 BRDF_Specular_GGX_Environment(const in Geometry geometry, const in vec3 specularColor, const in float roughness) {");
+        src.push("   float dotNV = saturate(dot(geometry.viewNormal, geometry.viewEyeDir));");
+        src.push("   const vec4 c0 = vec4( -1, -0.0275, -0.572,  0.022);");
+        src.push("   const vec4 c1 = vec4(  1,  0.0425,   1.04, -0.04);");
+        src.push("   vec4 r = roughness * c0 + c1;");
+        src.push("   float a004 = min(r.x * r.x, exp2(-9.28 * dotNV)) * r.x + r.y;");
+        src.push("   vec2 AB    = vec2(-1.04, 1.04) * a004 + r.zw;");
+        src.push("   return specularColor * AB.x + AB.y;");
+        src.push("}");
+
+        if (lightsState.lightMaps.length > 0 || lightsState.reflectionMaps.length > 0) {
+
+            src.push("void computePBRLightMapping(const in Geometry geometry, const in Material material, inout ReflectedLight reflectedLight) {");
+
+            if (lightsState.lightMaps.length > 0) {
+                src.push("   vec3 irradiance = " + TEXTURE_DECODE_FUNCS[lightsState.lightMaps[0].encoding] + "(textureCube(lightMap, geometry.worldNormal)).rgb;");
+                src.push("   irradiance *= PI;");
+                src.push("   vec3 diffuseBRDFContrib = (RECIPROCAL_PI * material.diffuseColor);");
+                src.push("   reflectedLight.diffuse +=  irradiance * diffuseBRDFContrib;");
+            }
+
+            if (lightsState.reflectionMaps.length > 0) {
+                src.push("   vec3 reflectVec             = reflect(-geometry.viewEyeDir, geometry.viewNormal);");
+                src.push("   reflectVec                  = inverseTransformDirection(reflectVec, viewMatrix);");
+                src.push("   float blinnExpFromRoughness = GGXRoughnessToBlinnExponent(material.specularRoughness);");
+                src.push("   vec3 radiance               = getLightProbeIndirectRadiance(reflectVec, blinnExpFromRoughness, 8);");
+                src.push("   vec3 specularBRDFContrib    = BRDF_Specular_GGX_Environment(geometry, material.specularColor, material.specularRoughness);");
+                src.push("   reflectedLight.specular     += radiance * specularBRDFContrib;");
+            }
+
+            src.push("}");
+        }
+
+        // MAIN LIGHTING COMPUTATION FUNCTION
+
+        src.push("void computePBRLighting(const in IncidentLight incidentLight, const in Geometry geometry, const in Material material, inout ReflectedLight reflectedLight) {");
+        src.push("   float dotNL     = saturate(dot(geometry.viewNormal, incidentLight.direction));");
+        src.push("   vec3 irradiance = dotNL * incidentLight.color * PI;");
+        src.push("   reflectedLight.diffuse  += irradiance * (RECIPROCAL_PI * material.diffuseColor);");
+        src.push("   reflectedLight.specular += irradiance * BRDF_Specular_GGX(incidentLight, geometry, material.specularColor, material.specularRoughness);");
+        src.push("}");
+
         src.push("void main(void) {");
+
         if (clipping) {
             src.push("  bool clippable = (float(vFlags2.x) > 0.0);");
             src.push("  if (clippable) {");
             src.push("  float dist = 0.0;");
-            for (i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
+            for (let i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
                 src.push("if (sectionPlaneActive" + i + ") {");
                 src.push("   dist += clamp(dot(-sectionPlaneDir" + i + ".xyz, vWorldPosition.xyz - sectionPlanePos" + i + ".xyz), 0.0, 1000.0);");
                 src.push("}");
@@ -32939,45 +33199,73 @@ class TrianglesBatchingColorQualityRenderer {
             src.push("}");
         }
 
-        src.push("vec3 reflectedColor = vec3(0.0, 0.0, 0.0);");
-        src.push("vec3 viewLightDir = vec3(0.0, 0.0, -1.0);");
+        src.push("IncidentLight  light;");
+        src.push("Material       material;");
+        src.push("Geometry       geometry;");
+        src.push("ReflectedLight reflectedLight = ReflectedLight(vec3(0.0,0.0,0.0), vec3(0.0,0.0,0.0));");
 
-        src.push("float lambertian = 1.0;");
+        src.push("vec3 rgb = (vec3(float(vColor.r) / 255.0, float(vColor.g) / 255.0, float(vColor.b) / 255.0));");
+        src.push("float alpha = float(vColor.a) / 255.0;");
+
+        src.push("vec3  diffuseColor = rgb;");
+        src.push("float specularF0 = 1.0;");
+        src.push("float metallic = float(vMetallicRoughness.r) / 255.0;");
+        src.push("float roughness = float(vMetallicRoughness.g) / 255.0;");
+        src.push("float dielectricSpecular = 0.16 * specularF0 * specularF0;");
+
+        src.push("material.diffuseColor      = diffuseColor * (1.0 - dielectricSpecular) * (1.0 - metallic);");
+        src.push("material.specularRoughness = clamp(roughness, 0.04, 1.0);");
+        src.push("material.specularColor     = mix(vec3(dielectricSpecular), diffuseColor, metallic);");
+
+        src.push("geometry.position      = vViewPosition.xyz;");
+        src.push("geometry.viewNormal    = -vViewNormal;");
+        src.push("geometry.viewEyeDir    = normalize(vViewPosition.xyz);");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("geometry.worldNormal   = normalize(vWorldNormal);");
+        }
+
+        if (lightsState.lightMaps.length > 0 || lightsState.reflectionMaps.length > 0) {
+            src.push("computePBRLightMapping(geometry, material, reflectedLight);");
+        }
 
         for (let i = 0, len = lightsState.lights.length; i < len; i++) {
-
             const light = lightsState.lights[i];
-
             if (light.type === "ambient") {
                 continue;
             }
             if (light.type === "dir") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightDir" + i + ");");
+                    src.push("light.direction =  normalize(lightDir" + i + ");");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
+                    src.push("light.direction =  normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "point") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightPos" + i + " - vViewPosition.xyz);");
+                    src.push("light.direction =  normalize(lightPos" + i + " - vViewPosition.xyz);");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
+                    src.push("light.direction =  normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "spot") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightDir" + i + ");");
+                    src.push("light.direction =  normalize(lightDir" + i + ");");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
+                    src.push("light.direction =  normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
                 }
             } else {
                 continue;
             }
-            src.push("lambertian = max(dot(-vViewNormal, viewLightDir), 0.0);");
-            src.push("reflectedColor += lambertian * (lightColor" + i + ".rgb * lightColor" + i + ".a);");
+
+            src.push("light.color =  lightColor" + i + ".rgb * lightColor" + i + ".a;"); // a is intensity
+
+            src.push("computePBRLighting(light, geometry, material, reflectedLight);");
         }
 
-        src.push("vec3 rgb = (vec3(float(vColor.r) / 255.0, float(vColor.g) / 255.0, float(vColor.b) / 255.0));");
-        src.push("vec4 color =  vec4((lightAmbient.rgb * lightAmbient.a * rgb) + (reflectedColor * rgb), float(vColor.a) / 255.0);");
+        src.push("vec3 outgoingLight = (reflectedLight.diffuse) + (reflectedLight.specular);");
+
+      //  src.push("outgoingLight += (lightAmbient.rgb* lightAmbient.a);");
+
+        src.push("vec4 fragColor;");
 
         if (this._withSAO) {
             // Doing SAO blend in the main solid fill draw shader just so that edge lines can be drawn over the top
@@ -32988,10 +33276,16 @@ class TrianglesBatchingColorQualityRenderer {
             src.push("   float blendFactor       = uSAOParams[3];");
             src.push("   vec2 uv                 = vec2(gl_FragCoord.x / viewportWidth, gl_FragCoord.y / viewportHeight);");
             src.push("   float ambient           = smoothstep(blendCutoff, 1.0, unpackRGBAToDepth(texture2D(uOcclusionTexture, uv))) * blendFactor;");
-            src.push("   gl_FragColor            = vec4(color.rgb * ambient, color.a);");
+            src.push("   fragColor            = vec4(outgoingLight.rgb * ambient, alpha);");
         } else {
-            src.push("   gl_FragColor            = color;");
+            src.push("   fragColor            = vec4(outgoingLight.rgb, alpha);");
         }
+
+        if (gammaOutput) {
+            src.push("fragColor = linearToGamma(fragColor, gammaFactor);");
+        }
+
+        src.push("gl_FragColor = fragColor;");
 
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;");
@@ -33254,6 +33548,7 @@ class TrianglesBatchingBuffer {
         this.maxIndices = maxGeometryBatchSize * 3; // Rough rule-of-thumb
         this.positions = [];
         this.colors = [];
+        this.metallicRoughness = [];
         this.normals = [];
         this.pickColors = [];
         this.flags = [];
@@ -33481,6 +33776,7 @@ class TrianglesBatchingLayer {
             offsetsBuf: null,
             normalsBuf: null,
             colorsBuf: null,
+            metallicRoughnessBuf: null,
             flagsBuf: null,
             flags2Buf: null,
             indicesBuf: null,
@@ -33544,6 +33840,8 @@ class TrianglesBatchingLayer {
      * @param cfg.indices  Flat int indices array.
      * @param [cfg.edgeIndices] Flat int edges indices array.
      * @param cfg.color Quantized RGB color [0..255,0..255,0..255,0..255]
+     * @param cfg.metallic Metalness factor [0..255]
+     * @param cfg.roughness Roughness factor [0..255]
      * @param cfg.opacity Opacity [0..255]
      * @param [cfg.meshMatrix] Flat float 4x4 matrix
      * @param [cfg.worldMatrix] Flat float 4x4 matrix
@@ -33562,6 +33860,8 @@ class TrianglesBatchingLayer {
         const indices = cfg.indices;
         const edgeIndices = cfg.edgeIndices;
         const color = cfg.color;
+        const metallic = cfg.metallic;
+        const roughness = cfg.roughness;
         const colors = cfg.colors;
         const opacity = cfg.opacity;
         const meshMatrix = cfg.meshMatrix;
@@ -33689,25 +33989,31 @@ class TrianglesBatchingLayer {
         if (colors) {
 
             for (let i = 0, len = colors.length; i < len; i += 3) {
-                buffer.colors.push(colors[i]*255);
-                buffer.colors.push(colors[i + 1]*255);
-                buffer.colors.push(colors[i + 2]*255);
+                buffer.colors.push(colors[i] * 255);
+                buffer.colors.push(colors[i + 1] * 255);
+                buffer.colors.push(colors[i + 2] * 255);
                 buffer.colors.push(255);
             }
 
-        } else
-            if (color) {
+        } else if (color) {
 
             const r = color[0]; // Color is pre-quantized by PerformanceModel
             const g = color[1];
             const b = color[2];
             const a = opacity;
 
+            const metallicValue = (metallic !== null && metallic !== undefined) ? metallic : 0;
+            const roughnessValue = (roughness !== null && roughness !== undefined) ? roughness : 255;
+
             for (let i = 0; i < numVerts; i++) {
+
                 buffer.colors.push(r);
                 buffer.colors.push(g);
                 buffer.colors.push(b);
                 buffer.colors.push(a);
+
+                buffer.metallicRoughness.push(metallicValue);
+                buffer.metallicRoughness.push(roughnessValue);
             }
         }
 
@@ -33790,6 +34096,12 @@ class TrianglesBatchingLayer {
             const colors = new Uint8Array(buffer.colors);
             let normalized = false;
             state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, colors, buffer.colors.length, 4, gl.DYNAMIC_DRAW, normalized);
+        }
+
+        if (buffer.metallicRoughness.length > 0) {
+            const metallicRoughness = new Uint8Array(buffer.metallicRoughness);
+            let normalized = false;
+            state.metallicRoughnessBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, metallicRoughness, buffer.metallicRoughness.length, 2, gl.STATIC_DRAW, normalized);
         }
 
         if (buffer.colors.length > 0) { // Because we build flags arrays here, get their length from the colors array
@@ -34161,7 +34473,7 @@ class TrianglesBatchingLayer {
             return;
         }
         if (frameCtx.withSAO) {
-            if (frameCtx.quality) {
+            if (frameCtx.pbrEnabled) {
                 if (this._batchingRenderers.colorQualityRendererWithSAO) {
                     this._batchingRenderers.colorQualityRendererWithSAO.drawLayer(frameCtx, this, RENDER_PASSES.COLOR_OPAQUE);
                 }
@@ -34171,7 +34483,7 @@ class TrianglesBatchingLayer {
                 }
             }
         } else {
-            if (frameCtx.quality) {
+            if (frameCtx.pbrEnabled) {
                 if (this._batchingRenderers.colorQualityRenderer) {
                     this._batchingRenderers.colorQualityRenderer.drawLayer(frameCtx, this, RENDER_PASSES.COLOR_OPAQUE);
                 }
@@ -34187,7 +34499,7 @@ class TrianglesBatchingLayer {
         if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === 0 || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
-        if (frameCtx.quality) {
+        if (frameCtx.pbrEnabled) {
             if (this._batchingRenderers.colorQualityRenderer) {
                 this._batchingRenderers.colorQualityRenderer.drawLayer(frameCtx, this, RENDER_PASSES.COLOR_TRANSPARENT);
             }
@@ -34362,6 +34674,10 @@ class TrianglesBatchingLayer {
         if (state.colorsBuf) {
             state.colorsBuf.destroy();
             state.colorsBuf = null;
+        }
+        if (state.metallicRoughnessBuf) {
+            state.metallicRoughnessBuf.destroy();
+            state.metallicRoughnessBuf = null;
         }
         if (state.flagsBuf) {
             state.flagsBuf.destroy();
@@ -37941,6 +38257,12 @@ class TrianglesInstancingShadowRenderer {
 const tempVec4$4 = math.vec4();
 const tempVec3a$q = math.vec3();
 
+const TEXTURE_DECODE_FUNCS$1 = {
+    "linear": "linearToLinear",
+    "sRGB": "sRGBToLinear",
+    "gamma": "gammaToLinear"
+};
+
 /**
  * @private
  */
@@ -37959,7 +38281,7 @@ class TrianglesInstancingColorQualityRenderer {
 
     _getHash() {
         const scene = this._scene;
-        return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
+        return [scene.gammaOutput, scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
     }
 
     drawLayer(frameCtx, instancingLayer, renderPass) {
@@ -38038,6 +38360,9 @@ class TrianglesInstancingColorQualityRenderer {
         this._aColor.bindArrayBuffer(state.colorsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
 
+        this._aMetallicRoughness.bindArrayBuffer(state.metallicRoughnessBuf);
+        instanceExt.vertexAttribDivisorANGLE(this._aMetallicRoughness.location, 1);
+
         this._aFlags.bindArrayBuffer(state.flagsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 1);
 
@@ -38062,6 +38387,7 @@ class TrianglesInstancingColorQualityRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelNormalMatrixCol1.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelNormalMatrixCol2.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 0);
+        instanceExt.vertexAttribDivisorANGLE(this._aMetallicRoughness.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
 
         if (this._aFlags2) { // Won't be in shader when not clipping
@@ -38101,6 +38427,8 @@ class TrianglesInstancingColorQualityRenderer {
         this._uViewNormalMatrix = program.getLocation("viewNormalMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
 
+        this._uGammaFactor = program.getLocation("gammaFactor");
+
         this._uLightAmbient = program.getLocation("lightAmbient");
         this._uLightColor = [];
         this._uLightDir = [];
@@ -38133,6 +38461,14 @@ class TrianglesInstancingColorQualityRenderer {
             }
         }
 
+        if (lightsState.reflectionMaps.length > 0) {
+            this._uReflectionMap = "reflectionMap";
+        }
+
+        if (lightsState.lightMaps.length > 0) {
+            this._uLightMap = "lightMap";
+        }
+
         this._uSectionPlanes = [];
 
         for (let i = 0, len = scene._sectionPlanesState.sectionPlanes.length; i < len; i++) {
@@ -38146,6 +38482,7 @@ class TrianglesInstancingColorQualityRenderer {
         this._aPosition = program.getAttribute("position");
         this._aNormal = program.getAttribute("normal");
         this._aColor = program.getAttribute("color");
+        this._aMetallicRoughness = program.getAttribute("metallicRoughness");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
         this._aOffset = program.getAttribute("offset");
@@ -38161,13 +38498,14 @@ class TrianglesInstancingColorQualityRenderer {
         this._uOcclusionTexture = "uOcclusionTexture";
         this._uSAOParams = program.getLocation("uSAOParams");
 
-        if ( scene.logarithmicDepthBufferEnabled) {
+        if (scene.logarithmicDepthBufferEnabled) {
             this._uLogDepthBufFC = program.getLocation("logDepthBufFC");
         }
     }
 
     _bindProgram(frameCtx) {
 
+        const maxTextureUnits = WEBGL_INFO$1.MAX_TEXTURE_UNITS;
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const lightsState = scene._lightsState;
@@ -38199,6 +38537,18 @@ class TrianglesInstancingColorQualityRenderer {
             }
         }
 
+        if (lightsState.reflectionMaps.length > 0 && lightsState.reflectionMaps[0].texture && this._uReflectionMap) {
+            this._program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frameCtx.textureUnit);
+            frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+            frameCtx.bindTexture++;
+        }
+
+        if (lightsState.lightMaps.length > 0 && lightsState.lightMaps[0].texture && this._uLightMap) {
+            this._program.bindTexture(this._uLightMap, lightsState.lightMaps[0].texture, frameCtx.textureUnit);
+            frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+            frameCtx.bindTexture++;
+        }
+
         if (this._withSAO) {
             const sao = scene.sao;
             const saoEnabled = sao.possible;
@@ -38210,13 +38560,19 @@ class TrianglesInstancingColorQualityRenderer {
                 tempVec4$4[2] = sao.blendCutoff;
                 tempVec4$4[3] = sao.blendFactor;
                 gl.uniform4fv(this._uSAOParams, tempVec4$4);
-                this._program.bindTexture(this._uOcclusionTexture, frameCtx.occlusionTexture, 0);
+                this._program.bindTexture(this._uOcclusionTexture, frameCtx.occlusionTexture, frameCtx.textureUnit);
+                frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                frameCtx.bindTexture++;
             }
         }
 
-        if ( scene.logarithmicDepthBufferEnabled) {
+        if (scene.logarithmicDepthBufferEnabled) {
             const logDepthBufFC = 2.0 / (Math.log(project.far + 1.0) / Math.LN2);
             gl.uniform1f(this._uLogDepthBufFC, logDepthBufFC);
+        }
+
+        if (this._uGammaFactor) {
+            gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
         }
     }
 
@@ -38231,6 +38587,7 @@ class TrianglesInstancingColorQualityRenderer {
 
         const scene = this._scene;
         const sectionPlanesState = scene._sectionPlanesState;
+        const lightsState = scene._lightsState;
         const clipping = sectionPlanesState.sectionPlanes.length > 0;
         const src = [];
 
@@ -38244,6 +38601,7 @@ class TrianglesInstancingColorQualityRenderer {
         src.push("attribute vec3 position;");
         src.push("attribute vec2 normal;");
         src.push("attribute vec4 color;");
+        src.push("attribute vec2 metallicRoughness;");
         src.push("attribute vec4 flags;");
         src.push("attribute vec4 flags2;");
 
@@ -38284,6 +38642,11 @@ class TrianglesInstancingColorQualityRenderer {
         src.push("varying vec4 vViewPosition;");
         src.push("varying vec3 vViewNormal;");
         src.push("varying vec4 vColor;");
+        src.push("varying vec2 vMetallicRoughness;");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("varying vec3 vWorldNormal;");
+        }
 
         if (clipping) {
             src.push("varying vec4 vWorldPosition;");
@@ -38325,9 +38688,16 @@ class TrianglesInstancingColorQualityRenderer {
                 src.push("clipPos.z *= clipPos.w;");
             }
         }
+
         src.push("vViewPosition = viewPosition;");
         src.push("vViewNormal = viewNormal;");
         src.push("vColor = color;");
+        src.push("vMetallicRoughness = metallicRoughness;");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("vWorldNormal = worldNormal.xyz;");
+        }
+
         src.push("gl_Position = clipPos;");
         src.push("}");
         src.push("}");
@@ -38337,6 +38707,7 @@ class TrianglesInstancingColorQualityRenderer {
     _buildFragmentShader() {
 
         const scene = this._scene;
+        const gammaOutput = scene.gammaOutput; // If set, then it expects that all textures and colors need to be outputted in premultiplied gamma. Default is false.
         const sectionPlanesState = scene._sectionPlanesState;
         const lightsState = scene._lightsState;
         const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -38377,6 +38748,14 @@ class TrianglesInstancingColorQualityRenderer {
             src.push("}");
         }
 
+        if (lightsState.reflectionMaps.length > 0) {
+            src.push("uniform samplerCube reflectionMap;");
+        }
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("uniform samplerCube lightMap;");
+        }
+
         src.push("uniform vec4 lightAmbient;");
 
         for (let i = 0, len = lightsState.lights.length; i < len; i++) {
@@ -38397,10 +38776,26 @@ class TrianglesInstancingColorQualityRenderer {
             }
         }
 
+        src.push("uniform float gammaFactor;");
+        src.push("vec4 linearToLinear( in vec4 value ) {");
+        src.push("  return value;");
+        src.push("}");
+        src.push("vec4 sRGBToLinear( in vec4 value ) {");
+        src.push("  return vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );");
+        src.push("}");
+        src.push("vec4 gammaToLinear( in vec4 value) {");
+        src.push("  return vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );");
+        src.push("}");
+        if (gammaOutput) {
+            src.push("vec4 linearToGamma( in vec4 value, in float gammaFactor ) {");
+            src.push("  return vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );");
+            src.push("}");
+        }
+
         if (clipping) {
             src.push("varying vec4 vWorldPosition;");
             src.push("varying vec4 vFlags2;");
-            for (i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
+            for (let i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
                 src.push("uniform bool sectionPlaneActive" + i + ";");
                 src.push("uniform vec3 sectionPlanePos" + i + ";");
                 src.push("uniform vec3 sectionPlaneDir" + i + ";");
@@ -38410,13 +38805,165 @@ class TrianglesInstancingColorQualityRenderer {
         src.push("varying vec4 vViewPosition;");
         src.push("varying vec3 vViewNormal;");
         src.push("varying vec4 vColor;");
+        src.push("varying vec2 vMetallicRoughness;");
+
+        if (lightsState.lightMaps.length > 0) {
+            src.push("varying vec3 vWorldNormal;");
+        }
+
+        src.push("uniform mat4 viewMatrix;");
+
+        // CONSTANT DEFINITIONS
+
+        src.push("#define PI 3.14159265359");
+        src.push("#define RECIPROCAL_PI 0.31830988618");
+        src.push("#define RECIPROCAL_PI2 0.15915494");
+        src.push("#define EPSILON 1e-6");
+
+        src.push("#define saturate(a) clamp( a, 0.0, 1.0 )");
+
+        // UTILITY DEFINITIONS
+
+        src.push("vec3 inverseTransformDirection(in vec3 dir, in mat4 matrix) {");
+        src.push("   return normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );");
+        src.push("}");
+
+        // STRUCTURES
+
+        src.push("struct IncidentLight {");
+        src.push("   vec3 color;");
+        src.push("   vec3 direction;");
+        src.push("};");
+
+        src.push("struct ReflectedLight {");
+        src.push("   vec3 diffuse;");
+        src.push("   vec3 specular;");
+        src.push("};");
+
+        src.push("struct Geometry {");
+        src.push("   vec3 position;");
+        src.push("   vec3 viewNormal;");
+        src.push("   vec3 worldNormal;");
+        src.push("   vec3 viewEyeDir;");
+        src.push("};");
+
+        src.push("struct Material {");
+        src.push("   vec3    diffuseColor;");
+        src.push("   float   specularRoughness;");
+        src.push("   vec3    specularColor;");
+        src.push("   float   shine;"); // Only used for Phong
+        src.push("};");
+
+        // IRRADIANCE EVALUATION
+
+        src.push("float GGXRoughnessToBlinnExponent(const in float ggxRoughness) {");
+        src.push("   float r = ggxRoughness + 0.0001;");
+        src.push("   return (2.0 / (r * r) - 2.0);");
+        src.push("}");
+
+        src.push("float getSpecularMIPLevel(const in float blinnShininessExponent, const in int maxMIPLevel) {");
+        src.push("   float maxMIPLevelScalar = float( maxMIPLevel );");
+        src.push("   float desiredMIPLevel = maxMIPLevelScalar - 0.79248 - 0.5 * log2( ( blinnShininessExponent * blinnShininessExponent ) + 1.0 );");
+        src.push("   return clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );");
+        src.push("}");
+
+        if (lightsState.reflectionMaps.length > 0) {
+            src.push("vec3 getLightProbeIndirectRadiance(const in vec3 reflectVec, const in float blinnShininessExponent, const in int maxMIPLevel) {");
+            src.push("   float mipLevel = 0.5 * getSpecularMIPLevel(blinnShininessExponent, maxMIPLevel);"); //TODO: a random factor - fix this
+            src.push("   vec3 envMapColor = " + TEXTURE_DECODE_FUNCS$1[lightsState.reflectionMaps[0].encoding] + "(textureCube(reflectionMap, reflectVec, mipLevel)).rgb;");
+            src.push("  return envMapColor;");
+            src.push("}");
+        }
+
+        // SPECULAR BRDF EVALUATION
+
+        src.push("vec3 F_Schlick(const in vec3 specularColor, const in float dotLH) {");
+        src.push("   float fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) * dotLH );");
+        src.push("   return ( 1.0 - specularColor ) * fresnel + specularColor;");
+        src.push("}");
+
+        src.push("float G_GGX_Smith(const in float alpha, const in float dotNL, const in float dotNV) {");
+        src.push("   float a2 = ( alpha * alpha );");
+        src.push("   float gl = dotNL + sqrt( a2 + ( 1.0 - a2 ) * ( dotNL * dotNL ) );");
+        src.push("   float gv = dotNV + sqrt( a2 + ( 1.0 - a2 ) * ( dotNV * dotNV ) );");
+        src.push("   return 1.0 / ( gl * gv );");
+        src.push("}");
+
+        src.push("float G_GGX_SmithCorrelated(const in float alpha, const in float dotNL, const in float dotNV) {");
+        src.push("   float a2 = ( alpha * alpha );");
+        src.push("   float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * ( dotNV * dotNV ) );");
+        src.push("   float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * ( dotNL * dotNL ) );");
+        src.push("   return 0.5 / max( gv + gl, EPSILON );");
+        src.push("}");
+
+        src.push("float D_GGX(const in float alpha, const in float dotNH) {");
+        src.push("   float a2 = ( alpha * alpha );");
+        src.push("   float denom = ( dotNH * dotNH) * ( a2 - 1.0 ) + 1.0;");
+        src.push("   return RECIPROCAL_PI * a2 / ( denom * denom);");
+        src.push("}");
+
+        src.push("vec3 BRDF_Specular_GGX(const in IncidentLight incidentLight, const in Geometry geometry, const in vec3 specularColor, const in float roughness) {");
+        src.push("   float alpha = ( roughness * roughness );");
+        src.push("   vec3 halfDir = normalize( incidentLight.direction + geometry.viewEyeDir );");
+        src.push("   float dotNL = saturate( dot( geometry.viewNormal, incidentLight.direction ) );");
+        src.push("   float dotNV = saturate( dot( geometry.viewNormal, geometry.viewEyeDir ) );");
+        src.push("   float dotNH = saturate( dot( geometry.viewNormal, halfDir ) );");
+        src.push("   float dotLH = saturate( dot( incidentLight.direction, halfDir ) );");
+        src.push("   vec3  F = F_Schlick( specularColor, dotLH );");
+        src.push("   float G = G_GGX_SmithCorrelated( alpha, dotNL, dotNV );");
+        src.push("   float D = D_GGX( alpha, dotNH );");
+        src.push("   return F * (G * D);");
+        src.push("}");
+
+        src.push("vec3 BRDF_Specular_GGX_Environment(const in Geometry geometry, const in vec3 specularColor, const in float roughness) {");
+        src.push("   float dotNV = saturate(dot(geometry.viewNormal, geometry.viewEyeDir));");
+        src.push("   const vec4 c0 = vec4( -1, -0.0275, -0.572,  0.022);");
+        src.push("   const vec4 c1 = vec4(  1,  0.0425,   1.04, -0.04);");
+        src.push("   vec4 r = roughness * c0 + c1;");
+        src.push("   float a004 = min(r.x * r.x, exp2(-9.28 * dotNV)) * r.x + r.y;");
+        src.push("   vec2 AB    = vec2(-1.04, 1.04) * a004 + r.zw;");
+        src.push("   return specularColor * AB.x + AB.y;");
+        src.push("}");
+
+        if (lightsState.lightMaps.length > 0 || lightsState.reflectionMaps.length > 0) {
+
+            src.push("void computePBRLightMapping(const in Geometry geometry, const in Material material, inout ReflectedLight reflectedLight) {");
+
+            if (lightsState.lightMaps.length > 0) {
+                src.push("   vec3 irradiance = " + TEXTURE_DECODE_FUNCS$1[lightsState.lightMaps[0].encoding] + "(textureCube(lightMap, geometry.worldNormal)).rgb;");
+                src.push("   irradiance *= PI;");
+                src.push("   vec3 diffuseBRDFContrib = (RECIPROCAL_PI * material.diffuseColor);");
+                src.push("   reflectedLight.diffuse += irradiance * diffuseBRDFContrib;");
+            }
+
+            if (lightsState.reflectionMaps.length > 0) {
+                src.push("   vec3 reflectVec             = reflect(-geometry.viewEyeDir, geometry.viewNormal);");
+                src.push("   reflectVec                  = inverseTransformDirection(reflectVec, viewMatrix);");
+                src.push("   float blinnExpFromRoughness = GGXRoughnessToBlinnExponent(material.specularRoughness);");
+                src.push("   vec3 radiance               = getLightProbeIndirectRadiance(reflectVec, blinnExpFromRoughness, 8);");
+                src.push("   vec3 specularBRDFContrib    = BRDF_Specular_GGX_Environment(geometry, material.specularColor, material.specularRoughness);");
+                src.push("   reflectedLight.specular     += radiance * specularBRDFContrib;");
+            }
+
+            src.push("}");
+        }
+
+        // MAIN LIGHTING COMPUTATION FUNCTION
+
+        src.push("void computePBRLighting(const in IncidentLight incidentLight, const in Geometry geometry, const in Material material, inout ReflectedLight reflectedLight) {");
+        src.push("   float dotNL     = saturate(dot(geometry.viewNormal, incidentLight.direction));");
+        src.push("   vec3 irradiance = dotNL * incidentLight.color * PI;");
+        src.push("   reflectedLight.diffuse  += irradiance * (RECIPROCAL_PI * material.diffuseColor);");
+        src.push("   reflectedLight.specular += irradiance * BRDF_Specular_GGX(incidentLight, geometry, material.specularColor, material.specularRoughness);");
+        src.push("}");
 
         src.push("void main(void) {");
+
         if (clipping) {
             src.push("  bool clippable = (float(vFlags2.x) > 0.0);");
             src.push("  if (clippable) {");
             src.push("  float dist = 0.0;");
-            for (i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
+            for (let i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
                 src.push("if (sectionPlaneActive" + i + ") {");
                 src.push("   dist += clamp(dot(-sectionPlaneDir" + i + ".xyz, vWorldPosition.xyz - sectionPlanePos" + i + ".xyz), 0.0, 1000.0);");
                 src.push("}");
@@ -38425,10 +38972,34 @@ class TrianglesInstancingColorQualityRenderer {
             src.push("}");
         }
 
-        src.push("vec3 reflectedColor = vec3(0.0, 0.0, 0.0);");
-        src.push("vec3 viewLightDir = vec3(0.0, 0.0, -1.0);");
+        src.push("IncidentLight  light;");
+        src.push("Material       material;");
+        src.push("Geometry       geometry;");
+        src.push("ReflectedLight reflectedLight = ReflectedLight(vec3(0.0,0.0,0.0), vec3(0.0,0.0,0.0));");
 
-        src.push("float lambertian = 1.0;");
+        src.push("vec3 rgb = (vec3(float(vColor.r) / 255.0, float(vColor.g) / 255.0, float(vColor.b) / 255.0));");
+        src.push("float alpha = float(vColor.a) / 255.0;");
+
+        src.push("vec3  diffuseColor = rgb;");
+        src.push("float specularF0 = 1.0;");
+        src.push("float metallic = float(vMetallicRoughness.r) / 255.0;");
+        src.push("float roughness = float(vMetallicRoughness.g) / 255.0;");
+        src.push("float dielectricSpecular = 0.16 * specularF0 * specularF0;");
+
+        src.push("material.diffuseColor      = diffuseColor * (1.0 - dielectricSpecular) * (1.0 - metallic);");
+        src.push("material.specularRoughness = clamp(roughness, 0.04, 1.0);");
+        src.push("material.specularColor     = mix(vec3(dielectricSpecular), diffuseColor, metallic);");
+
+        src.push("geometry.position      = vViewPosition.xyz;");
+        src.push("geometry.viewNormal    = -vViewNormal;");
+        src.push("geometry.viewEyeDir    = normalize(vViewPosition.xyz);");
+        if (lightsState.lightMaps.length > 0) {
+            src.push("geometry.worldNormal   = normalize(vWorldNormal);");
+        }
+
+        if (lightsState.lightMaps.length > 0 || lightsState.reflectionMaps.length > 0) {
+            src.push("computePBRLightMapping(geometry, material, reflectedLight);");
+        }
 
         for (let i = 0, len = lightsState.lights.length; i < len; i++) {
 
@@ -38439,31 +39010,34 @@ class TrianglesInstancingColorQualityRenderer {
             }
             if (light.type === "dir") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightDir" + i + ");");
+                    src.push("light.direction = normalize(lightDir" + i + ");");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
+                    src.push("light.direction = normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "point") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightPos" + i + " - vViewPosition.xyz);");
+                    src.push("light.direction = normalize(lightPos" + i + " - vViewPosition.xyz);");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
+                    src.push("light.direction = normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "spot") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightDir" + i + ");");
+                    src.push("light.direction = normalize(lightDir" + i + ");");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
+                    src.push("light.direction = normalize((viewMatrix * vec4(lightDir" + i + ", 0.0)).xyz);");
                 }
             } else {
                 continue;
             }
-            src.push("lambertian = max(dot(-vViewNormal, viewLightDir), 0.0);");
-            src.push("reflectedColor += lambertian * (lightColor" + i + ".rgb * lightColor" + i + ".a);");
+
+            src.push("light.color =  lightColor" + i + ".rgb * lightColor" + i + ".a;"); // a is intensity
+
+            src.push("computePBRLighting(light, geometry, material, reflectedLight);");
         }
 
-        src.push("vec3 rgb = (vec3(float(vColor.r) / 255.0, float(vColor.g) / 255.0, float(vColor.b) / 255.0));");
-        src.push("vec4 color =  vec4((lightAmbient.rgb * lightAmbient.a * rgb) + (reflectedColor * rgb), float(vColor.a) / 255.0);");
+        src.push("vec3 outgoingLight = (reflectedLight.diffuse) + (reflectedLight.specular);");
+
+        src.push("vec4 fragColor;");
 
         if (this._withSAO) {
             // Doing SAO blend in the main solid fill draw shader just so that edge lines can be drawn over the top
@@ -38474,10 +39048,18 @@ class TrianglesInstancingColorQualityRenderer {
             src.push("   float blendFactor       = uSAOParams[3];");
             src.push("   vec2 uv                 = vec2(gl_FragCoord.x / viewportWidth, gl_FragCoord.y / viewportHeight);");
             src.push("   float ambient           = smoothstep(blendCutoff, 1.0, unpackRGBAToDepth(texture2D(uOcclusionTexture, uv))) * blendFactor;");
-            src.push("   gl_FragColor            = vec4(color.rgb * ambient, color.a);");
+            src.push("   fragColor            = vec4(outgoingLight.rgb * ambient, alpha);");
         } else {
-            src.push("   gl_FragColor            = color;");
+            src.push("   fragColor            = vec4(outgoingLight.rgb, alpha);");
         }
+
+        if (gammaOutput) {
+            src.push("fragColor = linearToGamma(fragColor, gammaFactor);");
+        }
+
+    //    src.push("outgoingLight += (lightAmbient.rgb* lightAmbient.a);");
+
+        src.push("gl_FragColor = fragColor;");
 
         if (scene.logarithmicDepthBufferEnabled && WEBGL_INFO$1.SUPPORTED_EXTENSIONS["EXT_frag_depth"]) {
             src.push("gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;");
@@ -38839,6 +39421,7 @@ class TrianglesInstancingLayer {
 
         // Vertex arrays
         this._colors = [];
+        this._metallicRoughness = [];
         this._pickColors = [];
         this._offsets = [];
 
@@ -38876,6 +39459,8 @@ class TrianglesInstancingLayer {
      *
      * @param cfg Portion params
      * @param cfg.color Color [0..255,0..255,0..255]
+     * @param cfg.metallic Metalness factor [0..255]
+     * @param cfg.roughness Roughness factor [0..255]
      * @param cfg.opacity Opacity [0..255].
      * @param cfg.meshMatrix Flat float 4x4 matrix.
      * @param [cfg.worldMatrix] Flat float 4x4 matrix.
@@ -38886,6 +39471,8 @@ class TrianglesInstancingLayer {
     createPortion(cfg) {
 
         const color = cfg.color;
+        const metallic = cfg.metallic;
+        const roughness = cfg.roughness;
         const opacity = cfg.opacity;
         const meshMatrix = cfg.meshMatrix;
         const worldMatrix = cfg.worldMatrix;
@@ -38907,6 +39494,9 @@ class TrianglesInstancingLayer {
         this._colors.push(g);
         this._colors.push(b);
         this._colors.push(opacity);
+
+        this._metallicRoughness.push((metallic !== null && metallic !== undefined) ? metallic : 0);
+        this._metallicRoughness.push((roughness !== null && roughness !== undefined) ? roughness : 255);
 
         if (this.model.scene.entityOffsetsEnabled) {
             this._offsets.push(0);
@@ -39008,6 +39598,11 @@ class TrianglesInstancingLayer {
             let notNormalized = false;
             this._state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._colors), this._colors.length, 4, gl.DYNAMIC_DRAW, notNormalized);
             this._colors = []; // Release memory
+        }
+        if (this._metallicRoughness.length > 0) {
+            const metallicRoughness = new Uint8Array(this._metallicRoughness);
+            let normalized = false;
+            this._state.metallicRoughnessBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, metallicRoughness, this._metallicRoughness.length, 2, gl.STATIC_DRAW, normalized);
         }
         if (flagsLength > 0) {
             // Because we only build flags arrays here, 
@@ -39372,7 +39967,7 @@ class TrianglesInstancingLayer {
             return;
         }
         if (frameCtx.withSAO) {
-            if (frameCtx.quality) {
+            if (frameCtx.pbrEnabled) {
                 if (this._instancingRenderers.colorQualityRendererWithSAO) {
                     this._instancingRenderers.colorQualityRendererWithSAO.drawLayer(frameCtx, this, RENDER_PASSES.COLOR_OPAQUE);
                 }
@@ -39382,7 +39977,7 @@ class TrianglesInstancingLayer {
                 }
             }
         } else {
-            if (frameCtx.quality) {
+            if (frameCtx.pbrEnabled) {
                 if (this._instancingRenderers.colorQualityRenderer) {
                     this._instancingRenderers.colorQualityRenderer.drawLayer(frameCtx, this, RENDER_PASSES.COLOR_OPAQUE);
                 }
@@ -39398,7 +39993,7 @@ class TrianglesInstancingLayer {
         if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === 0 || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
-        if (frameCtx.quality) {
+        if (frameCtx.pbrEnabled) {
             if (this._instancingRenderers.colorQualityRenderer) {
                 this._instancingRenderers.colorQualityRenderer.drawLayer(frameCtx, this, RENDER_PASSES.COLOR_TRANSPARENT);
             }
@@ -39571,6 +40166,10 @@ class TrianglesInstancingLayer {
         if (state.colorsBuf) {
             state.colorsBuf.destroy();
             state.colorsBuf = null;
+        }
+        if (state.metallicRoughnessBuf) {
+            state.metallicRoughnessBuf.destroy();
+            state.metallicRoughnessBuf = null;
         }
         if (state.flagsBuf) {
             state.flagsBuf.destroy();
@@ -49828,6 +50427,8 @@ class PerformanceModel extends Component {
 
         const color = (cfg.color) ? new Uint8Array([Math.floor(cfg.color[0] * 255), Math.floor(cfg.color[1] * 255), Math.floor(cfg.color[2] * 255)]) : [255, 255, 255];
         const opacity = (cfg.opacity !== undefined && cfg.opacity !== null) ? Math.floor(cfg.opacity * 255) : 255;
+        const metallic = (cfg.metallic !== undefined && cfg.metallic !== null) ? Math.floor(cfg.metallic * 255) : 0;
+        const roughness = (cfg.roughness !== undefined && cfg.roughness !== null) ? Math.floor(cfg.roughness * 255) : 255;
 
         if (opacity < 255) {
             this.numTransparentLayerPortions++;
@@ -49867,6 +50468,8 @@ class PerformanceModel extends Component {
 
             portionId = instancingLayer.createPortion({
                 color: color,
+                metallic: metallic,
+                roughness: roughness,
                 opacity: opacity,
                 meshMatrix: meshMatrix,
                 worldMatrix: worldMatrix,
@@ -49993,6 +50596,8 @@ class PerformanceModel extends Component {
                         indices: indices,
                         edgeIndices: edgeIndices,
                         color: color,
+                        metallic: metallic,
+                        roughness: roughness,
                         colors: cfg.colors,
                         opacity: opacity,
                         meshMatrix: meshMatrix,
@@ -50695,7 +51300,6 @@ class PerformanceModel extends Component {
      * SAO is configured by the Scene's {@link SAO} component.
      *
      * @type {Boolean}
-     * @abstract
      */
     get saoEnabled() {
         return this._saoEnabled;
@@ -59776,7 +60380,7 @@ function extract$6(elements) {
 
         eachMeshGeometriesPortion: elements[13],
         eachMeshMatricesPortion: elements[14],
-        eachMeshColorAndOpacity: elements[15],
+        eachMeshMaterial: elements[15],
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
@@ -59811,7 +60415,7 @@ function inflate$6(deflatedData) {
 
         eachMeshGeometriesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachMeshGeometriesPortion).buffer),
         eachMeshMatricesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachMeshMatricesPortion).buffer),
-        eachMeshColorAndOpacity: new Uint8Array(pako$6.inflate(deflatedData.eachMeshColorAndOpacity).buffer),
+        eachMeshMaterial: new Uint8Array(pako$6.inflate(deflatedData.eachMeshMaterial).buffer),
 
         eachEntityId: pako$6.inflate(deflatedData.eachEntityId, {to: 'string'}),
         eachEntityMeshesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachEntityMeshesPortion).buffer),
@@ -59853,7 +60457,7 @@ function load$6(viewer, options, inflatedData, performanceModel) {
 
     const eachMeshGeometriesPortion = inflatedData.eachMeshGeometriesPortion;
     const eachMeshMatricesPortion = inflatedData.eachMeshMatricesPortion;
-    const eachMeshColorAndOpacity = inflatedData.eachMeshColorAndOpacity;
+    const eachMeshMaterial = inflatedData.eachMeshMaterial;
 
     const eachEntityId = JSON.parse(inflatedData.eachEntityId);
     const eachEntityMeshesPortion = inflatedData.eachEntityMeshesPortion;
@@ -59917,7 +60521,7 @@ function load$6(viewer, options, inflatedData, performanceModel) {
 
             const xktEntityId = eachEntityId[tileEntityIndex];
             const entityId = options.globalizeObjectIds ? math.globalizeObjectId(performanceModel.id, xktEntityId) : xktEntityId;
-
+            
             const lastTileEntityIndex = (numEntities - 1);
             const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
             const firstMeshIndex = eachEntityMeshesPortion [tileEntityIndex];
@@ -59975,9 +60579,11 @@ function load$6(viewer, options, inflatedData, performanceModel) {
                 const isReusedGeometry = (geometryReuseCount > 1);
 
                 const atLastGeometry = (geometryIndex === (numGeometries - 1));
-
-                const meshColor = decompressColor$6(eachMeshColorAndOpacity.subarray((meshIndex * 4), (meshIndex * 4) + 3));
-                const meshOpacity = eachMeshColorAndOpacity[(meshIndex * 4) + 3] / 255.0;
+                
+                const meshColor = decompressColor$6(eachMeshMaterial.subarray((meshIndex * 6), (meshIndex * 6) + 3));
+                const meshOpacity = eachMeshMaterial[(meshIndex * 6) + 3] / 255.0;
+                const meshMetallic = eachMeshMaterial[(meshIndex * 6) + 4] / 255.0;
+                const meshRoughness = eachMeshMaterial[(meshIndex * 6) + 5] / 255.0;
 
                 const meshId = nextMeshId++;
 
@@ -60050,6 +60656,8 @@ function load$6(viewer, options, inflatedData, performanceModel) {
                         geometryId: geometryId,
                         matrix: meshMatrix,
                         color: meshColor,
+                        metallic: meshMetallic,
+                        roughness: meshRoughness,
                         opacity: meshOpacity
                     }));
 
@@ -60106,6 +60714,8 @@ function load$6(viewer, options, inflatedData, performanceModel) {
                         edgeIndices: geometryEdgeIndices,
                         positionsDecodeMatrix: tileDecodeMatrix,
                         color: meshColor,
+                        metallic: meshMetallic,
+                        roughness: meshRoughness,
                         opacity: meshOpacity
                     }));
 
@@ -62284,7 +62894,7 @@ const DrawShaderSource = function (mesh) {
     }
 };
 
-const TEXTURE_DECODE_FUNCS = {
+const TEXTURE_DECODE_FUNCS$2 = {
     "linear": "linearToLinear",
     "sRGB": "sRGBToLinear",
     "gamma": "gammaToLinear"
@@ -62348,7 +62958,7 @@ function buildVertexLambert(mesh) {
 
     const src = [];
     src.push("// Lambertian drawing vertex shader");
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("#extension GL_EXT_frag_depth : enable");
     }
     src.push("attribute vec3 position;");
@@ -62360,7 +62970,7 @@ function buildVertexLambert(mesh) {
     if (quantizedGeometry) {
         src.push("uniform mat4 positionsDecodeMatrix;");
     }
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("uniform float logDepthBufFC;");
         src.push("varying float vFragDepth;");
     }
@@ -62505,7 +63115,7 @@ function buildVertexLambert(mesh) {
         src.push("gl_PointSize = pointSize;");
     }
     src.push("vec4 clipPos = projMatrix * viewPosition;");
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("vFragDepth = 1.0 + clipPos.w;");
     }
     src.push("gl_Position = clipPos;");
@@ -62522,7 +63132,7 @@ function buildFragmentLambert(mesh) {
     const gammaOutput = scene.gammaOutput; // If set, then it expects that all textures and colors need to be outputted in premultiplied gamma. Default is false.
     const src = [];
     src.push("// Lambertian drawing fragment shader");
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("#extension GL_EXT_frag_depth : enable");
     }
     src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
@@ -62532,7 +63142,7 @@ function buildFragmentLambert(mesh) {
     src.push("precision mediump float;");
     src.push("precision mediump int;");
     src.push("#endif");
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("uniform float logDepthBufFC;");
         src.push("varying float vFragDepth;");
     }
@@ -62572,7 +63182,7 @@ function buildFragmentLambert(mesh) {
         src.push("}");
 
     }
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;");
     }
     if (gammaOutput) {
@@ -62604,7 +63214,7 @@ function buildVertexDraw(mesh) {
     if (normals && material._normalMap) {
         src.push("#extension GL_OES_standard_derivatives : enable");
     }
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("#extension GL_EXT_frag_depth : enable");
     }
     src.push("attribute  vec3 position;");
@@ -62619,7 +63229,7 @@ function buildVertexDraw(mesh) {
     if (clipping) {
         src.push("varying vec4 vWorldPosition;");
     }
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("uniform float logDepthBufFC;");
         src.push("varying float vFragDepth;");
     }
@@ -62787,7 +63397,7 @@ function buildVertexDraw(mesh) {
     }
     src.push("   vViewPosition = viewPosition.xyz;");
     src.push("vec4 clipPos = projMatrix * viewPosition;");
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("vFragDepth = 1.0 + clipPos.w;");
     }
     src.push("gl_Position = clipPos;");
@@ -62826,7 +63436,7 @@ function buildFragmentDraw(mesh) {
 
     src.push("// Drawing fragment shader");
 
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("#extension GL_EXT_frag_depth : enable");
     }
 
@@ -62842,7 +63452,7 @@ function buildFragmentDraw(mesh) {
     src.push("precision mediump int;");
     src.push("#endif");
 
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("uniform float logDepthBufFC;");
         src.push("varying float vFragDepth;");
     }
@@ -62958,8 +63568,9 @@ function buildFragmentDraw(mesh) {
             if (lightsState.lightMaps.length > 0 || lightsState.reflectionMaps.length > 0) {
 
                 src.push("void computePhongLightMapping(const in Geometry geometry, const in Material material, inout ReflectedLight reflectedLight) {");
+
                 if (lightsState.lightMaps.length > 0) {
-                    src.push("   vec3 irradiance = " + TEXTURE_DECODE_FUNCS[lightsState.lightMaps[0].encoding] + "(textureCube(lightMap, geometry.worldNormal)).rgb;");
+                    src.push("   vec3 irradiance = " + TEXTURE_DECODE_FUNCS$2[lightsState.lightMaps[0].encoding] + "(textureCube(lightMap, geometry.worldNormal)).rgb;");
                     src.push("   irradiance *= PI;");
                     src.push("   vec3 diffuseBRDFContrib = (RECIPROCAL_PI * material.diffuseColor);");
                     src.push("   reflectedLight.diffuse += irradiance * diffuseBRDFContrib;");
@@ -62967,7 +63578,7 @@ function buildFragmentDraw(mesh) {
                 if (lightsState.reflectionMaps.length > 0) {
                     src.push("   vec3 reflectVec             = reflect(-geometry.viewEyeDir, geometry.viewNormal);");
                     src.push("   vec3 radiance               = textureCube(reflectionMap, reflectVec).rgb * 0.2;");
-                    //      src.push("   radiance *= PI;");
+                    src.push("   radiance *= PI;");
                     src.push("   reflectedLight.specular     += radiance;");
                 }
                 src.push("}");
@@ -62999,7 +63610,7 @@ function buildFragmentDraw(mesh) {
             if (lightsState.reflectionMaps.length > 0) {
                 src.push("vec3 getLightProbeIndirectRadiance(const in vec3 reflectVec, const in float blinnShininessExponent, const in int maxMIPLevel) {");
                 src.push("   float mipLevel = 0.5 * getSpecularMIPLevel(blinnShininessExponent, maxMIPLevel);"); //TODO: a random factor - fix this
-                src.push("   vec3 envMapColor = " + TEXTURE_DECODE_FUNCS[lightsState.reflectionMaps[0].encoding] + "(textureCube(reflectionMap, reflectVec, mipLevel)).rgb;");
+                src.push("   vec3 envMapColor = " + TEXTURE_DECODE_FUNCS$2[lightsState.reflectionMaps[0].encoding] + "(textureCube(reflectionMap, reflectVec, mipLevel)).rgb;");
                 src.push("  return envMapColor;");
                 src.push("}");
             }
@@ -63481,7 +64092,7 @@ function buildFragmentDraw(mesh) {
             src.push("textureCoord = texturePos.xy;");
         }
         src.push("vec4 ambientTexel = texture2D(ambientMap, textureCoord).rgb;");
-        src.push("ambientTexel = " + TEXTURE_DECODE_FUNCS[material._ambientMap._state.encoding] + "(ambientTexel);");
+        src.push("ambientTexel = " + TEXTURE_DECODE_FUNCS$2[material._ambientMap._state.encoding] + "(ambientTexel);");
         src.push("ambientColor *= ambientTexel.rgb;");
     }
 
@@ -63492,7 +64103,7 @@ function buildFragmentDraw(mesh) {
             src.push("textureCoord = texturePos.xy;");
         }
         src.push("vec4 diffuseTexel = texture2D(diffuseMap, textureCoord);");
-        src.push("diffuseTexel = " + TEXTURE_DECODE_FUNCS[material._diffuseMap._state.encoding] + "(diffuseTexel);");
+        src.push("diffuseTexel = " + TEXTURE_DECODE_FUNCS$2[material._diffuseMap._state.encoding] + "(diffuseTexel);");
         src.push("diffuseColor *= diffuseTexel.rgb;");
         src.push("alpha *= diffuseTexel.a;");
     }
@@ -63504,7 +64115,7 @@ function buildFragmentDraw(mesh) {
             src.push("textureCoord = texturePos.xy;");
         }
         src.push("vec4 baseColorTexel = texture2D(baseColorMap, textureCoord);");
-        src.push("baseColorTexel = " + TEXTURE_DECODE_FUNCS[material._baseColorMap._state.encoding] + "(baseColorTexel);");
+        src.push("baseColorTexel = " + TEXTURE_DECODE_FUNCS$2[material._baseColorMap._state.encoding] + "(baseColorTexel);");
         src.push("diffuseColor *= baseColorTexel.rgb;");
         src.push("alpha *= baseColorTexel.a;");
     }
@@ -63516,7 +64127,7 @@ function buildFragmentDraw(mesh) {
             src.push("textureCoord = texturePos.xy;");
         }
         src.push("vec4 emissiveTexel = texture2D(emissiveMap, textureCoord);");
-        src.push("emissiveTexel = " + TEXTURE_DECODE_FUNCS[material._emissiveMap._state.encoding] + "(emissiveTexel);");
+        src.push("emissiveTexel = " + TEXTURE_DECODE_FUNCS$2[material._emissiveMap._state.encoding] + "(emissiveTexel);");
         src.push("emissiveColor = emissiveTexel.rgb;");
     }
 
@@ -63804,7 +64415,7 @@ function buildFragmentDraw(mesh) {
         src.push("gl_FragColor = linearToGamma(gl_FragColor, gammaFactor);");
     }
 
-    if (scene.logarithmicDepthBufferEnabled ) {
+    if (scene.logarithmicDepthBufferEnabled) {
         src.push("gl_FragDepthEXT = log2( vFragDepth ) * logDepthBufFC * 0.5;");
     }
 
@@ -73902,4 +74513,312 @@ function buildSphereGeometry(cfg = {}) {
     });
 }
 
-export { GLTFLoaderPlugin, Mesh, PhongMaterial, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };
+function ensureImageSizePowerOfTwo$1(image) {
+    if (!isPowerOfTwo$1(image.width) || !isPowerOfTwo$1(image.height)) {
+        const canvas = document.createElement("canvas");
+        canvas.width = nextHighestPowerOfTwo$1(image.width);
+        canvas.height = nextHighestPowerOfTwo$1(image.height);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image,
+            0, 0, image.width, image.height,
+            0, 0, canvas.width, canvas.height);
+        image = canvas;
+    }
+    return image;
+}
+
+function isPowerOfTwo$1(x) {
+    return (x & (x - 1)) === 0;
+}
+
+function nextHighestPowerOfTwo$1(x) {
+    --x;
+    for (let i = 1; i < 32; i <<= 1) {
+        x = x | x >> i;
+    }
+    return x + 1;
+}
+
+/**
+ * @desc A cube texture map.
+ */
+class CubeTexture extends Component {
+
+    /**
+     @private
+     */
+    get type() {
+        return "CubeTexture";
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this CubeTexture, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String[]} [cfg.src=null]  Paths to six image files to load into this CubeTexture.
+     * @param {Boolean} [cfg.flipY=false] Flips this CubeTexture's source data along its vertical axis when true.
+     * @param {String} [cfg.encoding="linear"] Encoding format.  See the {@link CubeTexture/encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+
+        super(owner, cfg);
+
+        const gl = this.scene.canvas.gl;
+
+        this._state = new RenderState({
+            texture: new Texture2D(gl, gl.TEXTURE_CUBE_MAP),
+            flipY: this._checkFlipY(cfg.minFilter),
+            encoding: this._checkEncoding(cfg.encoding),
+            minFilter: "linearMipmapLinear",
+            magFilter: "linear",
+            wrapS: "clampToEdge",
+            wrapT: "clampToEdge",
+            mipmaps: true
+        });
+
+        this._src = cfg.src;
+        this._images = [];
+
+        this._loadSrc(cfg.src);
+
+        stats.memory.textures++;
+    }
+
+    _checkFlipY(value) {
+        return !!value;
+    }
+
+    _checkEncoding(value) {
+        value = value || "linear";
+        if (value !== "linear" && value !== "sRGB" && value !== "gamma") {
+            this.error("Unsupported value for 'encoding': '" + value + "' - supported values are 'linear', 'sRGB', 'gamma'. Defaulting to 'linear'.");
+            value = "linear";
+        }
+        return value;
+    }
+
+    _webglContextRestored() {
+        const gl = this.scene.canvas.gl;
+        this._state.texture = null;
+        // if (this._images.length > 0) {
+        //     this._state.texture = new xeokit.renderer.Texture2D(gl, gl.TEXTURE_CUBE_MAP);
+        //     this._state.texture.setImage(this._images, this._state);
+        //     this._state.texture.setProps(this._state);
+        // } else
+        if (this._src) {
+            this._loadSrc(this._src);
+        }
+    }
+
+    _loadSrc(src) {
+        const self = this;
+        const gl = this.scene.canvas.gl;
+        this._images = [];
+        let loadFailed = false;
+        let numLoaded = 0;
+        for (let i = 0; i < src.length; i++) {
+            const image = new Image();
+            image.onload = (function () {
+                let _image = image;
+                const index = i;
+                return function () {
+                    if (loadFailed) {
+                        return;
+                    }
+                    _image = ensureImageSizePowerOfTwo$1(_image);
+                    self._images[index] = _image;
+                    numLoaded++;
+                    if (numLoaded === 6) {
+                        let texture = self._state.texture;
+                        if (!texture) {
+                            texture = new Texture2D(gl, gl.TEXTURE_CUBE_MAP);
+                            self._state.texture = texture;
+                        }
+                        texture.setImage(self._images, self._state);
+                        texture.setProps(self._state);
+                        self.fire("loaded", self._src, false);
+                        self.glRedraw();
+                    }
+                };
+            })();
+            image.onerror = function () {
+                loadFailed = true;
+            };
+            image.src = src[i];
+        }
+    }
+
+    /**
+     * Destroys this CubeTexture
+     *
+     */
+    destroy() {
+        super.destroy();
+        if (this._state.texture) {
+            this._state.texture.destroy();
+        }
+        stats.memory.textures--;
+        this._state.destroy();
+    }
+}
+
+/**
+ * @desc A **LightMap** specifies a cube texture light map.
+ *
+ * ## Usage
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
+ * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
+ * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
+ * import {LightMap} from "../src/scene/lights/LightMap.js";
+ *
+ * // Create a Viewer and arrange the camera
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas"
+ * });
+ *
+ * viewer.scene.camera.eye = [0, 0, 5];
+ * viewer.scene.camera.look = [0, 0, 0];
+ * viewer.scene.camera.up = [0, 1, 0];
+ *
+ * new LightMap(viewer.scene, {
+ *     src: [
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PX.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NX.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PY.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NY.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PZ.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NZ.png"
+ *     ]
+ * });
+ *
+ * // Create a sphere and ground plane
+ *
+ * new Mesh(viewer.scene, {
+ *      geometry: new ReadableGeometry(viewer.scene, buildSphereGeometry({
+ *          radius: 2.0
+ *      }),
+ *      new MetallicMaterial(viewer.scene, {
+ *          baseColor: [1, 1, 1],
+ *          metallic: 1.0,
+ *          roughness: 1.0
+ *      })
+ * });
+ * ````
+ */
+class LightMap extends CubeTexture {
+
+    /**
+     @private
+     */
+    get type() {
+        return "LightMap";
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this LightMap, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String:Object} [cfg.meta] Optional map of user-defined metadata to attach to this LightMap.
+     * @param {String[]} [cfg.src=null] Paths to six image files to load into this LightMap.
+     * @param {Boolean} [cfg.flipY=false] Flips this LightMap's source data along its vertical axis when true.
+     * @param {String} [cfg.encoding="linear"] Encoding format.  See the {@link LightMap#encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+        super(owner, cfg);
+        this.scene._lightMapCreated(this);
+    }
+
+    destroy() {
+        super.destroy();
+        this.scene._lightMapDestroyed(this);
+    }
+}
+
+/**
+ * @desc A reflection cube map.
+ *
+ * ## Usage
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
+ * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
+ * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
+ * import {ReflectionMap} from "../src/scene/lights/ReflectionMap.js";
+ *
+ * // Create a Viewer and arrange the camera
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas"
+ * });
+ *
+ * viewer.scene.camera.eye = [0, 0, 5];
+ * viewer.scene.camera.look = [0, 0, 0];
+ * viewer.scene.camera.up = [0, 1, 0];
+ *
+ * new ReflectionMap(viewer.scene, {
+ *     src: [
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_PX.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_NX.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_PY.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_NY.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_PZ.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_NZ.png"
+ *     ]
+ * });
+ *
+ * // Create a sphere and ground plane
+ *
+ * new Mesh(viewer.scene, {
+ *      geometry: new ReadableGeometry(viewer.scene, buildSphereGeometry({
+ *          radius: 2.0
+ *      }),
+ *      new MetallicMaterial(viewer.scene, {
+ *          baseColor: [1, 1, 1],
+ *          metallic: 1.0,
+ *          roughness: 1.0
+ *      })
+ * });
+ * ````
+ */
+class ReflectionMap extends CubeTexture {
+
+    /**
+     @private
+     */
+    get type() {
+        return "ReflectionMap";
+    }
+
+    /**
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this ReflectionMap, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String[]} [cfg.src=null]  Paths to six image files to load into this ReflectionMap.
+     * @param {Boolean} [cfg.flipY=false] Flips this ReflectionMap's source data along its vertical axis when true.
+     * @param {String} [cfg.encoding="linear"]  Encoding format.  See the {@link ReflectionMap/encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+        super(owner, cfg);
+        this.scene._lightsState.addReflectionMap(this._state);
+        this.scene._reflectionMapCreated(this);
+    }
+
+    /**
+     * Destroys this ReflectionMap.
+     */
+    destroy() {
+        super.destroy();
+        this.scene._reflectionMapDestroyed(this);
+    }
+}
+
+export { DirLight, GLTFLoaderPlugin, LightMap, Mesh, PhongMaterial, ReflectionMap, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };

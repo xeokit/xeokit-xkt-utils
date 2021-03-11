@@ -27,6 +27,8 @@
 <script type="module">
 
     import {
+        DirLight,
+        LightMap, ReflectionMap,
         Viewer,
         XKTLoaderPlugin
     } from "./build/xeokit-components.js";
@@ -41,6 +43,7 @@
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
+        pbrEnabled: true,
         transparent: true
     });
 
@@ -50,6 +53,45 @@
 
     viewer.cameraControl.navMode = "orbit";
     viewer.cameraControl.followPointer = true;
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Configure lighting
+    //------------------------------------------------------------------------------------------------------------------
+
+    viewer.scene.gammaOutput = true;
+
+    viewer.scene.clearLights();
+
+    new DirLight(viewer.scene, {
+        dir: [-50, -50, -50],
+        color: [1.0, 1.0, 1.0],
+        intensity: 1.0,
+        space: "world"
+    });
+
+    new ReflectionMap(viewer.scene, {
+        src: [
+            "textures/reflect/desertRoad/px.png",
+            "textures/reflect/desertRoad/nx.png",
+            "textures/reflect/desertRoad/py.png",
+            "textures/reflect/desertRoad/ny.png",
+            "textures/reflect/desertRoad/pz.png",
+            "textures/reflect/desertRoad/nz.png"
+        ],
+        encoding: "sRGB"
+    });
+
+    new LightMap(viewer.scene, {
+        src: [
+            "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PX.png",
+            "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NX.png",
+            "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PY.png",
+            "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NY.png",
+            "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PZ.png",
+            "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NZ.png"
+        ],
+        encoding: "sRGB"
+    });
 
     function log(msg) {
         document.getElementById("log").innerHTML += "<br>" + msg;
@@ -75,7 +117,7 @@
         math.mulMat4(matrix, rotationMat, matrix);
         math.mulMat4(matrix, translationMat, matrix);
 
-        const xktGeometry = xktModel.createGeometry({
+        xktModel.createGeometry({
             geometryId: "boxGeometry" + i,
             primitiveType: box.primitiveType, // Will be "triangles"
             positions: box.positions,
@@ -87,7 +129,9 @@
             meshId: "boxMesh" + i,
             geometryId: "boxGeometry" + i,
             matrix: matrix,
-            color: [1, 0.6, 0],
+            color: [1, 1, 0],
+            metallic: 1.0,
+            roughness: 0.7,
             opacity: 1
         });
 
@@ -121,7 +165,9 @@
         position: [0, 20, 0],
         scale: [1, 1, 1],
         rotation: [0, 0, 0],
-        color: [1, 0.6, 0],
+        color: [1, 1, 1],
+        metallic: 1.0,
+        roughness: 0.5,
         opacity: 1
     });
 
@@ -149,7 +195,7 @@
     const model = xktLoader.load({
         id: "myModel",
         xkt: xktArrayBuffer,
-        edges: true
+        edges: false
     });
 
 </script>
