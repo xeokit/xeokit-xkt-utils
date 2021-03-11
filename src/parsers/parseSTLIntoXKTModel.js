@@ -1,12 +1,13 @@
+import {math} from "../lib/math.js";
+
 /**
  * @desc Parses STL file data into an {@link XKTModel}.
  *
  * @param {Object} data STL file data.
  * @param {XKTModel} model XKTModel to parse into.
  * @param {*} [options] Parsing options.
+ * @private
  */
-import {math} from "../lib/math.js";
-
 async function parseSTLIntoXKTModel(data, model, options) {
     const binData = ensureBinary(data);
     if (isBinary(binData)) {
