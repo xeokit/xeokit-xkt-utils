@@ -57,6 +57,20 @@ class XKTMesh {
         this.color = cfg.color || new Uint8Array(3);
 
         /**
+         * PBR metallness of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.metallic = (cfg.metallic !== null && cfg.metallic !== undefined) ? cfg.metallic : 0;
+
+        /**
+         * PBR roughness of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.roughness = (cfg.roughness !== null && cfg.roughness !== undefined) ? cfg.roughness : 1;
+
+        /**
          * Opacity of this XKTMesh.
          *
          * @type {Number}

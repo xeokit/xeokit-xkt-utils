@@ -101,11 +101,14 @@ function getModelData(xktModel) {
         eachGeometryIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.indices. If the next geometry has the same index, then this geometry has no indices.
         eachGeometryEdgeIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.edgeIndices. If the next geometry has the same index, then this geometry has no edge indices.
 
-        // Meshes are grouped in runs that are shared by the same entities
+        // Meshes are grouped in runs that are shared by the same entities.
+
+        // We duplicate materials for meshes, rather than reusing them, because each material is only 6 bytes and an index
+        // into a common materials array would be 4 bytes, so it's hardly worth reusing materials, as long as they are that compact.
 
         eachMeshGeometriesPortion: new Uint32Array(numMeshes), // For each mesh, an index into the eachGeometry* arrays
         eachMeshMatricesPortion: new Uint32Array(numMeshes), // For each mesh that shares its geometry, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared geometry Local-space vertex positions. This is ignored for meshes that don't share geometries, because the vertex positions of non-shared geometries are pre-transformed into World-space.
-        eachMeshColorAndOpacity: new Uint8Array(numMeshes * 4), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
+        eachMeshMaterial: new Uint8Array(numMeshes * 6), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255], and PBR metallic and roughness factors, of format [0..255, 0..255]
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
@@ -183,12 +186,14 @@ function getModelData(xktModel) {
             matricesIndex += 16;
         }
 
-        data.eachMeshColorAndOpacity[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
-        data.eachMeshColorAndOpacity[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
-        data.eachMeshColorAndOpacity[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
-        data.eachMeshColorAndOpacity[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshMaterial[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
+        data.eachMeshMaterial[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
+        data.eachMeshMaterial[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
+        data.eachMeshMaterial[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshMaterial[countMeshColors + 4] = Math.floor(mesh.metallic * 255);
+        data.eachMeshMaterial[countMeshColors + 5] = Math.floor(mesh.roughness * 255);
 
-        countMeshColors += 4;
+        countMeshColors += 6;
     }
 
     // Entities, geometry instances, and tiles
@@ -266,7 +271,7 @@ function deflateData(data) {
 
         eachMeshGeometriesPortion: pako.deflate(data.eachMeshGeometriesPortion.buffer),
         eachMeshMatricesPortion: pako.deflate(data.eachMeshMatricesPortion.buffer),
-        eachMeshColorAndOpacity: pako.deflate(data.eachMeshColorAndOpacity.buffer),
+        eachMeshMaterial: pako.deflate(data.eachMeshMaterial.buffer),
 
         eachEntityId: pako.deflate(JSON.stringify(data.eachEntityId)
             .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
@@ -302,7 +307,7 @@ function createArrayBuffer(deflatedData) {
 
         deflatedData.eachMeshGeometriesPortion,
         deflatedData.eachMeshMatricesPortion,
-        deflatedData.eachMeshColorAndOpacity,
+        deflatedData.eachMeshMaterial,
 
         deflatedData.eachEntityId,
         deflatedData.eachEntityMeshesPortion,

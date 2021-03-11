@@ -12,13 +12,12 @@ import {KDNode} from "./KDNode.js";
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
 
-const identityMat4 = math.identityMat4();
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
 const MIN_TILE_DIAG = 10000;
 
-const kdTreeDimLength = new Float32Array(3);
+const kdTreeDimLength = new Float64Array(3);
 
 /**
  * A document model that represents the contents of an .XKT file.
@@ -217,7 +216,7 @@ class XKTModel {
 
         const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
-        const positions = new Float32Array(params.positions); // May modify in #finalize
+        const positions = new Float64Array(params.positions); // May modify in #finalize
 
         const xktGeometryCfg = {
             geometryId: geometryId,
@@ -227,10 +226,9 @@ class XKTModel {
         }
 
         if (triangles) {
-            xktGeometryCfg.normals = new Float32Array(params.normals); // May modify in #finalize
+            xktGeometryCfg.normals = new Float64Array(params.normals); // May modify in #finalize
             xktGeometryCfg.indices = params.indices;
             xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
-
         }
 
         if (points) {
@@ -267,8 +265,10 @@ class XKTModel {
      * @param {Number} params.meshId Unique ID for the {@link XKTMesh}.
      * @param {Number} params.geometryId ID of an existing {@link XKTGeometry} in {@link XKTModel#geometries}.
      * @param {Uint8Array} params.color RGB color for the {@link XKTMesh}, with each color component in range [0..1].
+     * @param {Number} [params.metallic=0] How metallic the {@link XKTMesh} is, in range [0..1]. A value of ````0```` indicates fully dielectric material, while ````1```` indicates fully metallic.
+     * @param {Number} [params.roughness=1] How rough the {@link XKTMesh} is, in range [0..1]. A value of ````0```` indicates fully smooth, while ````1```` indicates fully rough.
      * @param {Number} params.opacity Opacity factor for the {@link XKTMesh}, in range [0..1].
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTMesh}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
+     * @param {Float64Array} [params.matrix] Modeling matrix for the {@link XKTMesh}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
      * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTMesh} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
@@ -336,6 +336,8 @@ class XKTModel {
             matrix: matrix,
             geometry: geometry,
             color: params.color,
+            metallic: params.metallic,
+            roughness: params.roughness,
             opacity: params.opacity
         });
 
@@ -439,8 +441,6 @@ class XKTModel {
 
         this._bakeAndOctEncodeNormals();
 
-        this._flagEntitiesThatReuseGeometries();
-
         this._createEntityAABBs();
 
         const rootKDNode = this._createKDTree();
@@ -475,6 +475,7 @@ class XKTModel {
                         tempVec4a[0] = positions[i + 0];
                         tempVec4a[1] = positions[i + 1];
                         tempVec4a[2] = positions[i + 2];
+                        tempVec4a[3] = 1;
 
                         math.transformPoint4(matrix, tempVec4a, tempVec4b);
 
@@ -498,27 +499,12 @@ class XKTModel {
 
                 geometry.normalsOctEncoded = new Int8Array(geometry.normals.length);
 
-                const modelNormalMatrix = math.inverseMat4(math.transposeMat4(mesh.matrix || identityMat4, tempMat4), tempMat4b);
-
-                geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
-            }
-        }
-    }
-
-    _flagEntitiesThatReuseGeometries() {
-
-        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
-
-            const entity = this.entitiesList[i];
-            const meshes = entity.meshes;
-
-            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
-
-                const mesh = meshes[j];
-                const geometry = mesh.geometry;
-
                 if (geometry.numInstances > 1) {
-                    entity.hasReusedGeometries = true;
+                    geometryCompression.octEncodeNormals(geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
+
+                } else {
+                    const modelNormalMatrix =  math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
+                    geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
                 }
             }
         }
@@ -547,6 +533,7 @@ class XKTModel {
                         tempVec4a[0] = positions[i + 0];
                         tempVec4a[1] = positions[i + 1];
                         tempVec4a[2] = positions[i + 2];
+                        tempVec4a[3] = 1;
                         math.transformPoint4(matrix, tempVec4a, tempVec4b);
                         math.expandAABB3Point3(entityAABB, tempVec4b);
                     }
@@ -678,8 +665,6 @@ class XKTModel {
      */
     _createTileFromEntities(entities) {
 
-        let numBatchingEntities = 0; // TEST
-
         const tileAABB = math.AABB3(); // A tighter World-space AABB around the entities
         math.collapseAABB3(tileAABB);
 
@@ -727,8 +712,6 @@ class XKTModel {
                     // Quantize positions relative to tile's RTC-space boundary
 
                     geometryCompression.quantizePositions(positions, positions.length, rtcAABB, geometry.positionsQuantized);
-
-                    numBatchingEntities++;
 
                 } else {
 
