@@ -24,10 +24,11 @@ const kdTreeDimLength = new Float64Array(3);
  *
  * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
- * * Each {@link XKTEntity} has {@link XKTMesh}s, which indicate the {@link XKTGeometry}s that comprise the {@link XKTEntity}.
- * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}
- * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}
- * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
+ * * Each {@link XKTEntity} has {@link XKTMesh}s, which each have a {@link XKTGeometry}. Each {@link XKTGeometry} can be shared by multiple {@link XKTMesh}s.
+ * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
+ * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
+ * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
+ * * Validate an ArrayBuffer against an XKTModel using {@link validateXKTArrayBuffer}.
  *
  * ## Usage
  *
