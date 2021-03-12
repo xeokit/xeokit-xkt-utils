@@ -1,28 +1,28 @@
 {
   "type": "File",
   "start": 0,
-  "end": 2840,
+  "end": 2019,
   "loc": {
     "start": {
       "line": 1,
       "column": 0
     },
     "end": {
-      "line": 85,
+      "line": 70,
       "column": 19
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 2840,
+    "end": 2019,
     "loc": {
       "start": {
         "line": 1,
         "column": 0
       },
       "end": {
-        "line": 85,
+        "line": 70,
         "column": 19
       }
     },
@@ -31,7 +31,7 @@
       {
         "type": "ImportDeclaration",
         "start": 0,
-        "end": 35,
+        "end": 36,
         "loc": {
           "start": {
             "line": 1,
@@ -39,7 +39,7 @@
           },
           "end": {
             "line": 1,
-            "column": 35
+            "column": 36
           }
         },
         "specifiers": [
@@ -96,7 +96,7 @@
         "source": {
           "type": "StringLiteral",
           "start": 19,
-          "end": 34,
+          "end": 35,
           "loc": {
             "start": {
               "line": 1,
@@ -104,28 +104,28 @@
             },
             "end": {
               "line": 1,
-              "column": 34
+              "column": 35
             }
           },
           "extra": {
-            "rawValue": "./lib/math.js",
-            "raw": "\"./lib/math.js\""
+            "rawValue": "../lib/math.js",
+            "raw": "\"../lib/math.js\""
           },
-          "value": "./lib/math.js"
+          "value": "../lib/math.js"
         },
         "trailingComments": [
           {
             "type": "CommentBlock",
-            "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
-            "start": 37,
-            "end": 459,
+            "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n *\n * @class XKTEntity\n ",
+            "start": 38,
+            "end": 307,
             "loc": {
               "start": {
                 "line": 3,
                 "column": 0
               },
               "end": {
-                "line": 12,
+                "line": 11,
                 "column": 3
               }
             }
@@ -134,29 +134,29 @@
       },
       {
         "type": "Identifier",
-        "start": 460,
-        "end": 2819,
+        "start": 308,
+        "end": 1998,
         "loc": {
           "start": {
-            "line": 13,
+            "line": 12,
             "column": 0
           },
           "end": {
-            "line": 83,
+            "line": 68,
             "column": 1
           }
         },
         "id": {
           "type": "Identifier",
-          "start": 466,
-          "end": 475,
+          "start": 314,
+          "end": 323,
           "loc": {
             "start": {
-              "line": 13,
+              "line": 12,
               "column": 6
             },
             "end": {
-              "line": 13,
+              "line": 12,
               "column": 15
             },
             "identifierName": "XKTEntity"
@@ -167,30 +167,30 @@
         "superClass": null,
         "body": {
           "type": "ClassBody",
-          "start": 476,
-          "end": 2819,
+          "start": 324,
+          "end": 1998,
           "loc": {
             "start": {
-              "line": 13,
+              "line": 12,
               "column": 16
             },
             "end": {
-              "line": 83,
+              "line": 68,
               "column": 1
             }
           },
           "body": [
             {
               "type": "ClassMethod",
-              "start": 592,
-              "end": 2817,
+              "start": 407,
+              "end": 1996,
               "loc": {
                 "start": {
-                  "line": 21,
+                  "line": 19,
                   "column": 4
                 },
                 "end": {
-                  "line": 82,
+                  "line": 67,
                   "column": 5
                 }
               },
@@ -198,15 +198,15 @@
               "computed": false,
               "key": {
                 "type": "Identifier",
-                "start": 592,
-                "end": 603,
+                "start": 407,
+                "end": 418,
                 "loc": {
                   "start": {
-                    "line": 21,
+                    "line": 19,
                     "column": 4
                   },
                   "end": {
-                    "line": 21,
+                    "line": 19,
                     "column": 15
                   },
                   "identifierName": "constructor"
@@ -222,15 +222,15 @@
               "params": [
                 {
                   "type": "Identifier",
-                  "start": 604,
-                  "end": 612,
+                  "start": 419,
+                  "end": 427,
                   "loc": {
                     "start": {
-                      "line": 21,
+                      "line": 19,
                       "column": 16
                     },
                     "end": {
-                      "line": 21,
+                      "line": 19,
                       "column": 24
                     },
                     "identifierName": "entityId"
@@ -239,108 +239,91 @@
                 },
                 {
                   "type": "Identifier",
-                  "start": 614,
-                  "end": 620,
+                  "start": 430,
+                  "end": 436,
                   "loc": {
                     "start": {
-                      "line": 21,
-                      "column": 26
+                      "line": 19,
+                      "column": 27
                     },
                     "end": {
-                      "line": 21,
-                      "column": 32
+                      "line": 19,
+                      "column": 33
                     },
-                    "identifierName": "matrix"
+                    "identifierName": "meshes"
                   },
-                  "name": "matrix"
-                },
-                {
-                  "type": "Identifier",
-                  "start": 622,
-                  "end": 640,
-                  "loc": {
-                    "start": {
-                      "line": 21,
-                      "column": 34
-                    },
-                    "end": {
-                      "line": 21,
-                      "column": 52
-                    },
-                    "identifierName": "primitiveInstances"
-                  },
-                  "name": "primitiveInstances"
+                  "name": "meshes"
                 }
               ],
               "body": {
                 "type": "BlockStatement",
-                "start": 642,
-                "end": 2817,
+                "start": 438,
+                "end": 1996,
                 "loc": {
                   "start": {
-                    "line": 21,
-                    "column": 54
+                    "line": 19,
+                    "column": 35
                   },
                   "end": {
-                    "line": 82,
+                    "line": 67,
                     "column": 5
                   }
                 },
                 "body": [
                   {
                     "type": "ExpressionStatement",
-                    "start": 862,
-                    "end": 887,
+                    "start": 658,
+                    "end": 683,
                     "loc": {
                       "start": {
-                        "line": 30,
+                        "line": 28,
                         "column": 8
                       },
                       "end": {
-                        "line": 30,
+                        "line": 28,
                         "column": 33
                       }
                     },
                     "expression": {
                       "type": "AssignmentExpression",
-                      "start": 862,
-                      "end": 886,
+                      "start": 658,
+                      "end": 682,
                       "loc": {
                         "start": {
-                          "line": 30,
+                          "line": 28,
                           "column": 8
                         },
                         "end": {
-                          "line": 30,
+                          "line": 28,
                           "column": 32
                         }
                       },
                       "operator": "=",
                       "left": {
                         "type": "MemberExpression",
-                        "start": 862,
-                        "end": 875,
+                        "start": 658,
+                        "end": 671,
                         "loc": {
                           "start": {
-                            "line": 30,
+                            "line": 28,
                             "column": 8
                           },
                           "end": {
-                            "line": 30,
+                            "line": 28,
                             "column": 21
                           }
                         },
                         "object": {
                           "type": "ThisExpression",
-                          "start": 862,
-                          "end": 866,
+                          "start": 658,
+                          "end": 662,
                           "loc": {
                             "start": {
-                              "line": 30,
+                              "line": 28,
                               "column": 8
                             },
                             "end": {
-                              "line": 30,
+                              "line": 28,
                               "column": 12
                             }
                           },
@@ -348,15 +331,15 @@
                         },
                         "property": {
                           "type": "Identifier",
-                          "start": 867,
-                          "end": 875,
+                          "start": 663,
+                          "end": 671,
                           "loc": {
                             "start": {
-                              "line": 30,
+                              "line": 28,
                               "column": 13
                             },
                             "end": {
-                              "line": 30,
+                              "line": 28,
                               "column": 21
                             },
                             "identifierName": "entityId"
@@ -368,15 +351,15 @@
                       },
                       "right": {
                         "type": "Identifier",
-                        "start": 878,
-                        "end": 886,
+                        "start": 674,
+                        "end": 682,
                         "loc": {
                           "start": {
-                            "line": 30,
+                            "line": 28,
                             "column": 24
                           },
                           "end": {
-                            "line": 30,
+                            "line": 28,
                             "column": 32
                           },
                           "identifierName": "entityId"
@@ -389,15 +372,15 @@
                       {
                         "type": "CommentBlock",
                         "value": "*\n         * Unique ID of this ````XKTEntity```` in {@link XKTModel#entities}.\n         *\n         * For a BIM model, this will be an IFC product ID.\n         *\n         * @type {String}\n         ",
-                        "start": 653,
-                        "end": 853,
+                        "start": 449,
+                        "end": 649,
                         "loc": {
                           "start": {
-                            "line": 23,
+                            "line": 21,
                             "column": 8
                           },
                           "end": {
-                            "line": 29,
+                            "line": 27,
                             "column": 11
                           }
                         }
@@ -407,15 +390,15 @@
                       {
                         "type": "CommentBlock",
                         "value": "*\n         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Number}\n         ",
-                        "start": 897,
-                        "end": 1082,
+                        "start": 693,
+                        "end": 878,
                         "loc": {
                           "start": {
-                            "line": 32,
+                            "line": 30,
                             "column": 8
                           },
                           "end": {
-                            "line": 38,
+                            "line": 36,
                             "column": 11
                           }
                         }
@@ -424,58 +407,58 @@
                   },
                   {
                     "type": "ExpressionStatement",
-                    "start": 1091,
-                    "end": 1112,
+                    "start": 887,
+                    "end": 908,
                     "loc": {
                       "start": {
-                        "line": 39,
+                        "line": 37,
                         "column": 8
                       },
                       "end": {
-                        "line": 39,
+                        "line": 37,
                         "column": 29
                       }
                     },
                     "expression": {
                       "type": "AssignmentExpression",
-                      "start": 1091,
-                      "end": 1111,
+                      "start": 887,
+                      "end": 907,
                       "loc": {
                         "start": {
-                          "line": 39,
+                          "line": 37,
                           "column": 8
                         },
                         "end": {
-                          "line": 39,
+                          "line": 37,
                           "column": 28
                         }
                       },
                       "operator": "=",
                       "left": {
                         "type": "MemberExpression",
-                        "start": 1091,
-                        "end": 1107,
+                        "start": 887,
+                        "end": 903,
                         "loc": {
                           "start": {
-                            "line": 39,
+                            "line": 37,
                             "column": 8
                           },
                           "end": {
-                            "line": 39,
+                            "line": 37,
                             "column": 24
                           }
                         },
                         "object": {
                           "type": "ThisExpression",
-                          "start": 1091,
-                          "end": 1095,
+                          "start": 887,
+                          "end": 891,
                           "loc": {
                             "start": {
-                              "line": 39,
+                              "line": 37,
                               "column": 8
                             },
                             "end": {
-                              "line": 39,
+                              "line": 37,
                               "column": 12
                             }
                           },
@@ -483,15 +466,15 @@
                         },
                         "property": {
                           "type": "Identifier",
-                          "start": 1096,
-                          "end": 1107,
+                          "start": 892,
+                          "end": 903,
                           "loc": {
                             "start": {
-                              "line": 39,
+                              "line": 37,
                               "column": 13
                             },
                             "end": {
-                              "line": 39,
+                              "line": 37,
                               "column": 24
                             },
                             "identifierName": "entityIndex"
@@ -503,15 +486,15 @@
                       },
                       "right": {
                         "type": "NumericLiteral",
-                        "start": 1110,
-                        "end": 1111,
+                        "start": 906,
+                        "end": 907,
                         "loc": {
                           "start": {
-                            "line": 39,
+                            "line": 37,
                             "column": 27
                           },
                           "end": {
-                            "line": 39,
+                            "line": 37,
                             "column": 28
                           }
                         },
@@ -527,15 +510,15 @@
                       {
                         "type": "CommentBlock",
                         "value": "*\n         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Number}\n         ",
-                        "start": 897,
-                        "end": 1082,
+                        "start": 693,
+                        "end": 878,
                         "loc": {
                           "start": {
-                            "line": 32,
+                            "line": 30,
                             "column": 8
                           },
                           "end": {
-                            "line": 38,
+                            "line": 36,
                             "column": 11
                           }
                         }
@@ -544,16 +527,16 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
-                        "start": 1122,
-                        "end": 1642,
+                        "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
+                        "start": 918,
+                        "end": 1077,
                         "loc": {
                           "start": {
-                            "line": 41,
+                            "line": 39,
                             "column": 8
                           },
                           "end": {
-                            "line": 51,
+                            "line": 43,
                             "column": 11
                           }
                         }
@@ -562,58 +545,58 @@
                   },
                   {
                     "type": "ExpressionStatement",
-                    "start": 1651,
-                    "end": 1672,
+                    "start": 1086,
+                    "end": 1107,
                     "loc": {
                       "start": {
-                        "line": 52,
+                        "line": 44,
                         "column": 8
                       },
                       "end": {
-                        "line": 52,
+                        "line": 44,
                         "column": 29
                       }
                     },
                     "expression": {
                       "type": "AssignmentExpression",
-                      "start": 1651,
-                      "end": 1671,
+                      "start": 1086,
+                      "end": 1106,
                       "loc": {
                         "start": {
-                          "line": 52,
+                          "line": 44,
                           "column": 8
                         },
                         "end": {
-                          "line": 52,
+                          "line": 44,
                           "column": 28
                         }
                       },
                       "operator": "=",
                       "left": {
                         "type": "MemberExpression",
-                        "start": 1651,
-                        "end": 1662,
+                        "start": 1086,
+                        "end": 1097,
                         "loc": {
                           "start": {
-                            "line": 52,
+                            "line": 44,
                             "column": 8
                           },
                           "end": {
-                            "line": 52,
+                            "line": 44,
                             "column": 19
                           }
                         },
                         "object": {
                           "type": "ThisExpression",
-                          "start": 1651,
-                          "end": 1655,
+                          "start": 1086,
+                          "end": 1090,
                           "loc": {
                             "start": {
-                              "line": 52,
+                              "line": 44,
                               "column": 8
                             },
                             "end": {
-                              "line": 52,
+                              "line": 44,
                               "column": 12
                             }
                           },
@@ -621,56 +604,56 @@
                         },
                         "property": {
                           "type": "Identifier",
-                          "start": 1656,
-                          "end": 1662,
+                          "start": 1091,
+                          "end": 1097,
                           "loc": {
                             "start": {
-                              "line": 52,
+                              "line": 44,
                               "column": 13
                             },
                             "end": {
-                              "line": 52,
+                              "line": 44,
                               "column": 19
                             },
-                            "identifierName": "matrix"
+                            "identifierName": "meshes"
                           },
-                          "name": "matrix"
+                          "name": "meshes"
                         },
                         "computed": false,
                         "leadingComments": null
                       },
                       "right": {
                         "type": "Identifier",
-                        "start": 1665,
-                        "end": 1671,
+                        "start": 1100,
+                        "end": 1106,
                         "loc": {
                           "start": {
-                            "line": 52,
+                            "line": 44,
                             "column": 22
                           },
                           "end": {
-                            "line": 52,
+                            "line": 44,
                             "column": 28
                           },
-                          "identifierName": "matrix"
+                          "identifierName": "meshes"
                         },
-                        "name": "matrix"
+                        "name": "meshes"
                       },
                       "leadingComments": null
                     },
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
-                        "start": 1122,
-                        "end": 1642,
+                        "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
+                        "start": 918,
+                        "end": 1077,
                         "loc": {
                           "start": {
-                            "line": 41,
+                            "line": 39,
                             "column": 8
                           },
                           "end": {
-                            "line": 51,
+                            "line": 43,
                             "column": 11
                           }
                         }
@@ -679,16 +662,16 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
-                        "start": 1682,
-                        "end": 1868,
+                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                        "start": 1117,
+                        "end": 1415,
                         "loc": {
                           "start": {
-                            "line": 54,
+                            "line": 46,
                             "column": 8
                           },
                           "end": {
-                            "line": 58,
+                            "line": 53,
                             "column": 11
                           }
                         }
@@ -697,193 +680,58 @@
                   },
                   {
                     "type": "ExpressionStatement",
-                    "start": 1877,
-                    "end": 1922,
+                    "start": 1424,
+                    "end": 1449,
                     "loc": {
                       "start": {
-                        "line": 59,
+                        "line": 54,
                         "column": 8
                       },
                       "end": {
-                        "line": 59,
-                        "column": 53
-                      }
-                    },
-                    "expression": {
-                      "type": "AssignmentExpression",
-                      "start": 1877,
-                      "end": 1921,
-                      "loc": {
-                        "start": {
-                          "line": 59,
-                          "column": 8
-                        },
-                        "end": {
-                          "line": 59,
-                          "column": 52
-                        }
-                      },
-                      "operator": "=",
-                      "left": {
-                        "type": "MemberExpression",
-                        "start": 1877,
-                        "end": 1900,
-                        "loc": {
-                          "start": {
-                            "line": 59,
-                            "column": 8
-                          },
-                          "end": {
-                            "line": 59,
-                            "column": 31
-                          }
-                        },
-                        "object": {
-                          "type": "ThisExpression",
-                          "start": 1877,
-                          "end": 1881,
-                          "loc": {
-                            "start": {
-                              "line": 59,
-                              "column": 8
-                            },
-                            "end": {
-                              "line": 59,
-                              "column": 12
-                            }
-                          },
-                          "leadingComments": null
-                        },
-                        "property": {
-                          "type": "Identifier",
-                          "start": 1882,
-                          "end": 1900,
-                          "loc": {
-                            "start": {
-                              "line": 59,
-                              "column": 13
-                            },
-                            "end": {
-                              "line": 59,
-                              "column": 31
-                            },
-                            "identifierName": "primitiveInstances"
-                          },
-                          "name": "primitiveInstances"
-                        },
-                        "computed": false,
-                        "leadingComments": null
-                      },
-                      "right": {
-                        "type": "Identifier",
-                        "start": 1903,
-                        "end": 1921,
-                        "loc": {
-                          "start": {
-                            "line": 59,
-                            "column": 34
-                          },
-                          "end": {
-                            "line": 59,
-                            "column": 52
-                          },
-                          "identifierName": "primitiveInstances"
-                        },
-                        "name": "primitiveInstances"
-                      },
-                      "leadingComments": null
-                    },
-                    "leadingComments": [
-                      {
-                        "type": "CommentBlock",
-                        "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
-                        "start": 1682,
-                        "end": 1868,
-                        "loc": {
-                          "start": {
-                            "line": 54,
-                            "column": 8
-                          },
-                          "end": {
-                            "line": 58,
-                            "column": 11
-                          }
-                        }
-                      }
-                    ],
-                    "trailingComments": [
-                      {
-                        "type": "CommentBlock",
-                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
-                        "start": 1932,
-                        "end": 2232,
-                        "loc": {
-                          "start": {
-                            "line": 61,
-                            "column": 8
-                          },
-                          "end": {
-                            "line": 68,
-                            "column": 11
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "type": "ExpressionStatement",
-                    "start": 2241,
-                    "end": 2266,
-                    "loc": {
-                      "start": {
-                        "line": 69,
-                        "column": 8
-                      },
-                      "end": {
-                        "line": 69,
+                        "line": 54,
                         "column": 33
                       }
                     },
                     "expression": {
                       "type": "AssignmentExpression",
-                      "start": 2241,
-                      "end": 2265,
+                      "start": 1424,
+                      "end": 1448,
                       "loc": {
                         "start": {
-                          "line": 69,
+                          "line": 54,
                           "column": 8
                         },
                         "end": {
-                          "line": 69,
+                          "line": 54,
                           "column": 32
                         }
                       },
                       "operator": "=",
                       "left": {
                         "type": "MemberExpression",
-                        "start": 2241,
-                        "end": 2250,
+                        "start": 1424,
+                        "end": 1433,
                         "loc": {
                           "start": {
-                            "line": 69,
+                            "line": 54,
                             "column": 8
                           },
                           "end": {
-                            "line": 69,
+                            "line": 54,
                             "column": 17
                           }
                         },
                         "object": {
                           "type": "ThisExpression",
-                          "start": 2241,
-                          "end": 2245,
+                          "start": 1424,
+                          "end": 1428,
                           "loc": {
                             "start": {
-                              "line": 69,
+                              "line": 54,
                               "column": 8
                             },
                             "end": {
-                              "line": 69,
+                              "line": 54,
                               "column": 12
                             }
                           },
@@ -891,15 +739,15 @@
                         },
                         "property": {
                           "type": "Identifier",
-                          "start": 2246,
-                          "end": 2250,
+                          "start": 1429,
+                          "end": 1433,
                           "loc": {
                             "start": {
-                              "line": 69,
+                              "line": 54,
                               "column": 13
                             },
                             "end": {
-                              "line": 69,
+                              "line": 54,
                               "column": 17
                             },
                             "identifierName": "aabb"
@@ -911,43 +759,43 @@
                       },
                       "right": {
                         "type": "CallExpression",
-                        "start": 2253,
-                        "end": 2265,
+                        "start": 1436,
+                        "end": 1448,
                         "loc": {
                           "start": {
-                            "line": 69,
+                            "line": 54,
                             "column": 20
                           },
                           "end": {
-                            "line": 69,
+                            "line": 54,
                             "column": 32
                           }
                         },
                         "callee": {
                           "type": "MemberExpression",
-                          "start": 2253,
-                          "end": 2263,
+                          "start": 1436,
+                          "end": 1446,
                           "loc": {
                             "start": {
-                              "line": 69,
+                              "line": 54,
                               "column": 20
                             },
                             "end": {
-                              "line": 69,
+                              "line": 54,
                               "column": 30
                             }
                           },
                           "object": {
                             "type": "Identifier",
-                            "start": 2253,
-                            "end": 2257,
+                            "start": 1436,
+                            "end": 1440,
                             "loc": {
                               "start": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 20
                               },
                               "end": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 24
                               },
                               "identifierName": "math"
@@ -956,15 +804,15 @@
                           },
                           "property": {
                             "type": "Identifier",
-                            "start": 2258,
-                            "end": 2263,
+                            "start": 1441,
+                            "end": 1446,
                             "loc": {
                               "start": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 25
                               },
                               "end": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 30
                               },
                               "identifierName": "AABB3"
@@ -980,16 +828,16 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
-                        "start": 1932,
-                        "end": 2232,
+                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                        "start": 1117,
+                        "end": 1415,
                         "loc": {
                           "start": {
-                            "line": 61,
+                            "line": 46,
                             "column": 8
                           },
                           "end": {
-                            "line": 68,
+                            "line": 53,
                             "column": 11
                           }
                         }
@@ -998,16 +846,16 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
-                        "start": 2276,
-                        "end": 2769,
+                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                        "start": 1459,
+                        "end": 1948,
                         "loc": {
                           "start": {
-                            "line": 71,
+                            "line": 56,
                             "column": 8
                           },
                           "end": {
-                            "line": 80,
+                            "line": 65,
                             "column": 11
                           }
                         }
@@ -1016,58 +864,58 @@
                   },
                   {
                     "type": "ExpressionStatement",
-                    "start": 2778,
-                    "end": 2811,
+                    "start": 1957,
+                    "end": 1990,
                     "loc": {
                       "start": {
-                        "line": 81,
+                        "line": 66,
                         "column": 8
                       },
                       "end": {
-                        "line": 81,
+                        "line": 66,
                         "column": 41
                       }
                     },
                     "expression": {
                       "type": "AssignmentExpression",
-                      "start": 2778,
-                      "end": 2810,
+                      "start": 1957,
+                      "end": 1989,
                       "loc": {
                         "start": {
-                          "line": 81,
+                          "line": 66,
                           "column": 8
                         },
                         "end": {
-                          "line": 81,
+                          "line": 66,
                           "column": 40
                         }
                       },
                       "operator": "=",
                       "left": {
                         "type": "MemberExpression",
-                        "start": 2778,
-                        "end": 2802,
+                        "start": 1957,
+                        "end": 1981,
                         "loc": {
                           "start": {
-                            "line": 81,
+                            "line": 66,
                             "column": 8
                           },
                           "end": {
-                            "line": 81,
+                            "line": 66,
                             "column": 32
                           }
                         },
                         "object": {
                           "type": "ThisExpression",
-                          "start": 2778,
-                          "end": 2782,
+                          "start": 1957,
+                          "end": 1961,
                           "loc": {
                             "start": {
-                              "line": 81,
+                              "line": 66,
                               "column": 8
                             },
                             "end": {
-                              "line": 81,
+                              "line": 66,
                               "column": 12
                             }
                           },
@@ -1075,35 +923,35 @@
                         },
                         "property": {
                           "type": "Identifier",
-                          "start": 2783,
-                          "end": 2802,
+                          "start": 1962,
+                          "end": 1981,
                           "loc": {
                             "start": {
-                              "line": 81,
+                              "line": 66,
                               "column": 13
                             },
                             "end": {
-                              "line": 81,
+                              "line": 66,
                               "column": 32
                             },
-                            "identifierName": "hasReusedPrimitives"
+                            "identifierName": "hasReusedGeometries"
                           },
-                          "name": "hasReusedPrimitives"
+                          "name": "hasReusedGeometries"
                         },
                         "computed": false,
                         "leadingComments": null
                       },
                       "right": {
                         "type": "BooleanLiteral",
-                        "start": 2805,
-                        "end": 2810,
+                        "start": 1984,
+                        "end": 1989,
                         "loc": {
                           "start": {
-                            "line": 81,
+                            "line": 66,
                             "column": 35
                           },
                           "end": {
-                            "line": 81,
+                            "line": 66,
                             "column": 40
                           }
                         },
@@ -1114,16 +962,16 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
-                        "start": 2276,
-                        "end": 2769,
+                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                        "start": 1459,
+                        "end": 1948,
                         "loc": {
                           "start": {
-                            "line": 71,
+                            "line": 56,
                             "column": 8
                           },
                           "end": {
-                            "line": 80,
+                            "line": 65,
                             "column": 11
                           }
                         }
@@ -1136,16 +984,16 @@
               "leadingComments": [
                 {
                   "type": "CommentBlock",
-                  "value": "*\n     * @private\n     * @param entityId\n     * @param matrix\n     * @param primitiveInstances\n     ",
-                  "start": 483,
-                  "end": 587,
+                  "value": "*\n     * @private\n     * @param entityId\n     * @param meshes\n     ",
+                  "start": 331,
+                  "end": 402,
                   "loc": {
                     "start": {
-                      "line": 15,
+                      "line": 14,
                       "column": 4
                     },
                     "end": {
-                      "line": 20,
+                      "line": 18,
                       "column": 7
                     }
                   }
@@ -1160,15 +1008,15 @@
       },
       {
         "type": "ExportNamedDeclaration",
-        "start": 2821,
-        "end": 2840,
+        "start": 2000,
+        "end": 2019,
         "loc": {
           "start": {
-            "line": 85,
+            "line": 70,
             "column": 0
           },
           "end": {
-            "line": 85,
+            "line": 70,
             "column": 19
           }
         },
@@ -1176,29 +1024,29 @@
         "specifiers": [
           {
             "type": "ExportSpecifier",
-            "start": 2829,
-            "end": 2838,
+            "start": 2008,
+            "end": 2017,
             "loc": {
               "start": {
-                "line": 85,
+                "line": 70,
                 "column": 8
               },
               "end": {
-                "line": 85,
+                "line": 70,
                 "column": 17
               }
             },
             "local": {
               "type": "Identifier",
-              "start": 2829,
-              "end": 2838,
+              "start": 2008,
+              "end": 2017,
               "loc": {
                 "start": {
-                  "line": 85,
+                  "line": 70,
                   "column": 8
                 },
                 "end": {
-                  "line": 85,
+                  "line": 70,
                   "column": 17
                 },
                 "identifierName": "XKTEntity"
@@ -1207,15 +1055,15 @@
             },
             "exported": {
               "type": "Identifier",
-              "start": 2829,
-              "end": 2838,
+              "start": 2008,
+              "end": 2017,
               "loc": {
                 "start": {
-                  "line": 85,
+                  "line": 70,
                   "column": 8
                 },
                 "end": {
-                  "line": 85,
+                  "line": 70,
                   "column": 17
                 },
                 "identifierName": "XKTEntity"
@@ -1228,43 +1076,43 @@
       },
       {
         "type": "ExportNamedDeclaration",
-        "start": 2821,
-        "end": 2840,
+        "start": 2000,
+        "end": 2019,
         "loc": {
           "start": {
-            "line": 85,
+            "line": 70,
             "column": 0
           },
           "end": {
-            "line": 85,
+            "line": 70,
             "column": 19
           }
         },
         "declaration": {
           "type": "ClassDeclaration",
-          "start": 460,
-          "end": 2819,
+          "start": 308,
+          "end": 1998,
           "loc": {
             "start": {
-              "line": 13,
+              "line": 12,
               "column": 0
             },
             "end": {
-              "line": 83,
+              "line": 68,
               "column": 1
             }
           },
           "id": {
             "type": "Identifier",
-            "start": 466,
-            "end": 475,
+            "start": 314,
+            "end": 323,
             "loc": {
               "start": {
-                "line": 13,
+                "line": 12,
                 "column": 6
               },
               "end": {
-                "line": 13,
+                "line": 12,
                 "column": 15
               },
               "identifierName": "XKTEntity"
@@ -1275,30 +1123,30 @@
           "superClass": null,
           "body": {
             "type": "ClassBody",
-            "start": 476,
-            "end": 2819,
+            "start": 324,
+            "end": 1998,
             "loc": {
               "start": {
-                "line": 13,
+                "line": 12,
                 "column": 16
               },
               "end": {
-                "line": 83,
+                "line": 68,
                 "column": 1
               }
             },
             "body": [
               {
                 "type": "ClassMethod",
-                "start": 592,
-                "end": 2817,
+                "start": 407,
+                "end": 1996,
                 "loc": {
                   "start": {
-                    "line": 21,
+                    "line": 19,
                     "column": 4
                   },
                   "end": {
-                    "line": 82,
+                    "line": 67,
                     "column": 5
                   }
                 },
@@ -1306,15 +1154,15 @@
                 "computed": false,
                 "key": {
                   "type": "Identifier",
-                  "start": 592,
-                  "end": 603,
+                  "start": 407,
+                  "end": 418,
                   "loc": {
                     "start": {
-                      "line": 21,
+                      "line": 19,
                       "column": 4
                     },
                     "end": {
-                      "line": 21,
+                      "line": 19,
                       "column": 15
                     },
                     "identifierName": "constructor"
@@ -1330,15 +1178,15 @@
                 "params": [
                   {
                     "type": "Identifier",
-                    "start": 604,
-                    "end": 612,
+                    "start": 419,
+                    "end": 427,
                     "loc": {
                       "start": {
-                        "line": 21,
+                        "line": 19,
                         "column": 16
                       },
                       "end": {
-                        "line": 21,
+                        "line": 19,
                         "column": 24
                       },
                       "identifierName": "entityId"
@@ -1347,108 +1195,91 @@
                   },
                   {
                     "type": "Identifier",
-                    "start": 614,
-                    "end": 620,
+                    "start": 430,
+                    "end": 436,
                     "loc": {
                       "start": {
-                        "line": 21,
-                        "column": 26
+                        "line": 19,
+                        "column": 27
                       },
                       "end": {
-                        "line": 21,
-                        "column": 32
+                        "line": 19,
+                        "column": 33
                       },
-                      "identifierName": "matrix"
+                      "identifierName": "meshes"
                     },
-                    "name": "matrix"
-                  },
-                  {
-                    "type": "Identifier",
-                    "start": 622,
-                    "end": 640,
-                    "loc": {
-                      "start": {
-                        "line": 21,
-                        "column": 34
-                      },
-                      "end": {
-                        "line": 21,
-                        "column": 52
-                      },
-                      "identifierName": "primitiveInstances"
-                    },
-                    "name": "primitiveInstances"
+                    "name": "meshes"
                   }
                 ],
                 "body": {
                   "type": "BlockStatement",
-                  "start": 642,
-                  "end": 2817,
+                  "start": 438,
+                  "end": 1996,
                   "loc": {
                     "start": {
-                      "line": 21,
-                      "column": 54
+                      "line": 19,
+                      "column": 35
                     },
                     "end": {
-                      "line": 82,
+                      "line": 67,
                       "column": 5
                     }
                   },
                   "body": [
                     {
                       "type": "ExpressionStatement",
-                      "start": 862,
-                      "end": 887,
+                      "start": 658,
+                      "end": 683,
                       "loc": {
                         "start": {
-                          "line": 30,
+                          "line": 28,
                           "column": 8
                         },
                         "end": {
-                          "line": 30,
+                          "line": 28,
                           "column": 33
                         }
                       },
                       "expression": {
                         "type": "AssignmentExpression",
-                        "start": 862,
-                        "end": 886,
+                        "start": 658,
+                        "end": 682,
                         "loc": {
                           "start": {
-                            "line": 30,
+                            "line": 28,
                             "column": 8
                           },
                           "end": {
-                            "line": 30,
+                            "line": 28,
                             "column": 32
                           }
                         },
                         "operator": "=",
                         "left": {
                           "type": "MemberExpression",
-                          "start": 862,
-                          "end": 875,
+                          "start": 658,
+                          "end": 671,
                           "loc": {
                             "start": {
-                              "line": 30,
+                              "line": 28,
                               "column": 8
                             },
                             "end": {
-                              "line": 30,
+                              "line": 28,
                               "column": 21
                             }
                           },
                           "object": {
                             "type": "ThisExpression",
-                            "start": 862,
-                            "end": 866,
+                            "start": 658,
+                            "end": 662,
                             "loc": {
                               "start": {
-                                "line": 30,
+                                "line": 28,
                                 "column": 8
                               },
                               "end": {
-                                "line": 30,
+                                "line": 28,
                                 "column": 12
                               }
                             },
@@ -1456,15 +1287,15 @@
                           },
                           "property": {
                             "type": "Identifier",
-                            "start": 867,
-                            "end": 875,
+                            "start": 663,
+                            "end": 671,
                             "loc": {
                               "start": {
-                                "line": 30,
+                                "line": 28,
                                 "column": 13
                               },
                               "end": {
-                                "line": 30,
+                                "line": 28,
                                 "column": 21
                               },
                               "identifierName": "entityId"
@@ -1476,15 +1307,15 @@
                         },
                         "right": {
                           "type": "Identifier",
-                          "start": 878,
-                          "end": 886,
+                          "start": 674,
+                          "end": 682,
                           "loc": {
                             "start": {
-                              "line": 30,
+                              "line": 28,
                               "column": 24
                             },
                             "end": {
-                              "line": 30,
+                              "line": 28,
                               "column": 32
                             },
                             "identifierName": "entityId"
@@ -1497,15 +1328,15 @@
                         {
                           "type": "CommentBlock",
                           "value": "*\n         * Unique ID of this ````XKTEntity```` in {@link XKTModel#entities}.\n         *\n         * For a BIM model, this will be an IFC product ID.\n         *\n         * @type {String}\n         ",
-                          "start": 653,
-                          "end": 853,
+                          "start": 449,
+                          "end": 649,
                           "loc": {
                             "start": {
-                              "line": 23,
+                              "line": 21,
                               "column": 8
                             },
                             "end": {
-                              "line": 29,
+                              "line": 27,
                               "column": 11
                             }
                           }
@@ -1515,15 +1346,15 @@
                         {
                           "type": "CommentBlock",
                           "value": "*\n         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Number}\n         ",
-                          "start": 897,
-                          "end": 1082,
+                          "start": 693,
+                          "end": 878,
                           "loc": {
                             "start": {
-                              "line": 32,
+                              "line": 30,
                               "column": 8
                             },
                             "end": {
-                              "line": 38,
+                              "line": 36,
                               "column": 11
                             }
                           }
@@ -1532,58 +1363,58 @@
                     },
                     {
                       "type": "ExpressionStatement",
-                      "start": 1091,
-                      "end": 1112,
+                      "start": 887,
+                      "end": 908,
                       "loc": {
                         "start": {
-                          "line": 39,
+                          "line": 37,
                           "column": 8
                         },
                         "end": {
-                          "line": 39,
+                          "line": 37,
                           "column": 29
                         }
                       },
                       "expression": {
                         "type": "AssignmentExpression",
-                        "start": 1091,
-                        "end": 1111,
+                        "start": 887,
+                        "end": 907,
                         "loc": {
                           "start": {
-                            "line": 39,
+                            "line": 37,
                             "column": 8
                           },
                           "end": {
-                            "line": 39,
+                            "line": 37,
                             "column": 28
                           }
                         },
                         "operator": "=",
                         "left": {
                           "type": "MemberExpression",
-                          "start": 1091,
-                          "end": 1107,
+                          "start": 887,
+                          "end": 903,
                           "loc": {
                             "start": {
-                              "line": 39,
+                              "line": 37,
                               "column": 8
                             },
                             "end": {
-                              "line": 39,
+                              "line": 37,
                               "column": 24
                             }
                           },
                           "object": {
                             "type": "ThisExpression",
-                            "start": 1091,
-                            "end": 1095,
+                            "start": 887,
+                            "end": 891,
                             "loc": {
                               "start": {
-                                "line": 39,
+                                "line": 37,
                                 "column": 8
                               },
                               "end": {
-                                "line": 39,
+                                "line": 37,
                                 "column": 12
                               }
                             },
@@ -1591,15 +1422,15 @@
                           },
                           "property": {
                             "type": "Identifier",
-                            "start": 1096,
-                            "end": 1107,
+                            "start": 892,
+                            "end": 903,
                             "loc": {
                               "start": {
-                                "line": 39,
+                                "line": 37,
                                 "column": 13
                               },
                               "end": {
-                                "line": 39,
+                                "line": 37,
                                 "column": 24
                               },
                               "identifierName": "entityIndex"
@@ -1611,15 +1442,15 @@
                         },
                         "right": {
                           "type": "NumericLiteral",
-                          "start": 1110,
-                          "end": 1111,
+                          "start": 906,
+                          "end": 907,
                           "loc": {
                             "start": {
-                              "line": 39,
+                              "line": 37,
                               "column": 27
                             },
                             "end": {
-                              "line": 39,
+                              "line": 37,
                               "column": 28
                             }
                           },
@@ -1635,15 +1466,15 @@
                         {
                           "type": "CommentBlock",
                           "value": "*\n         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Number}\n         ",
-                          "start": 897,
-                          "end": 1082,
+                          "start": 693,
+                          "end": 878,
                           "loc": {
                             "start": {
-                              "line": 32,
+                              "line": 30,
                               "column": 8
                             },
                             "end": {
-                              "line": 38,
+                              "line": 36,
                               "column": 11
                             }
                           }
@@ -1652,16 +1483,16 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
-                          "start": 1122,
-                          "end": 1642,
+                          "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
+                          "start": 918,
+                          "end": 1077,
                           "loc": {
                             "start": {
-                              "line": 41,
+                              "line": 39,
                               "column": 8
                             },
                             "end": {
-                              "line": 51,
+                              "line": 43,
                               "column": 11
                             }
                           }
@@ -1670,58 +1501,58 @@
                     },
                     {
                       "type": "ExpressionStatement",
-                      "start": 1651,
-                      "end": 1672,
+                      "start": 1086,
+                      "end": 1107,
                       "loc": {
                         "start": {
-                          "line": 52,
+                          "line": 44,
                           "column": 8
                         },
                         "end": {
-                          "line": 52,
+                          "line": 44,
                           "column": 29
                         }
                       },
                       "expression": {
                         "type": "AssignmentExpression",
-                        "start": 1651,
-                        "end": 1671,
+                        "start": 1086,
+                        "end": 1106,
                         "loc": {
                           "start": {
-                            "line": 52,
+                            "line": 44,
                             "column": 8
                           },
                           "end": {
-                            "line": 52,
+                            "line": 44,
                             "column": 28
                           }
                         },
                         "operator": "=",
                         "left": {
                           "type": "MemberExpression",
-                          "start": 1651,
-                          "end": 1662,
+                          "start": 1086,
+                          "end": 1097,
                           "loc": {
                             "start": {
-                              "line": 52,
+                              "line": 44,
                               "column": 8
                             },
                             "end": {
-                              "line": 52,
+                              "line": 44,
                               "column": 19
                             }
                           },
                           "object": {
                             "type": "ThisExpression",
-                            "start": 1651,
-                            "end": 1655,
+                            "start": 1086,
+                            "end": 1090,
                             "loc": {
                               "start": {
-                                "line": 52,
+                                "line": 44,
                                 "column": 8
                               },
                               "end": {
-                                "line": 52,
+                                "line": 44,
                                 "column": 12
                               }
                             },
@@ -1729,56 +1560,56 @@
                           },
                           "property": {
                             "type": "Identifier",
-                            "start": 1656,
-                            "end": 1662,
+                            "start": 1091,
+                            "end": 1097,
                             "loc": {
                               "start": {
-                                "line": 52,
+                                "line": 44,
                                 "column": 13
                               },
                               "end": {
-                                "line": 52,
+                                "line": 44,
                                 "column": 19
                               },
-                              "identifierName": "matrix"
+                              "identifierName": "meshes"
                             },
-                            "name": "matrix"
+                            "name": "meshes"
                           },
                           "computed": false,
                           "leadingComments": null
                         },
                         "right": {
                           "type": "Identifier",
-                          "start": 1665,
-                          "end": 1671,
+                          "start": 1100,
+                          "end": 1106,
                           "loc": {
                             "start": {
-                              "line": 52,
+                              "line": 44,
                               "column": 22
                             },
                             "end": {
-                              "line": 52,
+                              "line": 44,
                               "column": 28
                             },
-                            "identifierName": "matrix"
+                            "identifierName": "meshes"
                           },
-                          "name": "matrix"
+                          "name": "meshes"
                         },
                         "leadingComments": null
                       },
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
-                          "start": 1122,
-                          "end": 1642,
+                          "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
+                          "start": 918,
+                          "end": 1077,
                           "loc": {
                             "start": {
-                              "line": 41,
+                              "line": 39,
                               "column": 8
                             },
                             "end": {
-                              "line": 51,
+                              "line": 43,
                               "column": 11
                             }
                           }
@@ -1787,16 +1618,16 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
-                          "start": 1682,
-                          "end": 1868,
+                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                          "start": 1117,
+                          "end": 1415,
                           "loc": {
                             "start": {
-                              "line": 54,
+                              "line": 46,
                               "column": 8
                             },
                             "end": {
-                              "line": 58,
+                              "line": 53,
                               "column": 11
                             }
                           }
@@ -1805,193 +1636,58 @@
                     },
                     {
                       "type": "ExpressionStatement",
-                      "start": 1877,
-                      "end": 1922,
+                      "start": 1424,
+                      "end": 1449,
                       "loc": {
                         "start": {
-                          "line": 59,
+                          "line": 54,
                           "column": 8
                         },
                         "end": {
-                          "line": 59,
-                          "column": 53
-                        }
-                      },
-                      "expression": {
-                        "type": "AssignmentExpression",
-                        "start": 1877,
-                        "end": 1921,
-                        "loc": {
-                          "start": {
-                            "line": 59,
-                            "column": 8
-                          },
-                          "end": {
-                            "line": 59,
-                            "column": 52
-                          }
-                        },
-                        "operator": "=",
-                        "left": {
-                          "type": "MemberExpression",
-                          "start": 1877,
-                          "end": 1900,
-                          "loc": {
-                            "start": {
-                              "line": 59,
-                              "column": 8
-                            },
-                            "end": {
-                              "line": 59,
-                              "column": 31
-                            }
-                          },
-                          "object": {
-                            "type": "ThisExpression",
-                            "start": 1877,
-                            "end": 1881,
-                            "loc": {
-                              "start": {
-                                "line": 59,
-                                "column": 8
-                              },
-                              "end": {
-                                "line": 59,
-                                "column": 12
-                              }
-                            },
-                            "leadingComments": null
-                          },
-                          "property": {
-                            "type": "Identifier",
-                            "start": 1882,
-                            "end": 1900,
-                            "loc": {
-                              "start": {
-                                "line": 59,
-                                "column": 13
-                              },
-                              "end": {
-                                "line": 59,
-                                "column": 31
-                              },
-                              "identifierName": "primitiveInstances"
-                            },
-                            "name": "primitiveInstances"
-                          },
-                          "computed": false,
-                          "leadingComments": null
-                        },
-                        "right": {
-                          "type": "Identifier",
-                          "start": 1903,
-                          "end": 1921,
-                          "loc": {
-                            "start": {
-                              "line": 59,
-                              "column": 34
-                            },
-                            "end": {
-                              "line": 59,
-                              "column": 52
-                            },
-                            "identifierName": "primitiveInstances"
-                          },
-                          "name": "primitiveInstances"
-                        },
-                        "leadingComments": null
-                      },
-                      "leadingComments": [
-                        {
-                          "type": "CommentBlock",
-                          "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
-                          "start": 1682,
-                          "end": 1868,
-                          "loc": {
-                            "start": {
-                              "line": 54,
-                              "column": 8
-                            },
-                            "end": {
-                              "line": 58,
-                              "column": 11
-                            }
-                          }
-                        }
-                      ],
-                      "trailingComments": [
-                        {
-                          "type": "CommentBlock",
-                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
-                          "start": 1932,
-                          "end": 2232,
-                          "loc": {
-                            "start": {
-                              "line": 61,
-                              "column": 8
-                            },
-                            "end": {
-                              "line": 68,
-                              "column": 11
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "ExpressionStatement",
-                      "start": 2241,
-                      "end": 2266,
-                      "loc": {
-                        "start": {
-                          "line": 69,
-                          "column": 8
-                        },
-                        "end": {
-                          "line": 69,
+                          "line": 54,
                           "column": 33
                         }
                       },
                       "expression": {
                         "type": "AssignmentExpression",
-                        "start": 2241,
-                        "end": 2265,
+                        "start": 1424,
+                        "end": 1448,
                         "loc": {
                           "start": {
-                            "line": 69,
+                            "line": 54,
                             "column": 8
                           },
                           "end": {
-                            "line": 69,
+                            "line": 54,
                             "column": 32
                           }
                         },
                         "operator": "=",
                         "left": {
                           "type": "MemberExpression",
-                          "start": 2241,
-                          "end": 2250,
+                          "start": 1424,
+                          "end": 1433,
                           "loc": {
                             "start": {
-                              "line": 69,
+                              "line": 54,
                               "column": 8
                             },
                             "end": {
-                              "line": 69,
+                              "line": 54,
                               "column": 17
                             }
                           },
                           "object": {
                             "type": "ThisExpression",
-                            "start": 2241,
-                            "end": 2245,
+                            "start": 1424,
+                            "end": 1428,
                             "loc": {
                               "start": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 8
                               },
                               "end": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 12
                               }
                             },
@@ -1999,15 +1695,15 @@
                           },
                           "property": {
                             "type": "Identifier",
-                            "start": 2246,
-                            "end": 2250,
+                            "start": 1429,
+                            "end": 1433,
                             "loc": {
                               "start": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 13
                               },
                               "end": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 17
                               },
                               "identifierName": "aabb"
@@ -2019,43 +1715,43 @@
                         },
                         "right": {
                           "type": "CallExpression",
-                          "start": 2253,
-                          "end": 2265,
+                          "start": 1436,
+                          "end": 1448,
                           "loc": {
                             "start": {
-                              "line": 69,
+                              "line": 54,
                               "column": 20
                             },
                             "end": {
-                              "line": 69,
+                              "line": 54,
                               "column": 32
                             }
                           },
                           "callee": {
                             "type": "MemberExpression",
-                            "start": 2253,
-                            "end": 2263,
+                            "start": 1436,
+                            "end": 1446,
                             "loc": {
                               "start": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 20
                               },
                               "end": {
-                                "line": 69,
+                                "line": 54,
                                 "column": 30
                               }
                             },
                             "object": {
                               "type": "Identifier",
-                              "start": 2253,
-                              "end": 2257,
+                              "start": 1436,
+                              "end": 1440,
                               "loc": {
                                 "start": {
-                                  "line": 69,
+                                  "line": 54,
                                   "column": 20
                                 },
                                 "end": {
-                                  "line": 69,
+                                  "line": 54,
                                   "column": 24
                                 },
                                 "identifierName": "math"
@@ -2064,15 +1760,15 @@
                             },
                             "property": {
                               "type": "Identifier",
-                              "start": 2258,
-                              "end": 2263,
+                              "start": 1441,
+                              "end": 1446,
                               "loc": {
                                 "start": {
-                                  "line": 69,
+                                  "line": 54,
                                   "column": 25
                                 },
                                 "end": {
-                                  "line": 69,
+                                  "line": 54,
                                   "column": 30
                                 },
                                 "identifierName": "AABB3"
@@ -2088,16 +1784,16 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
-                          "start": 1932,
-                          "end": 2232,
+                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                          "start": 1117,
+                          "end": 1415,
                           "loc": {
                             "start": {
-                              "line": 61,
+                              "line": 46,
                               "column": 8
                             },
                             "end": {
-                              "line": 68,
+                              "line": 53,
                               "column": 11
                             }
                           }
@@ -2106,16 +1802,16 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
-                          "start": 2276,
-                          "end": 2769,
+                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                          "start": 1459,
+                          "end": 1948,
                           "loc": {
                             "start": {
-                              "line": 71,
+                              "line": 56,
                               "column": 8
                             },
                             "end": {
-                              "line": 80,
+                              "line": 65,
                               "column": 11
                             }
                           }
@@ -2124,58 +1820,58 @@
                     },
                     {
                       "type": "ExpressionStatement",
-                      "start": 2778,
-                      "end": 2811,
+                      "start": 1957,
+                      "end": 1990,
                       "loc": {
                         "start": {
-                          "line": 81,
+                          "line": 66,
                           "column": 8
                         },
                         "end": {
-                          "line": 81,
+                          "line": 66,
                           "column": 41
                         }
                       },
                       "expression": {
                         "type": "AssignmentExpression",
-                        "start": 2778,
-                        "end": 2810,
+                        "start": 1957,
+                        "end": 1989,
                         "loc": {
                           "start": {
-                            "line": 81,
+                            "line": 66,
                             "column": 8
                           },
                           "end": {
-                            "line": 81,
+                            "line": 66,
                             "column": 40
                           }
                         },
                         "operator": "=",
                         "left": {
                           "type": "MemberExpression",
-                          "start": 2778,
-                          "end": 2802,
+                          "start": 1957,
+                          "end": 1981,
                           "loc": {
                             "start": {
-                              "line": 81,
+                              "line": 66,
                               "column": 8
                             },
                             "end": {
-                              "line": 81,
+                              "line": 66,
                               "column": 32
                             }
                           },
                           "object": {
                             "type": "ThisExpression",
-                            "start": 2778,
-                            "end": 2782,
+                            "start": 1957,
+                            "end": 1961,
                             "loc": {
                               "start": {
-                                "line": 81,
+                                "line": 66,
                                 "column": 8
                               },
                               "end": {
-                                "line": 81,
+                                "line": 66,
                                 "column": 12
                               }
                             },
@@ -2183,35 +1879,35 @@
                           },
                           "property": {
                             "type": "Identifier",
-                            "start": 2783,
-                            "end": 2802,
+                            "start": 1962,
+                            "end": 1981,
                             "loc": {
                               "start": {
-                                "line": 81,
+                                "line": 66,
                                 "column": 13
                               },
                               "end": {
-                                "line": 81,
+                                "line": 66,
                                 "column": 32
                               },
-                              "identifierName": "hasReusedPrimitives"
+                              "identifierName": "hasReusedGeometries"
                             },
-                            "name": "hasReusedPrimitives"
+                            "name": "hasReusedGeometries"
                           },
                           "computed": false,
                           "leadingComments": null
                         },
                         "right": {
                           "type": "BooleanLiteral",
-                          "start": 2805,
-                          "end": 2810,
+                          "start": 1984,
+                          "end": 1989,
                           "loc": {
                             "start": {
-                              "line": 81,
+                              "line": 66,
                               "column": 35
                             },
                             "end": {
-                              "line": 81,
+                              "line": 66,
                               "column": 40
                             }
                           },
@@ -2222,16 +1918,16 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
-                          "start": 2276,
-                          "end": 2769,
+                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                          "start": 1459,
+                          "end": 1948,
                           "loc": {
                             "start": {
-                              "line": 71,
+                              "line": 56,
                               "column": 8
                             },
                             "end": {
-                              "line": 80,
+                              "line": 65,
                               "column": 11
                             }
                           }
@@ -2244,16 +1940,16 @@
                 "leadingComments": [
                   {
                     "type": "CommentBlock",
-                    "value": "*\n     * @private\n     * @param entityId\n     * @param matrix\n     * @param primitiveInstances\n     ",
-                    "start": 483,
-                    "end": 587,
+                    "value": "*\n     * @private\n     * @param entityId\n     * @param meshes\n     ",
+                    "start": 331,
+                    "end": 402,
                     "loc": {
                       "start": {
-                        "line": 15,
+                        "line": 14,
                         "column": 4
                       },
                       "end": {
-                        "line": 20,
+                        "line": 18,
                         "column": 7
                       }
                     }
@@ -2265,16 +1961,16 @@
           "leadingComments": [
             {
               "type": "CommentBlock",
-              "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
-              "start": 37,
-              "end": 459,
+              "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n *\n * @class XKTEntity\n ",
+              "start": 38,
+              "end": 307,
               "loc": {
                 "start": {
                   "line": 3,
                   "column": 0
                 },
                 "end": {
-                  "line": 12,
+                  "line": 11,
                   "column": 3
                 }
               }
@@ -2293,32 +1989,32 @@
   "comments": [
     {
       "type": "CommentBlock",
-      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
-      "start": 37,
-      "end": 459,
+      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n *\n * @class XKTEntity\n ",
+      "start": 38,
+      "end": 307,
       "loc": {
         "start": {
           "line": 3,
           "column": 0
         },
         "end": {
-          "line": 12,
+          "line": 11,
           "column": 3
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * @private\n     * @param entityId\n     * @param matrix\n     * @param primitiveInstances\n     ",
-      "start": 483,
-      "end": 587,
+      "value": "*\n     * @private\n     * @param entityId\n     * @param meshes\n     ",
+      "start": 331,
+      "end": 402,
       "loc": {
         "start": {
-          "line": 15,
+          "line": 14,
           "column": 4
         },
         "end": {
-          "line": 20,
+          "line": 18,
           "column": 7
         }
       }
@@ -2326,15 +2022,15 @@
     {
       "type": "CommentBlock",
       "value": "*\n         * Unique ID of this ````XKTEntity```` in {@link XKTModel#entities}.\n         *\n         * For a BIM model, this will be an IFC product ID.\n         *\n         * @type {String}\n         ",
-      "start": 653,
-      "end": 853,
+      "start": 449,
+      "end": 649,
       "loc": {
         "start": {
-          "line": 23,
+          "line": 21,
           "column": 8
         },
         "end": {
-          "line": 29,
+          "line": 27,
           "column": 11
         }
       }
@@ -2342,79 +2038,63 @@
     {
       "type": "CommentBlock",
       "value": "*\n         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Number}\n         ",
-      "start": 897,
-      "end": 1082,
+      "start": 693,
+      "end": 878,
       "loc": {
         "start": {
-          "line": 32,
+          "line": 30,
           "column": 8
         },
         "end": {
-          "line": 38,
+          "line": 36,
           "column": 11
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
-      "start": 1122,
-      "end": 1642,
+      "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
+      "start": 918,
+      "end": 1077,
       "loc": {
         "start": {
-          "line": 41,
+          "line": 39,
           "column": 8
         },
         "end": {
-          "line": 51,
+          "line": 43,
           "column": 11
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
-      "start": 1682,
-      "end": 1868,
+      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+      "start": 1117,
+      "end": 1415,
       "loc": {
         "start": {
-          "line": 54,
+          "line": 46,
           "column": 8
         },
         "end": {
-          "line": 58,
+          "line": 53,
           "column": 11
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
-      "start": 1932,
-      "end": 2232,
+      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+      "start": 1459,
+      "end": 1948,
       "loc": {
         "start": {
-          "line": 61,
+          "line": 56,
           "column": 8
         },
         "end": {
-          "line": 68,
-          "column": 11
-        }
-      }
-    },
-    {
-      "type": "CommentBlock",
-      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
-      "start": 2276,
-      "end": 2769,
-      "loc": {
-        "start": {
-          "line": 71,
-          "column": 8
-        },
-        "end": {
-          "line": 80,
+          "line": 65,
           "column": 11
         }
       }
@@ -2564,9 +2244,9 @@
         "binop": null,
         "updateContext": null
       },
-      "value": "./lib/math.js",
+      "value": "../lib/math.js",
       "start": 19,
-      "end": 34,
+      "end": 35,
       "loc": {
         "start": {
           "line": 1,
@@ -2574,7 +2254,7 @@
         },
         "end": {
           "line": 1,
-          "column": 34
+          "column": 35
         }
       }
     },
@@ -2591,31 +2271,31 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 34,
-      "end": 35,
+      "start": 35,
+      "end": 36,
       "loc": {
         "start": {
           "line": 1,
-          "column": 34
+          "column": 35
         },
         "end": {
           "line": 1,
-          "column": 35
+          "column": 36
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
-      "start": 37,
-      "end": 459,
+      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n *\n * @class XKTEntity\n ",
+      "start": 38,
+      "end": 307,
       "loc": {
         "start": {
           "line": 3,
           "column": 0
         },
         "end": {
-          "line": 12,
+          "line": 11,
           "column": 3
         }
       }
@@ -2635,15 +2315,15 @@
         "updateContext": null
       },
       "value": "class",
-      "start": 460,
-      "end": 465,
+      "start": 308,
+      "end": 313,
       "loc": {
         "start": {
-          "line": 13,
+          "line": 12,
           "column": 0
         },
         "end": {
-          "line": 13,
+          "line": 12,
           "column": 5
         }
       }
@@ -2661,15 +2341,15 @@
         "binop": null
       },
       "value": "XKTEntity",
-      "start": 466,
-      "end": 475,
+      "start": 314,
+      "end": 323,
       "loc": {
         "start": {
-          "line": 13,
+          "line": 12,
           "column": 6
         },
         "end": {
-          "line": 13,
+          "line": 12,
           "column": 15
         }
       }
@@ -2686,31 +2366,31 @@
         "postfix": false,
         "binop": null
       },
-      "start": 476,
-      "end": 477,
+      "start": 324,
+      "end": 325,
       "loc": {
         "start": {
-          "line": 13,
+          "line": 12,
           "column": 16
         },
         "end": {
-          "line": 13,
+          "line": 12,
           "column": 17
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * @private\n     * @param entityId\n     * @param matrix\n     * @param primitiveInstances\n     ",
-      "start": 483,
-      "end": 587,
+      "value": "*\n     * @private\n     * @param entityId\n     * @param meshes\n     ",
+      "start": 331,
+      "end": 402,
       "loc": {
         "start": {
-          "line": 15,
+          "line": 14,
           "column": 4
         },
         "end": {
-          "line": 20,
+          "line": 18,
           "column": 7
         }
       }
@@ -2728,15 +2408,15 @@
         "binop": null
       },
       "value": "constructor",
-      "start": 592,
-      "end": 603,
+      "start": 407,
+      "end": 418,
       "loc": {
         "start": {
-          "line": 21,
+          "line": 19,
           "column": 4
         },
         "end": {
-          "line": 21,
+          "line": 19,
           "column": 15
         }
       }
@@ -2753,15 +2433,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 603,
-      "end": 604,
+      "start": 418,
+      "end": 419,
       "loc": {
         "start": {
-          "line": 21,
+          "line": 19,
           "column": 15
         },
         "end": {
-          "line": 21,
+          "line": 19,
           "column": 16
         }
       }
@@ -2779,15 +2459,15 @@
         "binop": null
       },
       "value": "entityId",
-      "start": 604,
-      "end": 612,
+      "start": 419,
+      "end": 427,
       "loc": {
         "start": {
-          "line": 21,
+          "line": 19,
           "column": 16
         },
         "end": {
-          "line": 21,
+          "line": 19,
           "column": 24
         }
       }
@@ -2805,15 +2485,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 612,
-      "end": 613,
+      "start": 427,
+      "end": 428,
       "loc": {
         "start": {
-          "line": 21,
+          "line": 19,
           "column": 24
         },
         "end": {
-          "line": 21,
+          "line": 19,
           "column": 25
         }
       }
@@ -2830,69 +2510,17 @@
         "postfix": false,
         "binop": null
       },
-      "value": "matrix",
-      "start": 614,
-      "end": 620,
+      "value": "meshes",
+      "start": 430,
+      "end": 436,
       "loc": {
         "start": {
-          "line": 21,
-          "column": 26
+          "line": 19,
+          "column": 27
         },
         "end": {
-          "line": 21,
-          "column": 32
-        }
-      }
-    },
-    {
-      "type": {
-        "label": ",",
-        "beforeExpr": true,
-        "startsExpr": false,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null,
-        "updateContext": null
-      },
-      "start": 620,
-      "end": 621,
-      "loc": {
-        "start": {
-          "line": 21,
-          "column": 32
-        },
-        "end": {
-          "line": 21,
+          "line": 19,
           "column": 33
-        }
-      }
-    },
-    {
-      "type": {
-        "label": "name",
-        "beforeExpr": false,
-        "startsExpr": true,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null
-      },
-      "value": "primitiveInstances",
-      "start": 622,
-      "end": 640,
-      "loc": {
-        "start": {
-          "line": 21,
-          "column": 34
-        },
-        "end": {
-          "line": 21,
-          "column": 52
         }
       }
     },
@@ -2908,16 +2536,16 @@
         "postfix": false,
         "binop": null
       },
-      "start": 640,
-      "end": 641,
+      "start": 436,
+      "end": 437,
       "loc": {
         "start": {
-          "line": 21,
-          "column": 52
+          "line": 19,
+          "column": 33
         },
         "end": {
-          "line": 21,
-          "column": 53
+          "line": 19,
+          "column": 34
         }
       }
     },
@@ -2933,31 +2561,31 @@
         "postfix": false,
         "binop": null
       },
-      "start": 642,
-      "end": 643,
+      "start": 438,
+      "end": 439,
       "loc": {
         "start": {
-          "line": 21,
-          "column": 54
+          "line": 19,
+          "column": 35
         },
         "end": {
-          "line": 21,
-          "column": 55
+          "line": 19,
+          "column": 36
         }
       }
     },
     {
       "type": "CommentBlock",
       "value": "*\n         * Unique ID of this ````XKTEntity```` in {@link XKTModel#entities}.\n         *\n         * For a BIM model, this will be an IFC product ID.\n         *\n         * @type {String}\n         ",
-      "start": 653,
-      "end": 853,
+      "start": 449,
+      "end": 649,
       "loc": {
         "start": {
-          "line": 23,
+          "line": 21,
           "column": 8
         },
         "end": {
-          "line": 29,
+          "line": 27,
           "column": 11
         }
       }
@@ -2977,15 +2605,15 @@
         "updateContext": null
       },
       "value": "this",
-      "start": 862,
-      "end": 866,
+      "start": 658,
+      "end": 662,
       "loc": {
         "start": {
-          "line": 30,
+          "line": 28,
           "column": 8
         },
         "end": {
-          "line": 30,
+          "line": 28,
           "column": 12
         }
       }
@@ -3003,15 +2631,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 866,
-      "end": 867,
+      "start": 662,
+      "end": 663,
       "loc": {
         "start": {
-          "line": 30,
+          "line": 28,
           "column": 12
         },
         "end": {
-          "line": 30,
+          "line": 28,
           "column": 13
         }
       }
@@ -3029,15 +2657,15 @@
         "binop": null
       },
       "value": "entityId",
-      "start": 867,
-      "end": 875,
+      "start": 663,
+      "end": 671,
       "loc": {
         "start": {
-          "line": 30,
+          "line": 28,
           "column": 13
         },
         "end": {
-          "line": 30,
+          "line": 28,
           "column": 21
         }
       }
@@ -3056,15 +2684,15 @@
         "updateContext": null
       },
       "value": "=",
-      "start": 876,
-      "end": 877,
+      "start": 672,
+      "end": 673,
       "loc": {
         "start": {
-          "line": 30,
+          "line": 28,
           "column": 22
         },
         "end": {
-          "line": 30,
+          "line": 28,
           "column": 23
         }
       }
@@ -3082,15 +2710,15 @@
         "binop": null
       },
       "value": "entityId",
-      "start": 878,
-      "end": 886,
+      "start": 674,
+      "end": 682,
       "loc": {
         "start": {
-          "line": 30,
+          "line": 28,
           "column": 24
         },
         "end": {
-          "line": 30,
+          "line": 28,
           "column": 32
         }
       }
@@ -3108,15 +2736,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 886,
-      "end": 887,
+      "start": 682,
+      "end": 683,
       "loc": {
         "start": {
-          "line": 30,
+          "line": 28,
           "column": 32
         },
         "end": {
-          "line": 30,
+          "line": 28,
           "column": 33
         }
       }
@@ -3124,15 +2752,15 @@
     {
       "type": "CommentBlock",
       "value": "*\n         * Index of this ````XKTEntity```` in {@link XKTModel#entitiesList}.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Number}\n         ",
-      "start": 897,
-      "end": 1082,
+      "start": 693,
+      "end": 878,
       "loc": {
         "start": {
-          "line": 32,
+          "line": 30,
           "column": 8
         },
         "end": {
-          "line": 38,
+          "line": 36,
           "column": 11
         }
       }
@@ -3152,15 +2780,15 @@
         "updateContext": null
       },
       "value": "this",
-      "start": 1091,
-      "end": 1095,
+      "start": 887,
+      "end": 891,
       "loc": {
         "start": {
-          "line": 39,
+          "line": 37,
           "column": 8
         },
         "end": {
-          "line": 39,
+          "line": 37,
           "column": 12
         }
       }
@@ -3178,15 +2806,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 1095,
-      "end": 1096,
+      "start": 891,
+      "end": 892,
       "loc": {
         "start": {
-          "line": 39,
+          "line": 37,
           "column": 12
         },
         "end": {
-          "line": 39,
+          "line": 37,
           "column": 13
         }
       }
@@ -3204,15 +2832,15 @@
         "binop": null
       },
       "value": "entityIndex",
-      "start": 1096,
-      "end": 1107,
+      "start": 892,
+      "end": 903,
       "loc": {
         "start": {
-          "line": 39,
+          "line": 37,
           "column": 13
         },
         "end": {
-          "line": 39,
+          "line": 37,
           "column": 24
         }
       }
@@ -3231,15 +2859,15 @@
         "updateContext": null
       },
       "value": "=",
-      "start": 1108,
-      "end": 1109,
+      "start": 904,
+      "end": 905,
       "loc": {
         "start": {
-          "line": 39,
+          "line": 37,
           "column": 25
         },
         "end": {
-          "line": 39,
+          "line": 37,
           "column": 26
         }
       }
@@ -3258,15 +2886,15 @@
         "updateContext": null
       },
       "value": 0,
-      "start": 1110,
-      "end": 1111,
+      "start": 906,
+      "end": 907,
       "loc": {
         "start": {
-          "line": 39,
+          "line": 37,
           "column": 27
         },
         "end": {
-          "line": 39,
+          "line": 37,
           "column": 28
         }
       }
@@ -3284,31 +2912,31 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 1111,
-      "end": 1112,
+      "start": 907,
+      "end": 908,
       "loc": {
         "start": {
-          "line": 39,
+          "line": 37,
           "column": 28
         },
         "end": {
-          "line": 39,
+          "line": 37,
           "column": 29
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
-      "start": 1122,
-      "end": 1642,
+      "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
+      "start": 918,
+      "end": 1077,
       "loc": {
         "start": {
-          "line": 41,
+          "line": 39,
           "column": 8
         },
         "end": {
-          "line": 51,
+          "line": 43,
           "column": 11
         }
       }
@@ -3328,15 +2956,15 @@
         "updateContext": null
       },
       "value": "this",
-      "start": 1651,
-      "end": 1655,
+      "start": 1086,
+      "end": 1090,
       "loc": {
         "start": {
-          "line": 52,
+          "line": 44,
           "column": 8
         },
         "end": {
-          "line": 52,
+          "line": 44,
           "column": 12
         }
       }
@@ -3354,15 +2982,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 1655,
-      "end": 1656,
+      "start": 1090,
+      "end": 1091,
       "loc": {
         "start": {
-          "line": 52,
+          "line": 44,
           "column": 12
         },
         "end": {
-          "line": 52,
+          "line": 44,
           "column": 13
         }
       }
@@ -3379,16 +3007,16 @@
         "postfix": false,
         "binop": null
       },
-      "value": "matrix",
-      "start": 1656,
-      "end": 1662,
+      "value": "meshes",
+      "start": 1091,
+      "end": 1097,
       "loc": {
         "start": {
-          "line": 52,
+          "line": 44,
           "column": 13
         },
         "end": {
-          "line": 52,
+          "line": 44,
           "column": 19
         }
       }
@@ -3407,15 +3035,15 @@
         "updateContext": null
       },
       "value": "=",
-      "start": 1663,
-      "end": 1664,
+      "start": 1098,
+      "end": 1099,
       "loc": {
         "start": {
-          "line": 52,
+          "line": 44,
           "column": 20
         },
         "end": {
-          "line": 52,
+          "line": 44,
           "column": 21
         }
       }
@@ -3432,16 +3060,16 @@
         "postfix": false,
         "binop": null
       },
-      "value": "matrix",
-      "start": 1665,
-      "end": 1671,
+      "value": "meshes",
+      "start": 1100,
+      "end": 1106,
       "loc": {
         "start": {
-          "line": 52,
+          "line": 44,
           "column": 22
         },
         "end": {
-          "line": 52,
+          "line": 44,
           "column": 28
         }
       }
@@ -3459,59 +3087,59 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 1671,
-      "end": 1672,
+      "start": 1106,
+      "end": 1107,
       "loc": {
         "start": {
-          "line": 52,
+          "line": 44,
           "column": 28
         },
         "end": {
-          "line": 52,
+          "line": 44,
           "column": 29
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
-      "start": 1682,
-      "end": 1868,
+      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+      "start": 1117,
+      "end": 1415,
+      "loc": {
+        "start": {
+          "line": 46,
+          "column": 8
+        },
+        "end": {
+          "line": 53,
+          "column": 11
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "this",
+        "keyword": "this",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null,
+        "updateContext": null
+      },
+      "value": "this",
+      "start": 1424,
+      "end": 1428,
       "loc": {
         "start": {
           "line": 54,
           "column": 8
         },
         "end": {
-          "line": 58,
-          "column": 11
-        }
-      }
-    },
-    {
-      "type": {
-        "label": "this",
-        "keyword": "this",
-        "beforeExpr": false,
-        "startsExpr": true,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null,
-        "updateContext": null
-      },
-      "value": "this",
-      "start": 1877,
-      "end": 1881,
-      "loc": {
-        "start": {
-          "line": 59,
-          "column": 8
-        },
-        "end": {
-          "line": 59,
+          "line": 54,
           "column": 12
         }
       }
@@ -3529,190 +3157,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 1881,
-      "end": 1882,
+      "start": 1428,
+      "end": 1429,
       "loc": {
         "start": {
-          "line": 59,
+          "line": 54,
           "column": 12
         },
         "end": {
-          "line": 59,
-          "column": 13
-        }
-      }
-    },
-    {
-      "type": {
-        "label": "name",
-        "beforeExpr": false,
-        "startsExpr": true,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null
-      },
-      "value": "primitiveInstances",
-      "start": 1882,
-      "end": 1900,
-      "loc": {
-        "start": {
-          "line": 59,
-          "column": 13
-        },
-        "end": {
-          "line": 59,
-          "column": 31
-        }
-      }
-    },
-    {
-      "type": {
-        "label": "=",
-        "beforeExpr": true,
-        "startsExpr": false,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": true,
-        "prefix": false,
-        "postfix": false,
-        "binop": null,
-        "updateContext": null
-      },
-      "value": "=",
-      "start": 1901,
-      "end": 1902,
-      "loc": {
-        "start": {
-          "line": 59,
-          "column": 32
-        },
-        "end": {
-          "line": 59,
-          "column": 33
-        }
-      }
-    },
-    {
-      "type": {
-        "label": "name",
-        "beforeExpr": false,
-        "startsExpr": true,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null
-      },
-      "value": "primitiveInstances",
-      "start": 1903,
-      "end": 1921,
-      "loc": {
-        "start": {
-          "line": 59,
-          "column": 34
-        },
-        "end": {
-          "line": 59,
-          "column": 52
-        }
-      }
-    },
-    {
-      "type": {
-        "label": ";",
-        "beforeExpr": true,
-        "startsExpr": false,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null,
-        "updateContext": null
-      },
-      "start": 1921,
-      "end": 1922,
-      "loc": {
-        "start": {
-          "line": 59,
-          "column": 52
-        },
-        "end": {
-          "line": 59,
-          "column": 53
-        }
-      }
-    },
-    {
-      "type": "CommentBlock",
-      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
-      "start": 1932,
-      "end": 2232,
-      "loc": {
-        "start": {
-          "line": 61,
-          "column": 8
-        },
-        "end": {
-          "line": 68,
-          "column": 11
-        }
-      }
-    },
-    {
-      "type": {
-        "label": "this",
-        "keyword": "this",
-        "beforeExpr": false,
-        "startsExpr": true,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null,
-        "updateContext": null
-      },
-      "value": "this",
-      "start": 2241,
-      "end": 2245,
-      "loc": {
-        "start": {
-          "line": 69,
-          "column": 8
-        },
-        "end": {
-          "line": 69,
-          "column": 12
-        }
-      }
-    },
-    {
-      "type": {
-        "label": ".",
-        "beforeExpr": false,
-        "startsExpr": false,
-        "rightAssociative": false,
-        "isLoop": false,
-        "isAssign": false,
-        "prefix": false,
-        "postfix": false,
-        "binop": null,
-        "updateContext": null
-      },
-      "start": 2245,
-      "end": 2246,
-      "loc": {
-        "start": {
-          "line": 69,
-          "column": 12
-        },
-        "end": {
-          "line": 69,
+          "line": 54,
           "column": 13
         }
       }
@@ -3730,15 +3183,15 @@
         "binop": null
       },
       "value": "aabb",
-      "start": 2246,
-      "end": 2250,
+      "start": 1429,
+      "end": 1433,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 13
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 17
         }
       }
@@ -3757,15 +3210,15 @@
         "updateContext": null
       },
       "value": "=",
-      "start": 2251,
-      "end": 2252,
+      "start": 1434,
+      "end": 1435,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 18
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 19
         }
       }
@@ -3783,15 +3236,15 @@
         "binop": null
       },
       "value": "math",
-      "start": 2253,
-      "end": 2257,
+      "start": 1436,
+      "end": 1440,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 20
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 24
         }
       }
@@ -3809,15 +3262,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 2257,
-      "end": 2258,
+      "start": 1440,
+      "end": 1441,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 24
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 25
         }
       }
@@ -3835,15 +3288,15 @@
         "binop": null
       },
       "value": "AABB3",
-      "start": 2258,
-      "end": 2263,
+      "start": 1441,
+      "end": 1446,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 25
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 30
         }
       }
@@ -3860,15 +3313,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 2263,
-      "end": 2264,
+      "start": 1446,
+      "end": 1447,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 30
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 31
         }
       }
@@ -3885,15 +3338,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 2264,
-      "end": 2265,
+      "start": 1447,
+      "end": 1448,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 31
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 32
         }
       }
@@ -3911,31 +3364,31 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 2265,
-      "end": 2266,
+      "start": 1448,
+      "end": 1449,
       "loc": {
         "start": {
-          "line": 69,
+          "line": 54,
           "column": 32
         },
         "end": {
-          "line": 69,
+          "line": 54,
           "column": 33
         }
       }
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
-      "start": 2276,
-      "end": 2769,
+      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+      "start": 1459,
+      "end": 1948,
       "loc": {
         "start": {
-          "line": 71,
+          "line": 56,
           "column": 8
         },
         "end": {
-          "line": 80,
+          "line": 65,
           "column": 11
         }
       }
@@ -3955,15 +3408,15 @@
         "updateContext": null
       },
       "value": "this",
-      "start": 2778,
-      "end": 2782,
+      "start": 1957,
+      "end": 1961,
       "loc": {
         "start": {
-          "line": 81,
+          "line": 66,
           "column": 8
         },
         "end": {
-          "line": 81,
+          "line": 66,
           "column": 12
         }
       }
@@ -3981,15 +3434,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 2782,
-      "end": 2783,
+      "start": 1961,
+      "end": 1962,
       "loc": {
         "start": {
-          "line": 81,
+          "line": 66,
           "column": 12
         },
         "end": {
-          "line": 81,
+          "line": 66,
           "column": 13
         }
       }
@@ -4006,16 +3459,16 @@
         "postfix": false,
         "binop": null
       },
-      "value": "hasReusedPrimitives",
-      "start": 2783,
-      "end": 2802,
+      "value": "hasReusedGeometries",
+      "start": 1962,
+      "end": 1981,
       "loc": {
         "start": {
-          "line": 81,
+          "line": 66,
           "column": 13
         },
         "end": {
-          "line": 81,
+          "line": 66,
           "column": 32
         }
       }
@@ -4034,15 +3487,15 @@
         "updateContext": null
       },
       "value": "=",
-      "start": 2803,
-      "end": 2804,
+      "start": 1982,
+      "end": 1983,
       "loc": {
         "start": {
-          "line": 81,
+          "line": 66,
           "column": 33
         },
         "end": {
-          "line": 81,
+          "line": 66,
           "column": 34
         }
       }
@@ -4062,15 +3515,15 @@
         "updateContext": null
       },
       "value": "false",
-      "start": 2805,
-      "end": 2810,
+      "start": 1984,
+      "end": 1989,
       "loc": {
         "start": {
-          "line": 81,
+          "line": 66,
           "column": 35
         },
         "end": {
-          "line": 81,
+          "line": 66,
           "column": 40
         }
       }
@@ -4088,15 +3541,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 2810,
-      "end": 2811,
+      "start": 1989,
+      "end": 1990,
       "loc": {
         "start": {
-          "line": 81,
+          "line": 66,
           "column": 40
         },
         "end": {
-          "line": 81,
+          "line": 66,
           "column": 41
         }
       }
@@ -4113,15 +3566,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 2816,
-      "end": 2817,
+      "start": 1995,
+      "end": 1996,
       "loc": {
         "start": {
-          "line": 82,
+          "line": 67,
           "column": 4
         },
         "end": {
-          "line": 82,
+          "line": 67,
           "column": 5
         }
       }
@@ -4138,15 +3591,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 2818,
-      "end": 2819,
+      "start": 1997,
+      "end": 1998,
       "loc": {
         "start": {
-          "line": 83,
+          "line": 68,
           "column": 0
         },
         "end": {
-          "line": 83,
+          "line": 68,
           "column": 1
         }
       }
@@ -4166,15 +3619,15 @@
         "updateContext": null
       },
       "value": "export",
-      "start": 2821,
-      "end": 2827,
+      "start": 2000,
+      "end": 2006,
       "loc": {
         "start": {
-          "line": 85,
+          "line": 70,
           "column": 0
         },
         "end": {
-          "line": 85,
+          "line": 70,
           "column": 6
         }
       }
@@ -4191,15 +3644,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 2828,
-      "end": 2829,
+      "start": 2007,
+      "end": 2008,
       "loc": {
         "start": {
-          "line": 85,
+          "line": 70,
           "column": 7
         },
         "end": {
-          "line": 85,
+          "line": 70,
           "column": 8
         }
       }
@@ -4217,15 +3670,15 @@
         "binop": null
       },
       "value": "XKTEntity",
-      "start": 2829,
-      "end": 2838,
+      "start": 2008,
+      "end": 2017,
       "loc": {
         "start": {
-          "line": 85,
+          "line": 70,
           "column": 8
         },
         "end": {
-          "line": 85,
+          "line": 70,
           "column": 17
         }
       }
@@ -4242,15 +3695,15 @@
         "postfix": false,
         "binop": null
       },
-      "start": 2838,
-      "end": 2839,
+      "start": 2017,
+      "end": 2018,
       "loc": {
         "start": {
-          "line": 85,
+          "line": 70,
           "column": 17
         },
         "end": {
-          "line": 85,
+          "line": 70,
           "column": 18
         }
       }
@@ -4268,15 +3721,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 2839,
-      "end": 2840,
+      "start": 2018,
+      "end": 2019,
       "loc": {
         "start": {
-          "line": 85,
+          "line": 70,
           "column": 18
         },
         "end": {
-          "line": 85,
+          "line": 70,
           "column": 19
         }
       }
@@ -4294,15 +3747,15 @@
         "binop": null,
         "updateContext": null
       },
-      "start": 2840,
-      "end": 2840,
+      "start": 2019,
+      "end": 2019,
       "loc": {
         "start": {
-          "line": 85,
+          "line": 70,
           "column": 19
         },
         "end": {
-          "line": 85,
+          "line": 70,
           "column": 19
         }
       }

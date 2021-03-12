@@ -31,11 +31,11 @@
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -163,8 +163,8 @@ function validateData(inflatedData, xktModel) {
 
     const primitiveReuseCounts = new Uint32Array(numPrimitives);
 
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex &lt; numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
+    for (let meshIndex = 0; meshIndex &lt; numPrimitiveInstances; meshIndex++) {
+        const primitiveIndex = primitiveInstances[meshIndex];
         if (primitiveReuseCounts[primitiveIndex] !== undefined) {
             primitiveReuseCounts[primitiveIndex]++;
         } else {
@@ -218,8 +218,8 @@ function validateData(inflatedData, xktModel) {
 
             const lastTileEntityIndex = (numEntities - 1);
             const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
-            const firstPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
-            const lastPrimitiveInstanceIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
+            const firstmeshIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
+            const lastmeshIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
 
             // ASSERTIONS
 
@@ -242,7 +242,7 @@ function validateData(inflatedData, xktModel) {
 
             // Iterate each entity&apos;s primitive instances
 
-            for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex &lt; lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
+            for (let primitiveInstancesIndex = firstmeshIndex; primitiveInstancesIndex &lt; lastmeshIndex; primitiveInstancesIndex++) {
 
                 const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
                 const primitiveReuseCount = primitiveReuseCounts[primitiveIndex];
@@ -270,41 +270,41 @@ function validateData(inflatedData, xktModel) {
                     return false;
                 }
 
-                const xktPrimitiveInstance = xktModel.primitiveInstancesList[primitiveInstancesIndex];
-                const xktPrimitive = xktModel.primitivesList[primitiveIndex];
+                const XKTMesh = xktModel.primitiveInstancesList[primitiveInstancesIndex];
+                const XKTGeometry = xktModel.primitivesList[primitiveIndex];
 
-                if (!xktPrimitiveInstance) {
+                if (!XKTMesh) {
                     console.error(&quot;xktModel.primitiveInstancesList[primitiveInstancesIndex] not found&quot;);
                     return false;
                 }
 
-                if (!xktPrimitive) {
+                if (!XKTGeometry) {
                     console.error(&quot;xktModel.primitivesList[primitiveIndex] not found&quot;);
                     return false;
                 }
 
-                if (xktPrimitiveInstance.primitive !== xktPrimitive) {
-                    console.error(&quot;xktPrimitiveInstance.primitive !== xktPrimitive&quot;);
+                if (XKTMesh.primitive !== XKTGeometry) {
+                    console.error(&quot;XKTMesh.primitive !== XKTGeometry&quot;);
                     return false;
                 }
 
-                if (!compareArrays(primitivePositions, xktPrimitive.positions)) {
-                    console.error(&quot;compareArrays(primitivePositions, xktPrimitive.positions) === false&quot;);
+                if (!compareArrays(primitivePositions, XKTGeometry.positions)) {
+                    console.error(&quot;compareArrays(primitivePositions, XKTGeometry.positions) === false&quot;);
                     return false;
                 }
 
-                if (!compareArrays(primitiveNormals, xktPrimitive.normals)) {
-                    console.error(&quot;compareArrays(primitiveNormals, xktPrimitive.normals) === false&quot;);
+                if (!compareArrays(primitiveNormals, XKTGeometry.normals)) {
+                    console.error(&quot;compareArrays(primitiveNormals, XKTGeometry.normals) === false&quot;);
                     return false;
                 }
 
-                if (!compareArrays(primitiveIndices, xktPrimitive.indices)) {
-                    console.error(&quot;compareArrays(primitiveIndices, xktPrimitive.indices) === false&quot;);
+                if (!compareArrays(primitiveIndices, XKTGeometry.indices)) {
+                    console.error(&quot;compareArrays(primitiveIndices, XKTGeometry.indices) === false&quot;);
                     return false;
                 }
 
-                if (!compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices)) {
-                    console.error(&quot;compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false&quot;);
+                if (!compareArrays(primitiveEdgeIndices, XKTGeometry.edgeIndices)) {
+                    console.error(&quot;compareArrays(primitiveEdgeIndices, XKTGeometry.edgeIndices) === false&quot;);
                     return false;
                 }
 

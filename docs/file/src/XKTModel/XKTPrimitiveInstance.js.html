@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../../">
-  <title data-ice="title">src/XKTModel/XKTPrimitiveInstance.js | xeokit-xkt-utils</title>
+  <title data-ice="title">src/XKTModel/XKTMesh.js | xeokit-xkt-utils</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -31,45 +31,45 @@
     
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/XKTPrimitiveInstance.js</h1>
+<div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/XKTMesh.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
- * A usage of a {@link XKTPrimitive} by an {@link XKTEntity}.
+ * A usage of a {@link XKTGeometry} by an {@link XKTEntity}.
  *
  * * Created by {@link XKTModel#createEntity}
  * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}
  *
- * @class XKTPrimitiveInstance
+ * @class XKTMesh
  */
-class XKTPrimitiveInstance {
+class XKTMesh {
 
     /**
      * @private
-     * @param primitiveInstanceIndex
+     * @param meshIndex
      * @param primitive
      */
-    constructor(primitiveInstanceIndex, primitive) {
+    constructor(meshIndex, primitive) {
 
         /**
          * Index of this PrimitiveInstance in {@link XKTModel#primitiveInstancesList};
          *
          * @type {Number}
          */
-        this.primitiveInstanceIndex = primitiveInstanceIndex;
+        this.meshIndex = meshIndex;
 
         /**
-         * The instanced {@link XKTPrimitive}.
+         * The instanced {@link XKTGeometry}.
          *
-         * @type {XKTPrimitive}
+         * @type {XKTGeometry}
          */
         this.primitive = primitive;
 
@@ -82,7 +82,7 @@ class XKTPrimitiveInstance {
     }
 }
 
-export {XKTPrimitiveInstance};</code></pre>
+export {XKTMesh};</code></pre>
 
 </div>
 

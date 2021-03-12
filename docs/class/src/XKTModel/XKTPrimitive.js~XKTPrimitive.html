@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../../">
-  <title data-ice="title">XKTPrimitive | xeokit-xkt-utils</title>
+  <title data-ice="title">XKTGeometry | xeokit-xkt-utils</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -31,10 +31,10 @@
     
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -42,17 +42,17 @@
 </nav>
 
 <div class="content" data-ice="content"><div class="header-notice">
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {XKTPrimitive} from &apos;<span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber10">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTPrimitive.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {XKTGeometry} from &apos;<span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber10">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTGeometry.js</a></span>&apos;</code></pre></div>
   <span data-ice="access">public</span>
   <span data-ice="kind">class</span>
   
   
   
-  <span data-ice="source">| <span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber10">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber10">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
-  <h1 data-ice="name">XKTPrimitive</h1>
+  <h1 data-ice="name">XKTGeometry</h1>
 
   
 
@@ -72,7 +72,7 @@
 <ul>
 <li>Created by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createPrimitive">XKTModel#createPrimitive</a></span></li>
 <li>Stored in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives">XKTModel#primitives</a></span> and <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList">XKTModel#primitivesList</a></span></li>
-<li>Referenced by <span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span>s, which belong to <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>s</li>
+<li>Referenced by <span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span>s, which belong to <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>s</li>
 </ul>
 </div>
   
@@ -107,13 +107,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-color">color</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array">Uint8Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-color">color</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array">Uint8Array</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>RGB color of this XKTPrimitive.</p>
+        <div data-ice="description"><p>RGB color of this XKTGeometry.</p>
 </div>
       </div>
     </td>
@@ -136,7 +136,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-edgeIndices">edgeIndices</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array">Uint32Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-edgeIndices">edgeIndices</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array">Uint32Array</a></span></span>
         </p>
       </div>
       <div>
@@ -165,7 +165,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-indices">indices</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array">Uint32Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-indices">indices</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array">Uint32Array</a></span></span>
         </p>
       </div>
       <div>
@@ -194,7 +194,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-normalsOctEncoded">normalsOctEncoded</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array">Int8Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-normalsOctEncoded">normalsOctEncoded</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array">Int8Array</a></span></span>
         </p>
       </div>
       <div>
@@ -223,13 +223,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-numInstances">numInstances</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-numInstances">numInstances</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>The number of <span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span>s that reference this XKTPrimitive.</p>
+        <div data-ice="description"><p>The number of <span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span>s that reference this XKTGeometry.</p>
 </div>
       </div>
     </td>
@@ -252,13 +252,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-opacity">opacity</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-opacity">opacity</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Opacity of this XKTPrimitive.</p>
+        <div data-ice="description"><p>Opacity of this XKTGeometry.</p>
 </div>
       </div>
     </td>
@@ -281,7 +281,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positions">positions</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array">Float64Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positions">positions</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array">Float64Array</a></span></span>
         </p>
       </div>
       <div>
@@ -310,7 +310,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positionsQuantized">positionsQuantized</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array">Uint16Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positionsQuantized">positionsQuantized</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array">Uint16Array</a></span></span>
         </p>
       </div>
       <div>
@@ -339,13 +339,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveId">primitiveId</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-primitiveId">primitiveId</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Unique ID of this XKTPrimitive in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives">XKTModel#primitives</a></span>.</p>
+        <div data-ice="description"><p>Unique ID of this XKTGeometry in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives">XKTModel#primitives</a></span>.</p>
 </div>
       </div>
     </td>
@@ -368,13 +368,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveIndex">primitiveIndex</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-primitiveIndex">primitiveIndex</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Index of this XKTPrimitive in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList">XKTModel#primitivesList</a></span>.</p>
+        <div data-ice="description"><p>Index of this XKTGeometry in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList">XKTModel#primitivesList</a></span>.</p>
 </div>
       </div>
     </td>
@@ -397,7 +397,7 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveType">primitiveType</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-primitiveType">primitiveType</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></span>
         </p>
       </div>
       <div>
@@ -426,13 +426,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-get-reused">reused</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>: <span>*</span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-get-reused">reused</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></span>: <span>*</span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Convenience property that is <code>true</code> when <span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-numInstances">XKTPrimitive#numInstances</a></span> is greater that one.</p>
+        <div data-ice="description"><p>Convenience property that is <code>true</code> when <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-numInstances">XKTGeometry#numInstances</a></span> is greater that one.</p>
 </div>
       </div>
     </td>
@@ -465,14 +465,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber52">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber52">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>RGB color of this XKTPrimitive.</p>
+  <div data-ice="description"><p>RGB color of this XKTGeometry.</p>
 </div>
 
   
@@ -509,7 +509,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber103">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber103">source</a></span></span>
     </span>
   </h3>
 
@@ -553,7 +553,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber96">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber96">source</a></span></span>
     </span>
   </h3>
 
@@ -597,7 +597,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber89">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber89">source</a></span></span>
     </span>
   </h3>
 
@@ -641,14 +641,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber66">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber66">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>The number of <span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span>s that reference this XKTPrimitive.</p>
+  <div data-ice="description"><p>The number of <span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span>s that reference this XKTGeometry.</p>
 </div>
 
   
@@ -685,14 +685,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber59">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber59">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Opacity of this XKTPrimitive.</p>
+  <div data-ice="description"><p>Opacity of this XKTGeometry.</p>
 </div>
 
   
@@ -729,7 +729,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber73">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber73">source</a></span></span>
     </span>
   </h3>
 
@@ -773,7 +773,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber82">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber82">source</a></span></span>
     </span>
   </h3>
 
@@ -781,7 +781,7 @@
   
   
   <div data-ice="description"><p>Quantized vertex positions.</p>
-<p>This array is later created from <span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positions">XKTPrimitive#positions</a></span> by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
+<p>This array is later created from <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positions">XKTGeometry#positions</a></span> by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
 </div>
 
   
@@ -818,14 +818,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber31">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber31">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Unique ID of this XKTPrimitive in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives">XKTModel#primitives</a></span>.</p>
+  <div data-ice="description"><p>Unique ID of this XKTGeometry in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives">XKTModel#primitives</a></span>.</p>
 </div>
 
   
@@ -862,14 +862,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber45">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber45">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Index of this XKTPrimitive in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList">XKTModel#primitivesList</a></span>.</p>
+  <div data-ice="description"><p>Index of this XKTGeometry in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList">XKTModel#primitivesList</a></span>.</p>
 </div>
 
   
@@ -906,7 +906,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber38">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber38">source</a></span></span>
     </span>
   </h3>
 
@@ -950,14 +950,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPrimitive.js.html#lineNumber110">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber110">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Convenience property that is <code>true</code> when <span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-numInstances">XKTPrimitive#numInstances</a></span> is greater that one.</p>
+  <div data-ice="description"><p>Convenience property that is <code>true</code> when <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-numInstances">XKTGeometry#numInstances</a></span> is greater that one.</p>
 </div>
 
   

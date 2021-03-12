@@ -31,11 +31,11 @@
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -46,8 +46,8 @@
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {math} from &quot;./lib/math.js&quot;;
 import {geometryCompression} from &quot;./lib/geometryCompression.js&quot;;
 import {buildEdgeIndices} from &quot;./lib/buildEdgeIndices.js&quot;;
-import {XKTPrimitiveInstance} from &apos;./XKTPrimitiveInstance.js&apos;;
-import {XKTPrimitive} from &apos;./XKTPrimitive.js&apos;;
+import {XKTMesh} from &apos;./XKTMesh.js&apos;;
+import {XKTGeometry} from &apos;./XKTGeometry.js&apos;;
 import {XKTEntity} from &apos;./XKTEntity.js&apos;;
 import {XKTTile} from &apos;./XKTTile.js&apos;;
 import {KDNode} from &quot;./KDNode.js&quot;;
@@ -65,9 +65,9 @@ const kdTreeDimLength = new Float32Array(3);
  *
  * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions. Each {@link XKTTile}
  * contains {@link XKTEntity}s, which represent the objects within its region. Each {@link XKTEntity}
- * has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
+ * has {@link XKTMesh}s, which indicate the {@link XKTGeometry}s that comprise the {@link XKTEntity}.
  *
- * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
+ * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}
  * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
  *
@@ -170,40 +170,40 @@ class XKTModel {
     constructor(cfg = {}) {
 
         /**
-         * The positions of all shared {@link XKTPrimitive}s are de-quantized using this singular
+         * The positions of all shared {@link XKTGeometry}s are de-quantized using this singular
          * de-quantization matrix.
          *
          * This de-quantization matrix is which is generated from the collective boundary of the
-         * positions of all shared {@link XKTPrimitive}s.
+         * positions of all shared {@link XKTGeometry}s.
          *
          * @type {Float32Array}
          */
         this.reusedPrimitivesDecodeMatrix = new Float32Array(16);
 
         /**
-         * {@link XKTPrimitive}s within this XKTModel, each mapped to {@link XKTPrimitive#primitiveId}.
+         * {@link XKTGeometry}s within this XKTModel, each mapped to {@link XKTGeometry#primitiveId}.
          *
          * Created by {@link XKTModel#createPrimitive}.
          *
-         * @type {{Number:XKTPrimitive}}
+         * @type {{Number:XKTGeometry}}
          */
         this.primitives = {};
 
         /**
-         * {@link XKTPrimitive}s within this XKTModel, in the order they were created.
+         * {@link XKTGeometry}s within this XKTModel, in the order they were created.
          *
          * Created by {@link XKTModel#createPrimitive}.
          *
-         * @type {XKTPrimitive[]}
+         * @type {XKTGeometry[]}
          */
         this.primitivesList = [];
 
         /**
-         * {@link XKTPrimitiveInstance}s within this XKTModel, in the order they were created.
+         * {@link XKTMesh}s within this XKTModel, in the order they were created.
          *
          * Created by {@link XKTModel#createEntity}.
          *
-         * @type {XKTPrimitiveInstance[]}
+         * @type {XKTMesh[]}
          */
         this.primitiveInstancesList = [];
 
@@ -245,23 +245,23 @@ class XKTModel {
     }
 
     /**
-     * Creates an {@link XKTPrimitive} within this XKTModel.
+     * Creates an {@link XKTGeometry} within this XKTModel.
      *
      * Logs error and does nothing if this XKTModel has been (see {@link XKTModel#finalized}).
      *
      * @param {*} params Method parameters.
-     * @param {Number} params.primitiveId Unique ID for the {@link XKTPrimitive}.
-     * @param {String} params.primitiveType The type of {@link XKTPrimitive}: &quot;triangles&quot;, &quot;lines&quot; or &quot;points&quot;
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTPrimitive}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
-     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTPrimitive}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTPrimitive}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTPrimitive} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
-     * @param {Uint8Array} params.color RGB color for the {@link XKTPrimitive}, with each color component in range [0..1].
-     * @param {Number} params.opacity Opacity factor for the {@link XKTPrimitive}, in range [0..1].
-     * @param {Float32Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
-     * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTPrimitive}.
-     * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTPrimitive}.
-     * @returns {XKTPrimitive} The new {@link XKTPrimitive}.
+     * @param {Number} params.primitiveId Unique ID for the {@link XKTGeometry}.
+     * @param {String} params.primitiveType The type of {@link XKTGeometry}: &quot;triangles&quot;, &quot;lines&quot; or &quot;points&quot;
+     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTGeometry}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
+     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTGeometry}. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTGeometry}. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTGeometry} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
+     * @param {Uint8Array} params.color RGB color for the {@link XKTGeometry}, with each color component in range [0..1].
+     * @param {Number} params.opacity Opacity factor for the {@link XKTGeometry}, in range [0..1].
+     * @param {Float32Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}.
+     * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTGeometry}.
+     * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTGeometry}.
+     * @returns {XKTGeometry} The new {@link XKTGeometry}.
      */
     createPrimitive(params) {
 
@@ -344,7 +344,7 @@ class XKTModel {
 
         const primitiveIndex = this.primitivesList.length;
 
-        const primitive = new XKTPrimitive(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices);
+        const primitive = new XKTGeometry(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices);
 
         this.primitives[primitiveId] = primitive;
         this.primitivesList.push(primitive);
@@ -364,7 +364,7 @@ class XKTModel {
      * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTEntity}. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTEntity} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
 
-     * @param {String[]} params.primitiveIds IDs of {@link XKTPrimitive}s used by the {@link XKTEntity}.
+     * @param {String[]} params.primitiveIds IDs of {@link XKTGeometry}s used by the {@link XKTEntity}.
      * @returns {XKTEntity} The new {@link XKTEntity}.
      */
     createEntity(params) {
@@ -417,8 +417,8 @@ class XKTModel {
 
             primitive.numInstances++;
 
-            const primitiveInstanceIndex = this.primitiveInstancesList.length;
-            const primitiveInstance = new XKTPrimitiveInstance(primitiveInstanceIndex, primitive);
+            const meshIndex = this.primitiveInstancesList.length;
+            const primitiveInstance = new XKTMesh(meshIndex, primitive);
 
             primitiveInstances.push(primitiveInstance);
 
@@ -447,7 +447,7 @@ class XKTModel {
      *
      * Internally, this method:
      *
-     * * sets each {@link XKTEntity}&apos;s {@link XKTEntity#hasReusedPrimitives} true if it shares its {@link XKTPrimitive}s with other {@link XKTEntity}s,
+     * * sets each {@link XKTEntity}&apos;s {@link XKTEntity#hasReusedPrimitives} true if it shares its {@link XKTGeometry}s with other {@link XKTEntity}s,
      * * creates each {@link XKTEntity}&apos;s {@link XKTEntity#aabb},
      * * creates {@link XKTTile}s in {@link XKTModel#tilesList}, and
      * * sets {@link XKTModel#finalized} ````true````.
@@ -640,7 +640,7 @@ class XKTModel {
     /**
      * Creates a tile from the given entities.
      *
-     * For each single-use {@link XKTPrimitive}, this method centers {@link XKTPrimitive#positions} to make them relative to the
+     * For each single-use {@link XKTGeometry}, this method centers {@link XKTGeometry#positions} to make them relative to the
      * tile&apos;s center, then quantizes the positions to unsigned 16-bit integers, relative to the tile&apos;s boundary.
      *
      * @param entities

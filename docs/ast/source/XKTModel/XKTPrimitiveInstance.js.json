@@ -55,9 +55,9 @@
               "line": 9,
               "column": 26
             },
-            "identifierName": "XKTPrimitiveInstance"
+            "identifierName": "XKTMesh"
           },
-          "name": "XKTPrimitiveInstance",
+          "name": "XKTMesh",
           "leadingComments": null
         },
         "superClass": null,
@@ -129,9 +129,9 @@
                       "line": 16,
                       "column": 38
                     },
-                    "identifierName": "primitiveInstanceIndex"
+                    "identifierName": "meshIndex"
                   },
-                  "name": "primitiveInstanceIndex"
+                  "name": "meshIndex"
                 },
                 {
                   "type": "Identifier",
@@ -238,9 +238,9 @@
                               "line": 23,
                               "column": 35
                             },
-                            "identifierName": "primitiveInstanceIndex"
+                            "identifierName": "meshIndex"
                           },
-                          "name": "primitiveInstanceIndex"
+                          "name": "meshIndex"
                         },
                         "computed": false,
                         "leadingComments": null
@@ -258,9 +258,9 @@
                             "line": 23,
                             "column": 60
                           },
-                          "identifierName": "primitiveInstanceIndex"
+                          "identifierName": "meshIndex"
                         },
-                        "name": "primitiveInstanceIndex"
+                        "name": "meshIndex"
                       },
                       "leadingComments": null
                     },
@@ -285,7 +285,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The instanced {@link XKTPrimitive}.\n         *\n         * @type {XKTPrimitive}\n         ",
+                        "value": "*\n         * The instanced {@link XKTGeometry}.\n         *\n         * @type {XKTGeometry}\n         ",
                         "start": 645,
                         "end": 750,
                         "loc": {
@@ -402,7 +402,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The instanced {@link XKTPrimitive}.\n         *\n         * @type {XKTPrimitive}\n         ",
+                        "value": "*\n         * The instanced {@link XKTGeometry}.\n         *\n         * @type {XKTGeometry}\n         ",
                         "start": 645,
                         "end": 750,
                         "loc": {
@@ -575,7 +575,7 @@
               "leadingComments": [
                 {
                   "type": "CommentBlock",
-                  "value": "*\n     * @private\n     * @param primitiveInstanceIndex\n     * @param primitive\n     ",
+                  "value": "*\n     * @private\n     * @param meshIndex\n     * @param primitive\n     ",
                   "start": 283,
                   "end": 371,
                   "loc": {
@@ -640,9 +640,9 @@
                   "line": 41,
                   "column": 28
                 },
-                "identifierName": "XKTPrimitiveInstance"
+                "identifierName": "XKTMesh"
               },
-              "name": "XKTPrimitiveInstance"
+              "name": "XKTMesh"
             },
             "exported": {
               "type": "Identifier",
@@ -657,9 +657,9 @@
                   "line": 41,
                   "column": 28
                 },
-                "identifierName": "XKTPrimitiveInstance"
+                "identifierName": "XKTMesh"
               },
-              "name": "XKTPrimitiveInstance"
+              "name": "XKTMesh"
             }
           }
         ],
@@ -706,9 +706,9 @@
                 "line": 9,
                 "column": 26
               },
-              "identifierName": "XKTPrimitiveInstance"
+              "identifierName": "XKTMesh"
             },
-            "name": "XKTPrimitiveInstance",
+            "name": "XKTMesh",
             "leadingComments": null
           },
           "superClass": null,
@@ -780,9 +780,9 @@
                         "line": 16,
                         "column": 38
                       },
-                      "identifierName": "primitiveInstanceIndex"
+                      "identifierName": "meshIndex"
                     },
-                    "name": "primitiveInstanceIndex"
+                    "name": "meshIndex"
                   },
                   {
                     "type": "Identifier",
@@ -889,9 +889,9 @@
                                 "line": 23,
                                 "column": 35
                               },
-                              "identifierName": "primitiveInstanceIndex"
+                              "identifierName": "meshIndex"
                             },
-                            "name": "primitiveInstanceIndex"
+                            "name": "meshIndex"
                           },
                           "computed": false,
                           "leadingComments": null
@@ -909,9 +909,9 @@
                               "line": 23,
                               "column": 60
                             },
-                            "identifierName": "primitiveInstanceIndex"
+                            "identifierName": "meshIndex"
                           },
-                          "name": "primitiveInstanceIndex"
+                          "name": "meshIndex"
                         },
                         "leadingComments": null
                       },
@@ -936,7 +936,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The instanced {@link XKTPrimitive}.\n         *\n         * @type {XKTPrimitive}\n         ",
+                          "value": "*\n         * The instanced {@link XKTGeometry}.\n         *\n         * @type {XKTGeometry}\n         ",
                           "start": 645,
                           "end": 750,
                           "loc": {
@@ -1053,7 +1053,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The instanced {@link XKTPrimitive}.\n         *\n         * @type {XKTPrimitive}\n         ",
+                          "value": "*\n         * The instanced {@link XKTGeometry}.\n         *\n         * @type {XKTGeometry}\n         ",
                           "start": 645,
                           "end": 750,
                           "loc": {
@@ -1226,7 +1226,7 @@
                 "leadingComments": [
                   {
                     "type": "CommentBlock",
-                    "value": "*\n     * @private\n     * @param primitiveInstanceIndex\n     * @param primitive\n     ",
+                    "value": "*\n     * @private\n     * @param meshIndex\n     * @param primitive\n     ",
                     "start": 283,
                     "end": 371,
                     "loc": {
@@ -1247,7 +1247,7 @@
           "leadingComments": [
             {
               "type": "CommentBlock",
-              "value": "*\n * A usage of a {@link XKTPrimitive} by an {@link XKTEntity}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}\n *\n * @class XKTPrimitiveInstance\n ",
+              "value": "*\n * A usage of a {@link XKTGeometry} by an {@link XKTEntity}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}\n *\n * @class XKTMesh\n ",
               "start": 0,
               "end": 248,
               "loc": {
@@ -1275,7 +1275,7 @@
   "comments": [
     {
       "type": "CommentBlock",
-      "value": "*\n * A usage of a {@link XKTPrimitive} by an {@link XKTEntity}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}\n *\n * @class XKTPrimitiveInstance\n ",
+      "value": "*\n * A usage of a {@link XKTGeometry} by an {@link XKTEntity}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}\n *\n * @class XKTMesh\n ",
       "start": 0,
       "end": 248,
       "loc": {
@@ -1291,7 +1291,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * @private\n     * @param primitiveInstanceIndex\n     * @param primitive\n     ",
+      "value": "*\n     * @private\n     * @param meshIndex\n     * @param primitive\n     ",
       "start": 283,
       "end": 371,
       "loc": {
@@ -1323,7 +1323,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The instanced {@link XKTPrimitive}.\n         *\n         * @type {XKTPrimitive}\n         ",
+      "value": "*\n         * The instanced {@link XKTGeometry}.\n         *\n         * @type {XKTGeometry}\n         ",
       "start": 645,
       "end": 750,
       "loc": {
@@ -1373,7 +1373,7 @@
   "tokens": [
     {
       "type": "CommentBlock",
-      "value": "*\n * A usage of a {@link XKTPrimitive} by an {@link XKTEntity}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}\n *\n * @class XKTPrimitiveInstance\n ",
+      "value": "*\n * A usage of a {@link XKTGeometry} by an {@link XKTEntity}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}\n *\n * @class XKTMesh\n ",
       "start": 0,
       "end": 248,
       "loc": {
@@ -1427,7 +1427,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "XKTPrimitiveInstance",
+      "value": "XKTMesh",
       "start": 255,
       "end": 275,
       "loc": {
@@ -1468,7 +1468,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * @private\n     * @param primitiveInstanceIndex\n     * @param primitive\n     ",
+      "value": "*\n     * @private\n     * @param meshIndex\n     * @param primitive\n     ",
       "start": 283,
       "end": 371,
       "loc": {
@@ -1545,7 +1545,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 388,
       "end": 410,
       "loc": {
@@ -1743,7 +1743,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 587,
       "end": 609,
       "loc": {
@@ -1796,7 +1796,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 612,
       "end": 634,
       "loc": {
@@ -1838,7 +1838,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The instanced {@link XKTPrimitive}.\n         *\n         * @type {XKTPrimitive}\n         ",
+      "value": "*\n         * The instanced {@link XKTGeometry}.\n         *\n         * @type {XKTGeometry}\n         ",
       "start": 645,
       "end": 750,
       "loc": {
@@ -2319,7 +2319,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "XKTPrimitiveInstance",
+      "value": "XKTMesh",
       "start": 990,
       "end": 1010,
       "loc": {

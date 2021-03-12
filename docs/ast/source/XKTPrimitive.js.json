@@ -55,9 +55,9 @@
               "line": 10,
               "column": 18
             },
-            "identifierName": "XKTPrimitive"
+            "identifierName": "XKTGeometry"
           },
-          "name": "XKTPrimitive",
+          "name": "XKTGeometry",
           "leadingComments": null
         },
         "superClass": null,
@@ -386,7 +386,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Unique ID of this XKTPrimitive in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * Unique ID of this XKTGeometry in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
                         "start": 1253,
                         "end": 1379,
                         "loc": {
@@ -539,7 +539,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
                         "start": 1604,
                         "end": 1730,
                         "loc": {
@@ -656,7 +656,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
                         "start": 1604,
                         "end": 1730,
                         "loc": {
@@ -674,7 +674,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * RGB color of this XKTPrimitive.\n         *\n         * @type {Uint8Array}\n         ",
+                        "value": "*\n         * RGB color of this XKTGeometry.\n         *\n         * @type {Uint8Array}\n         ",
                         "start": 1786,
                         "end": 1885,
                         "loc": {
@@ -791,7 +791,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * RGB color of this XKTPrimitive.\n         *\n         * @type {Uint8Array}\n         ",
+                        "value": "*\n         * RGB color of this XKTGeometry.\n         *\n         * @type {Uint8Array}\n         ",
                         "start": 1786,
                         "end": 1885,
                         "loc": {
@@ -809,7 +809,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Opacity of this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * Opacity of this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                         "start": 1923,
                         "end": 2016,
                         "loc": {
@@ -926,7 +926,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Opacity of this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * Opacity of this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                         "start": 1923,
                         "end": 2016,
                         "loc": {
@@ -944,7 +944,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * The number of {@link XKTMesh}s that reference this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                         "start": 2058,
                         "end": 2199,
                         "loc": {
@@ -1064,7 +1064,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                        "value": "*\n         * The number of {@link XKTMesh}s that reference this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                         "start": 2058,
                         "end": 2199,
                         "loc": {
@@ -1217,7 +1217,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
+                        "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
                         "start": 2390,
                         "end": 2602,
                         "loc": {
@@ -1401,7 +1401,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
+                        "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
                         "start": 2390,
                         "end": 2602,
                         "loc": {
@@ -1829,7 +1829,7 @@
               "leadingComments": [
                 {
                   "type": "CommentBlock",
-                  "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTPrimitive.\n     * @param {Number} opacity Opacity of this XKTPrimitive.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
+                  "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTGeometry.\n     * @param {Number} opacity Opacity of this XKTGeometry.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
                   "start": 339,
                   "end": 1113,
                   "loc": {
@@ -1847,7 +1847,7 @@
               "trailingComments": [
                 {
                   "type": "CommentBlock",
-                  "value": "*\n     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
+                  "value": "*\n     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
                   "start": 3189,
                   "end": 3335,
                   "loc": {
@@ -2026,7 +2026,7 @@
               "leadingComments": [
                 {
                   "type": "CommentBlock",
-                  "value": "*\n     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
+                  "value": "*\n     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
                   "start": 3189,
                   "end": 3335,
                   "loc": {
@@ -2091,9 +2091,9 @@
                   "line": 115,
                   "column": 20
                 },
-                "identifierName": "XKTPrimitive"
+                "identifierName": "XKTGeometry"
               },
-              "name": "XKTPrimitive"
+              "name": "XKTGeometry"
             },
             "exported": {
               "type": "Identifier",
@@ -2108,9 +2108,9 @@
                   "line": 115,
                   "column": 20
                 },
-                "identifierName": "XKTPrimitive"
+                "identifierName": "XKTGeometry"
               },
-              "name": "XKTPrimitive"
+              "name": "XKTGeometry"
             }
           }
         ],
@@ -2157,9 +2157,9 @@
                 "line": 10,
                 "column": 18
               },
-              "identifierName": "XKTPrimitive"
+              "identifierName": "XKTGeometry"
             },
-            "name": "XKTPrimitive",
+            "name": "XKTGeometry",
             "leadingComments": null
           },
           "superClass": null,
@@ -2488,7 +2488,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Unique ID of this XKTPrimitive in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * Unique ID of this XKTGeometry in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
                           "start": 1253,
                           "end": 1379,
                           "loc": {
@@ -2641,7 +2641,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
                           "start": 1604,
                           "end": 1730,
                           "loc": {
@@ -2758,7 +2758,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
                           "start": 1604,
                           "end": 1730,
                           "loc": {
@@ -2776,7 +2776,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * RGB color of this XKTPrimitive.\n         *\n         * @type {Uint8Array}\n         ",
+                          "value": "*\n         * RGB color of this XKTGeometry.\n         *\n         * @type {Uint8Array}\n         ",
                           "start": 1786,
                           "end": 1885,
                           "loc": {
@@ -2893,7 +2893,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * RGB color of this XKTPrimitive.\n         *\n         * @type {Uint8Array}\n         ",
+                          "value": "*\n         * RGB color of this XKTGeometry.\n         *\n         * @type {Uint8Array}\n         ",
                           "start": 1786,
                           "end": 1885,
                           "loc": {
@@ -2911,7 +2911,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Opacity of this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * Opacity of this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                           "start": 1923,
                           "end": 2016,
                           "loc": {
@@ -3028,7 +3028,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Opacity of this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * Opacity of this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                           "start": 1923,
                           "end": 2016,
                           "loc": {
@@ -3046,7 +3046,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * The number of {@link XKTMesh}s that reference this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                           "start": 2058,
                           "end": 2199,
                           "loc": {
@@ -3166,7 +3166,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+                          "value": "*\n         * The number of {@link XKTMesh}s that reference this XKTGeometry.\n         *\n         * @type {Number}\n         ",
                           "start": 2058,
                           "end": 2199,
                           "loc": {
@@ -3319,7 +3319,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
+                          "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
                           "start": 2390,
                           "end": 2602,
                           "loc": {
@@ -3503,7 +3503,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
+                          "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
                           "start": 2390,
                           "end": 2602,
                           "loc": {
@@ -3931,7 +3931,7 @@
                 "leadingComments": [
                   {
                     "type": "CommentBlock",
-                    "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTPrimitive.\n     * @param {Number} opacity Opacity of this XKTPrimitive.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
+                    "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTGeometry.\n     * @param {Number} opacity Opacity of this XKTGeometry.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
                     "start": 339,
                     "end": 1113,
                     "loc": {
@@ -3949,7 +3949,7 @@
                 "trailingComments": [
                   {
                     "type": "CommentBlock",
-                    "value": "*\n     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
+                    "value": "*\n     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
                     "start": 3189,
                     "end": 3335,
                     "loc": {
@@ -4128,7 +4128,7 @@
                 "leadingComments": [
                   {
                     "type": "CommentBlock",
-                    "value": "*\n     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
+                    "value": "*\n     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
                     "start": 3189,
                     "end": 3335,
                     "loc": {
@@ -4149,7 +4149,7 @@
           "leadingComments": [
             {
               "type": "CommentBlock",
-              "value": "*\n * An element of reusable geometry within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createPrimitive}\n * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}\n * * Referenced by {@link XKTPrimitiveInstance}s, which belong to {@link XKTEntity}s\n *\n * @class XKTPrimitive\n ",
+              "value": "*\n * An element of reusable geometry within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createPrimitive}\n * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}\n * * Referenced by {@link XKTMesh}s, which belong to {@link XKTEntity}s\n *\n * @class XKTGeometry\n ",
               "start": 0,
               "end": 312,
               "loc": {
@@ -4177,7 +4177,7 @@
   "comments": [
     {
       "type": "CommentBlock",
-      "value": "*\n * An element of reusable geometry within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createPrimitive}\n * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}\n * * Referenced by {@link XKTPrimitiveInstance}s, which belong to {@link XKTEntity}s\n *\n * @class XKTPrimitive\n ",
+      "value": "*\n * An element of reusable geometry within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createPrimitive}\n * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}\n * * Referenced by {@link XKTMesh}s, which belong to {@link XKTEntity}s\n *\n * @class XKTGeometry\n ",
       "start": 0,
       "end": 312,
       "loc": {
@@ -4193,7 +4193,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTPrimitive.\n     * @param {Number} opacity Opacity of this XKTPrimitive.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
+      "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTGeometry.\n     * @param {Number} opacity Opacity of this XKTGeometry.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
       "start": 339,
       "end": 1113,
       "loc": {
@@ -4209,7 +4209,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Unique ID of this XKTPrimitive in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * Unique ID of this XKTGeometry in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
       "start": 1253,
       "end": 1379,
       "loc": {
@@ -4241,7 +4241,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
       "start": 1604,
       "end": 1730,
       "loc": {
@@ -4257,7 +4257,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * RGB color of this XKTPrimitive.\n         *\n         * @type {Uint8Array}\n         ",
+      "value": "*\n         * RGB color of this XKTGeometry.\n         *\n         * @type {Uint8Array}\n         ",
       "start": 1786,
       "end": 1885,
       "loc": {
@@ -4273,7 +4273,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Opacity of this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * Opacity of this XKTGeometry.\n         *\n         * @type {Number}\n         ",
       "start": 1923,
       "end": 2016,
       "loc": {
@@ -4289,7 +4289,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * The number of {@link XKTMesh}s that reference this XKTGeometry.\n         *\n         * @type {Number}\n         ",
       "start": 2058,
       "end": 2199,
       "loc": {
@@ -4321,7 +4321,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
+      "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
       "start": 2390,
       "end": 2602,
       "loc": {
@@ -4385,7 +4385,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
+      "value": "*\n     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
       "start": 3189,
       "end": 3335,
       "loc": {
@@ -4403,7 +4403,7 @@
   "tokens": [
     {
       "type": "CommentBlock",
-      "value": "*\n * An element of reusable geometry within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createPrimitive}\n * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}\n * * Referenced by {@link XKTPrimitiveInstance}s, which belong to {@link XKTEntity}s\n *\n * @class XKTPrimitive\n ",
+      "value": "*\n * An element of reusable geometry within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createPrimitive}\n * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}\n * * Referenced by {@link XKTMesh}s, which belong to {@link XKTEntity}s\n *\n * @class XKTGeometry\n ",
       "start": 0,
       "end": 312,
       "loc": {
@@ -4457,7 +4457,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "XKTPrimitive",
+      "value": "XKTGeometry",
       "start": 319,
       "end": 331,
       "loc": {
@@ -4498,7 +4498,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTPrimitive.\n     * @param {Number} opacity Opacity of this XKTPrimitive.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
+      "value": "*\n     * @private\n     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.\n     * @param {String} primitiveType Type of this primitive - \"triangles\" so far.\n     * @param {Number} primitiveIndex Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n     * @param {Uint8Array} color RGB color of this XKTGeometry.\n     * @param {Number} opacity Opacity of this XKTGeometry.\n     * @param {Float32Array} positions Non-quantized 3D vertex positions.\n     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.\n     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.\n     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.\n     ",
       "start": 339,
       "end": 1113,
       "loc": {
@@ -5057,7 +5057,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Unique ID of this XKTPrimitive in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * Unique ID of this XKTGeometry in {@link XKTModel#primitives}.\n         *\n         * @type {Number}\n         ",
       "start": 1253,
       "end": 1379,
       "loc": {
@@ -5407,7 +5407,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * Index of this XKTGeometry in {@link XKTModel#primitivesList}.\n         *\n         * @type {Number}\n         ",
       "start": 1604,
       "end": 1730,
       "loc": {
@@ -5582,7 +5582,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * RGB color of this XKTPrimitive.\n         *\n         * @type {Uint8Array}\n         ",
+      "value": "*\n         * RGB color of this XKTGeometry.\n         *\n         * @type {Uint8Array}\n         ",
       "start": 1786,
       "end": 1885,
       "loc": {
@@ -5757,7 +5757,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Opacity of this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * Opacity of this XKTGeometry.\n         *\n         * @type {Number}\n         ",
       "start": 1923,
       "end": 2016,
       "loc": {
@@ -5932,7 +5932,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.\n         *\n         * @type {Number}\n         ",
+      "value": "*\n         * The number of {@link XKTMesh}s that reference this XKTGeometry.\n         *\n         * @type {Number}\n         ",
       "start": 2058,
       "end": 2199,
       "loc": {
@@ -6283,7 +6283,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
+      "value": "*\n         * Quantized vertex positions.\n         *\n         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.\n         *\n         * @type {Uint16Array}\n         ",
       "start": 2390,
       "end": 2602,
       "loc": {
@@ -7164,7 +7164,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
+      "value": "*\n     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.\n     * @returns {boolean}\n     ",
       "start": 3189,
       "end": 3335,
       "loc": {
@@ -7658,7 +7658,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "XKTPrimitive",
+      "value": "XKTGeometry",
       "start": 3412,
       "end": 3424,
       "loc": {
