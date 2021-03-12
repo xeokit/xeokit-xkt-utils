@@ -104,18 +104,9 @@ async function parseArrayBuffer(parsingCtx, uri) {
         }
         return buffer;
     } else { // Uri is a path to a file
-        const contents = await parsingCtx.getAttachment(uri);
-        return toArrayBuffer(contents);
+        const arraybuffer = await parsingCtx.getAttachment(uri);
+        return arraybuffer;
     }
-}
-
-function toArrayBuffer(buf) {
-    const ab = new ArrayBuffer(buf.length);
-    const view = new Uint8Array(ab);
-    for (let i = 0; i < buf.length; ++i) {
-        view[i] = buf[i];
-    }
-    return ab;
 }
 
 function parseBufferViews(parsingCtx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
@@ -149,21 +140,28 @@ function parseMaterials(parsingCtx) {
     if (materialsInfo) {
         for (let i = 0, len = materialsInfo.length; i < len; i++) {
             const materialInfo = materialsInfo[i];
-            const material = parseMaterialColor(parsingCtx, materialInfo);
-            materialInfo._rgbaColor = material;
+            const material = parseMaterial(parsingCtx, materialInfo);
+            materialInfo._materialData = material;
         }
     }
 }
 
-function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
-    const color = new Float32Array([1, 1, 1, 1]);
+function parseMaterial(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
+    const material = {
+        color: new Float32Array([1, 1, 1]),
+        opacity: 1.0,
+        metallic: 0,
+        roughness: 1
+    };
     const extensions = materialInfo.extensions;
     if (extensions) {
         const specularPBR = extensions["KHR_materials_pbrSpecularGlossiness"];
         if (specularPBR) {
             const diffuseFactor = specularPBR.diffuseFactor;
             if (diffuseFactor !== null && diffuseFactor !== undefined) {
-                color.set(diffuseFactor);
+                material.color[0] = diffuseFactor[0];
+                material.color[1] = diffuseFactor[1];
+                material.color[2] = diffuseFactor[2];
             }
         }
         const common = extensions["KHR_materials_common"];
@@ -176,16 +174,18 @@ function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract a
             const diffuse = values.diffuse;
             if (diffuse && (blinn || phong || lambert)) {
                 if (!utils.isString(diffuse)) {
-                    color.set(diffuse);
+                    material.color[0] = diffuse[0];
+                    material.color[1] = diffuse[1];
+                    material.color[2] = diffuse[2];
                 }
             }
             const transparency = values.transparency;
             if (transparency !== null && transparency !== undefined) {
-                color[3] = transparency;
+                material.opacity = transparency;
             }
             const transparent = values.transparent;
             if (transparent !== null && transparent !== undefined) {
-                color[3] = transparent;
+                material.opacity = transparent;
             }
         }
     }
@@ -193,10 +193,21 @@ function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract a
     if (metallicPBR) {
         const baseColorFactor = metallicPBR.baseColorFactor;
         if (baseColorFactor) {
-            color.set(baseColorFactor);
+            material.color[0] = baseColorFactor[0];
+            material.color[1] = baseColorFactor[1];
+            material.color[2] = baseColorFactor[2];
+            material.opacity = baseColorFactor[3];
+        }
+        const metallicFactor = metallicPBR.metallicFactor;
+        if (metallicFactor !== null && metallicFactor !== undefined) {
+            material.metallic = metallicFactor;
+        }
+        const roughnessFactor = metallicPBR.roughnessFactor;
+        if (roughnessFactor !== null && roughnessFactor !== undefined) {
+            material.roughness = roughnessFactor;
         }
     }
-    return color;
+    return material;
 }
 
 function parseDefaultScene(parsingCtx) {
@@ -286,8 +297,10 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                     const primitiveInfo = meshInfo.primitives[i];
                     const materialIndex = primitiveInfo.material;
                     const materialInfo = (materialIndex !== null && materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
-                    const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
-                    const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
+                    const color = materialInfo ? materialInfo._materialData.color : new Float32Array([1.0, 1.0, 1.0, 1.0]);
+                    const opacity = materialInfo ? materialInfo._materialData.opacity : 1.0;
+                    const metallic = materialInfo ? materialInfo._materialData.metallic : 0.0;
+                    const roughness = materialInfo ? materialInfo._materialData.roughness : 1.0;
 
                     const xktGeometryId = createPrimitiveGeometryHash(primitiveInfo);
 
@@ -298,15 +311,15 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                         parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
 
                         const colors = geometryArrays.colors;
-                        
+
                         let colorsCompressed;
-                        
+
                         if (geometryArrays.colors) {
                             colorsCompressed = [];
                             for (let j = 0, lenj = colors.length; j < lenj; j += 4) {
-                                colorsCompressed.push(colors[j + 0]);
-                                colorsCompressed.push(colors[j + 1]);
-                                colorsCompressed.push(colors[j + 2]);
+                                colorsCompressed.push(Math.floor(colors[j + 0] * 255));
+                                colorsCompressed.push(Math.floor(colors[j + 1] * 255));
+                                colorsCompressed.push(Math.floor(colors[j + 2] * 255));
                             }
                         }
 
@@ -329,7 +342,9 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                         geometryId: xktGeometryId,
                         matrix: matrix ? matrix.slice() : math.identityMat4(),
                         color: color,
-                        opacity: opacity
+                        opacity: opacity,
+                        metallic: metallic,
+                        roughness: roughness
                     });
 
                     xktMeshIds.push(xktMeshId);
@@ -429,7 +444,7 @@ function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
 }
 
 function parseAccessorTypedArray(parsingCtx, accessorInfo) {
-    const bufferViewInfo = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
+    const bufferView = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
     const itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
     const TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
     const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
@@ -437,7 +452,7 @@ function parseAccessorTypedArray(parsingCtx, accessorInfo) {
     if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
         throw new Error("interleaved buffer!"); // TODO
     } else {
-        return new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
+        return new TypedArray(bufferView._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
     }
 }
 
