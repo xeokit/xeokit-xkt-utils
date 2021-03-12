@@ -40,8 +40,9 @@ convert glTF to ````XKT````.
 * Generate ````XKT```` files programmatically with JavaScript.
 * Convert glTF files into ````XKT```` files.
 * Triangle meshes, lines and point clouds.  
-* Double-precision geometry, without the cost of storing double-precision values.
+* Double-precision geometries.
 * Geometry compression, using instancing, quantization, oct-encoding and gzip.
+* Physically-based materials.
 * Works in browser and node.
 
 ## JavaScript API
@@ -268,8 +269,8 @@ viewer.cameraFlight.flyTo(model);
 
 Let's
 use [````parseGLTFIntoXKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel)
-to parse glTF into
-an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html).
+to import glTF into
+an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html). 
 
 We'll also use the classes and functions introduced in the previous examples to serialize
 the [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) to
@@ -288,6 +289,47 @@ utils.loadJSON("./models/gltf/MAP/MAP.gltf", (json) => {
         const xktModel = new XKTModel();
 
         parseGLTFIntoXKTModel(json, xktModel).then(() => {
+
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+            const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+
+            xktLoader.load({
+                id: "myModel",
+                xkt: xktArrayBuffer
+            });
+
+            viewer.cameraFlight.flyTo(viewer.scene);
+        });
+    },
+    (errMsg) => {
+    });
+````
+
+#### Loading STL into an XKTModel
+
+Let's
+use [````parseSTLIntoXKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel)
+to import STL into
+an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html).
+
+As before, we'll also use the classes and functions introduced in the previous examples to serialize
+the [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) to
+an ````ArrayBuffer````, then validate the ````ArrayBuffer```` and load it into
+a [````Viewer````](https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html).
+
+````javascript
+const viewer = new Viewer({
+    canvasId: "myCanvas"
+});
+
+const xktLoader = new XKTLoaderPlugin(viewer);
+
+utils.loadJSON("./models/stl/binary/spurGear.stl", (json) => {
+
+        const xktModel = new XKTModel();
+
+        parseSTLIntoXKTModel(json, xktModel).then(() => {
 
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
