@@ -37,13 +37,11 @@ convert glTF to ````XKT````.
 
 ## Features
 
-* Generate ````XKT```` files programmatically with JavaScript.
-* Convert glTF files into ````XKT```` files.
-* Triangle meshes, lines and point clouds.  
-* Double-precision geometries.
-* Geometry compression, using instancing, quantization, oct-encoding and gzip.
-* Physically-based materials.
-* Works in browser and node.
+* A JavaScript document model that represents an XKT file
+* Parse glTF into the document model
+* Programmatically generate geometry within the document model  
+* Serialize the document model to an array buffer
+* Save the array buffer as an XKT file
 
 ## JavaScript API
 
