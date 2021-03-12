@@ -12,7 +12,7 @@ into ````XKT````, and can even generate ````XKT```` files programmatically.
 This toolkit is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to
 convert glTF to ````XKT````.
 
-![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)
+[![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#geometryBuilders_buildGeometries)
 
 ## Contents
 
@@ -77,7 +77,7 @@ We'll code this example to run in the browser, using the ES module
 in [xeokit-xkt-utils.es.js](./dist/xeokit-xkt-utils.es.js). We could also code it to run on node, using the CommonJS
 module in [xeokit-xkt-utils.cjs.js](./dist/xeokit-xkt-utils.cjs.js).
 
-[![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate_instancing)
+[![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#generate_instancing_triangles)
 
 [[Run this example](https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate)]
 
