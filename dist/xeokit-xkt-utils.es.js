@@ -3749,8 +3749,8 @@ function transformAndOctEncodeNormals(modelNormalMatrix, normals, lenNormals, co
     // http://jcgt.org/published/0003/02/01/
     let oct, dec, best, currentCos, bestCos;
     let i;
-    let localNormal = new Float32Array([0, 0, 0, 0]);
-    let worldNormal = new Float32Array([0, 0, 0, 0]);
+    let localNormal = math.vec3();
+    let worldNormal =  math.vec3();
     for (i = 0; i < lenNormals; i += 3) {
         localNormal[0] = normals[i];
         localNormal[1] = normals[i + 1];
@@ -4120,6 +4120,20 @@ class XKTMesh {
         this.color = cfg.color || new Uint8Array(3);
 
         /**
+         * PBR metallness of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.metallic = (cfg.metallic !== null && cfg.metallic !== undefined) ? cfg.metallic : 0;
+
+        /**
+         * PBR roughness of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.roughness = (cfg.roughness !== null && cfg.roughness !== undefined) ? cfg.roughness : 1;
+
+        /**
          * Opacity of this XKTMesh.
          *
          * @type {Number}
@@ -4419,23 +4433,23 @@ class KDNode {
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
 
-const identityMat4 = math.identityMat4();
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
 const MIN_TILE_DIAG = 10000;
 
-const kdTreeDimLength = new Float32Array(3);
+const kdTreeDimLength = new Float64Array(3);
 
 /**
  * A document model that represents the contents of an .XKT file.
  *
  * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
- * * Each {@link XKTEntity} has {@link XKTMesh}s, which indicate the {@link XKTGeometry}s that comprise the {@link XKTEntity}.
- * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}
- * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}
- * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
+ * * Each {@link XKTEntity} has {@link XKTMesh}s, which each have a {@link XKTGeometry}. Each {@link XKTGeometry} can be shared by multiple {@link XKTMesh}s.
+ * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
+ * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
+ * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
+ * * Validate an ArrayBuffer against an XKTModel using {@link validateXKTArrayBuffer}.
  *
  * ## Usage
  *
@@ -4624,7 +4638,7 @@ class XKTModel {
 
         const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
-        const positions = new Float32Array(params.positions); // May modify in #finalize
+        const positions = new Float64Array(params.positions); // May modify in #finalize
 
         const xktGeometryCfg = {
             geometryId: geometryId,
@@ -4634,10 +4648,9 @@ class XKTModel {
         };
 
         if (triangles) {
-            xktGeometryCfg.normals = new Float32Array(params.normals); // May modify in #finalize
+            xktGeometryCfg.normals = new Float64Array(params.normals); // May modify in #finalize
             xktGeometryCfg.indices = params.indices;
             xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
-
         }
 
         if (points) {
@@ -4674,8 +4687,10 @@ class XKTModel {
      * @param {Number} params.meshId Unique ID for the {@link XKTMesh}.
      * @param {Number} params.geometryId ID of an existing {@link XKTGeometry} in {@link XKTModel#geometries}.
      * @param {Uint8Array} params.color RGB color for the {@link XKTMesh}, with each color component in range [0..1].
+     * @param {Number} [params.metallic=0] How metallic the {@link XKTMesh} is, in range [0..1]. A value of ````0```` indicates fully dielectric material, while ````1```` indicates fully metallic.
+     * @param {Number} [params.roughness=1] How rough the {@link XKTMesh} is, in range [0..1]. A value of ````0```` indicates fully smooth, while ````1```` indicates fully rough.
      * @param {Number} params.opacity Opacity factor for the {@link XKTMesh}, in range [0..1].
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTMesh}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
+     * @param {Float64Array} [params.matrix] Modeling matrix for the {@link XKTMesh}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
      * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
      * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTMesh} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
@@ -4743,6 +4758,8 @@ class XKTModel {
             matrix: matrix,
             geometry: geometry,
             color: params.color,
+            metallic: params.metallic,
+            roughness: params.roughness,
             opacity: params.opacity
         });
 
@@ -4846,8 +4863,6 @@ class XKTModel {
 
         this._bakeAndOctEncodeNormals();
 
-        this._flagEntitiesThatReuseGeometries();
-
         this._createEntityAABBs();
 
         const rootKDNode = this._createKDTree();
@@ -4882,6 +4897,7 @@ class XKTModel {
                         tempVec4a[0] = positions[i + 0];
                         tempVec4a[1] = positions[i + 1];
                         tempVec4a[2] = positions[i + 2];
+                        tempVec4a[3] = 1;
 
                         math.transformPoint4(matrix, tempVec4a, tempVec4b);
 
@@ -4905,27 +4921,12 @@ class XKTModel {
 
                 geometry.normalsOctEncoded = new Int8Array(geometry.normals.length);
 
-                const modelNormalMatrix = math.inverseMat4(math.transposeMat4(mesh.matrix || identityMat4, tempMat4), tempMat4b);
-
-                geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
-            }
-        }
-    }
-
-    _flagEntitiesThatReuseGeometries() {
-
-        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
-
-            const entity = this.entitiesList[i];
-            const meshes = entity.meshes;
-
-            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
-
-                const mesh = meshes[j];
-                const geometry = mesh.geometry;
-
                 if (geometry.numInstances > 1) {
-                    entity.hasReusedGeometries = true;
+                    geometryCompression.octEncodeNormals(geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
+
+                } else {
+                    const modelNormalMatrix =  math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
+                    geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
                 }
             }
         }
@@ -4954,6 +4955,7 @@ class XKTModel {
                         tempVec4a[0] = positions[i + 0];
                         tempVec4a[1] = positions[i + 1];
                         tempVec4a[2] = positions[i + 2];
+                        tempVec4a[3] = 1;
                         math.transformPoint4(matrix, tempVec4a, tempVec4b);
                         math.expandAABB3Point3(entityAABB, tempVec4b);
                     }
@@ -12801,11 +12803,14 @@ function getModelData(xktModel) {
         eachGeometryIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.indices. If the next geometry has the same index, then this geometry has no indices.
         eachGeometryEdgeIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.edgeIndices. If the next geometry has the same index, then this geometry has no edge indices.
 
-        // Meshes are grouped in runs that are shared by the same entities
+        // Meshes are grouped in runs that are shared by the same entities.
+
+        // We duplicate materials for meshes, rather than reusing them, because each material is only 6 bytes and an index
+        // into a common materials array would be 4 bytes, so it's hardly worth reusing materials, as long as they are that compact.
 
         eachMeshGeometriesPortion: new Uint32Array(numMeshes), // For each mesh, an index into the eachGeometry* arrays
         eachMeshMatricesPortion: new Uint32Array(numMeshes), // For each mesh that shares its geometry, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared geometry Local-space vertex positions. This is ignored for meshes that don't share geometries, because the vertex positions of non-shared geometries are pre-transformed into World-space.
-        eachMeshColorAndOpacity: new Uint8Array(numMeshes * 4), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
+        eachMeshMaterial: new Uint8Array(numMeshes * 6), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255], and PBR metallic and roughness factors, of format [0..255, 0..255]
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
@@ -12883,12 +12888,14 @@ function getModelData(xktModel) {
             matricesIndex += 16;
         }
 
-        data.eachMeshColorAndOpacity[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
-        data.eachMeshColorAndOpacity[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
-        data.eachMeshColorAndOpacity[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
-        data.eachMeshColorAndOpacity[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshMaterial[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
+        data.eachMeshMaterial[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
+        data.eachMeshMaterial[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
+        data.eachMeshMaterial[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshMaterial[countMeshColors + 4] = Math.floor(mesh.metallic * 255);
+        data.eachMeshMaterial[countMeshColors + 5] = Math.floor(mesh.roughness * 255);
 
-        countMeshColors += 4;
+        countMeshColors += 6;
     }
 
     // Entities, geometry instances, and tiles
@@ -12966,7 +12973,7 @@ function deflateData(data) {
 
         eachMeshGeometriesPortion: pako$2.deflate(data.eachMeshGeometriesPortion.buffer),
         eachMeshMatricesPortion: pako$2.deflate(data.eachMeshMatricesPortion.buffer),
-        eachMeshColorAndOpacity: pako$2.deflate(data.eachMeshColorAndOpacity.buffer),
+        eachMeshMaterial: pako$2.deflate(data.eachMeshMaterial.buffer),
 
         eachEntityId: pako$2.deflate(JSON.stringify(data.eachEntityId)
             .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
@@ -13002,7 +13009,7 @@ function createArrayBuffer(deflatedData) {
 
         deflatedData.eachMeshGeometriesPortion,
         deflatedData.eachMeshMatricesPortion,
-        deflatedData.eachMeshColorAndOpacity,
+        deflatedData.eachMeshMaterial,
 
         deflatedData.eachEntityId,
         deflatedData.eachEntityMeshesPortion,
@@ -13150,18 +13157,9 @@ async function parseArrayBuffer(parsingCtx, uri) {
         }
         return buffer;
     } else { // Uri is a path to a file
-        const contents = await parsingCtx.getAttachment(uri);
-        return toArrayBuffer$1(contents);
+        const arraybuffer = await parsingCtx.getAttachment(uri);
+        return arraybuffer;
     }
-}
-
-function toArrayBuffer$1(buf) {
-    const ab = new ArrayBuffer(buf.length);
-    const view = new Uint8Array(ab);
-    for (let i = 0; i < buf.length; ++i) {
-        view[i] = buf[i];
-    }
-    return ab;
 }
 
 function parseBufferViews(parsingCtx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
@@ -13195,21 +13193,28 @@ function parseMaterials(parsingCtx) {
     if (materialsInfo) {
         for (let i = 0, len = materialsInfo.length; i < len; i++) {
             const materialInfo = materialsInfo[i];
-            const material = parseMaterialColor(parsingCtx, materialInfo);
-            materialInfo._rgbaColor = material;
+            const material = parseMaterial(parsingCtx, materialInfo);
+            materialInfo._materialData = material;
         }
     }
 }
 
-function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
-    const color = new Float32Array([1, 1, 1, 1]);
+function parseMaterial(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
+    const material = {
+        color: new Float32Array([1, 1, 1]),
+        opacity: 1.0,
+        metallic: 0,
+        roughness: 1
+    };
     const extensions = materialInfo.extensions;
     if (extensions) {
         const specularPBR = extensions["KHR_materials_pbrSpecularGlossiness"];
         if (specularPBR) {
             const diffuseFactor = specularPBR.diffuseFactor;
             if (diffuseFactor !== null && diffuseFactor !== undefined) {
-                color.set(diffuseFactor);
+                material.color[0] = diffuseFactor[0];
+                material.color[1] = diffuseFactor[1];
+                material.color[2] = diffuseFactor[2];
             }
         }
         const common = extensions["KHR_materials_common"];
@@ -13222,16 +13227,18 @@ function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract a
             const diffuse = values.diffuse;
             if (diffuse && (blinn || phong || lambert)) {
                 if (!utils.isString(diffuse)) {
-                    color.set(diffuse);
+                    material.color[0] = diffuse[0];
+                    material.color[1] = diffuse[1];
+                    material.color[2] = diffuse[2];
                 }
             }
             const transparency = values.transparency;
             if (transparency !== null && transparency !== undefined) {
-                color[3] = transparency;
+                material.opacity = transparency;
             }
             const transparent = values.transparent;
             if (transparent !== null && transparent !== undefined) {
-                color[3] = transparent;
+                material.opacity = transparent;
             }
         }
     }
@@ -13239,10 +13246,21 @@ function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract a
     if (metallicPBR) {
         const baseColorFactor = metallicPBR.baseColorFactor;
         if (baseColorFactor) {
-            color.set(baseColorFactor);
+            material.color[0] = baseColorFactor[0];
+            material.color[1] = baseColorFactor[1];
+            material.color[2] = baseColorFactor[2];
+            material.opacity = baseColorFactor[3];
+        }
+        const metallicFactor = metallicPBR.metallicFactor;
+        if (metallicFactor !== null && metallicFactor !== undefined) {
+            material.metallic = metallicFactor;
+        }
+        const roughnessFactor = metallicPBR.roughnessFactor;
+        if (roughnessFactor !== null && roughnessFactor !== undefined) {
+            material.roughness = roughnessFactor;
         }
     }
-    return color;
+    return material;
 }
 
 function parseDefaultScene(parsingCtx) {
@@ -13330,8 +13348,10 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                     const primitiveInfo = meshInfo.primitives[i];
                     const materialIndex = primitiveInfo.material;
                     const materialInfo = (materialIndex !== null && materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
-                    const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
-                    const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
+                    const color = materialInfo ? materialInfo._materialData.color : new Float32Array([1.0, 1.0, 1.0, 1.0]);
+                    const opacity = materialInfo ? materialInfo._materialData.opacity : 1.0;
+                    const metallic = materialInfo ? materialInfo._materialData.metallic : 0.0;
+                    const roughness = materialInfo ? materialInfo._materialData.roughness : 1.0;
 
                     const xktGeometryId = createPrimitiveGeometryHash(primitiveInfo);
 
@@ -13342,15 +13362,15 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                         parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
 
                         const colors = geometryArrays.colors;
-                        
+
                         let colorsCompressed;
-                        
+
                         if (geometryArrays.colors) {
                             colorsCompressed = [];
                             for (let j = 0, lenj = colors.length; j < lenj; j += 4) {
-                                colorsCompressed.push(colors[j + 0]);
-                                colorsCompressed.push(colors[j + 1]);
-                                colorsCompressed.push(colors[j + 2]);
+                                colorsCompressed.push(Math.floor(colors[j + 0] * 255));
+                                colorsCompressed.push(Math.floor(colors[j + 1] * 255));
+                                colorsCompressed.push(Math.floor(colors[j + 2] * 255));
                             }
                         }
 
@@ -13373,7 +13393,9 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                         geometryId: xktGeometryId,
                         matrix: matrix ? matrix.slice() : math.identityMat4(),
                         color: color,
-                        opacity: opacity
+                        opacity: opacity,
+                        metallic: metallic,
+                        roughness: roughness
                     });
 
                     xktMeshIds.push(xktMeshId);
@@ -13473,7 +13495,7 @@ function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
 }
 
 function parseAccessorTypedArray(parsingCtx, accessorInfo) {
-    const bufferViewInfo = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
+    const bufferView = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
     const itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
     const TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
     const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
@@ -13481,7 +13503,7 @@ function parseAccessorTypedArray(parsingCtx, accessorInfo) {
     if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
         throw new Error("interleaved buffer!"); // TODO
     } else {
-        return new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
+        return new TypedArray(bufferView._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
     }
 }
 
