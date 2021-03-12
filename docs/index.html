@@ -57,7 +57,7 @@ then can load into <a href="http://xeokit.io">xeokit</a> v1.7+. </p>
 into <code>XKT</code>, and can even generate <code>XKT</code> files programmatically.</p>
 <p>This toolkit is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to
 convert glTF to <code>XKT</code>.</p>
-<p><img src="http://xeokit.io/img/BimdataViewerCroppedNarrow.jpg" alt="Spatial partitioning"></p>
+<p><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></p>
 <h2 id="contents">Contents</h2><ul>
 <li><a href="#links">Links</a></li>
 <li><a href="#features">Features</a></li>
@@ -77,16 +77,13 @@ convert glTF to <code>XKT</code>.</p>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs">API Documentation</a></li>
 <li><a href="https://github.com/xeokit/xeokit-xkt-utils">Source Code</a></li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/examples">Live Tests</a></li>
-<li><a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V6.md">XKT Format Specification (V6)</a></li>
 </ul>
 <h2 id="features">Features</h2><ul>
-<li>Generate <code>XKT</code> files programmatically with JavaScript.</li>
-<li>Convert glTF files into <code>XKT</code> files.</li>
-<li>Triangle meshes, lines and point clouds.  </li>
-<li>Double-precision geometries.</li>
-<li>Geometry compression, using instancing, quantization, oct-encoding and gzip.</li>
-<li>Physically-based materials.</li>
-<li>Works in browser and node.</li>
+<li>A JavaScript document model that represents an XKT file</li>
+<li>Parse glTF into the document model</li>
+<li>Programmatically generate geometry within the document model  </li>
+<li>Serialize the document model to an array buffer</li>
+<li>Save the array buffer as an XKT file</li>
 </ul>
 <h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel">XKTModel</h4><p>At the center of <code>xeokit-xkt-utils</code> is
 the  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a>

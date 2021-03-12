@@ -33,7 +33,6 @@ convert glTF to ````XKT````.
 * [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
 * [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
-* [XKT Format Specification (V6)](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V6.md)
 
 ## Features
 
