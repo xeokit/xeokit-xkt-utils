@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>XKTModel - Generating a model programmatically, with instanced points geometry</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"/>
+
+    <style>
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+            background: lightBlue;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas id="myCanvas"></canvas>
+<div id="info">
+    <h1>XKTModel - Generating a model programmatically, with instanced points geometry</h1><br>
+
+    <div id="log">Loading JavaScript modules...</div>
+
+</div>
+</body>
+<script type="module">
+
+    import {
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "./../dist/xeokit-xkt-utils.es.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.scene.camera.eye = [-1725.5651570375667, 945.0757263203204, 2211.1357051658474];
+    viewer.scene.camera.look = [-0.00091552734375, 0.0074920654296875, 0.001922607421875];
+    viewer.scene.camera.up = [0.18, 0.93, -0.25];
+
+    viewer.camera.perspective.far = 10000;
+
+    viewer.cameraControl.navMode = "orbit";
+    viewer.cameraControl.followPointer = true;
+
+    viewer.scene.pointsMaterial.roundPoints = true;
+    viewer.scene.pointsMaterial.perspectivePoints = true;
+    viewer.scene.pointsMaterial.pointSize = 2;
+    viewer.scene.pointsMaterial.minPerspectivePointSize = 2;
+    viewer.scene.pointsMaterial.maxPerspectivePointSize = 6;
+
+    function log(msg) {
+        document.getElementById("log").innerHTML += "<br>" + msg;
+    }
+
+    log("Generating XKTModel..");
+
+    const xktModel = new XKTModel();
+
+    const positions = [];
+    const colors = [];
+
+    const map = {};
+
+    for (let i = 0; i < 50000;) {
+
+        const x = (Math.random() * 1000) - 500;
+        const y = (Math.random() * 1000) - 500;
+        const z = (Math.random() * 1000) - 500;
+
+        const hash = "" + x + "." + y + "." + z;
+        if (map[hash]) {
+            continue;
+        }
+
+        map[hash] = true;
+
+        positions.push(x);
+        positions.push(y);
+        positions.push(z);
+
+        colors.push(Math.random());
+        colors.push(Math.random());
+        colors.push(Math.random());
+
+        i++;
+    }
+
+    xktModel.createGeometry({
+        geometryId: "pointsGeometry",
+        primitiveType: "points",
+        positions: positions,
+        colors: colors
+    });
+
+    xktModel.createMesh({
+        meshId: "pointsMesh1",
+        geometryId: "pointsGeometry",
+        position: [-800, 0, 0],
+        scale: [1, 1, 1],
+        rotation: [0, 0, 0]
+    });
+
+    xktModel.createMesh({
+        meshId: "pointsMesh2",
+        geometryId: "pointsGeometry",
+        position: [800, 0, 0],
+        scale: [1, 1, 1],
+        rotation: [0, 0, 0]
+    });
+
+    xktModel.createEntity({
+        entityId: "points",
+        meshIds: ["pointsMesh1", "pointsMesh2"]
+    });
+
+    xktModel.finalize();
+
+    log("Writing XKTModel to array buffer..");
+
+    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+    log("Validating array buffer..");
+
+    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+
+    log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
+
+    log("Loading array buffer with XKTLoaderPlugin..");
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    const model = xktLoader.load({
+        id: "myModel",
+        xkt: xktArrayBuffer,
+        edges: true
+    });
+
+</script>
+</html>

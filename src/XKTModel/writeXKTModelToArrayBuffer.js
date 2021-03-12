@@ -5,7 +5,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako = pako.default;
 }
 
-const XKT_VERSION = 6; // XKT format version
+const XKT_VERSION = 7; // XKT format version
 
 /**
  * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
@@ -30,67 +30,93 @@ function getModelData(xktModel) {
     // Allocate data
     //------------------------------------------------------------------------------------------------------------------
 
-    const primitivesList = xktModel.primitivesList;
-    const primitiveInstancesList = xktModel.primitiveInstancesList;
+    const geometriesList = xktModel.geometriesList;
+    const meshesList = xktModel.meshesList;
     const entitiesList = xktModel.entitiesList;
     const tilesList = xktModel.tilesList;
 
-    const numPrimitives = primitivesList.length;
-    const numPrimitiveInstances = primitiveInstancesList.length;
+    const numGeometries = geometriesList.length;
+    const numMeshes = meshesList.length;
     const numEntities = entitiesList.length;
     const numTiles = tilesList.length;
 
     let lenPositions = 0;
     let lenNormals = 0;
+    let lenColors = 0;
     let lenIndices = 0;
     let lenEdgeIndices = 0;
-    let lenColors = 0;
     let lenMatrices = 0;
 
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
-        const primitive = primitivesList [primitiveIndex];
-        lenPositions += primitive.positionsQuantized.length;
-        lenNormals += primitive.normalsOctEncoded.length;
-        lenIndices += primitive.indices.length;
-        lenEdgeIndices += primitive.edgeIndices.length;
-        lenColors += 4;
+    for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
+        const geometry = geometriesList [geometryIndex];
+        if (geometry.positionsQuantized) {
+            lenPositions += geometry.positionsQuantized.length;
+        }
+        if (geometry.normalsOctEncoded) {
+            lenNormals += geometry.normalsOctEncoded.length;
+        }
+        if (geometry.colorsCompressed) {
+            lenColors += geometry.colorsCompressed.length;
+        }
+        if (geometry.indices) {
+            lenIndices += geometry.indices.length;
+        }
+        if (geometry.edgeIndices) {
+            lenEdgeIndices += geometry.edgeIndices.length;
+        }
     }
 
-    for (let entityIndex = 0; entityIndex < numEntities; entityIndex++) {
-        const entity = entitiesList[entityIndex];
-        if (entity.hasReusedPrimitives) {
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+        const mesh = meshesList[meshIndex];
+        if (mesh.geometry.numInstances > 1) {
             lenMatrices += 16;
         }
     }
 
     const data = {
 
+        // Vertex attributes
+
         positions: new Uint16Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
+        colors: new Uint8Array(lenColors),
+
+        // Indices
+
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
 
-        matrices: new Float32Array(lenMatrices), // Modeling matrices for entities that share primitives. Each entity either shares all it's primitives, or owns all its primitives exclusively. Exclusively-owned primitives are pre-transformed into World-space, and so their entities don't have modeling matrices in this array.
+        // Transform matrices
 
-        reusedPrimitivesDecodeMatrix: new Float32Array(xktModel.reusedPrimitivesDecodeMatrix), // A single, global vertex position de-quantization matrix for all reused primitives. Reused primitives are quantized to their collective Local-space AABB, and this matrix is derived from that AABB.
+        matrices: new Float32Array(lenMatrices), // Modeling matrices for entities that share geometries. Each entity either shares all it's geometries, or owns all its geometries exclusively. Exclusively-owned geometries are pre-transformed into World-space, and so their entities don't have modeling matrices in this array.
 
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.positions and data.normals
-        eachPrimitiveIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.indices
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.edgeIndices
-        eachPrimitiveColorAndOpacity: new Uint8Array(lenColors), // For each primitive, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
+        reusedGeometriesDecodeMatrix: new Float32Array(xktModel.reusedGeometriesDecodeMatrix), // A single, global vertex position de-quantization matrix for all reused geometries. Reused geometries are quantized to their collective Local-space AABB, and this matrix is derived from that AABB.
 
-        // Primitive instances are grouped in runs that are shared by the same entities
+        // Geometries
 
-        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each primitive instance, an index into the eachPrimitive* arrays
+        eachGeometryPrimitiveType: new Uint8Array(numGeometries), // Primitive type for each geometry (0=solid triangles, 1=surface triangles, 2=lines, 3=points)
+        eachGeometryPositionsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.positions. Every primitive type has positions.
+        eachGeometryNormalsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.normals. If the next geometry has the same index, then this geometry has no normals.
+        eachGeometryColorsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.colors. If the next geometry has the same index, then this geometry has no colors.
+        eachGeometryIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.indices. If the next geometry has the same index, then this geometry has no indices.
+        eachGeometryEdgeIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.edgeIndices. If the next geometry has the same index, then this geometry has no edge indices.
+
+        // Meshes are grouped in runs that are shared by the same entities.
+
+        // We duplicate materials for meshes, rather than reusing them, because each material is only 6 bytes and an index
+        // into a common materials array would be 4 bytes, so it's hardly worth reusing materials, as long as they are that compact.
+
+        eachMeshGeometriesPortion: new Uint32Array(numMeshes), // For each mesh, an index into the eachGeometry* arrays
+        eachMeshMatricesPortion: new Uint32Array(numMeshes), // For each mesh that shares its geometry, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared geometry Local-space vertex positions. This is ignored for meshes that don't share geometries, because the vertex positions of non-shared geometries are pre-transformed into World-space.
+        eachMeshMaterial: new Uint8Array(numMeshes * 6), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255], and PBR metallic and roughness factors, of format [0..255, 0..255]
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
         eachEntityId: [], // For each entity, an ID string
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(numEntities), // For each entity, the index of the the first element of primitiveInstances used by the entity
-        eachEntityMatricesPortion: new Uint32Array(numEntities), // For each entity that shares primitives, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared primitives' Local-space vertex positions. Thios is ignored for entities that don't share primitives, because the vertex positions of non-shared primitives are pre-transformed into World-space.
+        eachEntityMeshesPortion: new Uint32Array(numEntities), // For each entity, the index of the the first element of meshes used by the entity
 
         eachTileAABB: new Float64Array(numTiles * 6), // For each tile, an axis-aligned bounding box
-        eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityPrimitiveInstancesPortion and eachEntityMatricesPortion used by the tile
+        eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityMeshesPortion and eachEntityMatricesPortion used by the tile
     };
 
     //------------------------------------------------------------------------------------------------------------------
@@ -99,41 +125,81 @@ function getModelData(xktModel) {
 
     let countPositions = 0;
     let countNormals = 0;
+    let countColors = 0;
     let countIndices = 0;
     let countEdgeIndices = 0;
-    let countColors = 0;
+    let countMeshColors = 0;
 
-    // Primitives
+    // Geometries
 
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
+    let matricesIndex = 0;
 
-        const primitive = primitivesList [primitiveIndex];
+    for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
 
-        data.positions.set(primitive.positionsQuantized, countPositions);
-        data.normals.set(primitive.normalsOctEncoded, countNormals);
-        data.indices.set(primitive.indices, countIndices);
-        data.edgeIndices.set(primitive.edgeIndices, countEdgeIndices);
+        const geometry = geometriesList [geometryIndex];
 
-        data.eachPrimitivePositionsAndNormalsPortion [primitiveIndex] = countPositions;
-        data.eachPrimitiveIndicesPortion [primitiveIndex] = countIndices;
-        data.eachPrimitiveEdgeIndicesPortion [primitiveIndex] = countEdgeIndices;
-        data.eachPrimitiveColorAndOpacity[countColors + 0] = Math.floor(primitive.color[0] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 1] = Math.floor(primitive.color[1] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 2] = Math.floor(primitive.color[2] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 3] = Math.floor(primitive.opacity * 255);
+        const primitiveType
+            = (geometry.primitiveType === "triangles")
+            ? (geometry.solid ? 0 : 1)
+            : (geometry.primitiveType === "points" ? 2 : 3)
 
-        countPositions += primitive.positions.length;
-        countNormals += primitive.normalsOctEncoded.length;
-        countIndices += primitive.indices.length;
-        countEdgeIndices += primitive.edgeIndices.length;
-        countColors += 4;
+        data.eachGeometryPrimitiveType [geometryIndex] = primitiveType;
+        data.eachGeometryPositionsPortion [geometryIndex] = countPositions;
+        data.eachGeometryNormalsPortion [geometryIndex] = countNormals;
+        data.eachGeometryColorsPortion [geometryIndex] = countColors;
+        data.eachGeometryIndicesPortion [geometryIndex] = countIndices;
+        data.eachGeometryEdgeIndicesPortion [geometryIndex] = countEdgeIndices;
+
+        if (geometry.positionsQuantized) {
+            data.positions.set(geometry.positionsQuantized, countPositions);
+            countPositions += geometry.positionsQuantized.length;
+        }
+        if (geometry.normalsOctEncoded) {
+            data.normals.set(geometry.normalsOctEncoded, countNormals);
+            countNormals += geometry.normalsOctEncoded.length;
+        }
+        if (geometry.colorsCompressed) {
+            data.colors.set(geometry.colorsCompressed, countColors);
+            countColors += geometry.colorsCompressed.length;
+        }
+        if (geometry.indices) {
+            data.indices.set(geometry.indices, countIndices);
+            countIndices += geometry.indices.length;
+        }
+        if (geometry.edgeIndices) {
+            data.edgeIndices.set(geometry.edgeIndices, countEdgeIndices);
+            countEdgeIndices += geometry.edgeIndices.length;
+        }
     }
 
-    // Entities, primitive instances, and tiles
+    // Meshes
+
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+
+        const mesh = meshesList [meshIndex];
+
+        if (mesh.geometry.numInstances > 1) {
+
+            data.matrices.set(mesh.matrix, matricesIndex);
+            data.eachMeshMatricesPortion [meshIndex] = matricesIndex;
+
+            matricesIndex += 16;
+        }
+
+        data.eachMeshMaterial[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
+        data.eachMeshMaterial[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
+        data.eachMeshMaterial[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
+        data.eachMeshMaterial[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshMaterial[countMeshColors + 4] = Math.floor(mesh.metallic * 255);
+        data.eachMeshMaterial[countMeshColors + 5] = Math.floor(mesh.roughness * 255);
+
+        countMeshColors += 6;
+    }
+
+    // Entities, geometry instances, and tiles
 
     let entityIndex = 0;
-    let countEntityPrimitiveInstancesPortion = 0;
-    let matricesIndex = 0;
+    let countEntityGeometryInstancesPortion = 0;
 
     for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
 
@@ -152,39 +218,30 @@ function getModelData(xktModel) {
         for (let j = 0; j < numTileEntities; j++) {
 
             const entity = tileEntities[j];
-            const entityPrimitiveInstances = entity.primitiveInstances;
-            const numEntityPrimitiveInstances = entityPrimitiveInstances.length;
+            const entityGeometryInstances = entity.meshes;
+            const numEntityGeometryInstances = entityGeometryInstances.length;
 
-            if (numEntityPrimitiveInstances === 0) {
+            if (numEntityGeometryInstances === 0) {
                 continue;
             }
 
-            for (let k = 0; k < numEntityPrimitiveInstances; k++) {
+            for (let k = 0; k < numEntityGeometryInstances; k++) {
 
-                const primitiveInstance = entityPrimitiveInstances[k];
-                const primitive = primitiveInstance.primitive;
-                const primitiveIndex = primitive.primitiveIndex;
+                const geometryInstance = entityGeometryInstances[k];
+                const geometry = geometryInstance.geometry;
+                const geometryIndex = geometry.geometryIndex;
 
-                data.primitiveInstances [countEntityPrimitiveInstancesPortion + k] = primitiveIndex;
-            }
-
-            if (entity.hasReusedPrimitives) {
-
-                data.matrices.set(entity.matrix, matricesIndex);
-                data.eachEntityMatricesPortion [entityIndex] = matricesIndex;
-
-                matricesIndex += 16;
+                data.eachMeshGeometriesPortion [countEntityGeometryInstancesPortion + k] = geometryIndex;
             }
 
             data.eachEntityId [entityIndex] = entity.entityId;
-            data.eachEntityPrimitiveInstancesPortion[entityIndex] = countEntityPrimitiveInstancesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityPrimitiveInstancesPortion correct?
+            data.eachEntityMeshesPortion[entityIndex] = countEntityGeometryInstancesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityGeometryInstancesPortion correct?
 
             entityIndex++;
-            countEntityPrimitiveInstancesPortion += numEntityPrimitiveInstances;
+            countEntityGeometryInstancesPortion += numEntityGeometryInstances;
         }
 
         const tileAABBIndex = tileIndex * 6;
-        const tileDecodeMatrixIndex = tileIndex * 16;
 
         data.eachTileAABB.set(tileAABB, tileAABBIndex);
     }
@@ -198,26 +255,29 @@ function deflateData(data) {
 
         positions: pako.deflate(data.positions.buffer),
         normals: pako.deflate(data.normals.buffer),
+        colors: pako.deflate(data.colors.buffer),
         indices: pako.deflate(data.indices.buffer),
         edgeIndices: pako.deflate(data.edgeIndices.buffer),
 
         matrices: pako.deflate(data.matrices.buffer),
+        reusedGeometriesDecodeMatrix: pako.deflate(data.reusedGeometriesDecodeMatrix.buffer),
 
-        reusedPrimitivesDecodeMatrix: pako.deflate(data.reusedPrimitivesDecodeMatrix.buffer),
+        eachGeometryPrimitiveType: pako.deflate(data.eachGeometryPrimitiveType.buffer),
+        eachGeometryPositionsPortion: pako.deflate(data.eachGeometryPositionsPortion.buffer),
+        eachGeometryNormalsPortion: pako.deflate(data.eachGeometryNormalsPortion.buffer),
+        eachGeometryColorsPortion: pako.deflate(data.eachGeometryColorsPortion.buffer),
+        eachGeometryIndicesPortion: pako.deflate(data.eachGeometryIndicesPortion.buffer),
+        eachGeometryEdgeIndicesPortion: pako.deflate(data.eachGeometryEdgeIndicesPortion.buffer),
 
-        eachPrimitivePositionsAndNormalsPortion: pako.deflate(data.eachPrimitivePositionsAndNormalsPortion.buffer),
-        eachPrimitiveIndicesPortion: pako.deflate(data.eachPrimitiveIndicesPortion.buffer),
-        eachPrimitiveEdgeIndicesPortion: pako.deflate(data.eachPrimitiveEdgeIndicesPortion.buffer),
-        eachPrimitiveColorAndOpacity: pako.deflate(data.eachPrimitiveColorAndOpacity.buffer),
-
-        primitiveInstances: pako.deflate(data.primitiveInstances.buffer),
+        eachMeshGeometriesPortion: pako.deflate(data.eachMeshGeometriesPortion.buffer),
+        eachMeshMatricesPortion: pako.deflate(data.eachMeshMatricesPortion.buffer),
+        eachMeshMaterial: pako.deflate(data.eachMeshMaterial.buffer),
 
         eachEntityId: pako.deflate(JSON.stringify(data.eachEntityId)
             .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
                 return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
             })),
-        eachEntityPrimitiveInstancesPortion: pako.deflate(data.eachEntityPrimitiveInstancesPortion.buffer),
-        eachEntityMatricesPortion: pako.deflate(data.eachEntityMatricesPortion.buffer),
+        eachEntityMeshesPortion: pako.deflate(data.eachEntityMeshesPortion.buffer),
 
         eachTileAABB: pako.deflate(data.eachTileAABB.buffer),
         eachTileEntitiesPortion: pako.deflate(data.eachTileEntitiesPortion.buffer)
@@ -230,23 +290,27 @@ function createArrayBuffer(deflatedData) {
 
         deflatedData.positions,
         deflatedData.normals,
+        deflatedData.colors,
+
         deflatedData.indices,
         deflatedData.edgeIndices,
 
         deflatedData.matrices,
+        deflatedData.reusedGeometriesDecodeMatrix,
 
-        deflatedData.reusedPrimitivesDecodeMatrix,
+        deflatedData.eachGeometryPrimitiveType,
+        deflatedData.eachGeometryPositionsPortion,
+        deflatedData.eachGeometryNormalsPortion,
+        deflatedData.eachGeometryColorsPortion,
+        deflatedData.eachGeometryIndicesPortion,
+        deflatedData.eachGeometryEdgeIndicesPortion,
 
-        deflatedData.eachPrimitivePositionsAndNormalsPortion,
-        deflatedData.eachPrimitiveIndicesPortion,
-        deflatedData.eachPrimitiveEdgeIndicesPortion,
-        deflatedData.eachPrimitiveColorAndOpacity,
-
-        deflatedData.primitiveInstances,
+        deflatedData.eachMeshGeometriesPortion,
+        deflatedData.eachMeshMatricesPortion,
+        deflatedData.eachMeshMaterial,
 
         deflatedData.eachEntityId,
-        deflatedData.eachEntityPrimitiveInstancesPortion,
-        deflatedData.eachEntityMatricesPortion,
+        deflatedData.eachEntityMeshesPortion,
 
         deflatedData.eachTileAABB,
         deflatedData.eachTileEntitiesPortion
@@ -267,7 +331,7 @@ function toArrayBuffer(elements) {
     const indexBuf = new Uint8Array(indexData.buffer);
     const dataArray = new Uint8Array(indexBuf.length + dataLen);
     dataArray.set(indexBuf);
-    var offset = indexBuf.length;
+    let offset = indexBuf.length;
     for (let i = 0, len = elements.length; i < len; i++) {     // Stored Data 2: the elements themselves
         const element = elements[i];
         dataArray.set(element, offset);

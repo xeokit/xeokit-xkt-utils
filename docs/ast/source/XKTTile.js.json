@@ -302,7 +302,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+                        "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTGeometry}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
                         "start": 620,
                         "end": 828,
                         "loc": {
@@ -419,7 +419,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+                        "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTGeometry}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
                         "start": 620,
                         "end": 828,
                         "loc": {
@@ -954,7 +954,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+                          "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTGeometry}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
                           "start": 620,
                           "end": 828,
                           "loc": {
@@ -1071,7 +1071,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+                          "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTGeometry}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
                           "start": 620,
                           "end": 828,
                           "loc": {
@@ -1325,7 +1325,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+      "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTGeometry}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
       "start": 620,
       "end": 828,
       "loc": {
@@ -1876,7 +1876,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTPrimitive}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
+      "value": "*\n         * 4x4 positions de-quantization matrix to decompress the shared {@link XKTGeometry}s belonging to the {@link XKTEntity}'s within this Tile.\n         *\n         * @type {Float32Array}\n         ",
       "start": 620,
       "end": 828,
       "loc": {

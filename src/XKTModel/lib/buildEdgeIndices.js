@@ -1,6 +1,6 @@
 //const math = require('./math');
 
-import {math} from "../lib/math.js";
+import {math} from "../../lib/math.js";
 
 /**
  * @private

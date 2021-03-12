@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../../">
-  <title data-ice="title">src/XKTModel/loadGLTFIntoXKTModel.js | xeokit-xkt-utils</title>
+  <title data-ice="title">src/XKTModel/parseGLTFIntoXKTModel.js | xeokit-xkt-utils</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -30,20 +30,35 @@
   <ul>
     
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildCylinderGeometry">buildCylinderGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildGridGeometry">buildGridGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildPlaneGeometry">buildPlaneGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildSphereGeometry">buildSphereGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildTorusGeometry">buildTorusGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#v7-xktmodel">v7/XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/v7/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/v7/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/v7/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/v7/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/v7/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/loadGLTFIntoXKTModel.js</h1>
+<div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/parseGLTFIntoXKTModel.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {utils} from &quot;./lib/utils.js&quot;;
-import {math} from &quot;./lib/math.js&quot;;
+import {math} from &quot;../lib/math.js&quot;;
 
 // HACK: Allows node.js to find atob()
 let atob2;
@@ -82,13 +97,17 @@ const WEBGL_TYPE_SIZES = {
  * @param {XKTModel} model XKTModel to parse into
  * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
  */
-async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
+async function parseGLTFIntoXKTModel(gltf, model, getAttachment) {
     const parsingCtx = {
         gltf: gltf,
-        getAttachment: getAttachment || (() =&gt; {throw new Error(&apos;You must define getAttachment() method to convert glTF with external resources&apos;)}),
+        getAttachment: getAttachment || (() =&gt; {
+            throw new Error(&apos;You must define getAttachment() method to convert glTF with external resources&apos;)
+        }),
         model: model,
-        numPrimitivesCreated: 0,
-        numEntitiesCreated: 0,
+        geometryCreated: {},
+        nextGeometryId: 0,
+        nextMeshId: 0,
+        nextDefaultEntityId: 0,
         nodes: [],
         meshInstanceCounts: {},
         _meshPrimitiveIds: {}
@@ -99,6 +118,7 @@ async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
     parseMaterials(parsingCtx);
     parseDefaultScene(parsingCtx);
 }
+
 async function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  &quot;_buffer&quot; Unit8Array properties on the glTF &quot;buffer&quot; elements
     const buffers = parsingCtx.gltf.buffers;
     if (buffers) {
@@ -337,88 +357,92 @@ function parseNode(parsingCtx, glTFNode, matrix) {
         }
     }
 
-    const meshId = glTFNode.mesh;
+    const gltfMeshId = glTFNode.mesh;
 
-    if (meshId !== undefined) {
+    if (gltfMeshId !== undefined) {
 
-        const meshInfo = gltf.meshes[meshId];
+        const meshInfo = gltf.meshes[gltfMeshId];
 
         if (meshInfo) {
 
-            let primitivesReused = (parsingCtx.meshInstanceCounts [meshId] &gt; 1);
+            let primitivesReused = (parsingCtx.meshInstanceCounts [gltfMeshId] &gt; 1);
 
-            let primitiveModelingMatrix;
-            let entityModelingMatrix;
+            let geometryMatrix;
+            let meshMatrix;
 
             if (primitivesReused) {
 
                 // Primitives in a mesh that is shared are left in Model-space
-                // Entities that instance those primitives will use their matrix to transform the primitives into World-space
+                // Entities that instance those geometries will use their matrix to transform the primitives into World-space
 
-                primitiveModelingMatrix = math.identityMat4();
-                entityModelingMatrix = matrix ? matrix.slice() : math.identityMat4();
+                geometryMatrix = math.identityMat4();
+                meshMatrix = matrix ? matrix.slice() : math.identityMat4();
 
             } else {
 
-                // glTF meshes do not share primitives - each primitive belongs to one mesh
+                // glTF meshes do not share primitives - each geometry belongs to one mesh
                 // Primitives in a mesh that&apos;s not shared get baked into World-space
 
-                primitiveModelingMatrix = matrix ? matrix.slice() : math.identityMat4();
-                entityModelingMatrix = math.identityMat4();
+                geometryMatrix = matrix ? matrix.slice() : math.identityMat4();
+                meshMatrix = math.identityMat4();
             }
 
             const numPrimitivesInMesh = meshInfo.primitives.length;
 
             if (numPrimitivesInMesh &gt; 0) {
 
-                let primitiveIds = parsingCtx._meshPrimitiveIds[meshId];
+                const meshIds = [];
 
-                if (!primitiveIds) {
+                for (let i = 0; i &lt; numPrimitivesInMesh; i++) {
 
-                    primitiveIds = [];
+                    const primitiveInfo = meshInfo.primitives[i];
+                    const materialIndex = primitiveInfo.material;
+                    const materialInfo = (materialIndex !== null &amp;&amp; materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
+                    const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
+                    const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
 
-                    for (let i = 0; i &lt; numPrimitivesInMesh; i++) {
+                    const geometryId = glTFNode.mesh + &quot;.&quot; + i;
 
-                        const primitiveInfo = meshInfo.primitives[i];
-                        const materialIndex = primitiveInfo.material;
-                        const materialInfo = (materialIndex !== null &amp;&amp; materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
-                        const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
-                        const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
+                    // TODO: Reuse unique glTF geometries, not glTF meshes
+                    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                    if (!parsingCtx.geometryCreated[geometryId]) {
 
                         const geometryArrays = {};
-
                         parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
 
-                        const primitiveId = parsingCtx.numPrimitivesCreated;
-
-                        model.createPrimitive({
-                            primitiveId: primitiveId,
+                        model.createGeometry({
+                            geometryId: geometryId,
                             primitiveType: &quot;triangles&quot;,
-                            matrix: primitiveModelingMatrix,
-                            color: color,
-                            opacity: opacity,
-                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused primitive positions
+                            matrix: geometryMatrix,
+                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused geometry positions
                             normals: geometryArrays.normals,
                             indices: geometryArrays.indices
                         });
 
-                        primitiveIds.push(primitiveId);
-
-                        parsingCtx.numPrimitivesCreated++;
+                        parsingCtx.geometryCreated[geometryId] = true;
                     }
 
-                    parsingCtx._meshPrimitiveIds [meshId] = primitiveIds;
+                    const meshId = parsingCtx.nextMeshId++;
+                    
+                    model.createMesh({
+                        meshId: meshId,
+                        geometryId: geometryId,
+                        matrix: meshMatrix,
+                        color: color,
+                        opacity: opacity
+                    });
+                    
+                    meshIds.push(meshId);
                 }
-
-                const entityId = glTFNode.name || &quot;entity&quot; + parsingCtx.numEntitiesCreated;
+                
+                const entityId = glTFNode.name || (&quot;entity&quot; + parsingCtx.nextDefaultEntityId++);
 
                 model.createEntity({
                     entityId: entityId,
-                    matrix: entityModelingMatrix,
-                    primitiveIds: primitiveIds
+                    meshIds: meshIds
                 });
-
-                parsingCtx.numEntitiesCreated++;
             }
         }
     }
@@ -475,7 +499,7 @@ function parseAccessorTypedArray(parsingCtx, accessorInfo) {
 }
 
 
-export {loadGLTFIntoXKTModel};
+export {parseGLTFIntoXKTModel};
 </code></pre>
 
 </div>

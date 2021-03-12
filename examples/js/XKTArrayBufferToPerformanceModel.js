@@ -124,8 +124,8 @@ function load(viewer, options, inflatedData, performanceModel) {
 
     const primitiveReuseCounts = new Uint32Array(numPrimitives);
 
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
+    for (let meshIndex = 0; meshIndex < numPrimitiveInstances; meshIndex++) {
+        const primitiveIndex = primitiveInstances[meshIndex];
         if (primitiveReuseCounts[primitiveIndex] !== undefined) {
             primitiveReuseCounts[primitiveIndex]++;
         } else {
@@ -166,14 +166,14 @@ function load(viewer, options, inflatedData, performanceModel) {
 
             const lastTileEntityIndex = (numEntities - 1);
             const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
-            const firstPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
-            const lastPrimitiveInstanceIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
+            const firstmeshIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
+            const lastmeshIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
 
             const meshIds = [];
 
             // Iterate each entity's primitive instances
 
-            for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex < lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
+            for (let primitiveInstancesIndex = firstmeshIndex; primitiveInstancesIndex < lastmeshIndex; primitiveInstancesIndex++) {
 
                 const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
                 const primitiveReuseCount = primitiveReuseCounts[primitiveIndex];

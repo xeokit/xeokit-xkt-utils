@@ -10549,9 +10549,9 @@
                           "line": 121,
                           "column": 35
                         },
-                        "identifierName": "primitiveInstanceIndex"
+                        "identifierName": "meshIndex"
                       },
-                      "name": "primitiveInstanceIndex"
+                      "name": "meshIndex"
                     },
                     "init": {
                       "type": "NumericLiteral",
@@ -10604,9 +10604,9 @@
                       "line": 121,
                       "column": 63
                     },
-                    "identifierName": "primitiveInstanceIndex"
+                    "identifierName": "meshIndex"
                   },
-                  "name": "primitiveInstanceIndex"
+                  "name": "meshIndex"
                 },
                 "operator": "<",
                 "right": {
@@ -10656,9 +10656,9 @@
                       "line": 121,
                       "column": 111
                     },
-                    "identifierName": "primitiveInstanceIndex"
+                    "identifierName": "meshIndex"
                   },
-                  "name": "primitiveInstanceIndex"
+                  "name": "meshIndex"
                 }
               },
               "body": {
@@ -10766,9 +10766,9 @@
                                 "line": 122,
                                 "column": 72
                               },
-                              "identifierName": "primitiveInstanceIndex"
+                              "identifierName": "meshIndex"
                             },
-                            "name": "primitiveInstanceIndex"
+                            "name": "meshIndex"
                           },
                           "computed": true
                         }
@@ -14171,9 +14171,9 @@
                                     "line": 176,
                                     "column": 45
                                   },
-                                  "identifierName": "firstPrimitiveInstanceIndex"
+                                  "identifierName": "firstmeshIndex"
                                 },
-                                "name": "firstPrimitiveInstanceIndex"
+                                "name": "firstmeshIndex"
                               },
                               "init": {
                                 "type": "MemberExpression",
@@ -14271,9 +14271,9 @@
                                     "line": 177,
                                     "column": 44
                                   },
-                                  "identifierName": "lastPrimitiveInstanceIndex"
+                                  "identifierName": "lastmeshIndex"
                                 },
-                                "name": "lastPrimitiveInstanceIndex"
+                                "name": "lastmeshIndex"
                               },
                               "init": {
                                 "type": "ConditionalExpression",
@@ -15453,9 +15453,9 @@
                                       "line": 200,
                                       "column": 74
                                     },
-                                    "identifierName": "firstPrimitiveInstanceIndex"
+                                    "identifierName": "firstmeshIndex"
                                   },
-                                  "name": "firstPrimitiveInstanceIndex"
+                                  "name": "firstmeshIndex"
                                 },
                                 "leadingComments": null
                               }
@@ -15508,9 +15508,9 @@
                                   "line": 200,
                                   "column": 128
                                 },
-                                "identifierName": "lastPrimitiveInstanceIndex"
+                                "identifierName": "lastmeshIndex"
                               },
-                              "name": "lastPrimitiveInstanceIndex"
+                              "name": "lastmeshIndex"
                             }
                           },
                           "update": {
@@ -18485,9 +18485,9 @@
                                           "line": 228,
                                           "column": 42
                                         },
-                                        "identifierName": "xktPrimitiveInstance"
+                                        "identifierName": "XKTMesh"
                                       },
-                                      "name": "xktPrimitiveInstance"
+                                      "name": "XKTMesh"
                                     },
                                     "init": {
                                       "type": "MemberExpression",
@@ -18618,9 +18618,9 @@
                                           "line": 229,
                                           "column": 34
                                         },
-                                        "identifierName": "xktPrimitive"
+                                        "identifierName": "XKTGeometry"
                                       },
-                                      "name": "xktPrimitive"
+                                      "name": "XKTGeometry"
                                     },
                                     "init": {
                                       "type": "MemberExpression",
@@ -18752,9 +18752,9 @@
                                         "line": 231,
                                         "column": 41
                                       },
-                                      "identifierName": "xktPrimitiveInstance"
+                                      "identifierName": "XKTMesh"
                                     },
-                                    "name": "xktPrimitiveInstance"
+                                    "name": "XKTMesh"
                                   },
                                   "extra": {
                                     "parenthesizedArgument": false
@@ -18956,9 +18956,9 @@
                                         "line": 236,
                                         "column": 33
                                       },
-                                      "identifierName": "xktPrimitive"
+                                      "identifierName": "XKTGeometry"
                                     },
-                                    "name": "xktPrimitive"
+                                    "name": "XKTGeometry"
                                   },
                                   "extra": {
                                     "parenthesizedArgument": false
@@ -19172,9 +19172,9 @@
                                           "line": 241,
                                           "column": 40
                                         },
-                                        "identifierName": "xktPrimitiveInstance"
+                                        "identifierName": "XKTMesh"
                                       },
-                                      "name": "xktPrimitiveInstance"
+                                      "name": "XKTMesh"
                                     },
                                     "property": {
                                       "type": "Identifier",
@@ -19209,9 +19209,9 @@
                                         "line": 241,
                                         "column": 67
                                       },
-                                      "identifierName": "xktPrimitive"
+                                      "identifierName": "XKTGeometry"
                                     },
-                                    "name": "xktPrimitive"
+                                    "name": "XKTGeometry"
                                   }
                                 },
                                 "consequent": {
@@ -19323,10 +19323,10 @@
                                               }
                                             },
                                             "extra": {
-                                              "rawValue": "xktPrimitiveInstance.primitive !== xktPrimitive",
-                                              "raw": "\"xktPrimitiveInstance.primitive !== xktPrimitive\""
+                                              "rawValue": "XKTMesh.primitive !== XKTGeometry",
+                                              "raw": "\"XKTMesh.primitive !== XKTGeometry\""
                                             },
-                                            "value": "xktPrimitiveInstance.primitive !== xktPrimitive"
+                                            "value": "XKTMesh.primitive !== XKTGeometry"
                                           }
                                         ]
                                       }
@@ -19473,9 +19473,9 @@
                                               "line": 246,
                                               "column": 67
                                             },
-                                            "identifierName": "xktPrimitive"
+                                            "identifierName": "XKTGeometry"
                                           },
-                                          "name": "xktPrimitive"
+                                          "name": "XKTGeometry"
                                         },
                                         "property": {
                                           "type": "Identifier",
@@ -19611,10 +19611,10 @@
                                               }
                                             },
                                             "extra": {
-                                              "rawValue": "compareArrays(primitivePositions, xktPrimitive.positions) === false",
-                                              "raw": "\"compareArrays(primitivePositions, xktPrimitive.positions) === false\""
+                                              "rawValue": "compareArrays(primitivePositions, XKTGeometry.positions) === false",
+                                              "raw": "\"compareArrays(primitivePositions, XKTGeometry.positions) === false\""
                                             },
-                                            "value": "compareArrays(primitivePositions, xktPrimitive.positions) === false"
+                                            "value": "compareArrays(primitivePositions, XKTGeometry.positions) === false"
                                           }
                                         ]
                                       }
@@ -19761,9 +19761,9 @@
                                               "line": 251,
                                               "column": 65
                                             },
-                                            "identifierName": "xktPrimitive"
+                                            "identifierName": "XKTGeometry"
                                           },
-                                          "name": "xktPrimitive"
+                                          "name": "XKTGeometry"
                                         },
                                         "property": {
                                           "type": "Identifier",
@@ -19899,10 +19899,10 @@
                                               }
                                             },
                                             "extra": {
-                                              "rawValue": "compareArrays(primitiveNormals, xktPrimitive.normals) === false",
-                                              "raw": "\"compareArrays(primitiveNormals, xktPrimitive.normals) === false\""
+                                              "rawValue": "compareArrays(primitiveNormals, XKTGeometry.normals) === false",
+                                              "raw": "\"compareArrays(primitiveNormals, XKTGeometry.normals) === false\""
                                             },
-                                            "value": "compareArrays(primitiveNormals, xktPrimitive.normals) === false"
+                                            "value": "compareArrays(primitiveNormals, XKTGeometry.normals) === false"
                                           }
                                         ]
                                       }
@@ -20049,9 +20049,9 @@
                                               "line": 256,
                                               "column": 65
                                             },
-                                            "identifierName": "xktPrimitive"
+                                            "identifierName": "XKTGeometry"
                                           },
-                                          "name": "xktPrimitive"
+                                          "name": "XKTGeometry"
                                         },
                                         "property": {
                                           "type": "Identifier",
@@ -20187,10 +20187,10 @@
                                               }
                                             },
                                             "extra": {
-                                              "rawValue": "compareArrays(primitiveIndices, xktPrimitive.indices) === false",
-                                              "raw": "\"compareArrays(primitiveIndices, xktPrimitive.indices) === false\""
+                                              "rawValue": "compareArrays(primitiveIndices, XKTGeometry.indices) === false",
+                                              "raw": "\"compareArrays(primitiveIndices, XKTGeometry.indices) === false\""
                                             },
-                                            "value": "compareArrays(primitiveIndices, xktPrimitive.indices) === false"
+                                            "value": "compareArrays(primitiveIndices, XKTGeometry.indices) === false"
                                           }
                                         ]
                                       }
@@ -20337,9 +20337,9 @@
                                               "line": 261,
                                               "column": 69
                                             },
-                                            "identifierName": "xktPrimitive"
+                                            "identifierName": "XKTGeometry"
                                           },
-                                          "name": "xktPrimitive"
+                                          "name": "XKTGeometry"
                                         },
                                         "property": {
                                           "type": "Identifier",
@@ -20475,10 +20475,10 @@
                                               }
                                             },
                                             "extra": {
-                                              "rawValue": "compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false",
-                                              "raw": "\"compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false\""
+                                              "rawValue": "compareArrays(primitiveEdgeIndices, XKTGeometry.edgeIndices) === false",
+                                              "raw": "\"compareArrays(primitiveEdgeIndices, XKTGeometry.edgeIndices) === false\""
                                             },
-                                            "value": "compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false"
+                                            "value": "compareArrays(primitiveEdgeIndices, XKTGeometry.edgeIndices) === false"
                                           }
                                         ]
                                       }
@@ -45022,7 +45022,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 5610,
       "end": 5632,
       "loc": {
@@ -45128,7 +45128,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 5638,
       "end": 5660,
       "loc": {
@@ -45233,7 +45233,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 5686,
       "end": 5708,
       "loc": {
@@ -45468,7 +45468,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "primitiveInstanceIndex",
+      "value": "meshIndex",
       "start": 5764,
       "end": 5786,
       "loc": {
@@ -52515,7 +52515,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "firstPrimitiveInstanceIndex",
+      "value": "firstmeshIndex",
       "start": 7806,
       "end": 7833,
       "loc": {
@@ -52726,7 +52726,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "lastPrimitiveInstanceIndex",
+      "value": "lastmeshIndex",
       "start": 7909,
       "end": 7935,
       "loc": {
@@ -55138,7 +55138,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "firstPrimitiveInstanceIndex",
+      "value": "firstmeshIndex",
       "start": 8768,
       "end": 8795,
       "loc": {
@@ -55243,7 +55243,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "lastPrimitiveInstanceIndex",
+      "value": "lastmeshIndex",
       "start": 8823,
       "end": 8849,
       "loc": {
@@ -61376,7 +61376,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitiveInstance",
+      "value": "XKTMesh",
       "start": 10694,
       "end": 10714,
       "loc": {
@@ -61639,7 +61639,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 10797,
       "end": 10809,
       "loc": {
@@ -61954,7 +61954,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitiveInstance",
+      "value": "XKTMesh",
       "start": 10875,
       "end": 10895,
       "loc": {
@@ -62398,7 +62398,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 11078,
       "end": 11090,
       "loc": {
@@ -62815,7 +62815,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitiveInstance",
+      "value": "XKTMesh",
       "start": 11255,
       "end": 11275,
       "loc": {
@@ -62920,7 +62920,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 11290,
       "end": 11302,
       "loc": {
@@ -63100,7 +63100,7 @@
         "binop": null,
         "updateContext": null
       },
-      "value": "xktPrimitiveInstance.primitive !== xktPrimitive",
+      "value": "XKTMesh.primitive !== XKTGeometry",
       "start": 11340,
       "end": 11389,
       "loc": {
@@ -63467,7 +63467,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 11500,
       "end": 11512,
       "loc": {
@@ -63724,7 +63724,7 @@
         "binop": null,
         "updateContext": null
       },
-      "value": "compareArrays(primitivePositions, xktPrimitive.positions) === false",
+      "value": "compareArrays(primitivePositions, XKTGeometry.positions) === false",
       "start": 11561,
       "end": 11630,
       "loc": {
@@ -64091,7 +64091,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 11739,
       "end": 11751,
       "loc": {
@@ -64348,7 +64348,7 @@
         "binop": null,
         "updateContext": null
       },
-      "value": "compareArrays(primitiveNormals, xktPrimitive.normals) === false",
+      "value": "compareArrays(primitiveNormals, XKTGeometry.normals) === false",
       "start": 11798,
       "end": 11863,
       "loc": {
@@ -64715,7 +64715,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 11972,
       "end": 11984,
       "loc": {
@@ -64972,7 +64972,7 @@
         "binop": null,
         "updateContext": null
       },
-      "value": "compareArrays(primitiveIndices, xktPrimitive.indices) === false",
+      "value": "compareArrays(primitiveIndices, XKTGeometry.indices) === false",
       "start": 12031,
       "end": 12096,
       "loc": {
@@ -65339,7 +65339,7 @@
         "postfix": false,
         "binop": null
       },
-      "value": "xktPrimitive",
+      "value": "XKTGeometry",
       "start": 12209,
       "end": 12221,
       "loc": {
@@ -65596,7 +65596,7 @@
         "binop": null,
         "updateContext": null
       },
-      "value": "compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false",
+      "value": "compareArrays(primitiveEdgeIndices, XKTGeometry.edgeIndices) === false",
       "start": 12272,
       "end": 12345,
       "loc": {

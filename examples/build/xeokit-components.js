@@ -820,11 +820,10 @@ function renderScenes() {
 window.requestAnimationFrame(frame);
 
 // Some temporary vars to help avoid garbage collection
-const FloatArrayType =  Float64Array ;
 
-const tempMat1 = new FloatArrayType(16);
-const tempMat2 = new FloatArrayType(16);
-const tempVec4 = new FloatArrayType(4);
+const tempMat1 = new Float32Array(16);
+const tempMat2 = new Float32Array(16);
+const tempVec4 = new Float32Array(4);
 
 
 /**
@@ -832,8 +831,8 @@ const tempVec4 = new FloatArrayType(4);
  */
 const math = {
 
-    MIN_DOUBLE: -Number.MAX_SAFE_INTEGER,
-    MAX_DOUBLE:  Number.MAX_SAFE_INTEGER,
+    MAX_DOUBLE: Number.MAX_VALUE,
+    MIN_DOUBLE: Number.MIN_VALUE,
 
     /**
      * The number of radiians in a degree (0.0174532925).
@@ -857,7 +856,7 @@ const math = {
      * @returns {Number[]}
      */
     vec2(values) {
-        return new FloatArrayType(values || 2);
+        return new Float32Array(values || 2);
     },
 
     /**
@@ -868,7 +867,7 @@ const math = {
      * @returns {Number[]}
      */
     vec3(values) {
-        return new FloatArrayType(values || 3);
+        return new Float32Array(values || 3);
     },
 
     /**
@@ -879,7 +878,7 @@ const math = {
      * @returns {Number[]}
      */
     vec4(values) {
-        return new FloatArrayType(values || 4);
+        return new Float32Array(values || 4);
     },
 
     /**
@@ -890,7 +889,7 @@ const math = {
      * @returns {Number[]}
      */
     mat3(values) {
-        return new FloatArrayType(values || 9);
+        return new Float32Array(values || 9);
     },
 
     /**
@@ -901,7 +900,7 @@ const math = {
      * @static
      * @returns {Number[]}
      */
-    mat3ToMat4(mat3, mat4 = new FloatArrayType(16)) {
+    mat3ToMat4(mat3, mat4 = new Float32Array(16)) {
         mat4[0] = mat3[0];
         mat4[1] = mat3[1];
         mat4[2] = mat3[2];
@@ -929,7 +928,7 @@ const math = {
      * @returns {Number[]}
      */
     mat4(values) {
-        return new FloatArrayType(values || 16);
+        return new Float32Array(values || 16);
     },
 
     /**
@@ -941,34 +940,7 @@ const math = {
      * @returns {Number[]}
      */
     mat4ToMat3(mat4, mat3) { // TODO
-        //return new FloatArrayType(values || 9);
-    },
-
-    /**
-     * Converts a list of double-precision values to a list of high-part floats and a list of low-part floats.
-     * @param doubleVals
-     * @param floatValsHigh
-     * @param floatValsLow
-     */
-    doublesToFloats(doubleVals, floatValsHigh, floatValsLow) {
-        const floatPair = new Float32Array(2);
-        for (let i = 0, len = doubleVals.length; i < len; i++) {
-            math.splitDouble(doubleVals[i], floatPair);
-            floatValsHigh[i] = floatPair[0];
-            floatValsLow[i] = floatPair[1];
-        }
-    },
-
-    /**
-     * Splits a double value into two floats.
-     * @param value
-     * @param floatPair
-     */
-    splitDouble(value, floatPair) {
-        const hi = Float32Array.from([value])[0];
-        const low = value - hi;
-        floatPair[0] = hi;
-        floatPair[1] = low;
+        //return new Float32Array(values || 9);
     },
 
     /**
@@ -977,6 +949,31 @@ const math = {
      * @static
      * @return string The new UUID
      */
+    //createUUID: function () {
+    //    // http://www.broofa.com/Tools/Math.uuid.htm
+    //    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+    //    var uuid = new Array(36);
+    //    var rnd = 0;
+    //    var r;
+    //    return function () {
+    //        for (var i = 0; i < 36; i++) {
+    //            if (i === 8 || i === 13 || i === 18 || i === 23) {
+    //                uuid[i] = '-';
+    //            } else if (i === 14) {
+    //                uuid[i] = '4';
+    //            } else {
+    //                if (rnd <= 0x02) {
+    //                    rnd = 0x2000000 + ( Math.random() * 0x1000000 ) | 0;
+    //                }
+    //                r = rnd & 0xf;
+    //                rnd = rnd >> 4;
+    //                uuid[i] = chars[( i === 19 ) ? ( r & 0x3 ) | 0x8 : r];
+    //            }
+    //        }
+    //        return uuid.join('');
+    //    };
+    //}(),
+    //
     createUUID: ((() => {
         const lut = [];
         for (let i = 0; i < 256; i++) {
@@ -1019,34 +1016,6 @@ const math = {
             a -= b;
         }
         return a;
-    },
-
-    /**
-     * Returns true if the two 3-element vectors are the same.
-     * @param v1
-     * @param v2
-     * @returns {boolean}
-     */
-    compareVec3(v1, v2) {
-        return (v1[0] === v2[0] && v1[1] === v2[1] && v1[2] === v2[2]);
-    },
-
-    /**
-     * Negates a three-element vector.
-     * @method negateVec3
-     * @static
-     * @param {Array(Number)} v Vector to negate
-     * @param  {Array(Number)} [dest] Destination vector
-     * @return {Array(Number)} dest if specified, v otherwise
-     */
-    negateVec3(v, dest) {
-        if (!dest) {
-            dest = v;
-        }
-        dest[0] = -v[0];
-        dest[1] = -v[1];
-        dest[2] = -v[2];
-        return dest;
     },
 
     /**
@@ -1201,24 +1170,6 @@ const math = {
         dest[0] = u[0] - v[0];
         dest[1] = u[1] - v[1];
         return dest;
-    },
-
-    /**
-     * Get the geometric mean of the vectors.
-     * @method geometricMeanVec2
-     * @static
-     * @param {...Array(Number)} vectors Vec2 to mean
-     * @return {Array(Number)} The geometric mean vec2
-     */
-    geometricMeanVec2(...vectors) {
-        const geometricMean = new FloatArrayType(vectors[0]);
-        for (let i = 1; i < vectors.length; i++) {
-            geometricMean[0] += vectors[i][0];
-            geometricMean[1] += vectors[i][1];
-        }
-        geometricMean[0] /= vectors.length;
-        geometricMean[1] /= vectors.length;
-        return geometricMean;
     },
 
     /**
@@ -1576,7 +1527,7 @@ const math = {
     },
 
     distVec3: ((() => {
-        const vec = new FloatArrayType(3);
+        const vec = new Float32Array(3);
         return (v, w) => math.lenVec3(math.subVec3(v, w, vec));
     }))(),
 
@@ -1592,7 +1543,7 @@ const math = {
     },
 
     distVec2: ((() => {
-        const vec = new FloatArrayType(2);
+        const vec = new Float32Array(2);
         return (v, w) => math.lenVec2(math.subVec2(v, w, vec));
     }))(),
 
@@ -1662,7 +1613,7 @@ const math = {
      */
     vec3FromMat4Scale: ((() => {
 
-        const tempVec3 = new FloatArrayType(3);
+        const tempVec3 = new Float32Array(3);
 
         return (m, dest) => {
 
@@ -1722,7 +1673,7 @@ const math = {
      * @returns {*[]}
      */
     xyzObjectToArray(xyz, arry) {
-        arry = arry || new FloatArrayType(3);
+        arry = arry || new Float32Array(3);
         arry[0] = xyz.x;
         arry[1] = xyz.y;
         arry[2] = xyz.z;
@@ -1789,7 +1740,7 @@ const math = {
      * @static
      */
     diagonalMat4v(v) {
-        return new FloatArrayType([
+        return new Float32Array([
             v[0], 0.0, 0.0, 0.0,
             0.0, v[1], 0.0, 0.0,
             0.0, 0.0, v[2], 0.0,
@@ -1820,7 +1771,7 @@ const math = {
      * @method identityMat4
      * @static
      */
-    identityMat4(mat = new FloatArrayType(16)) {
+    identityMat4(mat = new Float32Array(16)) {
         mat[0] = 1.0;
         mat[1] = 0.0;
         mat[2] = 0.0;
@@ -1849,7 +1800,7 @@ const math = {
      * @method identityMat3
      * @static
      */
-    identityMat3(mat = new FloatArrayType(9)) {
+    identityMat3(mat = new Float32Array(9)) {
         mat[0] = 1.0;
         mat[1] = 0.0;
         mat[2] = 0.0;
@@ -2129,7 +2080,7 @@ const math = {
      */
     mulMat3(a, b, dest) {
         if (!dest) {
-            dest = new FloatArrayType(9);
+            dest = new Float32Array(9);
         }
 
         const a11 = a[0];
@@ -2432,7 +2383,7 @@ const math = {
      * @static
      */
     translationMat4c: ((() => {
-        const xyz = new FloatArrayType(3);
+        const xyz = new Float32Array(3);
         return (x, y, z, dest) => {
             xyz[0] = x;
             xyz[1] = y;
@@ -2515,40 +2466,6 @@ const math = {
 
         return m;
     },
-
-    /**
-     * Creates a new matrix that replaces the translation in the rightmost column of the given
-     * affine matrix with the given translation.
-     * @param m
-     * @param translation
-     * @param dest
-     * @returns {*}
-     */
-    setMat4Translation(m, translation, dest) {
-
-        dest[0] = m[0];
-        dest[1] = m[1];
-        dest[2] = m[2];
-        dest[3] = m[3];
-
-        dest[4] = m[4];
-        dest[5] = m[5];
-        dest[6] = m[6];
-        dest[7] = m[7];
-
-        dest[8] = m[8];
-        dest[9] = m[9];
-        dest[10] = m[10];
-        dest[11] = m[11];
-
-        dest[12] = translation[0];
-        dest[13] = translation[1];
-        dest[14] = translation[2];
-        dest[15] = m[15];
-
-        return dest;
-    },
-
     /**
      * Returns 4x4 rotation matrix.
      * @method rotationMat4v
@@ -2644,7 +2561,7 @@ const math = {
      * @static
      */
     scalingMat4c: ((() => {
-        const xyz = new FloatArrayType(3);
+        const xyz = new Float32Array(3);
         return (x, y, z, dest) => {
             xyz[0] = x;
             xyz[1] = y;
@@ -2876,8 +2793,8 @@ const math = {
 
     decomposeMat4: (() => {
 
-        const vec = new FloatArrayType(3);
-        const matrix = new FloatArrayType(16);
+        const vec = new Float32Array(3);
+        const matrix = new Float32Array(16);
 
         return function decompose(mat, position, quaternion, scale) {
 
@@ -2940,20 +2857,6 @@ const math = {
         };
 
     })(),
-
-    /** @private */
-    getColMat4(mat, c) {
-        const i = c * 4;
-        return [mat[i], mat[i + 1], mat[i + 2], mat[i + 3]];
-    },
-
-    /** @private */
-    setRowMat4(mat, r, v) {
-        mat[r] = v[0];
-        mat[r + 4] = v[1];
-        mat[r + 8] = v[2];
-        mat[r + 12] = v[3];
-    },
 
     /**
      * Returns a 4x4 'lookat' viewing transform matrix.
@@ -3565,9 +3468,9 @@ const math = {
      * @static
      */
     unprojectVec3: ((() => {
-        const mat = new FloatArrayType(16);
-        const mat2 = new FloatArrayType(16);
-        const mat3 = new FloatArrayType(16);
+        const mat = new Float32Array(16);
+        const mat2 = new Float32Array(16);
+        const mat3 = new Float32Array(16);
         return function (p, viewMat, projMat, q) {
             return this.transformVec3(this.mulMat4(this.inverseMat4(viewMat, mat), this.inverseMat4(projMat, mat2), mat3), p, q)
         };
@@ -3826,7 +3729,7 @@ const math = {
     },
 
     quaternionToEuler: ((() => {
-        const mat = new FloatArrayType(16);
+        const mat = new Float32Array(16);
         return (q, order, dest) => {
             dest = dest || math.vec3();
             math.quaternionToRotationMat4(q, mat);
@@ -4012,7 +3915,7 @@ const math = {
      * @private
      */
     AABB3(values) {
-        return new FloatArrayType(values || 6);
+        return new Float32Array(values || 6);
     },
 
     /**
@@ -4021,7 +3924,7 @@ const math = {
      * @private
      */
     AABB2(values) {
-        return new FloatArrayType(values || 4);
+        return new Float32Array(values || 4);
     },
 
     /**
@@ -4030,7 +3933,7 @@ const math = {
      * @private
      */
     OBB3(values) {
-        return new FloatArrayType(values || 32);
+        return new Float32Array(values || 32);
     },
 
     /**
@@ -4039,12 +3942,12 @@ const math = {
      * @private
      */
     OBB2(values) {
-        return new FloatArrayType(values || 16);
+        return new Float32Array(values || 16);
     },
 
     /** Returns a new 3D bounding sphere */
     Sphere3(x, y, z, r) {
-        return new FloatArrayType([x, y, z, r]);
+        return new Float32Array([x, y, z, r]);
     },
 
     /**
@@ -4092,20 +3995,6 @@ const math = {
         return p2;
     },
 
-    /** Returns true if the first AABB contains the second AABB.
-     * @param aabb1
-     * @param aabb2
-     * @returns {boolean}
-     */
-    containsAABB3: function (aabb1, aabb2) {
-        const result = (
-            aabb1[0] <= aabb2[0] && aabb2[3] <= aabb1[3] &&
-            aabb1[1] <= aabb2[1] && aabb2[4] <= aabb1[4] &&
-            aabb1[2] <= aabb2[2] && aabb2[5] <= aabb1[5]);
-        return result;
-    },
-
-
     /**
      * Gets the diagonal size of an AABB3 given as minima and maxima.
      *
@@ -4113,9 +4002,9 @@ const math = {
      */
     getAABB3Diag: ((() => {
 
-        const min = new FloatArrayType(3);
-        const max = new FloatArrayType(3);
-        const tempVec3 = new FloatArrayType(3);
+        const min = new Float32Array(3);
+        const max = new Float32Array(3);
+        const tempVec3 = new Float32Array(3);
 
         return aabb => {
 
@@ -4140,9 +4029,9 @@ const math = {
      */
     getAABB3DiagPoint: ((() => {
 
-        const min = new FloatArrayType(3);
-        const max = new FloatArrayType(3);
-        const tempVec3 = new FloatArrayType(3);
+        const min = new Float32Array(3);
+        const max = new Float32Array(3);
+        const tempVec3 = new Float32Array(3);
 
         return (aabb, p) => {
 
@@ -4222,9 +4111,9 @@ const math = {
         aabb[0] = math.MAX_DOUBLE;
         aabb[1] = math.MAX_DOUBLE;
         aabb[2] = math.MAX_DOUBLE;
-        aabb[3] = math.MIN_DOUBLE;
-        aabb[4] = math.MIN_DOUBLE;
-        aabb[5] = math.MIN_DOUBLE;
+        aabb[3] = -math.MAX_DOUBLE;
+        aabb[4] = -math.MAX_DOUBLE;
+        aabb[5] = -math.MAX_DOUBLE;
 
         return aabb;
     },
@@ -4294,9 +4183,9 @@ const math = {
             let xmin = math.MAX_DOUBLE;
             let ymin = math.MAX_DOUBLE;
             let zmin = math.MAX_DOUBLE;
-            let xmax = math.MIN_DOUBLE;
-            let ymax = math.MIN_DOUBLE;
-            let zmax = math.MIN_DOUBLE;
+            let xmax = -math.MAX_DOUBLE;
+            let ymax = -math.MAX_DOUBLE;
+            let zmax = -math.MAX_DOUBLE;
 
             let x;
             let y;
@@ -4367,9 +4256,9 @@ const math = {
         let xmin = math.MAX_DOUBLE;
         let ymin = math.MAX_DOUBLE;
         let zmin = math.MAX_DOUBLE;
-        let xmax = math.MIN_DOUBLE;
-        let ymax = math.MIN_DOUBLE;
-        let zmax = math.MIN_DOUBLE;
+        let xmax = -math.MAX_DOUBLE;
+        let ymax = -math.MAX_DOUBLE;
+        let zmax = -math.MAX_DOUBLE;
 
         let x;
         let y;
@@ -4425,9 +4314,9 @@ const math = {
         let xmin = math.MAX_DOUBLE;
         let ymin = math.MAX_DOUBLE;
         let zmin = math.MAX_DOUBLE;
-        let xmax = math.MIN_DOUBLE;
-        let ymax = math.MIN_DOUBLE;
-        let zmax = math.MIN_DOUBLE;
+        let xmax = -math.MAX_DOUBLE;
+        let ymax = -math.MAX_DOUBLE;
+        let zmax = -math.MAX_DOUBLE;
 
         let x;
         let y;
@@ -4756,57 +4645,14 @@ const math = {
     collapseAABB2(aabb = math.AABB2()) {
         aabb[0] = math.MAX_DOUBLE;
         aabb[1] = math.MAX_DOUBLE;
-        aabb[2] = math.MIN_DOUBLE;
-        aabb[3] = math.MIN_DOUBLE;
+        aabb[2] = -math.MAX_DOUBLE;
+        aabb[3] = -math.MAX_DOUBLE;
 
         return aabb;
     },
 
     point3AABB3Intersect(aabb, p) {
         return aabb[0] > p[0] || aabb[3] < p[0] || aabb[1] > p[1] || aabb[4] < p[1] || aabb[2] > p[2] || aabb[5] < p[2];
-    },
-
-    /**
-     * 
-     * @param dir
-     * @param constant
-     * @param aabb
-     * @returns {number}
-     */
-    planeAABB3Intersect(dir, constant, aabb) {
-        let min, max;
-        if (dir[0] > 0) {
-            min = dir[0] * aabb[0];
-            max = dir[0] * aabb[3];
-        } else {
-            min = dir[0] * aabb[3];
-            max = dir[0] * aabb[0];
-        }
-        if (dir[1] > 0) {
-            min += dir[1] * aabb[1];
-            max += dir[1] * aabb[4];
-        } else {
-            min += dir[1] * aabb[4];
-            max += dir[1] * aabb[1];
-        }
-        if (dir[2] > 0) {
-            min += dir[2] * aabb[2];
-            max += dir[2] * aabb[5];
-        } else {
-            min += dir[2] * aabb[5];
-            max += dir[2] * aabb[2];
-        }
-        const outside = (min <= -constant) && (max <= -constant);
-        if (outside) {
-            return -1;
-        }
-
-        const inside = (min >= -constant) && (max >= -constant);
-        if (inside) {
-            return 1;
-        }
-
-        return 0;
     },
 
     /**
@@ -4817,8 +4663,8 @@ const math = {
     OBB3ToAABB2(points, aabb = math.AABB2()) {
         let xmin = math.MAX_DOUBLE;
         let ymin = math.MAX_DOUBLE;
-        let xmax = math.MIN_DOUBLE;
-        let ymax = math.MIN_DOUBLE;
+        let xmax = -math.MAX_DOUBLE;
+        let ymax = -math.MAX_DOUBLE;
 
         let x;
         let y;
@@ -6139,7 +5985,6 @@ math.buildEdgeIndices = (function () {
  *
  * We can then find those components like this:
  *
- * ````javascript
  * // Find the Material
  * var material = viewer.scene.components["myMaterial"];
  *
@@ -6149,20 +5994,6 @@ math.buildEdgeIndices = (function () {
  * // Find our Material within the PhongMaterials
  * var materialAgain = phongMaterials["myMaterial"];
  * ````
- *
- * ## Restriction on IDs
- *
- * Auto-generated IDs are of the form ````"__0"````, ````"__1"````, ````"__2"```` ... and so on.
- *
- * Scene maintains a map of these IDs, along with a counter that it increments each time it generates a new ID.
- *
- * If Scene has created the IDs listed above, and we then destroy the ````Component```` with ID ````"__1"````,
- * Scene will mark that ID as available, and will reuse it for the next default ID.
- *
- * Therefore, two restrictions your on IDs:
- *
- * * don't use IDs that begin with two underscores, and
- * * don't reuse auto-generated IDs of destroyed Components.
  *
  * ## Logging
  *
@@ -6264,7 +6095,6 @@ class Component {
          @type Object
          */
         this.meta = cfg.meta || {};
-
 
         /**
          * ID of this Component, unique within the {@link Scene}.
@@ -6987,6 +6817,202 @@ class Component {
     }
 }
 
+/*
+ * Canvas2Image v0.1
+ * Copyright (c) 2008 Jacob Seidelin, cupboy@gmail.com
+ * MIT License [http://www.opensource.org/licenses/mit-license.php]
+ */
+
+/**
+ * @private
+ */
+const Canvas2Image = (function () {
+    // check if we have canvas support
+    const oCanvas = document.createElement("canvas"), sc = String.fromCharCode;
+
+    // no canvas, bail out.
+    if (!oCanvas.getContext) {
+        return {
+            saveAsBMP: function () {
+            },
+            saveAsPNG: function () {
+            },
+            saveAsJPEG: function () {
+            }
+        }
+    }
+
+    const bHasImageData = !!(oCanvas.getContext("2d").getImageData), bHasDataURL = !!(oCanvas.toDataURL), bHasBase64 = !!(window.btoa);
+
+    // ok, we're good
+    const readCanvasData = function (oCanvas) {
+        const iWidth = parseInt(oCanvas.width), iHeight = parseInt(oCanvas.height);
+        return oCanvas.getContext("2d").getImageData(0, 0, iWidth, iHeight);
+    };
+
+    // base64 encodes either a string or an array of charcodes
+    const encodeData = function (data) {
+        let i, aData, strData = "";
+
+        if (typeof data == "string") {
+            strData = data;
+        } else {
+            aData = data;
+            for (i = 0; i < aData.length; i++) {
+                strData += sc(aData[i]);
+            }
+        }
+        return btoa(strData);
+    };
+
+    // creates a base64 encoded string containing BMP data takes an imagedata object as argument
+    const createBMP = function (oData) {
+        let strHeader = '';
+        const iWidth = oData.width;
+        const iHeight = oData.height;
+
+        strHeader += 'BM';
+
+        let iFileSize = iWidth * iHeight * 4 + 54; // total header size = 54 bytes
+        strHeader += sc(iFileSize % 256);
+        iFileSize = Math.floor(iFileSize / 256);
+        strHeader += sc(iFileSize % 256);
+        iFileSize = Math.floor(iFileSize / 256);
+        strHeader += sc(iFileSize % 256);
+        iFileSize = Math.floor(iFileSize / 256);
+        strHeader += sc(iFileSize % 256);
+
+        strHeader += sc(0, 0, 0, 0, 54, 0, 0, 0); // data offset
+        strHeader += sc(40, 0, 0, 0); // info header size
+
+        let iImageWidth = iWidth;
+        strHeader += sc(iImageWidth % 256);
+        iImageWidth = Math.floor(iImageWidth / 256);
+        strHeader += sc(iImageWidth % 256);
+        iImageWidth = Math.floor(iImageWidth / 256);
+        strHeader += sc(iImageWidth % 256);
+        iImageWidth = Math.floor(iImageWidth / 256);
+        strHeader += sc(iImageWidth % 256);
+
+        let iImageHeight = iHeight;
+        strHeader += sc(iImageHeight % 256);
+        iImageHeight = Math.floor(iImageHeight / 256);
+        strHeader += sc(iImageHeight % 256);
+        iImageHeight = Math.floor(iImageHeight / 256);
+        strHeader += sc(iImageHeight % 256);
+        iImageHeight = Math.floor(iImageHeight / 256);
+        strHeader += sc(iImageHeight % 256);
+
+        strHeader += sc(1, 0, 32, 0); // num of planes & num of bits per pixel
+        strHeader += sc(0, 0, 0, 0); // compression = none
+
+        let iDataSize = iWidth * iHeight * 4;
+        strHeader += sc(iDataSize % 256);
+        iDataSize = Math.floor(iDataSize / 256);
+        strHeader += sc(iDataSize % 256);
+        iDataSize = Math.floor(iDataSize / 256);
+        strHeader += sc(iDataSize % 256);
+        iDataSize = Math.floor(iDataSize / 256);
+        strHeader += sc(iDataSize % 256);
+
+        strHeader += sc(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); // these bytes are not used
+
+        const aImgData = oData.data;
+        let strPixelData = "";
+        let x;
+        let y = iHeight;
+        let iOffsetX;
+        let iOffsetY;
+        let strPixelRow;
+
+        do {
+            iOffsetY = iWidth * (y - 1) * 4;
+            strPixelRow = "";
+            for (x = 0; x < iWidth; x++) {
+                iOffsetX = 4 * x;
+                strPixelRow += sc(
+                    aImgData[iOffsetY + iOffsetX + 2], // B
+                    aImgData[iOffsetY + iOffsetX + 1], // G
+                    aImgData[iOffsetY + iOffsetX],     // R
+                    aImgData[iOffsetY + iOffsetX + 3]  // A
+                );
+            }
+            strPixelData += strPixelRow;
+        } while (--y);
+
+        return encodeData(strHeader + strPixelData);
+    };
+
+    // sends the generated file to the client
+    const saveFile = function (strData) {
+        if (!window.open(strData)) {
+            document.location.href = strData;
+        }
+    };
+
+    const makeDataURI = function (strData, strMime) {
+        return "data:" + strMime + ";base64," + strData;
+    };
+
+    // generates a <img> object containing the imagedata
+    const makeImageObject = function (strSource) {
+        const oImgElement = document.createElement("img");
+        oImgElement.src = strSource;
+        return oImgElement;
+    };
+
+    const scaleCanvas = function (oCanvas, iWidth, iHeight) {
+        if (iWidth && iHeight) {
+            const oSaveCanvas = document.createElement("canvas");
+            oSaveCanvas.width = iWidth;
+            oSaveCanvas.height = iHeight;
+            oSaveCanvas.style.width = iWidth + "px";
+            oSaveCanvas.style.height = iHeight + "px";
+            const oSaveCtx = oSaveCanvas.getContext("2d");
+            oSaveCtx.drawImage(oCanvas, 0, 0, oCanvas.width, oCanvas.height, 0, 0, iWidth, iHeight);
+            return oSaveCanvas;
+        }
+        return oCanvas;
+    };
+
+    return {
+        saveAsPNG: function (oCanvas, bReturnImg, iWidth, iHeight) {
+            if (!bHasDataURL) return false;
+            const oScaledCanvas = scaleCanvas(oCanvas, iWidth, iHeight), strMime = "image/png", strData = oScaledCanvas.toDataURL(strMime);
+            if (bReturnImg) {
+                return makeImageObject(strData);
+            } else {
+                saveFile( strData);
+            }
+            return true;
+        },
+
+        saveAsJPEG: function (oCanvas, bReturnImg, iWidth, iHeight) {
+            if (!bHasDataURL) return false;
+            const oScaledCanvas = scaleCanvas(oCanvas, iWidth, iHeight), strMime = "image/jpeg", strData = oScaledCanvas.toDataURL(strMime);
+            // check if browser actually supports jpeg by looking for the mime type in the data uri. if not, return false
+            if (strData.indexOf(strMime) != 5) return false;
+            if (bReturnImg) {
+                return makeImageObject(strData);
+            } else {
+                saveFile( strData);
+            }
+            return true;
+        },
+
+        saveAsBMP: function (oCanvas, bReturnImg, iWidth, iHeight) {
+            if (!(bHasDataURL && bHasImageData && bHasBase64)) return false;
+            const oScaledCanvas = scaleCanvas(oCanvas, iWidth, iHeight), strMime = "image/bmp", oData = readCanvasData(oScaledCanvas), strImgData = createBMP(oData);
+            if (bReturnImg) {
+                return makeImageObject(makeDataURI(strImgData, strMime));
+            } else {
+                saveFile(makeDataURI(strImgData, strMime));
+            }
+            return true;
+        }
+    };
+})();
+
 const defaultCSS = ".sk-fading-circle {\
         background: transparent;\
         margin: 20px auto;\
@@ -7704,6 +7730,37 @@ class Canvas extends Component {
     }
 
     /**
+     * Called by Viewer#getSnapshot
+     * @private
+     * @param params
+     * @returns {*}
+     * @private
+     */
+    _getSnapshot(params) {
+        params = params || {};
+        const width = params.width || this.canvas.width;
+        const height = params.height || this.canvas.height;
+        const format = params.format || "jpeg";
+        let image;
+        switch (format) {
+            case "jpeg":
+                image = Canvas2Image.saveAsJPEG(this.canvas, true, width, height);
+                break;
+            case "png":
+                image = Canvas2Image.saveAsPNG(this.canvas, true, width, height);
+                break;
+            case "bmp":
+                image = Canvas2Image.saveAsBMP(this.canvas, true, width, height);
+                break;
+            default:
+                this.error("Unsupported snapshot format: '" + format
+                    + "' - supported types are 'jpeg', 'bmp' and 'png' - defaulting to 'jpeg'");
+                image = Canvas2Image.saveAsJPEG(this.canvas, true, width, height);
+        }
+        return image.src;
+    }
+
+    /**
      * Reads colors of pixels from the last rendered frame.
      *
      * Call this method like this:
@@ -7755,74 +7812,19 @@ class Canvas extends Component {
         // Memory leak avoidance
         this.canvas.removeEventListener("webglcontextlost", this._webglcontextlostListener);
         this.canvas.removeEventListener("webglcontextrestored", this._webglcontextrestoredListener);
+        this.canvas = null;
         this.gl = null;
         super.destroy();
     }
 }
 
-const tempVec3a = math.vec3();
-
 /**
- * Given a view matrix and a relative-to-center (RTC) coordinate origin, returns a view matrix
- * to transform RTC coordinates to View-space.
- *
- * The returned view matrix is
- *
- * @private
- */
-const createRTCViewMat = (function () {
-
-    const tempMat = new Float32Array(16);
-    const rtcCenterWorld = new Float64Array(4);
-    const rtcCenterView = new Float64Array(4);
-
-    return function (viewMat, rtcCenter, rtcViewMat = tempMat) {
-        rtcCenterWorld[0] = rtcCenter[0];
-        rtcCenterWorld[1] = rtcCenter[1];
-        rtcCenterWorld[2] = rtcCenter[2];
-        rtcCenterWorld[3] = 1;
-        math.transformVec4(viewMat, rtcCenterWorld, rtcCenterView);
-        math.setMat4Translation(viewMat, rtcCenterView, rtcViewMat);
-        return rtcViewMat;
-    }
-}());
-
-/**
- * Given a 3D plane defined by distance from origin and direction, and an RTC center position,
- * return a plane position that is relative to the RTC center.
- *
- * @param dist
- * @param dir
- * @param rtcCenter
- * @param rtcPlanePos
- * @returns {*}
- */
-function getPlaneRTCPos(dist, dir, rtcCenter, rtcPlanePos) {
-    const rtcCenterToPlaneDist = math.dotVec3(dir, rtcCenter) + dist;
-    const dirNormalized = math.normalizeVec3(dir, tempVec3a);
-    math.mulVec3Scalar(dirNormalized, -rtcCenterToPlaneDist, rtcPlanePos);
-    return rtcPlanePos;
-}
-
-/**
- * @desc Provides rendering context to {@link Drawable"}s as xeokit renders them for a frame.
- *
- * Also creates RTC viewing and picking matrices, caching and reusing matrices within each frame.
- *
+ * @desc Provides rendering context to {@link Drawable"}}Drawables{{/crossLink}} as xeokit renders them for a frame.
  * @private
  */
 class FrameContext {
 
-    constructor(scene) {
-
-        this._scene = scene;
-
-        this._matPool = [];
-        this._matPoolNextFreeIndex = 0;
-
-        this._rtcViewMats = {};
-        this._rtcPickViewMats = {};
-
+    constructor() {
         this.reset();
     }
 
@@ -7832,23 +7834,12 @@ class FrameContext {
      */
     reset() {
 
-        this._matPoolNextFreeIndex = 0;
-        this._rtcViewMats = {};
-        this._rtcPickViewMats = {};
-
         /**
          * ID of the last {@link webgl.Program} that was bound during the current frame.
          * @property lastProgramId
          * @type {Number}
          */
         this.lastProgramId = null;
-
-        /**
-         * The last RTC center that was used during the current frame.
-         * @property lastRTCCenter
-         * @type {Number[]}
-         */
-        this.lastRTCCenter = null;
 
         /**
          * Whether SAO is currently enabled during the current frame.
@@ -7990,259 +7981,140 @@ class FrameContext {
          */
         this.lineWidth = 1;
     }
-
-    /**
-     * Get View matrix for the given RTC center.
-     */
-    getRTCViewMatrix(rtcCenterHash, rtcCenter) {
-        let rtcViewMat = this._rtcViewMats[rtcCenterHash];
-        if (!rtcViewMat) {
-            rtcViewMat = this._getNewMat();
-            createRTCViewMat(this._scene.camera.viewMatrix, rtcCenter, rtcViewMat);
-            this._rtcViewMats[rtcCenterHash] = rtcViewMat;
-        }
-        return rtcViewMat;
-    }
-
-    /**
-     * Get picking View RTC matrix for the given RTC center.
-     */
-    getRTCPickViewMatrix(rtcCenterHash, rtcCenter) {
-        let rtcPickViewMat = this._rtcPickViewMats[rtcCenterHash];
-        if (!rtcPickViewMat) {
-            rtcPickViewMat = this._getNewMat();
-            const pickViewMat = this.pickViewMatrix || this._scene.camera.viewMatrix;
-            createRTCViewMat(pickViewMat, rtcCenter, rtcPickViewMat);
-            this._rtcPickViewMats[rtcCenterHash] = rtcPickViewMat;
-        }
-        return rtcPickViewMat;
-    }
-
-    _getNewMat() {
-        let mat = this._matPool[this._matPoolNextFreeIndex];
-        if (!mat) {
-            mat = math.mat4();
-            this._matPool[this._matPoolNextFreeIndex] = mat;
-        }
-        this._matPoolNextFreeIndex++;
-        return mat;
-    }
 }
 
-/*
- * Canvas2Image v0.1
- * Copyright (c) 2008 Jacob Seidelin, cupboy@gmail.com
- * MIT License [http://www.opensource.org/licenses/mit-license.php]
- *
- * Modified by @xeolabs to permit vertical flipping, so that snapshot can be taken from WebGL frame buffers,
- * which vertically flip image data as part of the way that WebGL renders textures.
- */
-
 /**
+ * @desc Passed to each {@link Drawable#getRenderFlags} method as xeokit is about to render it, to query what rendering methods xeokit should call on the {@link Drawable} to render it.
  * @private
  */
-const Canvas2Image = (function () {
-    // check if we have canvas support
-    const oCanvas = document.createElement("canvas"), sc = String.fromCharCode;
+class RenderFlags {
 
-    // no canvas, bail out.
-    if (!oCanvas.getContext) {
-        return {
-            saveAsBMP: function () {
-            },
-            saveAsPNG: function () {
-            },
-            saveAsJPEG: function () {
-            }
-        }
+    /**
+     * @private
+     */
+    constructor() {
+        this.reset();
     }
 
-    const bHasImageData = !!(oCanvas.getContext("2d").getImageData), bHasDataURL = !!(oCanvas.toDataURL),
-        bHasBase64 = !!(window.btoa);
+    /**
+     * @private
+     */
+    reset() {
 
-    // ok, we're good
-    const readCanvasData = function (oCanvas) {
-        const iWidth = parseInt(oCanvas.width), iHeight = parseInt(oCanvas.height);
-        return oCanvas.getContext("2d").getImageData(0, 0, iWidth, iHeight);
-    };
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillOpaque}.
+         * @property normalFillOpaque
+         * @type {boolean}
+         */
+        this.normalFillOpaque = false;
 
-    // base64 encodes either a string or an array of charcodes
-    const encodeData = function (data) {
-        let i, aData, strData = "";
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesOpaque}.
+         * @property normalEdgesOpaque
+         * @type {boolean}
+         */
+        this.normalEdgesOpaque = false;
 
-        if (typeof data == "string") {
-            strData = data;
-        } else {
-            aData = data;
-            for (i = 0; i < aData.length; i++) {
-                strData += sc(aData[i]);
-            }
-        }
-        return btoa(strData);
-    };
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillTransparent}.
+         * @property normalFillTransparent
+         * @type {boolean}
+         */
+        this.normalFillTransparent = false;
 
-    // creates a base64 encoded string containing BMP data takes an imagedata object as argument
-    const createBMP = function (oData) {
-        let strHeader = '';
-        const iWidth = oData.width;
-        const iHeight = oData.height;
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesTransparent}.
+         * @property normalEdgesTransparent
+         * @type {boolean}
+         */
+        this.normalEdgesTransparent = false;
 
-        strHeader += 'BM';
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillOpaque}.
+         * @property xrayedFillOpaque
+         * @type {boolean}
+         */
+        this.xrayedFillOpaque = false;
 
-        let iFileSize = iWidth * iHeight * 4 + 54; // total header size = 54 bytes
-        strHeader += sc(iFileSize % 256);
-        iFileSize = Math.floor(iFileSize / 256);
-        strHeader += sc(iFileSize % 256);
-        iFileSize = Math.floor(iFileSize / 256);
-        strHeader += sc(iFileSize % 256);
-        iFileSize = Math.floor(iFileSize / 256);
-        strHeader += sc(iFileSize % 256);
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedEdgesOpaque}.
+         * @property xrayedEdgesOpaque
+         * @type {boolean}
+         */
+        this.xrayedEdgesOpaque = false;
 
-        strHeader += sc(0, 0, 0, 0, 54, 0, 0, 0); // data offset
-        strHeader += sc(40, 0, 0, 0); // info header size
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillTransparent}.
+         * @property xrayedFillTransparent
+         * @type {boolean}
+         */
+        this.xrayedFillTransparent = false;
 
-        let iImageWidth = iWidth;
-        strHeader += sc(iImageWidth % 256);
-        iImageWidth = Math.floor(iImageWidth / 256);
-        strHeader += sc(iImageWidth % 256);
-        iImageWidth = Math.floor(iImageWidth / 256);
-        strHeader += sc(iImageWidth % 256);
-        iImageWidth = Math.floor(iImageWidth / 256);
-        strHeader += sc(iImageWidth % 256);
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #xrayedEdgesTransparent}.
+         * @property xrayedEdgesTransparent
+         * @type {boolean}
+         */
+        this.xrayedEdgesTransparent = false;
 
-        let iImageHeight = iHeight;
-        strHeader += sc(iImageHeight % 256);
-        iImageHeight = Math.floor(iImageHeight / 256);
-        strHeader += sc(iImageHeight % 256);
-        iImageHeight = Math.floor(iImageHeight / 256);
-        strHeader += sc(iImageHeight % 256);
-        iImageHeight = Math.floor(iImageHeight / 256);
-        strHeader += sc(iImageHeight % 256);
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawHighlightedFillOpaque}.
+         * @property highlightedFillOpaque
+         * @type {boolean}
+         */
+        this.highlightedFillOpaque = false;
 
-        strHeader += sc(1, 0, 32, 0); // num of planes & num of bits per pixel
-        strHeader += sc(0, 0, 0, 0); // compression = none
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesOpaque}.
+         * @property highlightedEdgesOpaque
+         * @type {boolean}
+         */
+        this.highlightedEdgesOpaque = false;
 
-        let iDataSize = iWidth * iHeight * 4;
-        strHeader += sc(iDataSize % 256);
-        iDataSize = Math.floor(iDataSize / 256);
-        strHeader += sc(iDataSize % 256);
-        iDataSize = Math.floor(iDataSize / 256);
-        strHeader += sc(iDataSize % 256);
-        iDataSize = Math.floor(iDataSize / 256);
-        strHeader += sc(iDataSize % 256);
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedFillTransparent}.
+         * @property highlightedFillTransparent
+         * @type {boolean}
+         */
+        this.highlightedFillTransparent = false;
 
-        strHeader += sc(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); // these bytes are not used
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesTransparent}.
+         * @property highlightedEdgesTransparent
+         * @type {boolean}
+         */
+        this.highlightedEdgesTransparent = false;
 
-        const aImgData = oData.data;
-        let strPixelData = "";
-        let x;
-        let y = iHeight;
-        let iOffsetX;
-        let iOffsetY;
-        let strPixelRow;
 
-        do {
-            iOffsetY = iWidth * (y - 1) * 4;
-            strPixelRow = "";
-            for (x = 0; x < iWidth; x++) {
-                iOffsetX = 4 * x;
-                strPixelRow += sc(
-                    aImgData[iOffsetY + iOffsetX + 2], // B
-                    aImgData[iOffsetY + iOffsetX + 1], // G
-                    aImgData[iOffsetY + iOffsetX],     // R
-                    aImgData[iOffsetY + iOffsetX + 3]  // A
-                );
-            }
-            strPixelData += strPixelRow;
-        } while (--y);
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillOpaque}.
+         * @property selectedFillOpaque
+         * @type {boolean}
+         */
+        this.selectedFillOpaque = false;
 
-        return encodeData(strHeader + strPixelData);
-    };
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesOpaque}.
+         * @property selectedEdgesOpaque
+         * @type {boolean}
+         */
+        this.selectedEdgesOpaque = false;
 
-    // sends the generated file to the client
-    const saveFile = function (strData) {
-        if (!window.open(strData)) {
-            document.location.href = strData;
-        }
-    };
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillTransparent}.
+         * @property selectedFillTransparent
+         * @type {boolean}
+         */
+        this.selectedFillTransparent = false;
 
-    const makeDataURI = function (strData, strMime) {
-        return "data:" + strMime + ";base64," + strData;
-    };
-
-    // generates a <img> object containing the imagedata
-    const makeImageObject = function (strSource) {
-        const oImgElement = document.createElement("img");
-        oImgElement.src = strSource;
-        return oImgElement;
-    };
-
-    const scaleCanvas = function (oCanvas, iWidth, iHeight, flipy) {
-        if (iWidth && iHeight) {
-            const oSaveCanvas = document.createElement("canvas");
-            oSaveCanvas.width = iWidth;
-            oSaveCanvas.height = iHeight;
-            oSaveCanvas.style.width = iWidth + "px";
-            oSaveCanvas.style.height = iHeight + "px";
-            const oSaveCtx = oSaveCanvas.getContext("2d");
-            if (flipy) {
-                oSaveCtx.save();
-                oSaveCtx.scale(1.0, -1.0);
-                oSaveCtx.imageSmoothingEnabled = true;
-                oSaveCtx.drawImage(oCanvas, 0, 0, oCanvas.width, oCanvas.height, 0, 0, iWidth, -iHeight);
-                oSaveCtx.restore();
-            } else {
-                oSaveCtx.imageSmoothingEnabled = true;
-                oSaveCtx.drawImage(oCanvas, 0, 0, oCanvas.width, oCanvas.height, 0, 0, iWidth, iHeight);
-            }
-            return oSaveCanvas;
-        }
-        return oCanvas;
-    };
-
-    return {
-        saveAsPNG: function (oCanvas, bReturnImg, iWidth, iHeight, flipy) {
-            if (!bHasDataURL) return false;
-            const oScaledCanvas = scaleCanvas(oCanvas, iWidth, iHeight, flipy);
-            const strMime = "image/png";
-            const strData = oScaledCanvas.toDataURL(strMime);
-            if (bReturnImg) {
-                return makeImageObject(strData);
-            } else {
-                saveFile( strData);
-            }
-            return true;
-        },
-
-        saveAsJPEG: function (oCanvas, bReturnImg, iWidth, iHeight, flipy) {
-            if (!bHasDataURL) return false;
-            const oScaledCanvas = scaleCanvas(oCanvas, iWidth, iHeight, flipy);
-            const strMime = "image/jpeg";
-            const strData = oScaledCanvas.toDataURL(strMime);
-            // check if browser actually supports jpeg by looking for the mime type in the data uri. if not, return false
-            if (strData.indexOf(strMime) != 5) return false;
-            if (bReturnImg) {
-                return makeImageObject(strData);
-            } else {
-                saveFile( strData);
-            }
-            return true;
-        },
-
-        saveAsBMP: function (oCanvas, bReturnImg, iWidth, iHeight, flipy) {
-            if (!(bHasDataURL && bHasImageData && bHasBase64)) return false;
-            const oScaledCanvas = scaleCanvas(oCanvas, iWidth, iHeight, flipy);
-            const strMime = "image/bmp";
-            const oData = readCanvasData(oScaledCanvas), strImgData = createBMP(oData);
-            if (bReturnImg) {
-                return makeImageObject(makeDataURI(strImgData, strMime));
-            } else {
-                saveFile(makeDataURI(strImgData, strMime));
-            }
-            return true;
-        }
-    };
-})();
+        /**
+         * Set by {@link Drawable#getRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesTransparent}.
+         * @property selectedEdgesTransparent
+         * @type {boolean}
+         */
+        this.selectedEdgesTransparent = false;
+    }
+}
 
 /**
  * @desc Represents a WebGL render buffer.
@@ -8310,14 +8182,12 @@ class RenderBuffer {
 
         const texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
-
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
         const renderbuf = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuf);
@@ -8391,83 +8261,6 @@ class RenderBuffer {
         return pix;
     }
 
-    readImage(params) {
-
-        const gl = this.gl;
-        const imageDataCache = this._getImageDataCache();
-        const pixelData = imageDataCache.pixelData;
-        const canvas = imageDataCache.canvas;
-        const imageData = imageDataCache.imageData;
-        const context = imageDataCache.context;
-
-        gl.readPixels(0, 0, this.buffer.width, this.buffer.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelData);
-
-        imageData.data.set(pixelData);
-        context.putImageData(imageData, 0, 0);
-
-        const imageWidth = params.width || canvas.width;
-        const imageHeight = params.height || canvas.height;
-        const format = params.format || "jpeg";
-        const flipy = true; // Account for WebGL texture flipping
-
-        let image;
-
-        switch (format) {
-            case "jpeg":
-                image = Canvas2Image.saveAsJPEG(canvas, true, imageWidth, imageHeight, flipy);
-                break;
-            case "png":
-                image = Canvas2Image.saveAsPNG(canvas, true, imageWidth, imageHeight, flipy);
-                break;
-            case "bmp":
-                image = Canvas2Image.saveAsBMP(canvas, true, imageWidth, imageHeight, flipy);
-                break;
-            default:
-                console.error("Unsupported image format: '" + format + "' - supported types are 'jpeg', 'bmp' and 'png' - defaulting to 'jpeg'");
-                image = Canvas2Image.saveAsJPEG(canvas, true, imageWidth, imageHeight, flipy);
-        }
-
-        return image.src;
-    }
-
-    _getImageDataCache() {
-
-        const bufferWidth = this.buffer.width;
-        const bufferHeight = this.buffer.height;
-
-        let imageDataCache = this._imageDataCache;
-
-        if (imageDataCache) {
-            if (imageDataCache.width !== bufferWidth || imageDataCache.height !== bufferHeight) {
-                this._imageDataCache = null;
-                imageDataCache = null;
-            }
-        }
-
-        if (!imageDataCache) {
-
-            const canvas = document.createElement('canvas');
-            canvas.width = bufferWidth;
-            canvas.height = bufferHeight;
-
-            const context = canvas.getContext('2d');
-            const imageData = context.createImageData(bufferWidth, bufferHeight);
-
-            imageDataCache = {
-                pixelData: new Uint8Array(bufferWidth * bufferHeight * 4),
-                canvas: canvas,
-                context: context,
-                imageData: imageData,
-                width: bufferWidth,
-                height: bufferHeight
-            };
-
-            this._imageDataCache = imageDataCache;
-        }
-
-        return imageDataCache;
-    }
-
     unbind() {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -8476,7 +8269,7 @@ class RenderBuffer {
 
     getTexture() {
         const self = this;
-        return this._texture || (this._texture = {
+        return {
             renderBuffer: this,
             bind: function (unit) {
                 if (self.buffer && self.buffer.texture) {
@@ -8492,7 +8285,7 @@ class RenderBuffer {
                     self.gl.bindTexture(self.gl.TEXTURE_2D, null);
                 }
             }
-        });
+        };
     }
 
     destroy() {
@@ -8505,8 +8298,6 @@ class RenderBuffer {
             this.buffer = null;
             this.bound = false;
         }
-        this._imageDataCache = null;
-        this._texture = null;
     }
 }
 
@@ -8547,15 +8338,15 @@ class PickResult {
         this.primIndex = -1;
 
         this._canvasPos = new Int16Array([0, 0]);
-        this._origin = new Float64Array([0, 0, 0]);
-        this._direction = new Float64Array([0, 0, 0]);
+        this._origin = new Float32Array([0, 0, 0]);
+        this._direction = new Float32Array([0, 0, 0]);
         this._indices = new Int32Array(3);
-        this._localPos = new Float64Array([0, 0, 0]);
-        this._worldPos = new Float64Array([0, 0, 0]);
-        this._viewPos = new Float64Array([0, 0, 0]);
-        this._bary = new Float64Array([0, 0, 0]);
-        this._worldNormal = new Float64Array([0, 0, 0]);
-        this._uv = new Float64Array([0, 0]);
+        this._localPos = new Float32Array([0, 0, 0]);
+        this._worldPos = new Float32Array([0, 0, 0]);
+        this._viewPos = new Float32Array([0, 0, 0]);
+        this._bary = new Float32Array([0, 0, 0]);
+        this._worldNormal = new Float32Array([0, 0, 0]);
+        this._uv = new Float32Array([0, 0]);
 
         this.reset();
     }
@@ -9206,219 +8997,8 @@ class ArrayBuf {
     }
 }
 
-class OcclusionLayer {
-
-    constructor(scene, rtcCenter) {
-
-        this.scene = scene;
-        this.aabb = math.AABB3();
-        this.rtcCenter = math.vec3(rtcCenter);
-        this.rtcCenterHash = this.rtcCenter.join();
-        this.numMarkers = 0;
-        this.markers = {};
-        this.markerList = [];                  // Ordered array of Markers
-        this.markerIndices = {};               // ID map of Marker indices in _markerList
-        this.positions = [];                   // Packed array of World-space marker positions
-        this.indices = [];                     // Indices corresponding to array above
-        this.positionsBuf = null;
-        this.lenPositionsBuf = 0;
-        this.indicesBuf = null;
-        this.sectionPlanesActive = [];
-        this.culledBySectionPlanes = false;
-        this.occlusionTestList = [];           // List of
-        this.lenOcclusionTestList = 0;
-        this.pixels = [];
-        this.aabbDirty = false;
-        this.markerListDirty = false;
-        this.positionsDirty = true;
-        this.occlusionTestListDirty = false;
-    }
-
-    addMarker(marker) {
-        this.markers[marker.id] = marker;
-        this.markerListDirty = true;
-        this.numMarkers++;
-    }
-
-    markerWorldPosUpdated(marker) {
-        if (!this.markers[marker.id]) { // Not added
-            return;
-        }
-        const i = this.markerIndices[marker.id];
-        this.positions[i * 3 + 0] = marker.worldPos[0];
-        this.positions[i * 3 + 1] = marker.worldPos[1];
-        this.positions[i * 3 + 2] = marker.worldPos[2];
-        this.positionsDirty = true; // TODO: avoid reallocating VBO each time
-    }
-
-    removeMarker(marker) {
-        delete this.markers[marker.id];
-        this.markerListDirty = true;
-        this.numMarkers--;
-    }
-
-    update() {
-        if (this.markerListDirty) {
-            this._buildMarkerList();
-            this.markerListDirty = false;
-            this.positionsDirty = true;
-            this.occlusionTestListDirty = true;
-        }
-        if (this.positionsDirty) { //////////////  TODO: Don't rebuild this when positions change, very wasteful
-            this._buildPositions();
-            this.positionsDirty = false;
-            this.aabbDirty = true;
-            this.vbosDirty = true;
-        }
-        if (this.aabbDirty) {
-            this._buildAABB();
-            this.aabbDirty = false;
-        }
-        if (this.vbosDirty) {
-            this._buildVBOs();
-            this.vbosDirty = false;
-        }
-        if (this.occlusionTestListDirty) {
-            this._buildOcclusionTestList();
-        }
-        this._updateActiveSectionPlanes();
-    }
-
-    _buildMarkerList() {
-        this.numMarkers = 0;
-        for (var id in this.markers) {
-            if (this.markers.hasOwnProperty(id)) {
-                this.markerList[this.numMarkers] = this.markers[id];
-                this.markerIndices[id] = this.numMarkers;
-                this.numMarkers++;
-            }
-        }
-        this.markerList.length = this.numMarkers;
-    }
-
-    _buildPositions() {
-        let j = 0;
-        for (let i = 0; i < this.numMarkers; i++) {
-            if (this.markerList[i]) {
-                const marker = this.markerList[i];
-                const worldPos = marker.worldPos;
-                this.positions[j++] = worldPos[0];
-                this.positions[j++] = worldPos[1];
-                this.positions[j++] = worldPos[2];
-                this.indices[i] = i;
-            }
-        }
-        this.positions.length = this.numMarkers * 3;
-        this.indices.length = this.numMarkers;
-    }
-
-    _buildAABB() {
-        const aabb = this.aabb;
-        math.collapseAABB3(aabb);
-        math.expandAABB3Points3(aabb, this.positions);
-        const rtcCenter = this.rtcCenter;
-        aabb[0] += rtcCenter[0];
-        aabb[1] += rtcCenter[1];
-        aabb[2] += rtcCenter[2];
-        aabb[3] += rtcCenter[0];
-        aabb[4] += rtcCenter[1];
-        aabb[5] += rtcCenter[2];
-    }
-
-    _buildVBOs() {
-        if (this.positionsBuf) {
-            if (this.lenPositionsBuf === this.positions.length) { // Just updating buffer elements, don't need to reallocate
-                this.positionsBuf.setData(this.positions); // Indices don't need updating
-                return;
-            }
-            this.positionsBuf.destroy();
-            this.positionsBuf = null;
-            this.indicesBuf.destroy();
-            this.indicesBuf = null;
-        }
-        const gl = this.scene.canvas.gl;
-        const lenPositions = this.numMarkers * 3;
-        const lenIndices = this.numMarkers;
-        this.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this.positions), lenPositions, 3, gl.STATIC_DRAW);
-        this.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), lenIndices, 1, gl.STATIC_DRAW);
-        this.lenPositionsBuf = this.positions.length;
-    }
-
-    _buildOcclusionTestList() {
-        const canvas = this.scene.canvas;
-        const near = this.scene.camera.perspective.near; // Assume near enough to ortho near
-        const boundary = canvas.boundary;
-        const canvasWidth = boundary[2];
-        const canvasHeight = boundary[3];
-        let lenPixels = 0;
-        this.lenOcclusionTestList = 0;
-        for (let i = 0; i < this.numMarkers; i++) {
-            const marker = this.markerList[i];
-            const viewPos = marker.viewPos;
-            if (viewPos[2] > -near) { // Clipped by near plane
-                marker._setVisible(false);
-                continue;
-            }
-            const canvasPos = marker.canvasPos;
-            const canvasX = canvasPos[0];
-            const canvasY = canvasPos[1];
-            if ((canvasX + 10) < 0 || (canvasY + 10) < 0 || (canvasX - 10) > canvasWidth || (canvasY - 10) > canvasHeight) {
-                marker._setVisible(false);
-                continue;
-            }
-            if (marker.entity && !marker.entity.visible) {
-                marker._setVisible(false);
-                continue;
-            }
-            if (marker.occludable) {
-                this.occlusionTestList[this.lenOcclusionTestList++] = marker;
-                this.pixels[lenPixels++] = canvasX;
-                this.pixels[lenPixels++] = canvasY;
-                continue;
-            }
-            marker._setVisible(true);
-        }
-    }
-
-    _updateActiveSectionPlanes() {
-        const sectionPlanes = this.scene._sectionPlanesState.sectionPlanes;
-        const numSectionPlanes = sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            for (let i = 0; i < numSectionPlanes; i++) {
-                const sectionPlane = sectionPlanes[i];
-                if (!sectionPlane.active) {
-                    this.sectionPlanesActive[i] = false;
-                } else {
-                    const intersect = math.planeAABB3Intersect(sectionPlane.dir, sectionPlane.dist, this.aabb);
-                    const outside = (intersect === -1);
-                    if (outside) {
-                        this.culledBySectionPlanes = true;
-                        return;
-                    }
-                    const intersecting = (intersect === 0);
-                    this.sectionPlanesActive[i] = intersecting;
-                }
-            }
-        }
-        this.culledBySectionPlanes = false;
-    }
-
-    destroy() {
-        this.markers = {};
-        this.markerList.length = 0;
-        if (this.positionsBuf) {
-            this.positionsBuf.destroy();
-        }
-        if (this.indicesBuf) {
-            this.indicesBuf.destroy();
-        }
-    }
-}
-
 const MARKER_COLOR = math.vec3([1.0, 0.0, 0.0]);
 const POINT_SIZE = 20;
-
-const tempVec3a$1 = math.vec3();
 
 /**
  * Manages occlusion testing. Private member of a Renderer.
@@ -9428,11 +9008,17 @@ class OcclusionTester {
     constructor(scene) {
 
         this._scene = scene;
-
-        this._occlusionLayers = {};
-        this._occlusionLayersList = [];
-        this._occlusionLayersListDirty = false;
-
+        this._markers = {};                     // ID map of Markers
+        this._markerList = [];                  // Ordered array of Markers
+        this._markerIndices = {};               // ID map of Marker indices in _markerList
+        this._numMarkers = 0;                   // Length of _markerList
+        this._positions = [];                   // Packed array of World-space marker positions
+        this._indices = [];                     // Indices corresponding to array above
+        this._positionsBuf = null;              // Positions VBO to render marker positions
+        this._indicesBuf = null;                // Indices VBO
+        this._occlusionTestList = [];           // List of
+        this._lenOcclusionTestList = 0;
+        this._pixels = [];
         this._shaderSource = null;
         this._program = null;
 
@@ -9440,18 +9026,22 @@ class OcclusionTester {
 
         this._shaderSourceDirty = true;         // Need to build shader source code ?
         this._programDirty = false;             // Need to build shader program ?
+        this._markerListDirty = false;          // Need to (re)build _markerList ?
+        this._positionsDirty = false;           // Need to (re)build _positions and _indices ?
+        this._vbosDirty = false;                // Need to rebuild _positionsBuf and _indicesBuf ?
+        this._occlusionTestListDirty = false;   // Need to build _occlusionTestList ?
 
-        this._markersToOcclusionLayersMap = {};
+        this._lenPositionsBuf = 0;
 
-        this._onCameraViewMatrix = scene.camera.on("viewMatrix", () => {
+        scene.camera.on("viewMatrix", () => {
             this._occlusionTestListDirty = true;
         });
 
-        this._onCameraProjMatrix = scene.camera.on("projMatrix", () => {
+        scene.camera.on("projMatrix", () => {
             this._occlusionTestListDirty = true;
         });
 
-        this._onCanvasBoundary = scene.canvas.on("boundary", () => {
+        scene.canvas.on("boundary", () => {
             this._occlusionTestListDirty = true;
         });
     }
@@ -9461,15 +9051,8 @@ class OcclusionTester {
      * @param marker
      */
     addMarker(marker) {
-        const rtcCenterHash = marker.rtcCenter.join();
-        let occlusionLayer = this._occlusionLayers[rtcCenterHash];
-        if (!occlusionLayer) {
-            occlusionLayer = new OcclusionLayer(this._scene, marker.rtcCenter);
-            this._occlusionLayers[occlusionLayer.rtcCenterHash] = occlusionLayer;
-            this._occlusionLayersListDirty = true;
-        }
-        occlusionLayer.addMarker(marker);
-        this._markersToOcclusionLayersMap[marker.id] = occlusionLayer;
+        this._markers[marker.id] = marker;
+        this._markerListDirty = true;
     }
 
     /**
@@ -9477,31 +9060,15 @@ class OcclusionTester {
      * @param marker
      */
     markerWorldPosUpdated(marker) {
-        const occlusionLayer = this._markersToOcclusionLayersMap[marker.id];
-        if (!occlusionLayer) {
-            marker.error("Marker has not been added to OcclusionTester");
+        if (!this._markers[marker.id]) { // Not added
             return;
         }
-        const rtcCenterHash = marker.rtcCenter.join();
-        if (rtcCenterHash !== occlusionLayer.rtcCenterHash) {
-            if (occlusionLayer.numMarkers === 1) {
-                occlusionLayer.destroy();
-                delete this._occlusionLayers[occlusionLayer.rtcCenterHash];
-                this._occlusionLayersListDirty = true;
-            } else {
-                occlusionLayer.removeMarker(marker);
-            }
-            let newOcclusionLayer = this._occlusionLayers[rtcCenterHash];
-            if (!newOcclusionLayer) {
-                newOcclusionLayer = new OcclusionLayer(this._scene, marker.rtcCenter);
-                this._occlusionLayers[rtcCenterHash] = occlusionLayer;
-                this._occlusionLayersListDirty = true;
-            }
-            newOcclusionLayer.addMarker(marker);
-            this._markersToOcclusionLayersMap[marker.id] = newOcclusionLayer;
-        } else {
-            occlusionLayer.markerWorldPosUpdated(marker);
-        }
+        const i = this._markerIndices[marker.id];
+        this._positions[i * 3 + 0] = marker.worldPos[0];
+        this._positions[i * 3 + 1] = marker.worldPos[1];
+        this._positions[i * 3 + 2] = marker.worldPos[2];
+
+        this._positionsDirty = true; // TODO: avoid reallocating VBO each time
     }
 
     /**
@@ -9509,44 +9076,23 @@ class OcclusionTester {
      * @param marker
      */
     removeMarker(marker) {
-        const rtcCenterHash = marker.rtcCenter.join();
-        let occlusionLayer = this._occlusionLayers[rtcCenterHash];
-        if (!occlusionLayer) {
-            return;
-        }
-        if (occlusionLayer.numMarkers === 1) {
-            occlusionLayer.destroy();
-            delete this._occlusionLayers[occlusionLayer.rtcCenterHash];
-            this._occlusionLayersListDirty = true;
-        } else {
-            occlusionLayer.removeMarker(marker);
-        }
-        delete this._markersToOcclusionLayersMap[marker.id];
+        delete this._markers[marker.id];
+        this._markerListDirty = true;
     }
 
     /**
-     * Returns true if an occlusion test is needed.
-     *
-     * @returns {boolean}
-     */
-    get needOcclusionTest() {
-        return this._occlusionTestListDirty;
-    }
-
-    /**
-     * Binds the render buffer. After calling this, the caller then renders object silhouettes to the render buffer,
-     * then calls drawMarkers() and doOcclusionTest().
+     * Prepares for an occlusion test.
+     * Binds render buffer.
      */
     bindRenderBuf() {
 
         const shaderSourceHash = [this._scene.canvas.canvas.id, this._scene._sectionPlanesState.getHash()].join(";");
-
         if (shaderSourceHash !== this._shaderSourceHash) {
             this._shaderSourceHash = shaderSourceHash;
             this._shaderSourceDirty = true;
         }
 
-        if (this._shaderSourceDirty) {
+        if (this._shaderSourceDirty) { // TODO: Set this when hash changes
             this._buildShaderSource();
             this._shaderSourceDirty = false;
             this._programDirty = true;
@@ -9558,17 +9104,26 @@ class OcclusionTester {
             this._occlusionTestListDirty = true;
         }
 
-        if (this._occlusionLayersListDirty) {
-            this._buildOcclusionLayersList();
-            this._occlusionLayersListDirty = false;
+        if (this._markerListDirty) {
+            this._buildMarkerList();
+            this._markerListDirty = false;
+            this._positionsDirty = true;
+            this._occlusionTestListDirty = true;
+        }
+
+        if (this._positionsDirty) { //////////////  TODO: Don't rebuild this when positions change, very wasteful
+            this._buildPositions();
+            this._positionsDirty = false;
+            this._vbosDirty = true;
+        }
+
+        if (this._vbosDirty) {
+            this._buildVBOs();
+            this._vbosDirty = false;
         }
 
         if (this._occlusionTestListDirty) {
-            for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
-                const occlusionLayer = this._occlusionLayersList[i];
-                occlusionLayer.occlusionTestListDirty = true;
-            }
-            this._occlusionTestListDirty = false;
+            this._buildOcclusionTestList();
         }
 
         {
@@ -9576,16 +9131,6 @@ class OcclusionTester {
             this._readPixelBuf.bind();
             this._readPixelBuf.clear();
         }
-    }
-
-    _buildOcclusionLayersList() {
-        let numOcclusionLayers = 0;
-        for (let rtcCenterHash in this._occlusionLayers) {
-            if (this._occlusionLayers.hasOwnProperty(rtcCenterHash)) {
-                this._occlusionLayersList[numOcclusionLayers++] = this._occlusionLayers[rtcCenterHash];
-            }
-        }
-        this._occlusionLayersList.length = numOcclusionLayers;
     }
 
     _buildShaderSource() {
@@ -9599,7 +9144,7 @@ class OcclusionTester {
         const scene = this._scene;
         const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
         const src = [];
-        src.push("// OcclusionTester vertex shader");
+        src.push("// Mesh occlusion vertex shader");
         src.push("attribute vec3 position;");
         src.push("uniform mat4 modelMatrix;");
         src.push("uniform mat4 viewMatrix;");
@@ -9624,7 +9169,7 @@ class OcclusionTester {
         const sectionPlanesState = scene._sectionPlanesState;
         const clipping = sectionPlanesState.sectionPlanes.length > 0;
         const src = [];
-        src.push("// OcclusionTester fragment shader");
+        src.push("// Mesh occlusion fragment shader");
         src.push("precision lowp float;");
         if (clipping) {
             src.push("varying vec4 vWorldPosition;");
@@ -9666,7 +9211,7 @@ class OcclusionTester {
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
         const sectionPlanes = sectionPlanesState.sectionPlanes;
-        for (let i = 0, len = sectionPlanes.length; i < len; i++) {
+        for (var i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
                 pos: program.getLocation("sectionPlanePos" + i),
@@ -9676,82 +9221,152 @@ class OcclusionTester {
         this._aPosition = program.getAttribute("position");
     }
 
+    _buildMarkerList() {
+        this._numMarkers = 0;
+        for (var id in this._markers) {
+            if (this._markers.hasOwnProperty(id)) {
+                this._markerList[this._numMarkers] = this._markers[id];
+                this._markerIndices[id] = this._numMarkers;
+                this._numMarkers++;
+            }
+        }
+        this._markerList.length = this._numMarkers;
+    }
+
+    _buildPositions() {
+        var j = 0;
+        for (var i = 0; i < this._numMarkers; i++) {
+            if (this._markerList[i]) {
+                const marker = this._markerList[i];
+                const worldPos = marker.worldPos;
+                this._positions[j++] = worldPos[0];
+                this._positions[j++] = worldPos[1];
+                this._positions[j++] = worldPos[2];
+                this._indices[i] = i;
+            }
+        }
+        this._positions.length = this._numMarkers * 3;
+        this._indices.length = this._numMarkers;
+    }
+
+    _buildVBOs() {
+        if (this._positionsBuf) {
+            if (this._lenPositionsBuf === this._positions.length) { // Just updating buffer elements, don't need to reallocate
+                this._positionsBuf.setData(this._positions); // Indices don't need updating
+                return;
+            }
+            this._positionsBuf.destroy();
+            this._positionsBuf = null;
+            this._indicesBuf.destroy();
+            this._indicesBuf = null;
+        }
+        const gl = this._scene.canvas.gl;
+        const lenPositions = this._numMarkers * 3;
+        const lenIndices = this._numMarkers;
+        this._positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._positions), lenPositions, 3, gl.STATIC_DRAW);
+        this._indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this._indices), lenIndices, 1, gl.STATIC_DRAW);
+        this._lenPositionsBuf = this._positions.length;
+    }
+
+    _buildOcclusionTestList() {
+        const canvas = this._scene.canvas;
+        const near = this._scene.camera.perspective.near; // Assume near enough to ortho near
+        let marker;
+        let canvasPos;
+        let viewPos;
+        let canvasX;
+        let canvasY;
+        let lenPixels = 0;
+        let i;
+        const boundary = canvas.boundary;
+        const canvasWidth = boundary[2];
+        const canvasHeight = boundary[3];
+        this._lenOcclusionTestList = 0;
+        for (i = 0; i < this._numMarkers; i++) {
+            marker = this._markerList[i];
+            viewPos = marker.viewPos;
+            if (viewPos[2] > -near) { // Clipped by near plane
+                marker._setVisible(false);
+                continue;
+            }
+            canvasPos = marker.canvasPos;
+            canvasX = canvasPos[0];
+            canvasY = canvasPos[1];
+            if ((canvasX + 10) < 0 || (canvasY + 10) < 0 || (canvasX - 10) > canvasWidth || (canvasY - 10) > canvasHeight) {
+                marker._setVisible(false);
+                continue;
+            }
+            if (marker.entity && !marker.entity.visible) {
+                marker._setVisible(false);
+                continue;
+            }
+            if (marker.occludable) {
+                this._occlusionTestList[this._lenOcclusionTestList++] = marker;
+                this._pixels[lenPixels++] = canvasX;
+                this._pixels[lenPixels++] = canvasY;
+                continue;
+            }
+            marker._setVisible(true);
+        }
+    }
+
     /**
      * Draws {@link Marker}s to the render buffer.
+     * @param frameCtx
      */
-    drawMarkers() {
-
+    drawMarkers(frameCtx) {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
         const sectionPlanesState = scene._sectionPlanesState;
         const camera = scene.camera;
-
+        const cameraState = camera._state;
         program.bind();
-
-        gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-
-        for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
-
-            const occlusionLayer = this._occlusionLayersList[i];
-
-            occlusionLayer.update();
-
-            if (occlusionLayer.culledBySectionPlanes) {
-                continue;
-            }
-
-            const rtcCenter = occlusionLayer.rtcCenter;
-
-            gl.uniformMatrix4fv(this._uViewMatrix, false, createRTCViewMat(camera.viewMatrix, rtcCenter));
-
-            const numSectionPlanes = sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = sectionPlanesState.sectionPlanes;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = occlusionLayer.sectionPlanesActive[sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        gl.uniform3fv(sectionPlaneUniforms.pos, getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$1));
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
                 }
             }
-
-            this._aPosition.bindArrayBuffer(occlusionLayer.positionsBuf);
-
-            const indicesBuf = occlusionLayer.indicesBuf;
-            indicesBuf.bind();
-            gl.drawElements(gl.POINTS, indicesBuf.numItems, indicesBuf.itemType, 0);
         }
+        gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
+        gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        this._aPosition.bindArrayBuffer(this._positionsBuf);
+        this._indicesBuf.bind();
+        gl.drawElements(gl.POINTS, this._indicesBuf.numItems, this._indicesBuf.itemType, 0);
     }
 
     /**
-     * Sets visibilities of {@link Marker}s according to whether or not they are obscured by anything in the render buffer.
+     * Reads render buffer and updates visibility states of {@link Marker}s if they can be found in the buffer.
      */
     doOcclusionTest() {
-
         {
-
             const markerR = MARKER_COLOR[0] * 255;
             const markerG = MARKER_COLOR[1] * 255;
             const markerB = MARKER_COLOR[2] * 255;
-
-            for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
-
-                const occlusionLayer = this._occlusionLayersList[i];
-
-                for (let i = 0; i < occlusionLayer.lenOcclusionTestList; i++) {
-
-                    const marker = occlusionLayer.occlusionTestList[i];
-                    const j = i * 2;
-                    const color = this._readPixelBuf.read(occlusionLayer.pixels[j], occlusionLayer.pixels[j + 1]);
-                    const visible = (color[0] === markerR) && (color[1] === markerG) && (color[2] === markerB);
-
-                    marker._setVisible(visible);
-                }
+            for (var i = 0; i < this._lenOcclusionTestList; i++) {
+                const marker = this._occlusionTestList[i];
+                const j = i * 2;
+                const color = this._readPixelBuf.read(this._pixels[j], this._pixels[j + 1]);
+                const visible = (color[0] === markerR) && (color[1] === markerG) && (color[2] === markerB);
+                marker._setVisible(visible);
             }
         }
     }
@@ -9769,22 +9384,18 @@ class OcclusionTester {
      * Destroys this OcclusionTester.
      */
     destroy() {
-        if (this.destroyed) {
-            return;
-        }
-        for (let i = 0, len = this._occlusionLayersList.length; i < len; i++) {
-            const occlusionLayer = this._occlusionLayersList[i];
-            occlusionLayer.destroy();
-        }
+        this._markers = {};
+        this._markerList.length = 0;
 
+        if (this._positionsBuf) {
+            this._positionsBuf.destroy();
+        }
+        if (this._indicesBuf) {
+            this._indicesBuf.destroy();
+        }
         if (this._program) {
             this._program.destroy();
         }
-
-        this._scene.camera.off(this._onCameraViewMatrix);
-        this._scene.camera.off(this._onCameraProjMatrix);
-        this._scene.canvas.off(this._onCanvasBoundary);
-        this.destroyed = true;
     }
 }
 
@@ -10528,16 +10139,15 @@ const Renderer = function (scene, options) {
 
     options = options || {};
 
-    const frameCtx = new FrameContext(scene);
+    const frameCtx = new FrameContext();
     const canvas = scene.canvas.canvas;
     const gl = scene.canvas.gl;
     const canvasTransparent = (!!options.transparent);
-    const alphaDepthMask = options.alphaDepthMask;
 
     const pickIDs = new Map({});
 
-    let drawableTypeInfo = {};
-    let drawables = {};
+    var drawableTypeInfo = {};
+    var drawables = {};
 
     let drawableListDirty = true;
     let stateSortDirty = true;
@@ -10548,9 +10158,7 @@ const Renderer = function (scene, options) {
     const occlusionBuffer2 = new RenderBuffer(canvas, gl);
 
     const pickBuffer = new RenderBuffer(canvas, gl);
-    const snapshotBuffer = new RenderBuffer(canvas, gl);
-
-    let snapshotBound = false;
+    const readPixelBuffer = new RenderBuffer(canvas, gl);
 
     const saoOcclusionRenderer = new SAOOcclusionRenderer(scene);
     const saoBlurRenderer = new SAOBlurRenderer(scene);
@@ -10575,7 +10183,7 @@ const Renderer = function (scene, options) {
     this.webglContextRestored = function (gl) {
 
         pickBuffer.webglContextRestored(gl);
-        snapshotBuffer.webglContextRestored(gl);
+        readPixelBuffer.webglContextRestored(gl);
         saoDepthBuffer.webglContextRestored(gl);
         occlusionBuffer1.webglContextRestored(gl);
         occlusionBuffer2.webglContextRestored(gl);
@@ -10592,12 +10200,12 @@ const Renderer = function (scene, options) {
      *  @private
      */
     this.addDrawable = function (id, drawable) {
-        const type = drawable.type;
+        var type = drawable.type;
         if (!type) {
             console.error("Renderer#addDrawable() : drawable with ID " + id + " has no 'type' - ignoring");
             return;
         }
-        let drawableInfo = drawableTypeInfo[type];
+        var drawableInfo = drawableTypeInfo[type];
         if (!drawableInfo) {
             drawableInfo = {
                 type: drawable.type,
@@ -10605,8 +10213,8 @@ const Renderer = function (scene, options) {
                 isStateSortable: drawable.isStateSortable,
                 stateSortCompare: drawable.stateSortCompare,
                 drawableMap: {},
-                drawableListPreCull: [],
-                drawableList: []
+                drawableList: [],
+                lenDrawableList: 0
             };
             drawableTypeInfo[type] = drawableInfo;
         }
@@ -10675,11 +10283,8 @@ const Renderer = function (scene, options) {
      */
     this.render = function (params) {
         params = params || {};
-        if (params.force) {
-            imageDirty = true;
-        }
         updateDrawlist();
-        if (imageDirty) {
+        if (imageDirty || params.force) {
             draw(params);
             stats.frame.frameCount++;
             imageDirty = false;
@@ -10697,224 +10302,134 @@ const Renderer = function (scene, options) {
             stateSortDirty = false;
             imageDirty = true;
         }
-        if (imageDirty) { // Image is usually dirty because the camera moved
-            cullDrawableList();
-        }
     }
 
     function buildDrawableList() {
-        for (let type in drawableTypeInfo) {
+        for (var type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
                 const drawableInfo = drawableTypeInfo[type];
                 const drawableMap = drawableInfo.drawableMap;
-                const drawableListPreCull = drawableInfo.drawableListPreCull;
-                let lenDrawableList = 0;
-                for (let id in drawableMap) {
+                const drawableList = drawableInfo.drawableList;
+                var lenDrawableList = 0;
+                for (var id in drawableMap) {
                     if (drawableMap.hasOwnProperty(id)) {
-                        drawableListPreCull[lenDrawableList++] = drawableMap[id];
+                        drawableList[lenDrawableList++] = drawableMap[id];
                     }
                 }
-                drawableListPreCull.length = lenDrawableList;
+                drawableList.length = lenDrawableList;
+                drawableInfo.lenDrawableList = lenDrawableList;
             }
         }
     }
 
     function sortDrawableList() {
-        for (let type in drawableTypeInfo) {
+        for (var type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
                 const drawableInfo = drawableTypeInfo[type];
                 if (drawableInfo.isStateSortable) {
-                    drawableInfo.drawableListPreCull.sort(drawableInfo.stateSortCompare);
+                    drawableInfo.drawableList.sort(drawableInfo.stateSortCompare);
                 }
             }
         }
     }
 
-    function cullDrawableList() {
-        for (let type in drawableTypeInfo) {
-            if (drawableTypeInfo.hasOwnProperty(type)) {
-                const drawableInfo = drawableTypeInfo[type];
-                const drawableListPreCull = drawableInfo.drawableListPreCull;
-                const drawableList = drawableInfo.drawableList;
-                let lenDrawableList = 0;
-                for (let i = 0, len = drawableListPreCull.length; i < len; i++) {
-                    const drawable = drawableListPreCull[i];
-                    drawable.rebuildRenderFlags();
-                    if (!drawable.renderFlags.culled) {
-                        drawableList[lenDrawableList++] = drawable;
-                    }
-                }
-                drawableList.length = lenDrawableList;
-            }
-        }
-    }
-
-    function draw(params) {
-
-        if (WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"]) {  // In case context lost/recovered
-            gl.getExtension("OES_element_index_uint");
-        }
+    const draw = function (params) {
 
         const sao = scene.sao;
 
         if (sao.possible) {
-            drawSAOBuffers(params);
-        }
 
-        drawShadowMaps();
 
-        drawColor(params);
-    }
+            // Render depth buffer
 
-    function drawSAOBuffers(params) {
+            saoDepthBuffer.bind();
+            saoDepthBuffer.clear();
+            drawDepth(params);
+            saoDepthBuffer.unbind();
 
-        const sao = scene.sao;
-
-        // Render depth buffer
-
-        saoDepthBuffer.bind();
-        saoDepthBuffer.clear();
-        drawDepth(params);
-        saoDepthBuffer.unbind();
-
-        // Render occlusion buffer
-
-        occlusionBuffer1.bind();
-        occlusionBuffer1.clear();
-        saoOcclusionRenderer.render(saoDepthBuffer.getTexture(), null);
-        occlusionBuffer1.unbind();
-
-        if (sao.blur) {
-
-            // Horizontally blur occlusion buffer 1 into occlusion buffer 2
-
-            occlusionBuffer2.bind();
-            occlusionBuffer2.clear();
-            saoBlurRenderer.render(saoDepthBuffer.getTexture(), occlusionBuffer1.getTexture(), 0);
-            occlusionBuffer2.unbind();
-
-            // Vertically blur occlusion buffer 2 back into occlusion buffer 1
+            // Render occlusion buffer
 
             occlusionBuffer1.bind();
             occlusionBuffer1.clear();
-            saoBlurRenderer.render(saoDepthBuffer.getTexture(), occlusionBuffer2.getTexture(), 1);
+            saoOcclusionRenderer.render(saoDepthBuffer.getTexture(), null);
             occlusionBuffer1.unbind();
+
+            if (sao.blur) {
+
+                // Horizontally blur occlusion buffer 1 into occlusion buffer 2
+
+                occlusionBuffer2.bind();
+                occlusionBuffer2.clear();
+                saoBlurRenderer.render(saoDepthBuffer.getTexture(), occlusionBuffer1.getTexture(), 0);
+                occlusionBuffer2.unbind();
+
+                // Vertically blur occlusion buffer 2 back into occlusion buffer 1
+
+                occlusionBuffer1.bind();
+                occlusionBuffer1.clear();
+                saoBlurRenderer.render(saoDepthBuffer.getTexture(), occlusionBuffer2.getTexture(), 1);
+                occlusionBuffer1.unbind();
+            }
         }
-    }
 
-    function drawDepth(params) {
+        drawColor(params);
+    };
 
-        frameCtx.reset();
-        frameCtx.pass = params.pass;
+    const drawDepth = (function () {
 
-        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        const renderFlags = new RenderFlags();
 
-        gl.clearColor(0, 0, 0, 0);
-        gl.enable(gl.DEPTH_TEST);
-        gl.frontFace(gl.CCW);
-        gl.enable(gl.CULL_FACE);
-        gl.depthMask(true);
+        return function (params) {
 
-        if (params.clear !== false) {
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-        }
+            if (WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"]) {  // In case context lost/recovered
+                gl.getExtension("OES_element_index_uint");
+            }
 
-        for (let type in drawableTypeInfo) {
-            if (drawableTypeInfo.hasOwnProperty(type)) {
+            frameCtx.reset();
+            frameCtx.pass = params.pass;
 
-                const drawableInfo = drawableTypeInfo[type];
-                const drawableList = drawableInfo.drawableList;
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-                for (let i = 0, len = drawableList.length; i < len; i++) {
+            gl.clearColor(0, 0, 0, 0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.frontFace(gl.CCW);
+            gl.enable(gl.CULL_FACE);
+            gl.depthMask(true);
 
-                    const drawable = drawableList[i];
+            if (params.clear !== false) {
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+            }
 
-                    if (drawable.culled === true || drawable.visible === false || !drawable.drawDepth) {
-                        continue;
-                    }
+            for (var type in drawableTypeInfo) {
+                if (drawableTypeInfo.hasOwnProperty(type)) {
 
-                    if (drawable.renderFlags.normalFillOpaque) {
-                        drawable.drawDepth(frameCtx);
+                    const drawableInfo = drawableTypeInfo[type];
+                    const drawableList = drawableInfo.drawableList;
+
+                    for (let i = 0, len = drawableList.length; i < len; i++) {
+
+                        const drawable = drawableList[i];
+
+                        if (drawable.culled === true || drawable.visible === false || !drawable.drawDepth) {
+                            continue;
+                        }
+
+                        drawable.getRenderFlags(renderFlags);
+
+                        if (renderFlags.normalFillOpaque) {
+                            drawable.drawDepth(frameCtx);
+                        }
                     }
                 }
             }
-        }
 
-        // const numVertexAttribs = WEBGL_INFO.MAX_VERTEX_ATTRIBS; // Fixes https://github.com/xeokit/xeokit-sdk/issues/174
-        // for (let ii = 0; ii < numVertexAttribs; ii++) {
-        //     gl.disableVertexAttribArray(ii);
-        // }
+            // const numVertexAttribs = WEBGL_INFO.MAX_VERTEX_ATTRIBS; // Fixes https://github.com/xeokit/xeokit-sdk/issues/174
+            // for (let ii = 0; ii < numVertexAttribs; ii++) {
+            //     gl.disableVertexAttribArray(ii);
+            // }
 
-    }
-
-    function drawShadowMaps() {
-
-        let lights = scene._lightsState.lights;
-
-        for (let i = 0, len = lights.length; i < len; i++) {
-            const light = lights[i];
-            if (!light.castsShadow) {
-                continue;
-            }
-            drawShadowMap(light);
-        }
-    }
-
-    function drawShadowMap(light) {
-
-        const castsShadow = light.castsShadow;
-
-        if (!castsShadow) {
-            return;
-        }
-
-        const shadowRenderBuf = light.getShadowRenderBuf();
-
-        if (!shadowRenderBuf) {
-            return;
-        }
-
-        shadowRenderBuf.bind();
-
-        frameCtx.reset();
-
-        frameCtx.backfaces = true;
-        frameCtx.frontface = true;
-        frameCtx.shadowViewMatrix = light.getShadowViewMatrix();
-        frameCtx.shadowProjMatrix = light.getShadowProjMatrix();
-
-        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-        gl.clearColor(0, 0, 0, 1);
-        gl.enable(gl.DEPTH_TEST);
-        gl.disable(gl.BLEND);
-
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        for (let type in drawableTypeInfo) {
-
-            if (drawableTypeInfo.hasOwnProperty(type)) {
-
-                const drawableInfo = drawableTypeInfo[type];
-                const drawableList = drawableInfo.drawableList;
-
-                for (let i = 0, len = drawableList.length; i < len; i++) {
-
-                    const drawable = drawableList[i];
-
-                    if (drawable.visible === false || !drawable.castsShadow || !drawable.drawShadow) {
-                        continue;
-                    }
-
-                    if (drawable.renderFlags.normalFillOpaque) { // Transparent objects don't cast shadows (yet)
-                        drawable.drawShadow(frameCtx);
-                    }
-                }
-            }
-        }
-
-        shadowRenderBuf.unbind();
-    }
+        };
+    })();
 
     const drawColor = (function () { // Draws the drawables in drawableListSorted
 
@@ -10938,7 +10453,13 @@ const Renderer = function (scene, options) {
         const selectedFillTransparentBin = [];
         const selectedEdgesTransparentBin = [];
 
+        const renderFlags = new RenderFlags();
+
         return function (params) {
+
+            if (WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"]) {  // In case context lost/recovered
+                gl.getExtension("OES_element_index_uint");
+            }
 
             const ambientColor = scene._lightsState.getAmbientColor();
 
@@ -10999,7 +10520,7 @@ const Renderer = function (scene, options) {
             // Render normal opaque solids, defer others to bins to render after
             //------------------------------------------------------------------------------------------------------
 
-            for (let type in drawableTypeInfo) {
+            for (var type in drawableTypeInfo) {
                 if (drawableTypeInfo.hasOwnProperty(type)) {
 
                     const drawableInfo = drawableTypeInfo[type];
@@ -11013,7 +10534,7 @@ const Renderer = function (scene, options) {
                             continue;
                         }
 
-                        const renderFlags = drawable.renderFlags;
+                        drawable.getRenderFlags(renderFlags);
 
                         if (renderFlags.normalFillOpaque) {
                             if (saoPossible && drawable.saoEnabled) {
@@ -11114,21 +10635,19 @@ const Renderer = function (scene, options) {
                     xrayEdgesOpaqueBin[i].drawXRayedEdgesOpaque(frameCtx);
                 }
             }
-
             if (xrayedFillTransparentBinLen > 0 || xrayEdgesTransparentBinLen > 0 || normalFillTransparentBinLen > 0) {
                 gl.enable(gl.CULL_FACE);
                 gl.enable(gl.BLEND);
 
                 if (canvasTransparent) {
-                    gl.blendEquation(gl.FUNC_ADD);
-                    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                 } else {
                     gl.blendEquation(gl.FUNC_ADD);
-                    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
                 }
 
                 frameCtx.backfaces = false;
-                if (!alphaDepthMask) {
+                {
                     gl.depthMask(false);
                 }
                 if (xrayEdgesTransparentBinLen > 0) {
@@ -11154,9 +10673,7 @@ const Renderer = function (scene, options) {
                     }
                 }
                 gl.disable(gl.BLEND);
-                if (!alphaDepthMask) {
-                    gl.depthMask(true);
-                }
+                gl.depthMask(true);
             }
 
             if (highlightedFillOpaqueBinLen > 0 || highlightedEdgesOpaqueBinLen > 0) {
@@ -11273,10 +10790,8 @@ const Renderer = function (scene, options) {
 
         const tempVec3a = math.vec3();
         const tempMat4a = math.mat4();
-        const tempMat4b = math.mat4();
-
         const up = math.vec3([0, 1, 0]);
-        const pickFrustumMatrix = math.frustumMat4(-1, 1, -1, 1, 0.1, 2000);
+        const pickFrustumMatrix = math.frustumMat4(-1, 1, -1, 1, 0.1, 10000);
         const _pickResult = new PickResult();
 
         return function (params, pickResult = _pickResult) {
@@ -11314,8 +10829,6 @@ const Renderer = function (scene, options) {
                 // Picking with arbitrary World-space ray
                 // Align camera along ray and fire ray through center of canvas
 
-                const pickFrustumMatrix = math.frustumMat4(-1, 1, -1, 1, 0.1, scene.camera.project.far, tempMat4a);
-
                 if (params.matrix) {
 
                     pickViewMatrix = params.matrix;
@@ -11327,7 +10840,7 @@ const Renderer = function (scene, options) {
                     direction = params.direction || math.vec3([0, 0, 1]);
                     look = math.addVec3(origin, direction, tempVec3a);
 
-                    pickViewMatrix = math.lookAtMat4v(origin, look, up, tempMat4b);
+                    pickViewMatrix = math.lookAtMat4v(origin, look, up, tempMat4a);
                     pickProjMatrix = pickFrustumMatrix;
 
                     pickResult.origin = origin;
@@ -11344,12 +10857,6 @@ const Renderer = function (scene, options) {
 
             if (!pickable) {
                 pickBuffer.unbind();
-                return null;
-            }
-
-            const pickedEntity = (pickable.delegatePickedEntity) ? pickable.delegatePickedEntity() : pickable;
-
-            if (!pickedEntity) {
                 return null;
             }
 
@@ -11370,7 +10877,7 @@ const Renderer = function (scene, options) {
 
             pickBuffer.unbind();
 
-            pickResult.entity = pickedEntity;
+            pickResult.entity = (pickable.delegatePickedEntity) ? pickable.delegatePickedEntity() : pickable;
 
             return pickResult;
         };
@@ -11398,7 +10905,7 @@ const Renderer = function (scene, options) {
         const includeEntityIds = params.includeEntityIds;
         const excludeEntityIds = params.excludeEntityIds;
 
-        for (let type in drawableTypeInfo) {
+        for (var type in drawableTypeInfo) {
             if (drawableTypeInfo.hasOwnProperty(type)) {
 
                 const drawableInfo = drawableTypeInfo[type];
@@ -11467,7 +10974,7 @@ const Renderer = function (scene, options) {
         pickResult.primIndex = primIndex;
     }
 
-    const pickWorldPos = (function () {
+    var pickWorldPos = (function () {
 
         const tempVec4a = math.vec4();
         const tempVec4b = math.vec4();
@@ -11476,7 +10983,6 @@ const Renderer = function (scene, options) {
         const tempVec4e = math.vec4();
         const tempMat4a = math.mat4();
         const tempMat4b = math.mat4();
-        const tempMat4c = math.mat4();
 
         return function (pickable, canvasX, canvasY, pickViewMatrix, pickProjMatrix, pickResult) {
 
@@ -11501,28 +11007,17 @@ const Renderer = function (scene, options) {
             const screenZ = unpackDepth(pix); // Get screen-space Z at the given canvas coords
 
             // Calculate clip space coordinates, which will be in range of x=[-1..1] and y=[-1..1], with y=(+1) at top
-            const x = (canvasX - canvas.width / 2) / (canvas.width / 2);
-            const y = -(canvasY - canvas.height / 2) / (canvas.height / 2);
-
-            const rtcCenter = pickable.rtcCenter;
-            let pvMat;
-
-            if (rtcCenter) {
-                const rtcPickViewMat = createRTCViewMat(pickViewMatrix, rtcCenter, tempMat4a);
-                pvMat = math.mulMat4(pickProjMatrix, rtcPickViewMat, tempMat4b);
-
-            } else {
-                pvMat = math.mulMat4(pickProjMatrix, pickViewMatrix, tempMat4b);
-            }
-
-            const pvMatInverse = math.inverseMat4(pvMat, tempMat4c);
+            var x = (canvasX - canvas.width / 2) / (canvas.width / 2);
+            var y = -(canvasY - canvas.height / 2) / (canvas.height / 2);
+            var pvMat = math.mulMat4(pickProjMatrix, pickViewMatrix, tempMat4a);
+            var pvMatInverse = math.inverseMat4(pvMat, tempMat4b);
 
             tempVec4a[0] = x;
             tempVec4a[1] = y;
             tempVec4a[2] = -1;
             tempVec4a[3] = 1;
 
-            let world1 = math.transformVec4(pvMatInverse, tempVec4a);
+            var world1 = math.transformVec4(pvMatInverse, tempVec4a);
             world1 = math.mulVec4Scalar(world1, 1 / world1[3]);
 
             tempVec4b[0] = x;
@@ -11530,23 +11025,19 @@ const Renderer = function (scene, options) {
             tempVec4b[2] = 1;
             tempVec4b[3] = 1;
 
-            let world2 = math.transformVec4(pvMatInverse, tempVec4b);
+            var world2 = math.transformVec4(pvMatInverse, tempVec4b);
             world2 = math.mulVec4Scalar(world2, 1 / world2[3]);
 
-            const dir = math.subVec3(world2, world1, tempVec4c);
-            const worldPos = math.addVec3(world1, math.mulVec4Scalar(dir, screenZ, tempVec4d), tempVec4e);
-
-            if (rtcCenter) {
-                math.addVec3(worldPos, rtcCenter);
-            }
+            var dir = math.subVec3(world2, world1, tempVec4c);
+            var worldPos = math.addVec3(world1, math.mulVec4Scalar(dir, screenZ, tempVec4d), tempVec4e);
 
             pickResult.worldPos = worldPos;
         }
     })();
 
     function unpackDepth(depthZ) {
-        const vec = [depthZ[0] / 256.0, depthZ[1] / 256.0, depthZ[2] / 256.0, depthZ[3] / 256.0];
-        const bitShift = [1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0];
+        var vec = [depthZ[0] / 256.0, depthZ[1] / 256.0, depthZ[2] / 256.0, depthZ[3] / 256.0];
+        var bitShift = [1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0];
         return math.dotVec4(vec, bitShift);
     }
 
@@ -11608,7 +11099,7 @@ const Renderer = function (scene, options) {
      */
     this.doOcclusionTest = function () {
 
-        if (this._occlusionTester && this._occlusionTester.needOcclusionTest) {
+        if (this._occlusionTester) {
 
             updateDrawlist();
 
@@ -11625,16 +11116,17 @@ const Renderer = function (scene, options) {
             gl.disable(gl.BLEND);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            for (let type in drawableTypeInfo) {
+            for (var type in drawableTypeInfo) {
                 if (drawableTypeInfo.hasOwnProperty(type)) {
                     const drawableInfo = drawableTypeInfo[type];
                     const drawableList = drawableInfo.drawableList;
-                    for (let i = 0, len = drawableList.length; i < len; i++) {
+                    for (var i = 0, len = drawableList.length; i < len; i++) {
                         const drawable = drawableList[i];
-                        if (!drawable.drawOcclusion || drawable.culled === true || drawable.visible === false || drawable.pickable === false) { // TODO: Option to exclude transparent?
+                        if (!drawable.drawOcclusion || drawable.culled === true || drawable.visible === false || drawable.pickable === false) {
+
+                            // nTODO: Exclude transpArent
                             continue;
                         }
-
                         drawable.drawOcclusion(frameCtx);
                     }
                 }
@@ -11647,7 +11139,7 @@ const Renderer = function (scene, options) {
     };
 
     /**
-     * Read pixels from the renderer's current output. Performs a force-render first.
+     * Read pixels from the renderer's frameCtx buffer. Performs a force-render first
      * @param pixels
      * @param colors
      * @param len
@@ -11655,8 +11147,8 @@ const Renderer = function (scene, options) {
      * @private
      */
     this.readPixels = function (pixels, colors, len, opaqueOnly) {
-        snapshotBuffer.bind();
-        snapshotBuffer.clear();
+        readPixelBuffer.bind();
+        readPixelBuffer.clear();
         this.render({force: true, opaqueOnly: opaqueOnly});
         let color;
         let i;
@@ -11665,63 +11157,14 @@ const Renderer = function (scene, options) {
         for (i = 0; i < len; i++) {
             j = i * 2;
             k = i * 4;
-            color = snapshotBuffer.read(pixels[j], pixels[j + 1]);
+            color = readPixelBuffer.read(pixels[j], pixels[j + 1]);
             colors[k] = color[0];
             colors[k + 1] = color[1];
             colors[k + 2] = color[2];
             colors[k + 3] = color[3];
         }
-        snapshotBuffer.unbind();
+        readPixelBuffer.unbind();
         imageDirty = true;
-    };
-
-    /**
-     * Enter snapshot mode.
-     *
-     * Switches rendering to a hidden snapshot canvas.
-     *
-     * Exit snapshot mode using endSnapshot().
-     */
-    this.beginSnapshot = function () {
-        snapshotBuffer.bind();
-        snapshotBuffer.clear();
-        snapshotBound = true;
-    };
-
-    /**
-     * When in snapshot mode, renders a frame of the current Scene state to the snapshot canvas.
-     */
-    this.renderSnapshot = function () {
-        if (!snapshotBound) {
-            return;
-        }
-        snapshotBuffer.clear();
-        this.render({force: true, opaqueOnly: false});
-        imageDirty = true;
-    };
-
-    /**
-     * When in snapshot mode, gets an image of the snapshot canvas.
-     *
-     * @private
-     * @returns {String} The image data URI.
-     */
-    this.readSnapshot = function (params) {
-        const imageDataURI = snapshotBuffer.readImage(params);
-        return imageDataURI;
-    };
-
-    /**
-     * Exists snapshot mode.
-     *
-     * Switches rendering back to the main canvas.
-     */
-    this.endSnapshot = function () {
-        if (!snapshotBound) {
-            return;
-        }
-        snapshotBuffer.unbind();
-        snapshotBound = false;
     };
 
     /**
@@ -11734,7 +11177,7 @@ const Renderer = function (scene, options) {
         drawables = {};
 
         pickBuffer.destroy();
-        snapshotBuffer.destroy();
+        readPixelBuffer.destroy();
         saoDepthBuffer.destroy();
         occlusionBuffer1.destroy();
         occlusionBuffer2.destroy();
@@ -11750,148 +11193,121 @@ const Renderer = function (scene, options) {
 };
 
 /**
- * @desc Meditates mouse, touch and keyboard events for various interaction controls.
- *
- * Ordinarily, you would only use this component as a utility to help manage input events and state for your
- * own custom input handlers.
- *
- * * Located at {@link Scene#input}
- * * Used by (at least) {@link CameraControl}
- *
- * ## Usage
- *
- * Subscribing to mouse events on the canvas:
- *
- * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- *
- * const viewer = new Viewer({
- *      canvasId: "myCanvas"
- * });
- *
- * const input = viewer.scene.input;
- *
- * const onMouseDown = input.on("mousedown", (canvasCoords) => {
- *       console.log("Mouse down at: x=" + canvasCoords[0] + ", y=" + coords[1]);
- * });
- *
- * const onMouseUp = input.on("mouseup", (canvasCoords) => {
- *       console.log("Mouse up at: x=" + canvasCoords[0] + ", y=" + canvasCoords[1]);
- * });
- *
- * const onMouseClicked = input.on("mouseclicked", (canvasCoords) => {
- *      console.log("Mouse clicked at: x=" + canvasCoords[0] + ", y=" + canvasCoords[1]);
- * });
- *
- * const onDblClick = input.on("dblclick", (canvasCoords) => {
- *       console.log("Double-click at: x=" + canvasCoords[0] + ", y=" + canvasCoords[1]);
- * });
- * ````
- *
- * Subscribing to keyboard events on the canvas:
- *
- * ````javascript
- * const onKeyDown = input.on("keydown", (keyCode) => {
- *      switch (keyCode) {
- *          case this.KEY_A:
- *              console.log("The 'A' key is down");
- *              break;
- *
- *          case this.KEY_B:
- *              console.log("The 'B' key is down");
- *              break;
- *
- *          case this.KEY_C:
- *              console.log("The 'C' key is down");
- *              break;
- *
- *          default:
- *              console.log("Some other key is down");
- *      }
- * });
- *
- * const onKeyUp = input.on("keyup", (keyCode) => {
- *      switch (keyCode) {
- *          case this.KEY_A:
- *              console.log("The 'A' key is up");
- *              break;
- *
- *          case this.KEY_B:
- *              console.log("The 'B' key is up");
- *              break;
- *
- *          case this.KEY_C:
- *              console.log("The 'C' key is up");
- *              break;
- *
- *          default:
- *              console.log("Some other key is up");
- *      }
- *  });
- * ````
- *
- * Checking if keys are down:
- *
- * ````javascript
- * const isCtrlDown = input.ctrlDown;
- * const isAltDown = input.altDown;
- * const shiftDown = input.shiftDown;
- * //...
- *
- * const isAKeyDown = input.keyDown[input.KEY_A];
- * const isBKeyDown = input.keyDown[input.KEY_B];
- * const isShiftKeyDown = input.keyDown[input.KEY_SHIFT];
- * //...
- *
- * ````
- * Unsubscribing from events:
- *
- * ````javascript
- * input.off(onMouseDown);
- * input.off(onMouseUp);
- * //...
- * ````
- *
- * ## Disabling all events
- *
- * Event handling is enabled by default.
- *
- * To disable all events:
- *
- * ````javascript
- * myViewer.scene.input.setEnabled(false);
- * ````
- * To enable all events again:
- *
- * ````javascript
- * myViewer.scene.input.setEnabled(true);
- * ````
- *
- * ## Disabling keyboard input
- *
- * When the mouse is over the canvas, the canvas will consume keyboard events. Therefore, sometimes we need
- * to disable keyboard control, so that other UI elements can get those events.
- *
- * To disable keyboard events:
- *
- * ````javascript
- * myViewer.scene.input.setKeyboardEnabled(false);
- * ````
- *
- * To enable keyboard events again:
- *
- * ````javascript
- * myViewer.scene.input.setKeyboardEnabled(true)
- * ````
+ @desc  Publishes keyboard and mouse events that occur on the parent {@link Scene}'s {@link Canvas}.
+
+ * Each {@link Scene} provides an Input on itself as a read-only property.
+
+ ## Usage
+
+ In this example, we're subscribing to some mouse and key events that will occur on
+ a {@link Scene} {@link Canvas"}}Canvas{{/crossLink}}.
+
+ ````javascript
+ var myScene = new xeokit.Scene();
+
+ var input = myScene.input;
+
+ // We'll save a handle to this subscription
+ // to show how to unsubscribe, further down
+ var handle = input.on("mousedown", function(coords) {
+       console.log("Mouse down at: x=" + coords[0] + ", y=" + coords[1]);
+ });
+
+ input.on("mouseup", function(coords) {
+       console.log("Mouse up at: x=" + coords[0] + ", y=" + coords[1]);
+ });
+
+ input.on("mouseclicked", function(coords) {
+      console.log("Mouse clicked at: x=" + coords[0] + ", y=" + coords[1]);
+ });
+
+ input.on("dblclick", function(coords) {
+       console.log("Double-click at: x=" + coords[0] + ", y=" + coords[1]);
+ });
+
+ input.on("keydown", function(keyCode) {
+        switch (keyCode) {
+
+            case this.KEY_A:
+               console.log("The 'A' key is down");
+               break;
+
+            case this.KEY_B:
+               console.log("The 'B' key is down");
+               break;
+
+            case this.KEY_C:
+               console.log("The 'C' key is down");
+               break;
+
+            default:
+               console.log("Some other key is down");
+       }
+     });
+
+ input.on("keyup", function(keyCode) {
+        switch (keyCode) {
+
+            case this.KEY_A:
+               console.log("The 'A' key is up");
+               break;
+
+            case this.KEY_B:
+               console.log("The 'B' key is up");
+               break;
+
+            case this.KEY_C:
+               console.log("The 'C' key is up");
+               break;
+
+            default:
+               console.log("Some other key is up");
+        }
+     });
+
+ // TODO: ALT and CTRL keys etc
+ ````
+
+ ### Unsubscribing from Events
+
+ In the snippet above, we saved a handle to one of our event subscriptions.
+
+ We can then use that handle to unsubscribe again, like this:
+
+ ````javascript
+ input.off(handle);
+ ````
+
+ ## Disabling keyboard input
+
+ When the mouse is over the canvas, the canvas will consume "keydown" events. Therefore, sometimes we need to prevent
+ disable keyboard control, so that other UI elements can get those events.
+
+ To disable keyboard control, set {@link Input#keyboardEnabled} ````false````:
+
+ ````javascript
+ myViewer.scene.input.keyboardEnabled = false;
+ ````
+
+ @extends Component
  */
+
 class Input extends Component {
 
     /**
-     * @private
+     @private
      */
+    get type() {
+        return "Input";
+    }
+
     constructor(owner, cfg = {}) {
 
         super(owner, cfg);
+
+        const self = this;
+
+        // Key codes
 
         /**
          * Code for the BACKSPACE key.
@@ -12685,50 +12101,38 @@ class Input extends Component {
          */
         this.KEY_SPACE = 32;
 
-        /**
-         * The canvas element that mouse and keyboards are bound to.
-         *
-         * @final
-         * @type {HTMLCanvasElement}
-         */
-        this.element = cfg.element;
+        this._element = cfg.element;
 
-        /** True whenever ALT key is down.
-         *
-         * @type {boolean}
-         */
+        // True when ALT down
         this.altDown = false;
 
-        /** True whenever CTRL key is down.
+        /** True whenever CTRL is down
          *
          * @type {boolean}
          */
         this.ctrlDown = false;
 
-        /** True whenever left mouse button is down.
+        /** True whenever left mouse button is down
          *
          * @type {boolean}
          */
         this.mouseDownLeft = false;
 
-        /**
-         * True whenever middle mouse button is down.
+        /** True whenever middle mouse button is down
          *
          * @type {boolean}
          */
         this.mouseDownMiddle = false;
 
-        /**
-         * True whenever the right mouse button is down.
+        /** True whenever right mouse button is down
          *
          * @type {boolean}
          */
         this.mouseDownRight = false;
 
-        /**
-         * Flag for each key that's down.
+        /** Flag for each key that's down
          *
-         * @type {boolean[]}
+         * @type {boolean}
          */
         this.keyDown = [];
 
@@ -12738,7 +12142,7 @@ class Input extends Component {
          */
         this.enabled = true;
 
-        /** True while keyboard input is enabled.
+        /** True while keyboard input enabled.
          *
          * Default value is ````true````.
          *
@@ -12748,214 +12152,335 @@ class Input extends Component {
          */
         this.keyboardEnabled = true;
 
-        /** True while the mouse is over the canvas.
+        /** True while mouse is over the parent {@link Scene} {@link Canvas"}}Canvas{{/crossLink}}
          *
          * @type {boolean}
          */
         this.mouseover = false;
 
-        /**
-         * Current mouse position within the canvas.
-         * @type {Number[]}
-         */
-        this.mouseCanvasPos = math.vec2();
+        // Capture input events and publish them on this component
 
-        this._bindEvents();
-    }
+        document.addEventListener("keydown", this._keyDownListener = function (e) {
 
-    _bindEvents() {
-
-        if (this._eventsBound) {
-            return;
-        }
-
-        document.addEventListener("keydown", this._keyDownListener = (e) => {
-            if (!this.enabled || (!this.keyboardEnabled)) {
+            if (!self.enabled || (!self.keyboardEnabled)) {
                 return;
             }
+
             if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-                if (e.keyCode === this.KEY_CTRL) {
-                    this.ctrlDown = true;
-                } else if (e.keyCode === this.KEY_ALT) {
-                    this.altDown = true;
-                } else if (e.keyCode === this.KEY_SHIFT) {
-                    this.shiftDown = true;
+
+                if (e.keyCode === self.KEY_CTRL) {
+                    self.ctrlDown = true;
+                } else if (e.keyCode === self.KEY_ALT) {
+                    self.altDown = true;
                 }
-                this.keyDown[e.keyCode] = true;
-                this.fire("keydown", e.keyCode, true);
+
+                self.keyDown[e.keyCode] = true;
+
+                /**
+                 * Fired whenever a key is pressed while the parent
+                 * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}} has input focus.
+                 * @event keydown
+                 * @param value {Number} The key code, for example {@link Input/KEY_LEFT_ARROW},
+                 */
+                self.fire("keydown", e.keyCode, true);
             }
+
+            if (self.mouseover) {
+                e.preventDefault();
+            }
+
         }, false);
 
-        document.addEventListener("keyup", this._keyUpListener = (e) => {
-            if (!this.enabled || (!this.keyboardEnabled)) {
+        document.addEventListener("keyup", this._keyUpListener = function (e) {
+
+            if (!self.enabled || (!self.keyboardEnabled)) {
                 return;
             }
+
             if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
-                if (e.keyCode === this.KEY_CTRL) {
-                    this.ctrlDown = false;
-                } else if (e.keyCode === this.KEY_ALT) {
-                    this.altDown = false;
-                } else if (e.keyCode === this.KEY_SHIFT) {
-                    this.shiftDown = false;
+
+                if (e.keyCode === self.KEY_CTRL) {
+                    self.ctrlDown = false;
+                } else if (e.keyCode === self.KEY_ALT) {
+                    self.altDown = false;
                 }
-                this.keyDown[e.keyCode] = false;
-                this.fire("keyup", e.keyCode, true);
+
+                self.keyDown[e.keyCode] = false;
+
+                /**
+                 * Fired whenever a key is released while the parent
+                 * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}} has input focus.
+                 * @event keyup
+                 * @param value {Number} The key code, for example {@link Input/KEY_LEFT_ARROW},
+                 */
+                self.fire("keyup", e.keyCode, true);
             }
         });
 
-        this.element.addEventListener("mouseenter", this._mouseEnterListener = (e) => {
-            if (!this.enabled) {
+        cfg.element.addEventListener("mouseenter", this._mouseEnterListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
-            this.mouseover = true;
-            this._getMouseCanvasPos(e);
-            this.fire("mouseenter", this.mouseCanvasPos, true);
+
+            self.mouseover = true;
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            /**
+             * Fired whenever the mouse is moved into of the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event mouseenter
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("mouseenter", coords, true);
         });
 
-        this.element.addEventListener("mouseleave", this._mouseLeaveListener = (e) => {
-            if (!this.enabled) {
+        cfg.element.addEventListener("mouseleave", this._mouseLeaveListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
-            this.mouseover = false;
-            this._getMouseCanvasPos(e);
-            this.fire("mouseleave", this.mouseCanvasPos, true);
+
+            self.mouseover = false;
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            /**
+             * Fired whenever the mouse is moved out of the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event mouseleave
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("mouseleave", coords, true);
         });
 
-        this.element.addEventListener("mousedown", this._mouseDownListener = (e) => {
-            if (!this.enabled) {
+
+        cfg.element.addEventListener("mousedown", this._mouseDownListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
+
             switch (e.which) {
+
                 case 1:// Left button
-                    this.mouseDownLeft = true;
+                    self.mouseDownLeft = true;
                     break;
+
                 case 2:// Middle/both buttons
-                    this.mouseDownMiddle = true;
+                    self.mouseDownMiddle = true;
                     break;
+
                 case 3:// Right button
-                    this.mouseDownRight = true;
+                    self.mouseDownRight = true;
                     break;
             }
-            this._getMouseCanvasPos(e);
-            this.element.focus();
-            this.fire("mousedown", this.mouseCanvasPos, true);
-            if (this.mouseover) {
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            cfg.element.focus();
+
+            /**
+             * Fired whenever the mouse is pressed over the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event mousedown
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("mousedown", coords, true);
+
+            if (self.mouseover) {
                 e.preventDefault();
             }
         });
 
-        document.addEventListener("mouseup", this._mouseUpListener = (e) => {
-            if (!this.enabled) {
+        document.addEventListener("mouseup", this._mouseUpListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
+
             switch (e.which) {
+
                 case 1:// Left button
-                    this.mouseDownLeft = false;
+                    self.mouseDownLeft = false;
                     break;
+
                 case 2:// Middle/both buttons
-                    this.mouseDownMiddle = false;
+                    self.mouseDownMiddle = false;
                     break;
+
                 case 3:// Right button
-                    this.mouseDownRight = false;
+                    self.mouseDownRight = false;
                     break;
             }
-            this.fire("mouseup", this.mouseCanvasPos, true);
-            // if (this.mouseover) {
-            //     e.preventDefault();
-            // }
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            /**
+             * Fired whenever the mouse is released over the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event mouseup
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("mouseup", coords, true);
+
+            if (self.mouseover) {
+                e.preventDefault();
+            }
         }, true);
 
-        document.addEventListener("click", this._clickListener = (e) => {
-            if (!this.enabled) {
+        document.addEventListener("click", this._clickListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
+
             switch (e.which) {
+
                 case 1:// Left button
-                    this.mouseDownLeft = false;
-                    this.mouseDownRight = false;
+                    self.mouseDownLeft = false;
+                    self.mouseDownRight = false;
                     break;
+
                 case 2:// Middle/both buttons
-                    this.mouseDownMiddle = false;
+                    self.mouseDownMiddle = false;
                     break;
+
                 case 3:// Right button
-                    this.mouseDownLeft = false;
-                    this.mouseDownRight = false;
+                    self.mouseDownLeft = false;
+                    self.mouseDownRight = false;
                     break;
             }
-            this._getMouseCanvasPos(e);
-            this.fire("click", this.mouseCanvasPos, true);
-            if (this.mouseover) {
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            /**
+             * Fired whenever the mouse is clicked over the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event dblclick
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("click", coords, true);
+
+            if (self.mouseover) {
                 e.preventDefault();
             }
         });
 
-        document.addEventListener("dblclick", this._dblClickListener = (e) => {
-            if (!this.enabled) {
+        document.addEventListener("dblclick", this._dblClickListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
+
             switch (e.which) {
+
                 case 1:// Left button
-                    this.mouseDownLeft = false;
-                    this.mouseDownRight = false;
+                    self.mouseDownLeft = false;
+                    self.mouseDownRight = false;
                     break;
+
                 case 2:// Middle/both buttons
-                    this.mouseDownMiddle = false;
+                    self.mouseDownMiddle = false;
                     break;
+
                 case 3:// Right button
-                    this.mouseDownLeft = false;
-                    this.mouseDownRight = false;
+                    self.mouseDownLeft = false;
+                    self.mouseDownRight = false;
                     break;
             }
-            this._getMouseCanvasPos(e);
-            this.fire("dblclick", this.mouseCanvasPos, true);
-            if (this.mouseover) {
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            /**
+             * Fired whenever the mouse is double-clicked over the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event dblclick
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("dblclick", coords, true);
+
+            if (self.mouseover) {
                 e.preventDefault();
             }
         });
 
-        this.element.addEventListener("mousemove", this._mouseMoveListener = (e) => {
-            if (!this.enabled) {
+        cfg.element.addEventListener("mousemove", this._mouseMoveListener = function (e) {
+
+            if (!self.enabled) {
                 return;
             }
-            this._getMouseCanvasPos(e);
-            this.fire("mousemove", this.mouseCanvasPos, true);
-            if (this.mouseover) {
+
+            const coords = self._getClickCoordsWithinElement(e);
+
+            /**
+             * Fired whenever the mouse is moved over the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event mousedown
+             * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+             */
+            self.fire("mousemove", coords, true);
+
+            if (self.mouseover) {
                 e.preventDefault();
             }
         });
 
-        this.element.addEventListener("wheel", this._mouseWheelListener = (e, d) => {
-            if (!this.enabled) {
+        cfg.element.addEventListener("wheel", this._mouseWheelListener = function (e, d) {
+
+            if (!self.enabled) {
                 return;
             }
+
             const delta = Math.max(-1, Math.min(1, -e.deltaY * 40));
-            this.fire("mousewheel", delta, true);
+
+            /**
+             * Fired whenever the mouse wheel is moved over the parent
+             * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+             * @event mousewheel
+             * @param delta {Number} The mouse wheel delta,
+             */
+            self.fire("mousewheel", delta, true);
         }, {passive: true});
 
         // mouseclicked
 
-        {
+        (function () {
+
             let downX;
             let downY;
+
             // Tolerance between down and up positions for a mouse click
             const tolerance = 2;
-            this.on("mousedown", (params) => {
+
+            self.on("mousedown", function (params) {
                 downX = params[0];
                 downY = params[1];
             });
-            this.on("mouseup", (params) => {
+
+            self.on("mouseup", function (params) {
+
                 if (downX >= (params[0] - tolerance) &&
                     downX <= (params[0] + tolerance) &&
                     downY >= (params[1] - tolerance) &&
                     downY <= (params[1] + tolerance)) {
-                    this.fire("mouseclicked", params, true);
+
+                    /**
+                     * Fired whenever the mouse is clicked over the parent
+                     * {@link Scene}'s {@link Canvas"}}Canvas{{/crossLink}}.
+                     * @event mouseclicked
+                     * @param value {[Number, Number]} The mouse coordinates within the {@link Canvas"}}Canvas{{/crossLink}},
+                     */
+                    self.fire("mouseclicked", params, true);
                 }
             });
-        }
+        })();
+
 
         // VR
 
-        {
+        (function () {
 
             const orientationAngleLookup = {
                 'landscape-primary': 90,
@@ -12990,7 +12515,7 @@ class Input extends Component {
             };
 
             if (window.OrientationChangeEvent) {
-                window.addEventListener('orientationchange', this._orientationchangedListener = () => {
+                window.addEventListener('orientationchange', self._orientationchangedListener = function () {
 
                         orientation = window.screen.orientation || window.screen.mozOrientation || window.msOrientation || null;
                         orientationAngle = orientation ? (orientationAngleLookup[orientation] || 0) : 0;
@@ -13005,13 +12530,13 @@ class Input extends Component {
                          * @param orientation The orientation: "landscape-primary", "landscape-secondary", "portrait-secondary" or "portrait-primary"
                          * @param orientationAngle The orientation angle in degrees: 90 for landscape-primary, -90 for landscape-secondary, 180 for portrait-secondary or 0 for portrait-primary.
                          */
-                        this.fire("orientationchange", orientationChangeEvent);
+                        self.fire("orientationchange", orientationChangeEvent);
                     },
                     false);
             }
 
             if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', this._deviceMotionListener = (e) => {
+                window.addEventListener('devicemotion', self._deviceMotionListener = function (e) {
 
                         deviceMotionEvent.interval = e.interval;
                         deviceMotionEvent.orientationAngle = orientationAngle;
@@ -13051,13 +12576,13 @@ class Input extends Component {
                          * @param, Number interval The interval, in milliseconds, at which this event is fired. The next event will be fired in approximately this amount of time.
                          * @param  Float32Array rotationRate The rates of rotation of the device about each axis, in degrees per second.
                          */
-                        this.fire("devicemotion", deviceMotionEvent);
+                        self.fire("devicemotion", deviceMotionEvent);
                     },
                     false);
             }
 
             if (window.DeviceOrientationEvent) {
-                window.addEventListener("deviceorientation", this._deviceOrientListener = (e) => {
+                window.addEventListener("deviceorientation", self._deviceOrientListener = function (e) {
 
                         deviceOrientationEvent.gamma = e.gamma;
                         deviceOrientationEvent.beta = e.beta;
@@ -13076,81 +12601,44 @@ class Input extends Component {
                          * @param Number gamma The current orientation of the device around the Y axis in degrees; that is, how far the device is turned left or right.
                          * @param Boolean absolute This value is true if the orientation is provided as a difference between the device coordinate frame and the Earth coordinate frame; if the device can't detect the Earth coordinate frame, this value is false.
                          */
-                        this.fire("deviceorientation", deviceOrientationEvent);
+                        self.fire("deviceorientation", deviceOrientationEvent);
                     },
                     false);
             }
-        }
-        this._eventsBound = true;
+        })();
     }
 
-    _unbindEvents() {
-        if (!this._eventsBound) {
-            return;
-        }
-        document.removeEventListener("keydown", this._keyDownListener);
-        document.removeEventListener("keyup", this._keyUpListener);
-        this.element.removeEventListener("mouseenter", this._mouseEnterListener);
-        this.element.removeEventListener("mouseleave", this._mouseLeaveListener);
-        this.element.removeEventListener("mousedown", this._mouseDownListener);
-        document.removeEventListener("mouseup", this._mouseDownListener);
-        document.removeEventListener("click", this._clickListener);
-        document.removeEventListener("dblclick", this._dblClickListener);
-        this.element.removeEventListener("mousemove", this._mouseMoveListener);
-        this.element.removeEventListener("wheel", this._mouseWheelListener);
-        if (window.OrientationChangeEvent) {
-            window.removeEventListener('orientationchange', this._orientationchangedListener);
-        }
-        if (window.DeviceMotionEvent) {
-            window.removeEventListener('devicemotion', this._deviceMotionListener);
-        }
-        if (window.DeviceOrientationEvent) {
-            window.removeEventListener("deviceorientation", this._deviceOrientListener);
-        }
-        this._eventsBound = false;
-    }
-
-    _getMouseCanvasPos(event) {
+    _getClickCoordsWithinElement(event) {
+        const coords = [0, 0];
         if (!event) {
             event = window.event;
-            this.mouseCanvasPos[0] = event.x;
-            this.mouseCanvasPos[1] = event.y;
+            coords.x = event.x;
+            coords.y = event.y;
         } else {
             let element = event.target;
             let totalOffsetLeft = 0;
             let totalOffsetTop = 0;
+
             while (element.offsetParent) {
                 totalOffsetLeft += element.offsetLeft;
                 totalOffsetTop += element.offsetTop;
                 element = element.offsetParent;
             }
-            this.mouseCanvasPos[0] = event.pageX - totalOffsetLeft;
-            this.mouseCanvasPos[1] = event.pageY - totalOffsetTop;
+            coords[0] = event.pageX - totalOffsetLeft;
+            coords[1] = event.pageY - totalOffsetTop;
         }
+        return coords;
     }
 
     /**
-     * Sets whether input handlers are enabled.
+     * Enable or disable all input handlers
      *
-     * Default value is ````true````.
-     *
-     * @param {Boolean} enable Indicates if input handlers are enabled.
+     * @param enable
      */
     setEnabled(enable) {
         if (this.enabled !== enable) {
             this.fire("enabled", this.enabled = enable);
         }
-    }
-
-    /**
-     * Gets whether input handlers are enabled.
-     *
-     * Default value is ````true````.
-     *
-     * @returns {Boolean} Indicates if input handlers are enabled.
-     */
-    getEnabled() {
-        return this.enabled;
     }
 
     /**
@@ -13160,7 +12648,7 @@ class Input extends Component {
      *
      * {@link CameraControl} will not respond to keyboard events while this is set ````false````.
      *
-     * @param {Boolean} value Indicates whether keyboard input is enabled.
+     * @param {Boolean} value Set ````true```` to enable keyboard input.
      */
     setKeyboardEnabled(value) {
         this.keyboardEnabled = value;
@@ -13173,18 +12661,34 @@ class Input extends Component {
      *
      * {@link CameraControl} will not respond to keyboard events while this is set ````false````.
      *
-     * @returns {Boolean} Returns whether keyboard input is enabled.
+     * @returns {Boolean} Returns ````true```` if keyboard input is enabled.
      */
     getKeyboardEnabled() {
         return this.keyboardEnabled;
     }
 
-    /**
-     * @private
-     */
     destroy() {
         super.destroy();
-        this._unbindEvents();
+        // Prevent memory leak when destroying canvas/WebGL context
+        document.removeEventListener("keydown", this._keyDownListener);
+        document.removeEventListener("keyup", this._keyUpListener);
+        this._element.removeEventListener("mouseenter", this._mouseEnterListener);
+        this._element.removeEventListener("mouseleave", this._mouseLeaveListener);
+        this._element.removeEventListener("mousedown", this._mouseDownListener);
+        document.removeEventListener("mouseup", this._mouseDownListener);
+        document.removeEventListener("click", this._clickListener);
+        document.removeEventListener("dblclick", this._dblClickListener);
+        this._element.removeEventListener("mousemove", this._mouseMoveListener);
+        this._element.removeEventListener("wheel", this._mouseWheelListener);
+        if (window.OrientationChangeEvent) {
+            window.removeEventListener('orientationchange', this._orientationchangedListener);
+        }
+        if (window.DeviceMotionEvent) {
+            window.removeEventListener('devicemotion', this._deviceMotionListener);
+        }
+        if (window.DeviceOrientationEvent) {
+            window.removeEventListener("deviceorientation", this._deviceOrientListener);
+        }
     }
 }
 
@@ -14751,7 +14255,7 @@ class Camera extends Component {
     set worldAxis(axis) {
         axis = axis || [1, 0, 0, 0, 1, 0, 0, 0, 1];
         if (!this._worldAxis) {
-            this._worldAxis = math.vec3(axis);
+            this._worldAxis = new Float32Array(axis);
         } else {
             this._worldAxis.set(axis);
         }
@@ -15072,7 +14576,6 @@ class Camera extends Component {
          @param value The property's new value
          */
         this.fire("projection",  this._projectionType);
-        this.fire("projMatrix",  this._project.matrix);
     }
 
     /**
@@ -15254,68 +14757,55 @@ class DirLight extends Light {
 
         super(owner, cfg);
 
+        const self = this;
+
         this._shadowRenderBuf = null;
         this._shadowViewMatrix = null;
         this._shadowProjMatrix = null;
         this._shadowViewMatrixDirty = true;
         this._shadowProjMatrixDirty = true;
 
-        const camera = this.scene.camera;
-        const canvas = this.scene.canvas;
-
-        this._onCameraViewMatrix = camera.on("viewMatrix", () => {
-            this._shadowViewMatrixDirty = true;
-        });
-
-        this._onCameraProjMatrix = camera.on("projMatrix", () => {
-            this._shadowProjMatrixDirty = true;
-        });
-
-        this._onCanvasBoundary = canvas.on("boundary", () => {
-            this._shadowProjMatrixDirty = true;
-        });
-
         this._state = new RenderState({
-
             type: "dir",
             dir: math.vec3([1.0, 1.0, 1.0]),
             color: math.vec3([0.7, 0.7, 0.8]),
             intensity: 1.0,
             space: cfg.space || "view",
             castsShadow: false,
+            shadowDirty: true,
 
-            getShadowViewMatrix: () => {
-                if (this._shadowViewMatrixDirty) {
-                    if (!this._shadowViewMatrix) {
-                        this._shadowViewMatrix = math.identityMat4();
+            getShadowViewMatrix: (function () {
+                const look = math.vec3();
+                const up = math.vec3([0, 1, 0]);
+                return function () {
+                    if (self._shadowViewMatrixDirty) {
+                        if (!self._shadowViewMatrix) {
+                            self._shadowViewMatrix = math.identityMat4();
+                        }
+                        const dir = self._state.dir;
+                        math.lookAtMat4v([-dir[0], -dir[1], -dir[2]], [0, 0, 0], up, self._shadowViewMatrix);
+                        self._shadowViewMatrixDirty = false;
                     }
-                    const camera = this.scene.camera;
-                    const dir = this._state.dir;
-                    const look = camera.look;
-                    const eye = [look[0] - dir[0], look[1] - dir[1], look[2] - dir[2]];
-                    const up = [0, 1, 0];
-                    math.lookAtMat4v(eye, look, up, this._shadowViewMatrix);
-                    this._shadowViewMatrixDirty = false;
+                    return self._shadowViewMatrix;
+                };
+            })(),
+
+            getShadowProjMatrix: function () {
+                if (self._shadowProjMatrixDirty) { // TODO: Set when canvas resizes
+                    if (!self._shadowProjMatrix) {
+                        self._shadowProjMatrix = math.identityMat4();
+                    }
+                    math.orthoMat4c(-10, 10, -10, 10, 0, 500.0, self._shadowProjMatrix);
+                    self._shadowProjMatrixDirty = false;
                 }
-                return this._shadowViewMatrix;
+                return self._shadowProjMatrix;
             },
 
-            getShadowProjMatrix: () => {
-                if (this._shadowProjMatrixDirty) { // TODO: Set when canvas resizes
-                    if (!this._shadowProjMatrix) {
-                        this._shadowProjMatrix = math.identityMat4();
-                    }
-                    math.orthoMat4c(-40, 40, -40, 40, -40.0, 80, this._shadowProjMatrix);  // left, right, bottom, top, near, far, dest
-                    this._shadowProjMatrixDirty = false;
+            getShadowRenderBuf: function () {
+                if (!self._shadowRenderBuf) {
+                    self._shadowRenderBuf = new RenderBuffer(self.scene.canvas.canvas, self.scene.canvas.gl, {size: [1024, 1024]});
                 }
-                return this._shadowProjMatrix;
-            },
-
-            getShadowRenderBuf: () => {
-                if (!this._shadowRenderBuf) {
-                    this._shadowRenderBuf = new RenderBuffer(this.scene.canvas.canvas, this.scene.canvas.gl, {size: [1024, 1024]}); // Super old mobile devices have a limit of 1024x1024 textures
-                }
-                return this._shadowRenderBuf;
+                return self._shadowRenderBuf;
             }
         });
 
@@ -15323,7 +14813,6 @@ class DirLight extends Light {
         this.color = cfg.color;
         this.intensity = cfg.intensity;
         this.castsShadow = cfg.castsShadow;
-
         this.scene._lightCreated(this);
     }
 
@@ -15430,13 +14919,6 @@ class DirLight extends Light {
      * Destroys this DirLight.
      */
     destroy() {
-
-        const camera = this.scene.camera;
-        const canvas = this.scene.canvas;
-        camera.off(this._onCameraViewMatrix);
-        camera.off(this._onCameraProjMatrix);
-        canvas.off(this._onCanvasBoundary);
-
         super.destroy();
         this._state.destroy();
         if (this._shadowRenderBuf) {
@@ -15837,26 +15319,6 @@ function getPositionsBounds(array) {
     };
 }
 
-const createPositionsDecodeMatrix = (function () {
-    const translate = math.mat4();
-    const scale = math.mat4();
-    return function (aabb, positionsDecodeMatrix) {
-        positionsDecodeMatrix = positionsDecodeMatrix || math.mat4();
-        const xmin = aabb[0];
-        const ymin = aabb[1];
-        const zmin = aabb[2];
-        const xwid = aabb[3] - xmin;
-        const ywid = aabb[4] - ymin;
-        const zwid = aabb[5] - zmin;
-        const maxInt = 65535;
-        math.identityMat4(translate);
-        math.translationMat4v(aabb, translate);
-        math.identityMat4(scale);
-        math.scalingMat4v([xwid / maxInt, ywid / maxInt, zwid / maxInt], scale);
-        math.mulMat4(translate, scale, positionsDecodeMatrix);
-        return positionsDecodeMatrix;
-    };
-})();
 
 /**
  * @private
@@ -16142,7 +15604,6 @@ function decompressNormals(octs, result) {
 const geometryCompressionUtils = {
 
     getPositionsBounds: getPositionsBounds,
-    createPositionsDecodeMatrix: createPositionsDecodeMatrix,
     compressPositions: compressPositions,
     decompressPositions: decompressPositions,
     decompressPosition: decompressPosition,
@@ -16735,7 +16196,7 @@ class ReadableGeometry extends Geometry {
     /**
      * Local-space axis-aligned 3D boundary (AABB) of this geometry.
      *
-     * The AABB is represented by a six-element Float64Array containing the min/max extents of the
+     * The AABB is represented by a six-element Float32Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @property aabb
@@ -16756,7 +16217,7 @@ class ReadableGeometry extends Geometry {
     /**
      * Local-space oriented 3D boundary (OBB) of this geometry.
      *
-     * The OBB is represented by a 32-element Float64Array containing the eight vertices of the box,
+     * The OBB is represented by a 32-element Float32Array containing the eight vertices of the box,
      * where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
      *
      * @property obb
@@ -19139,7 +18600,7 @@ class Metrics extends Component {
      * @param {Number[]} [realPos] Destination for Real-space 3D position.
      * @returns {Number[]} Real-space 3D position, in units indicated by {@link Metrics#units}.
      */
-    worldToRealPos(worldPos, realPos = math.vec3(3)) {
+    worldToRealPos(worldPos, realPos = new Float32Array(3)) {
         realPos[0] = this._origin[0] + (this._scale * worldPos[0]);
         realPos[1] = this._origin[1] + (this._scale * worldPos[1]);
         realPos[2] = this._origin[2] + (this._scale * worldPos[2]);
@@ -19154,7 +18615,7 @@ class Metrics extends Component {
      * @param {Number[]} [worldPos] Destination for World-space 3D position.
      * @returns {Number[]} World-space 3D position.
      */
-    realToWorldPos(realPos, worldPos = math.vec3(3)) {
+    realToWorldPos(realPos, worldPos = new Float32Array(3)) {
         worldPos[0] = (realPos[0] - this._origin[0]) / this._scale;
         worldPos[1] = (realPos[1] - this._origin[1]) / this._scale;
         worldPos[2] = (realPos[2] - this._origin[2]) / this._scale;
@@ -19216,7 +18677,7 @@ class Metrics extends Component {
  * }
  *
  * sao.enabled = true; // Enable SAO - only works if supported (see above)
- * sao.intensity = 0.20;
+ * sao.intensity = 0.25;
  * sao.bias = 0.5;
  * sao.scale = 500.0;
  * sao.minResolution = 0.0;
@@ -19461,13 +18922,13 @@ class SAO extends Component {
     /**
      * Sets the degree of darkening (ambient obscurance) produced by the SAO effect.
      *
-     * Default value is ````0.20````.
+     * Default value is ````0.25````.
      *
      * @type {Number}
      */
     set intensity(value) {
         if (value === undefined || value === null) {
-            value = 0.20;
+            value = 0.25;
         }
         if (this._intensity === value) {
             return;
@@ -19810,24 +19271,24 @@ function getEntityIDMap(scene, entityIds) {
  * For example, to pick a point on the surface of the closest entity at the given canvas coordinates:
  *
  * ````javascript
- * var pickResult = scene.pick({
+ * var hit = scene.pick({
  *      pickSurface: true,
  *      canvasPos: [23, 131]
  * });
  *
- * if (pickResult) { // Picked an entity
+ * if (hit) { // Picked an entity
  *
- *     var entity = pickResult.entity;
+ *     var entity = hit.entity;
  *
- *     var primitive = pickResult.primitive; // Type of primitive that was picked, usually "triangles"
- *     var primIndex = pickResult.primIndex; // Position of triangle's first index in the picked Mesh's Geometry's indices array
- *     var indices = pickResult.indices; // UInt32Array containing the triangle's vertex indices
- *     var localPos = pickResult.localPos; // Float64Array containing the picked Local-space position on the triangle
- *     var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the triangle
- *     var viewPos = pickResult.viewPos; // Float64Array containing the picked View-space position on the triangle
- *     var bary = pickResult.bary; // Float64Array containing the picked barycentric position within the triangle
- *     var normal = pickResult.normal; // Float64Array containing the interpolated normal vector at the picked position on the triangle
- *     var uv = pickResult.uv; // Float64Array containing the interpolated UV coordinates at the picked position on the triangle
+ *     var primitive = hit.primitive; // Type of primitive that was picked, usually "triangles"
+ *     var primIndex = hit.primIndex; // Position of triangle's first index in the picked Mesh's Geometry's indices array
+ *     var indices = hit.indices; // UInt32Array containing the triangle's vertex indices
+ *     var localPos = hit.localPos; // Float32Array containing the picked Local-space position on the triangle
+ *     var worldPos = hit.worldPos; // Float32Array containing the picked World-space position on the triangle
+ *     var viewPos = hit.viewPos; // Float32Array containing the picked View-space position on the triangle
+ *     var bary = hit.bary; // Float32Array containing the picked barycentric position within the triangle
+ *     var normal = hit.normal; // Float32Array containing the interpolated normal vector at the picked position on the triangle
+ *     var uv = hit.uv; // Float32Array containing the interpolated UV coordinates at the picked position on the triangle
  * }
  * ````
  *
@@ -19841,14 +19302,14 @@ function getEntityIDMap(scene, entityIds) {
  * in the way, as if they weren't there:
  *
  * ````javascript
- * var pickResult = scene.pick({
+ * var hit = scene.pick({
  *      canvasPos: [23, 131],
  *      includeEntities: ["gearbox#77.0", "gearbox#79.0"]
  * });
  *
- * if (pickResult) {
+ * if (hit) {
  *       // Entity will always be either "gearbox#77.0" or "gearbox#79.0"
- *       var entity = pickResult.entity;
+ *       var entity = hit.entity;
  * }
  * ````
  *
@@ -19856,14 +19317,14 @@ function getEntityIDMap(scene, entityIds) {
  * Entities if they happen to be in the way:
  *
  * ````javascript
- * var pickResult = scene.pick({
+ * var hit = scene.pick({
  *      canvasPos: [23, 131],
  *      excludeEntities: ["gearbox#77.0", "gearbox#79.0"]
  * });
  *
- * if (pickResult) {
+ * if (hit) {
  *       // Entity will never be "gearbox#77.0" or "gearbox#79.0"
- *       var entity = pickResult.entity;
+ *       var entity = hit.entity;
  * }
  * ````
  *
@@ -19990,7 +19451,6 @@ class Scene extends Component {
     }
 
     /**
-     * @private
      * @constructor
      * @param {Object} cfg Scene configuration.
      * @param {String} [cfg.canvasId]  ID of an existing HTML canvas for the {@link Scene#canvas} - either this or canvasElement is mandatory. When both values are given, the element reference is always preferred to the ID.
@@ -20008,7 +19468,6 @@ class Scene extends Component {
         }
 
         const transparent = (!!cfg.transparent);
-        const alphaDepthMask = (!!cfg.alphaDepthMask);
 
         this._aabbDirty = true;
 
@@ -20121,34 +19580,6 @@ class Scene extends Component {
         this.colorizedObjects = {};
         this._numColorizedObjects = 0;
 
-        /**
-         * Map of {@link Entity}s that represent objects whose opacity was updated.
-         *
-         * An Entity represents an object if {@link Entity#isObject} is ````true````.
-         *
-         * Each {@link Entity} is mapped here by {@link Entity#id}.
-         *
-         * @property opacityObjects
-         * @final
-         * @type {{String:Object}}
-         */
-        this.opacityObjects = {};
-        this._numOpacityObjects = 0;
-
-        /**
-         * Map of {@link Entity}s that represent objects whose {@link Entity#offset}s were updated.
-         *
-         * An Entity represents an object if {@link Entity#isObject} is ````true````.
-         *
-         * Each {@link Entity} is mapped here by {@link Entity#id}.
-         *
-         * @property offsetObjects
-         * @final
-         * @type {{String:Object}}
-         */
-        this.offsetObjects = {};
-        this._numOffsetObjects = 0;
-
         // Cached ID arrays, lazy-rebuilt as needed when stale after map updates
 
         /**
@@ -20161,8 +19592,6 @@ class Scene extends Component {
         this._highlightedObjectIds = null;
         this._selectedObjectIds = null;
         this._colorizedObjectIds = null;
-        this._opacityObjectIds = null;
-        this._offsetObjectIds = null;
 
         this._collidables = {}; // Components that contribute to the Scene AABB
         this._compilables = {}; // Components that require shader compilation
@@ -20244,8 +19673,7 @@ class Scene extends Component {
         });
 
         this._renderer = new Renderer(this, {
-            transparent: transparent,
-            alphaDepthMask: alphaDepthMask
+            transparent: transparent
         });
 
         this._sectionPlanesState = new (function () {
@@ -20263,7 +19691,6 @@ class Scene extends Component {
                     return this.hash = ";";
                 }
                 let sectionPlane;
-
                 const hashParts = [];
                 for (let i = 0, len = sectionPlanes.length; i < len; i++) {
                     sectionPlane = sectionPlanes[i];
@@ -20466,7 +19893,7 @@ class Scene extends Component {
         // Default lights
 
         new AmbientLight(this, {
-            color: [1.0, 1.0, 1.0],
+            color: [0.3, 0.3, 0.3],
             intensity: 0.7
         });
 
@@ -20522,7 +19949,7 @@ class Scene extends Component {
                 window.nextID = 0;
             }
             //component.id = math.createUUID();
-            component.id = "__" + window.nextID++;
+            component.id = "_" + window.nextID++;
             while (this.components[component.id]) {
                 component.id = math.createUUID();
             }
@@ -20599,7 +20026,6 @@ class Scene extends Component {
     _sectionPlaneDestroyed(sectionPlane) {
         delete this.sectionPlanes[sectionPlane.id];
         this.scene._sectionPlanesState.removeSectionPlane(sectionPlane._state);
-        this.scene.fire("sectionPlaneDestroyed", sectionPlane, true /* Don't retain event */);
         this._needRecompile = true;
     }
 
@@ -20699,28 +20125,6 @@ class Scene extends Component {
             this._numColorizedObjects--;
         }
         this._colorizedObjectIds = null; // Lazy regenerate
-    }
-
-    _objectOpacityUpdated(entity, opacityUpdated) {
-        if (opacityUpdated) {
-            this.opacityObjects[entity.id] = entity;
-            this._numOpacityObjects++;
-        } else {
-            delete this.opacityObjects[entity.id];
-            this._numOpacityObjects--;
-        }
-        this._opacityObjectIds = null; // Lazy regenerate
-    }
-
-    _objectOffsetUpdated(entity, offset) {
-        if (!offset || offset[0] === 0 && offset[1] === 0 && offset[2] === 0) {
-            this.offsetObjects[entity.id] = entity;
-            this._numOffsetObjects++;
-        } else {
-            delete this.offsetObjects[entity.id];
-            this._numOffsetObjects--;
-        }
-        this._offsetObjectIds = null; // Lazy regenerate
     }
 
     _webglContextLost() {
@@ -20835,7 +20239,6 @@ class Scene extends Component {
                 this._compilables[id].compile();
             }
         }
-        this._renderer.shadowsDirty();
         this.fire("compile", this, true);
     }
 
@@ -20995,30 +20398,6 @@ class Scene extends Component {
             this._colorizedObjectIds = Object.keys(this.colorizedObjects);
         }
         return this._colorizedObjectIds;
-    }
-
-    /**
-     * Gets the IDs of the {@link Entity}s in {@link Scene#opacityObjects}.
-     *
-     * @type {String[]}
-     */
-    get opacityObjectIds() {
-        if (!this._opacityObjectIds) {
-            this._opacityObjectIds = Object.keys(this.opacityObjects);
-        }
-        return this._opacityObjectIds;
-    }
-
-    /**
-     * Gets the IDs of the {@link Entity}s in {@link Scene#offsetObjects}.
-     *
-     * @type {String[]}
-     */
-    get offsetObjectIds() {
-        if (!this._offsetObjectIds) {
-            this._offsetObjectIds = Object.keys(this.offsetObjects);
-        }
-        return this._offsetObjectIds;
     }
 
     /**
@@ -21374,7 +20753,7 @@ class Scene extends Component {
     /**
      * Gets the World-space axis-aligned 3D boundary (AABB) of this Scene.
      *
-     * The AABB is represented by a six-element Float64Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
+     * The AABB is represented by a six-element Float32Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * When the Scene has no content, will be ````[-100,-100,-100,100,100,100]````.
      *
@@ -21388,9 +20767,9 @@ class Scene extends Component {
             let xmin = math.MAX_DOUBLE;
             let ymin = math.MAX_DOUBLE;
             let zmin = math.MAX_DOUBLE;
-            let xmax = math.MIN_DOUBLE;
-            let ymax = math.MIN_DOUBLE;
-            let zmax = math.MIN_DOUBLE;
+            let xmax = -math.MAX_DOUBLE;
+            let ymax = -math.MAX_DOUBLE;
+            let zmax = -math.MAX_DOUBLE;
             let aabb;
             const collidables = this._collidables;
             let collidable;
@@ -21486,19 +20865,19 @@ class Scene extends Component {
      *
      *         var primIndex = pickResult.primIndex; // Position of triangle's first index in the picked Entity's Geometry's indices array
      *         var indices = pickResult.indices; // UInt32Array containing the triangle's vertex indices
-     *         var localPos = pickResult.localPos; // Float64Array containing the picked Local-space position on the triangle
-     *         var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the triangle
-     *         var viewPos = pickResult.viewPos; // Float64Array containing the picked View-space position on the triangle
-     *         var bary = pickResult.bary; // Float64Array containing the picked barycentric position within the triangle
-     *         var worldNormal = pickResult.worldNormal; // Float64Array containing the interpolated World-space normal vector at the picked position on the triangle
-     *         var uv = pickResult.uv; // Float64Array containing the interpolated UV coordinates at the picked position on the triangle
+     *         var localPos = pickResult.localPos; // Float32Array containing the picked Local-space position on the triangle
+     *         var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the triangle
+     *         var viewPos = pickResult.viewPos; // Float32Array containing the picked View-space position on the triangle
+     *         var bary = pickResult.bary; // Float32Array containing the picked barycentric position within the triangle
+     *         var worldNormal = pickResult.worldNormal; // Float32Array containing the interpolated World-space normal vector at the picked position on the triangle
+     *         var uv = pickResult.uv; // Float32Array containing the interpolated UV coordinates at the picked position on the triangle
      *
-     *     } else if (pickResult.worldPos && pickResult.worldNormal) {
+     *     } else if (pickResult.worldPos) {
      *
      *         // Picked a point and normal on the entity surface
      *
-     *         var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the Entity surface
-     *         var worldNormal = pickResult.worldNormal; // Float64Array containing the picked World-space normal vector on the Entity Surface
+     *         var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the Entity surface
+     *         var worldNormal = pickResult.worldNormal; // Float32Array containing the picked World-space normal vector on the Entity Surface
      *     }
      * }
      * ````
@@ -21523,32 +20902,29 @@ class Scene extends Component {
      *           var primitive = pickResult.primitive; // Type of primitive that was picked, usually "triangles"
      *           var primIndex = pickResult.primIndex; // Position of triangle's first index in the picked Entity's Geometry's indices array
      *           var indices = pickResult.indices; // UInt32Array containing the triangle's vertex indices
-     *           var localPos = pickResult.localPos; // Float64Array containing the picked Local-space position on the triangle
-     *           var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the triangle
-     *           var viewPos = pickResult.viewPos; // Float64Array containing the picked View-space position on the triangle
-     *           var bary = pickResult.bary; // Float64Array containing the picked barycentric position within the triangle
-     *           var worldNormal = pickResult.worldNormal; // Float64Array containing the interpolated World-space normal vector at the picked position on the triangle
-     *           var uv = pickResult.uv; // Float64Array containing the interpolated UV coordinates at the picked position on the triangle
-     *           var origin = pickResult.origin; // Float64Array containing the World-space ray origin
-     *           var direction = pickResult.direction; // Float64Array containing the World-space ray direction
+     *           var localPos = pickResult.localPos; // Float32Array containing the picked Local-space position on the triangle
+     *           var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the triangle
+     *           var viewPos = pickResult.viewPos; // Float32Array containing the picked View-space position on the triangle
+     *           var bary = pickResult.bary; // Float32Array containing the picked barycentric position within the triangle
+     *           var worldNormal = pickResult.worldNormal; // Float32Array containing the interpolated World-space normal vector at the picked position on the triangle
+     *           var uv = pickResult.uv; // Float32Array containing the interpolated UV coordinates at the picked position on the triangle
+     *           var origin = pickResult.origin; // Float32Array containing the World-space ray origin
+     *           var direction = pickResult.direction; // Float32Array containing the World-space ray direction
      *
-     *     } else if (pickResult.worldPos && pickResult.worldNormal) {
+     *     } else if (pickResult.worldPos) {
      *
      *         // Picked a point and normal on the entity surface
      *
-     *         var worldPos = pickResult.worldPos; // Float64Array containing the picked World-space position on the Entity surface
-     *         var worldNormal = pickResult.worldNormal; // Float64Array containing the picked World-space normal vector on the Entity Surface
+     *         var worldPos = pickResult.worldPos; // Float32Array containing the picked World-space position on the Entity surface
+     *         var worldNormal = pickResult.worldNormal; // Float32Array containing the picked World-space normal vector on the Entity Surface
      *     }
-     * }
      *  ````
      *
      * @param {*} params Picking parameters.
      * @param {Boolean} [params.pickSurface=false] Whether to find the picked position on the surface of the Entity.
-     * @param {Boolean} [params.pickSurfaceNormal=false] Whether to find the picked normal on the surface of the Entity. Only works if ````pickSurface```` is given.
      * @param {Number[]} [params.canvasPos] Canvas-space coordinates. When ray-picking, this will override the **origin** and ** direction** parameters and will cause the ray to be fired through the canvas at this position, directly along the negative View-space Z-axis.
      * @param {Number[]} [params.origin] World-space ray origin when ray-picking. Ignored when canvasPos given.
      * @param {Number[]} [params.direction] World-space ray direction when ray-picking. Also indicates the length of the ray. Ignored when canvasPos given.
-     * @param {Number[]} [params.matrix] 4x4 transformation matrix to define the World-space ray origin and direction, as an alternative to ````origin```` and ````direction````.
      * @param {String[]} [params.includeEntities] IDs of {@link Entity}s to restrict picking to. When given, ignores {@link Entity}s whose IDs are not in this list.
      * @param {String[]} [params.excludeEntities] IDs of {@link Entity}s to ignore. When given, will pick *through* these {@link Entity}s, as if they were not there.
      * @param {PickResult} [pickResult] Holds the results of the pick attempt. Will use the Scene's singleton PickResult if you don't supply your own.
@@ -21565,8 +20941,8 @@ class Scene extends Component {
 
         params.pickSurface = params.pickSurface || params.rayPick; // Backwards compatibility
 
-        if (!params.canvasPos && !params.matrix && (!params.origin || !params.direction)) {
-            this.warn("picking without canvasPos, matrix, or ray origin and direction");
+        if (!params.canvasPos && (!params.origin || !params.direction)) {
+            this.warn("picking without canvasPos or ray origin and direction");
         }
 
         const includeEntities = params.includeEntities || params.include; // Backwards compat
@@ -21589,7 +20965,7 @@ class Scene extends Component {
 
         if (pickResult) {
             if (pickResult.entity.fire) {
-                pickResult.entity.fire("picked", pickResult); // TODO: PerformanceModelNode doesn't fire events
+                pickResult.entity.fire("picked", pickResult); // TODO: PerformanceModelNode doeosn't fire events...
             }
             return pickResult;
         }
@@ -21656,12 +21032,12 @@ class Scene extends Component {
         if (ids.length === 0) {
             return this.aabb;
         }
-        let xmin = math.MAX_DOUBLE;
-        let ymin = math.MAX_DOUBLE;
-        let zmin = math.MAX_DOUBLE;
-        let xmax = math.MIN_DOUBLE;
-        let ymax = math.MIN_DOUBLE;
-        let zmax = math.MIN_DOUBLE;
+        let xmin = 100000;
+        let ymin = 100000;
+        let zmin = 100000;
+        let xmax = -100000;
+        let ymax = -100000;
+        let zmax = -100000;
         let valid;
         this._withEntities(ids, this.objects, entity => {
                 if (entity.collidable) {
@@ -21882,20 +21258,6 @@ class Scene extends Component {
         });
     }
 
-    /**
-     * Batch-updates {@link Entity#offset} on {@link Entity}s that represent objects.
-     *
-     * An {@link Entity} represents an object when {@link Entity#isObject} is ````true````.
-     *
-     * @param {String[]} ids Array of {@link Entity#id} values.
-     * @param {Number[]} [offset] 3D offset vector.
-     */
-    setObjectsOffset(ids, offset) {
-        this._withEntities(ids, this.objects, entity => {
-            entity.offset = offset;
-        });
-    }
-
     _withEntities(ids, entities, callback) {
         if (utils.isString(ids)) {
             ids = [ids];
@@ -21936,7 +21298,6 @@ class Scene extends Component {
         this.highlightedObjects = null;
         this.selectedObjects = null;
         this.colorizedObjects = null;
-        this.opacityObjects = null;
         this.sectionPlanes = null;
         this.lights = null;
         this.lightMaps = null;
@@ -22611,2735 +21972,35 @@ class CameraFlightAnimation extends Component {
     get trail() {
         return this._trail;
     }
+}
+
+/**
+ * @desc Controls a {@link Camera} with keyboard, mouse and touch input.
+ *
+ * Located for convenience at {@link Viewer#cameraControl}.
+ *
+ * Fires these events:
+ *
+ * @emits "hover" - pointer hovers over a new object
+ * @emits "hoverSurface" - Hover continues over an object surface - fired continuously as mouse moves over an object
+ * @emits "hoverOut"  - Hover has left the last object we were hovering over
+ * @emits "hoverOff" - Hover continues over empty space - fired continuously as mouse moves over nothing
+ * @emits "picked" - Clicked or tapped object
+ * @emits "pickedSurface" -  Clicked or tapped object, with event containing surface intersection details
+ * @emits "doublePicked" - Double-clicked or double-tapped object
+ * @emits "doublePickedSurface" - Double-clicked or double-tapped object, with event containing surface intersection details
+ * @emits "pickedNothing" - Clicked or tapped, but not on any objects
+ * @emits "doublePickedNothing" - Double-clicked or double-tapped, but not on any objects
+ * @emits "rightClick" - Right-click
+ */
+class CameraControl extends Component {
 
     /**
      * @private
      */
-    destroy() {
-        this.stop();
-        super.destroy();
+    get type() {
+        return "CameraControl";
     }
-}
-
-const screenPos = math.vec4();
-const viewPos = math.vec4();
-const worldPos = math.vec4();
-const tempVec3a$2 = math.vec3();
-
-const tempVec4a = math.vec4();
-const tempVec4b = math.vec4();
-const tempVec4c = math.vec4();
-
-/**
- * @private
- */
-class PanController {
-
-    constructor(scene) {
-
-        this._scene = scene;
-
-        this._inverseProjectMat = math.mat4();
-        this._transposedProjectMat = math.mat4();
-
-        this._inverseOrthoProjectMat = math.mat4();
-        this._transposedOrthoProjectMat = math.mat4();
-
-        this._inverseViewMat = math.mat4();
-        this._projMatDirty = true;
-        this._viewMatDirty = true;
-        this._sceneDiagSizeDirty = true;
-        this._sceneDiagSize = 1;
-
-        this._onCameraOrthoProjMatrix = this._scene.camera.ortho.on("matrix", () => {
-            this._projMatDirty = true;
-        });
-
-        this._onCameraPerspectiveProjMatrix = this._scene.camera.perspective.on("matrix", () => {
-            this._projMatDirty = true;
-        });
-
-        this._onCameraViewMatrix = this._scene.camera.on("viewMatrix", () => {
-            this._viewMatDirty = true;
-        });
-
-        this._onSceneBoundary = this._scene.scene.on("boundary", () => {
-            this._sceneDiagSizeDirty = true;
-        });
-    }
-
-    _updateProjMatrices() {
-        if (this._projMatDirty) {
-            math.inverseMat4(this._scene.camera.perspective.matrix, this._inverseProjectMat);
-            math.inverseMat4(this._scene.camera.ortho.matrix, this._inverseOrthoProjectMat);
-            math.transposeMat4(this._scene.camera.perspective.matrix, this._transposedProjectMat);
-            math.transposeMat4(this._scene.camera.ortho.matrix, this._transposedOrthoProjectMat);
-            this._projMatDirty = false;
-        }
-    }
-
-    _getInverseProjectMat() {
-        this._updateProjMatrices();
-        return this._inverseProjectMat;
-    }
-
-    _getTransposedProjectMat() {
-        this._updateProjMatrices();
-        return this._transposedProjectMat;
-    }
-
-    _getInverseOrthoProjectMat() {
-        this._updateProjMatrices();
-        return this._inverseOrthoProjectMat;
-    }
-
-    _getTransposedOrthoProjectMat() {
-        this._updateProjMatrices();
-        return this._transposedOrthoProjectMat;
-    }
-
-    _getInverseViewMat() {
-        if (this._viewMatDirty) {
-            math.inverseMat4(this._scene.camera.viewMatrix, this._inverseViewMat);
-        }
-        return this._inverseViewMat;
-    }
-
-    _getSceneDiagSize() {
-        if (this._sceneDiagSizeDirty) {
-            this._sceneDiagSize = math.getAABB3Diag(this._scene.aabb);
-        }
-        return this._sceneDiagSize;
-    }
-
-    _unproject(canvasPos, viewPos, worldPos) {
-
-        const canvas = this._scene.canvas.canvas;
-        const transposedProjectMat = this._getTransposedProjectMat();
-        const Pt3 = transposedProjectMat.subarray(8, 12);
-        const Pt4 = transposedProjectMat.subarray(12);
-        const D = [0, 0, -this._getSceneDiagSize(), 1];
-        const screenZ = math.dotVec4(D, Pt3) / math.dotVec4(D, Pt4);
-        const inverseProjMat = this._getInverseProjectMat();
-        const inverseViewMat = this._getInverseViewMat();
-        const halfCanvasWidth = canvas.offsetWidth / 2.0;
-        const halfCanvasHeight = canvas.offsetHeight / 2.0;
-
-        screenPos[0] = (canvasPos[0] - halfCanvasWidth) / halfCanvasWidth;
-        screenPos[1] = (canvasPos[1] - halfCanvasHeight) / halfCanvasHeight;
-        screenPos[2] = screenZ;
-        screenPos[3] = 1.0;
-
-        math.mulMat4v4(inverseProjMat, screenPos, viewPos);
-        math.mulVec3Scalar(viewPos, 1.0 / viewPos[3]); // Normalize homogeneous coord
-
-        viewPos[3] = 1.0;
-        viewPos[1] *= -1; // TODO: Why is this reversed?
-
-        math.mulMat4v4(inverseViewMat, viewPos, worldPos);
-    }
-
-    _unprojectOrtho(canvasPos, viewPos, worldPos) {
-
-        const canvas = this._scene.canvas.canvas;
-        const transposedProjectMat = this._getTransposedOrthoProjectMat();
-        const Pt3 = transposedProjectMat.subarray(8, 12);
-        const Pt4 = transposedProjectMat.subarray(12);
-        const D = [0, 0, -this._getSceneDiagSize(), 1];
-        const screenZ = math.dotVec4(D, Pt3) / math.dotVec4(D, Pt4);
-        const inverseProjMat = this._getInverseOrthoProjectMat();
-        const inverseViewMat = this._getInverseViewMat();
-        const halfCanvasWidth = canvas.offsetWidth / 2.0;
-        const halfCanvasHeight = canvas.offsetHeight / 2.0;
-
-        screenPos[0] = (canvasPos[0] - halfCanvasWidth) / halfCanvasWidth;
-        screenPos[1] = (canvasPos[1] - halfCanvasHeight) / halfCanvasHeight;
-        screenPos[2] = screenZ;
-        screenPos[3] = 1.0;
-
-        math.mulMat4v4(inverseProjMat, screenPos, viewPos);
-        math.mulVec3Scalar(viewPos, 1.0 / viewPos[3]); // Normalize homogeneous coord
-
-        viewPos[3] = 1.0;
-        viewPos[1] *= -1; // TODO: Why is this reversed?
-
-        math.mulMat4v4(inverseViewMat, viewPos, worldPos);
-    }
-
-
-    /**
-     * Pans the Camera towards the given 2D canvas coordinates.
-     * @param canvasPos
-     * @param dollyDist
-     */
-    dollyToCanvasPosOLD(canvasPos, dollyDist) {
-
-        this._unprojectOrtho(canvasPos, viewPos, worldPos);
-
-        if (camera.projection === "perspective") {
-            this.dollyToWorldPos(worldPos, dollyDist);
-
-        }
-    }
-
-
-    /**
-     * Pans the Camera towards the given 2D canvas coordinates.
-     * @param canvasPos
-     * @param dollyDist
-     */
-    dollyToCanvasPos(canvasPos, dollyDist) {
-
-        this._unprojectOrtho(canvasPos, viewPos, tempVec4a);
-
-        const camera = this._scene.camera;
-        if (camera.projection === "perspective") {
-
-            camera.ortho.scale = camera.ortho.scale - dollyDist;
-             this.dollyToWorldPos(tempVec4a, dollyDist);
-
-        } else {
-
-            camera.ortho.scale = camera.ortho.scale - dollyDist;
-            camera.ortho._update(); // HACK
-
-            this._unprojectOrtho(canvasPos, viewPos, tempVec4b);
-
-            const offset = math.subVec3(tempVec4b, tempVec4a, tempVec4c);
-            console.log(offset);
-            camera.eye = [camera.eye[0] - offset[0], camera.eye[1] - offset[1], camera.eye[2] - offset[2]];
-            camera.look = [camera.look[0] - offset[0], camera.look[1] - offset[1], camera.look[2] - offset[2]];
-        }
-    }
-
-    /**
-     * Pans the camera towards the given 3D World-space coordinates.
-     * @param worldPos
-     * @param dollyDist
-     */
-    dollyToWorldPos(worldPos, dollyDist) {
-
-        const camera = this._scene.camera;
-        const eyeToWorldPosVec = math.subVec3(worldPos, camera.eye, tempVec3a$2);
-
-        const dist = math.lenVec3(eyeToWorldPosVec);
-
-        if (dist < dollyDist) {
-            return;
-        }
-
-        math.normalizeVec3(eyeToWorldPosVec);
-
-        const px = eyeToWorldPosVec[0] * dollyDist;
-        const py = eyeToWorldPosVec[1] * dollyDist;
-        const pz = eyeToWorldPosVec[2] * dollyDist;
-
-        const eye = camera.eye;
-        const look = camera.look;
-
-        camera.eye = [eye[0] + px, eye[1] + py, eye[2] + pz];
-        camera.look = [look[0] + px, look[1] + py, look[2] + pz];
-    }
-
-    destroy() {
-        this._scene.camera.perspective.off(this._onCameraPerspectiveProjMatrix);
-        this._scene.camera.ortho.off(this._onCameraOrthoProjMatrix);
-        this._scene.camera.off(this._onCameraViewMatrix);
-        this._scene.scene.off(this._onSceneBoundary);
-    }
-}
-
-/** @private */
-class PivotController {
-
-    /**
-     * Constructs a Pivoter.
-     * @param scene
-     */
-    constructor(scene) {
-
-        // Pivot math by: http://www.derschmale.com/
-
-        this._scene = scene;
-        this._pivotWorldPos = math.vec3();
-        this._cameraOffset = math.vec3();
-        this._azimuth = 0;
-        this._polar = 0;
-        this._radius = 0;
-        this._pivoting = false; // True while pivoting
-        this._shown = false;
-
-        this._pivotViewPos = math.vec4();
-        this._pivotProjPos = math.vec4();
-        this._pivotCanvasPos = math.vec2();
-        this._cameraDirty = true;
-
-        this._onViewMatrix = this._scene.camera.on("viewMatrix", () => {
-            this._cameraDirty = true;
-        });
-
-      this._onProjMatrix =   this._scene.camera.on("projMatrix", () => {
-            this._cameraDirty = true;
-        });
-
-       this._onTick =  this._scene.on("tick", () => {
-            this.updatePivotElement();
-        });
-    }
-
-    updatePivotElement() {
-
-        const camera = this._scene.camera;
-        const canvas = this._scene.canvas;
-
-        if (this._pivoting && this._cameraDirty) {
-
-            math.transformPoint3(camera.viewMatrix, this._pivotWorldPos, this._pivotViewPos);
-            this._pivotViewPos[3] = 1;
-            math.transformPoint4(camera.projMatrix, this._pivotViewPos, this._pivotProjPos);
-
-            const canvasAABB = canvas.boundary;
-            const canvasWidth = canvasAABB[2];
-            const canvasHeight = canvasAABB[3];
-
-            this._pivotCanvasPos[0] = Math.floor((1 + this._pivotProjPos[0] / this._pivotProjPos[3]) * canvasWidth / 2);
-            this._pivotCanvasPos[1] = Math.floor((1 - this._pivotProjPos[1] / this._pivotProjPos[3]) * canvasHeight / 2);
-
-            const canvasElem = canvas.canvas;
-            const canvasBoundingRect = canvasElem.getBoundingClientRect();
-
-            if (this._pivotElement) {
-                this._pivotElement.style.left = (Math.floor(canvasBoundingRect.left + this._pivotCanvasPos[0]) - 12) + "px";
-                this._pivotElement.style.top = (Math.floor(canvasBoundingRect.top + this._pivotCanvasPos[1]) - 12) + "px";
-            }
-            this._cameraDirty = false;
-        }
-    }
-
-    /**
-     * Sets the HTML DOM element that will represent the pivot position.
-     *
-     * @param pivotElement
-     */
-    setPivotElement(pivotElement) {
-        this._pivotElement = pivotElement;
-    }
-
-    /**
-     * Begins pivoting.
-     *
-     * @param {Number[]} worldPos The World-space pivot position.
-     */
-    startPivot(worldPos) {
-
-        const camera = this._scene.camera;
-
-        if (worldPos) {
-            this._pivotWorldPos.set(worldPos);
-        } else {
-            this._pivotWorldPos.set(camera.look);
-        }
-
-        let lookat = math.lookAtMat4v(camera.eye, camera.look, camera.worldUp);
-        math.transformPoint3(lookat, this._pivotWorldPos, this._cameraOffset);
-
-        this._cameraOffset[2] += math.distVec3(camera.eye, this._pivotWorldPos);
-
-        lookat = math.inverseMat4(lookat);
-
-        const offset = math.transformVec3(lookat, this._cameraOffset);
-        const diff = math.vec3();
-
-        math.subVec3(camera.eye, this._pivotWorldPos, diff);
-        math.addVec3(diff, offset);
-
-        if (camera.zUp) {
-            const t = diff[1];
-            diff[1] = diff[2];
-            diff[2] = t;
-        }
-
-        this._radius = math.lenVec3(diff);
-        this._polar = Math.acos(diff[1] / this._radius);
-        this._azimuth = Math.atan2(diff[0], diff[2]);
-        this._pivoting = true;
-    }
-
-    /**
-     * Returns true if we are currently pivoting.
-     *
-     * @returns {boolean}
-     */
-    getPivoting() {
-        return this._pivoting;
-    }
-
-    /**
-     * Sets the position we're pivoting about.
-     *
-     * @param {Number[]} worldPos The new World-space pivot position.
-     */
-    setPivotPos(worldPos) {
-        this._pivotWorldPos.set(worldPos);
-    }
-
-    /**
-     * Gets the current position we're pivoting about.
-     * @returns {Number[]} The current World-space pivot position.
-     */
-    getPivotPos() {
-        return this._pivotWorldPos;
-    }
-
-    /**
-     * Continues to pivot.
-     *
-     * @param {Number} yawInc Yaw rotation increment.
-     * @param {Number} pitchInc Pitch rotation increment.
-     */
-    continuePivot(yawInc, pitchInc) {
-        if (!this._pivoting) {
-            return;
-        }
-        if (yawInc === 0 && pitchInc === 0) {
-            return;
-        }
-        const camera = this._scene.camera;
-        var dx = -yawInc;
-        const dy = -pitchInc;
-        if (camera.worldUp[2] === 1) {
-            dx = -dx;
-        }
-
-        this._azimuth += -dx * .01;
-        this._polar += dy * .01;
-        this._polar = math.clamp(this._polar, .001, Math.PI - .001);
-        const pos = [
-            this._radius * Math.sin(this._polar) * Math.sin(this._azimuth),
-            this._radius * Math.cos(this._polar),
-            this._radius * Math.sin(this._polar) * Math.cos(this._azimuth)
-        ];
-        if (camera.worldUp[2] === 1) {
-            const t = pos[1];
-            pos[1] = pos[2];
-            pos[2] = t;
-        }
-        // Preserve the eye->look distance, since in xeokit "look" is the point-of-interest, not the direction vector.
-        const eyeLookLen = math.lenVec3(math.subVec3(camera.look, camera.eye, math.vec3()));
-        math.addVec3(pos, this._pivotWorldPos);
-        let lookat = math.lookAtMat4v(pos, this._pivotWorldPos, camera.worldUp);
-        lookat = math.inverseMat4(lookat);
-        const offset = math.transformVec3(lookat, this._cameraOffset);
-        lookat[12] -= offset[0];
-        lookat[13] -= offset[1];
-        lookat[14] -= offset[2];
-        const zAxis = [lookat[8], lookat[9], lookat[10]];
-        camera.eye = [lookat[12], lookat[13], lookat[14]];
-        math.subVec3(camera.eye, math.mulVec3Scalar(zAxis, eyeLookLen), camera.look);
-        camera.up = [lookat[4], lookat[5], lookat[6]];
-        this.showPivot();
-    }
-
-    /**
-     * Shows the pivot position.
-     *
-     * Only works if we set an  HTML DOM element to represent the pivot position.
-     */
-    showPivot() {
-        if (this._shown) {
-            return;
-        }
-        if (this._hideTimeout !== null) {
-            window.clearTimeout(this._hideTimeout);
-            this._hideTimeout = null;
-        }
-        if (this._pivotElement) {
-            this.updatePivotElement();
-            this._pivotElement.style.visibility = "visible";
-            this._shown = true;
-            this._hideTimeout = window.setTimeout(() => {
-                this.hidePivot();
-            }, 1000);
-        }
-    }
-
-    /**
-     * Hides the pivot position.
-     *
-     * Only works if we set an  HTML DOM element to represent the pivot position.
-     */
-    hidePivot() {
-        if (!this._shown) {
-            return;
-        }
-        if (this._hideTimeout !== null) {
-            window.clearTimeout(this._hideTimeout);
-            this._hideTimeout = null;
-        }
-        if (this._pivotElement) {
-            this._pivotElement.style.visibility = "hidden";
-        }
-        this._shown = false;
-    }
-
-    /**
-     * Finishes pivoting.
-     */
-    endPivot() {
-        this._pivoting = false;
-    }
-
-    destroy() {
-        this._scene.camera.off(this._onViewMatrix);
-        this._scene.camera.off(this._onProjMatrix);
-        this._scene.off(this._onTick);
-    }
-}
-
-/**
- *
- * @private
- */
-class PickController {
-
-    constructor(cameraControl, configs) {
-
-        this._scene = cameraControl.scene;
-
-        this._cameraControl = cameraControl;
-
-        this._scene.canvas.canvas.oncontextmenu = function (e) {
-            e.preventDefault();
-        };
-
-        this._configs = configs;
-
-        /**
-         * Set true to schedule picking of an Entity.
-         * @type {boolean}
-         */
-        this.schedulePickEntity = false;
-
-        /**
-         * Set true to schedule picking of a position on teh surface of an Entity.
-         * @type {boolean}
-         */
-        this.schedulePickSurface = false;
-
-        /**
-         * The canvas position at which to do the next scheduled pick.
-         * @type {Number[]}
-         */
-        this.pickCursorPos = math.vec2();
-
-        /**
-         * Will be true after picking to indicate that something was picked.
-         * @type {boolean}
-         */
-        this.picked = false;
-
-        /**
-         * Will be true after picking to indicate that a position on the surface of an Entity was picked.
-         * @type {boolean}
-         */
-        this.pickedSurface = false;
-
-        /**
-         * Will hold the PickResult after after picking.
-         * @type {PickResult}
-         */
-        this.pickResult = null;
-
-        this._lastPickedEntityId = null;
-
-        this._needFireEvents = false;
-    }
-
-    /**
-     * Immediately attempts a pick, if scheduled.
-     */
-    update() {
-
-        if (!this._configs.pointerEnabled) {
-            return;
-        }
-
-        if (!this.schedulePickEntity && !this.schedulePickSurface) {
-            return;
-        }
-
-        this.picked = false;
-        this.pickedSurface = false;
-        this._needFireEvents = false;
-
-        const hasHoverSurfaceSubs = this._cameraControl.hasSubs("hoverSurface");
-
-        if (this.schedulePickSurface) {
-            if (this.pickResult && this.pickResult.worldPos) {
-                const pickResultCanvasPos = this.pickResult.canvasPos;
-                if (pickResultCanvasPos[0] === this.pickCursorPos[0] && pickResultCanvasPos[1] === this.pickCursorPos[1]) {
-                    this.picked = true;
-                    this.pickedSurface = true;
-                    this._needFireEvents = hasHoverSurfaceSubs;
-                    this.schedulePickEntity = false;
-                    this.schedulePickSurface = false;
-                    return;
-                }
-            }
-        }
-
-        if (this.schedulePickEntity) {
-            if (this.pickResult) {
-                const pickResultCanvasPos = this.pickResult.canvasPos;
-                if (pickResultCanvasPos[0] === this.pickCursorPos[0] && pickResultCanvasPos[1] === this.pickCursorPos[1]) {
-                    this.picked = true;
-                    this.pickedSurface = false;
-                    this._needFireEvents = false;
-                    this.schedulePickEntity = false;
-                    this.schedulePickSurface = false;
-                    return;
-                }
-            }
-        }
-
-        if (this.schedulePickSurface) {
-
-            this.pickResult = this._scene.pick({
-                pickSurface: true,
-                pickSurfaceNormal: true,
-                canvasPos: this.pickCursorPos
-            });
-
-            if (this.pickResult) {
-                this.picked = true;
-                this.pickedSurface = true;
-                this._needFireEvents = true;
-            }
-
-        } else { // schedulePickEntity == true
-
-            this.pickResult = this._scene.pick({
-                canvasPos: this.pickCursorPos
-            });
-
-            if (this.pickResult) {
-                this.picked = true;
-                this.pickedSurface = false;
-                this._needFireEvents = true;
-            }
-        }
-
-        this.schedulePickEntity = false;
-        this.schedulePickSurface = false;
-    }
-
-    fireEvents() {
-
-        if (!this._needFireEvents) {
-            return;
-        }
-
-        if (this.picked && this.pickResult && this.pickResult.entity) {
-
-            const pickedEntityId = this.pickResult.entity.id;
-
-            if (this._lastPickedEntityId !== pickedEntityId) {
-
-                if (this._lastPickedEntityId !== undefined) {
-                    this._cameraControl.fire("hoverOut", {
-                        entity: this._scene.objects[this._lastPickedEntityId]
-                    }, true);
-                }
-
-                this._cameraControl.fire("hoverEnter", this.pickResult, true);
-                this._lastPickedEntityId = pickedEntityId;
-            }
-
-            this._cameraControl.fire("hover", this.pickResult, true);
-
-            if (this.pickResult.worldPos) {
-                this.pickedSurface = true;
-                this._cameraControl.fire("hoverSurface", this.pickResult, true);
-            }
-
-        } else {
-
-            if (this._lastPickedEntityId !== undefined) {
-                this._cameraControl.fire("hoverOut", {
-                    entity: this._scene.objects[this._lastPickedEntityId]
-                }, true);
-                this._lastPickedEntityId = undefined;
-            }
-
-            this._cameraControl.fire("hoverOff", {
-                canvasPos: this.pickCursorPos
-            }, true);
-        }
-
-        this.pickResult = null;
-
-        this._needFireEvents = false;
-    }
-
-    destroy() {
-        this._scene.off(this._onTick);
-    }
-}
-
-/**
- * @private
- */
-
-const canvasPos = math.vec2();
-
-const getCanvasPosFromEvent = function (event, canvasPos) {
-    if (!event) {
-        event = window.event;
-        canvasPos[0] = event.x;
-        canvasPos[1] = event.y;
-    } else {
-        let element = event.target;
-        let totalOffsetLeft = 0;
-        let totalOffsetTop = 0;
-        while (element.offsetParent) {
-            totalOffsetLeft += element.offsetLeft;
-            totalOffsetTop += element.offsetTop;
-            element = element.offsetParent;
-        }
-        canvasPos[0] = event.pageX - totalOffsetLeft;
-        canvasPos[1] = event.pageY - totalOffsetTop;
-    }
-    return canvasPos;
-};
-
-/**
- * @private
- */
-class MousePanRotateDollyHandler {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-
-        const pickController = controllers.pickController;
-
-        let lastX = 0;
-        let lastY = 0;
-        let lastXDown = 0;
-        let lastYDown = 0;
-        this._down = false;
-        let mouseDownMiddle;
-        let mouseDownRight;
-
-        let mouseDownPicked = false;
-        const pickedWorldPos = math.vec3();
-
-        let mouseMovedSinceLastWheel = true;
-
-        const canvas = this._scene.canvas.canvas;
-
-        const keyDown = [];
-
-        document.addEventListener("keydown", this._documentKeyDownHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled) || (!scene.input.keyboardEnabled)) {
-                return;
-            }
-            if (!states.mouseover) {
-                return;
-            }
-            const keyCode = e.keyCode;
-            keyDown[keyCode] = true;
-        });
-
-        document.addEventListener("keyup", this._documentKeyUpHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled) || (!scene.input.keyboardEnabled)) {
-                return;
-            }
-            if (!states.mouseover) {
-                return;
-            }
-            const keyCode = e.keyCode;
-            keyDown[keyCode] = false;
-        });
-
-        canvas.addEventListener("mousedown", this._mouseDownHandler = (e) => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            this._down = true;
-
-            switch (e.which) {
-
-                case 1: // Left button
-
-                    if (keyDown[scene.input.KEY_SHIFT] || configs.planView) {
-
-                        canvas.style.cursor = "move";
-
-                        lastX = states.pointerCanvasPos[0];
-                        lastY = states.pointerCanvasPos[1];
-                        lastXDown = states.pointerCanvasPos[0];
-                        lastYDown = states.pointerCanvasPos[1];
-
-                        pickController.pickCursorPos = states.pointerCanvasPos;
-                        pickController.schedulePickSurface = true;
-                        pickController.update();
-
-                        if (pickController.picked && pickController.pickedSurface && pickController.pickResult) {
-                            mouseDownPicked = true;
-                            pickedWorldPos.set(pickController.pickResult.worldPos);
-                        } else {
-                            mouseDownPicked = false;
-                        }
-
-                    } else {
-                        canvas.style.cursor = "move";
-
-                        lastX = states.pointerCanvasPos[0];
-                        lastY = states.pointerCanvasPos[1];
-                        lastXDown = states.pointerCanvasPos[0];
-                        lastYDown = states.pointerCanvasPos[1];
-                    }
-
-                    break;
-
-                case 2: // Middle/both buttons
-
-                    mouseDownMiddle = true;
-
-                    if (!configs.panRightClick) {
-
-                        canvas.style.cursor = "move";
-
-                        lastX = states.pointerCanvasPos[0];
-                        lastY = states.pointerCanvasPos[1];
-                        lastXDown = states.pointerCanvasPos[0];
-                        lastYDown = states.pointerCanvasPos[1];
-                    }
-
-                    break;
-
-                case 3: // Right button
-
-                    mouseDownRight = true;
-
-                    if (configs.panRightClick) {
-
-                        canvas.style.cursor = "move";
-
-                        lastX = states.pointerCanvasPos[0];
-                        lastY = states.pointerCanvasPos[1];
-                        lastXDown = states.pointerCanvasPos[0];
-                        lastYDown = states.pointerCanvasPos[1];
-
-                        pickController.pickCursorPos = states.pointerCanvasPos;
-                        pickController.schedulePickSurface = true;
-                        pickController.update();
-
-                        if (pickController.picked && pickController.pickedSurface && pickController.pickResult) {
-                            mouseDownPicked = true;
-                            pickedWorldPos.set(pickController.pickResult.worldPos);
-                        } else {
-                            mouseDownPicked = false;
-                        }
-                    }
-
-                    break;
-            }
-        });
-
-        canvas.addEventListener("mousemove", this._mouseMoveHandler = (e) => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            if (!states.mouseover) {
-                return;
-            }
-
-            updates.inputFromMouse = true;
-
-            mouseMovedSinceLastWheel = true;
-
-            if (!this._down) {
-                return;
-            }
-
-            // Scaling drag-rotate to canvas boundary
-
-            const canvasBoundary = scene.canvas.boundary;
-            const canvasWidth = canvasBoundary[2] - canvasBoundary[0];
-            const canvasHeight = canvasBoundary[3] - canvasBoundary[1];
-            const x = states.pointerCanvasPos[0];
-            const y = states.pointerCanvasPos[1];
-
-            const panning = keyDown[scene.input.KEY_SHIFT] || configs.planView || (!configs.panRightClick && mouseDownMiddle) || (configs.panRightClick && mouseDownRight);
-
-            if (panning) {
-
-                const xPanDelta = (x - lastX);
-                const yPanDelta = (y - lastY);
-
-                const camera = scene.camera;
-
-                // We use only canvasHeight here so that aspect ratio does not distort speed
-
-                if (camera.projection === "perspective") {
-
-                    const depth = Math.abs(mouseDownPicked ? math.lenVec3(math.subVec3(pickedWorldPos, scene.camera.eye, [])) : scene.camera.eyeLookDist);
-                    const targetDistance = depth * Math.tan((camera.perspective.fov / 2) * Math.PI / 180.0);
-
-                    updates.panDeltaX += (1.5 * xPanDelta * targetDistance / canvasHeight);
-                    updates.panDeltaY += (1.5 * yPanDelta * targetDistance / canvasHeight);
-
-                } else {
-
-                    updates.panDeltaX += 0.5 * camera.ortho.scale * (xPanDelta / canvasHeight);
-                    updates.panDeltaY += 0.5 * camera.ortho.scale * (yPanDelta / canvasHeight);
-                }
-
-            } else {
-
-                if (!configs.planView) { // No rotating in plan-view mode
-
-                    if (configs.firstPerson) {
-                        updates.rotateDeltaY -= ((x - lastX) / canvasWidth) * configs.dragRotationRate / 2;
-                        updates.rotateDeltaX += ((y - lastY) / canvasHeight) * (configs.dragRotationRate / 4);
-
-                    } else {
-                        updates.rotateDeltaY -= ((x - lastX) / canvasWidth) * configs.dragRotationRate;
-                        updates.rotateDeltaX += ((y - lastY) / canvasHeight) * (configs.dragRotationRate);
-                    }
-                }
-            }
-
-            lastX = x;
-            lastY = y;
-        });
-
-        document.addEventListener("mouseup", this._documentMouseUpHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-            switch (e.which) {
-                case 1: // Left button
-                    break;
-                case 2: // Middle/both buttons
-                    mouseDownMiddle = false;
-                    break;
-                case 3: // Right button
-                    mouseDownRight = false;
-                    break;
-            }
-            this._down = false;
-        });
-
-        canvas.addEventListener("mouseup", this._mouseUpHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-            switch (e.which) {
-                case 3: // Right button
-                    getCanvasPosFromEvent(e, canvasPos);
-                    const x = canvasPos[0];
-                    const y = canvasPos[1];
-                    if (Math.abs(x - lastXDown) < 3 && Math.abs(y - lastYDown) < 3) {
-                        controllers.cameraControl.fire("rightClick", { // For context menus
-                            canvasPos: canvasPos,
-                            event: e
-                        }, true);
-                    }
-                    break;
-            }
-            canvas.style.removeProperty("cursor");
-        });
-
-        canvas.addEventListener("mouseenter", this._mouseEnterHandler = () => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            this._down = false;
-        });
-
-        canvas.addEventListener("mouseleave", this._mouseLeaveHandler = () => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            updates.panDeltaX = 0;
-            updates.panDeltaY = 0;
-            updates.rotateDeltaX = 0;
-            updates.rotateDeltaY = 0;
-
-            this._down = false;
-        });
-
-        const maxElapsed = 1 / 20;
-        const minElapsed = 1 / 60;
-
-        let secsNowLast = null;
-
-        canvas.addEventListener("wheel", this._mouseWheelHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-            const secsNow = performance.now() / 1000.0;
-            var secsElapsed = (secsNowLast !== null) ? (secsNow - secsNowLast) : 0;
-            secsNowLast = secsNow;
-            if (secsElapsed > maxElapsed) {
-                secsElapsed = maxElapsed;
-            }
-            if (secsElapsed < minElapsed) {
-                secsElapsed = minElapsed;
-            }
-            const delta = Math.max(-1, Math.min(1, -e.deltaY * 40));
-            if (delta === 0) {
-                return;
-            }
-            const normalizedDelta = delta / Math.abs(delta);
-            updates.dollyDelta += -normalizedDelta * secsElapsed * configs.mouseWheelDollyRate;
-
-            if (mouseMovedSinceLastWheel) {
-                states.followPointerDirty = true;
-                mouseMovedSinceLastWheel = false;
-            }
-
-            e.preventDefault();
-        });
-    }
-
-    reset() {
-        this._down = false;
-    }
-
-    destroy() {
-
-        const canvas = this._scene.canvas.canvas;
-
-        document.removeEventListener("keydown", this._documentKeyDownHandler);
-        document.removeEventListener("keyup", this._documentKeyUpHandler);
-        canvas.removeEventListener("mousedown", this._mouseDownHandler);
-        canvas.removeEventListener("mousemove", this._mouseMoveHandler);
-        document.removeEventListener("mouseup", this._documentMouseUpHandler);
-        canvas.removeEventListener("mouseup", this._mouseUpHandler);
-        canvas.removeEventListener("mouseenter", this._mouseEnterHandler);
-        canvas.removeEventListener("mouseleave", this._mouseLeaveHandler);
-        canvas.removeEventListener("wheel", this._mouseWheelHandler);
-    }
-}
-
-const center = math.vec3();
-const tempVec3a$3 = math.vec3();
-const tempVec3b$1 = math.vec3();
-const tempVec3c$1 = math.vec3();
-const tempVec3d$1 = math.vec3();
-
-const tempCameraTarget = {
-    eye: math.vec3(),
-    look: math.vec3(),
-    up: math.vec3()
-};
-
-/**
- * @private
- */
-class KeyboardAxisViewHandler {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-        const cameraControl = controllers.cameraControl;
-        const camera = scene.camera;
-
-        document.addEventListener("keydown", this._documentKeyDownHandler = (e) => {
-
-            if (!(configs.active && configs.pointerEnabled) || (!scene.input.keyboardEnabled)) {
-                return;
-            }
-
-            if (!states.mouseover) {
-                return;
-            }
-
-            const axisViewRight = cameraControl._isKeyDownForAction(cameraControl.AXIS_VIEW_RIGHT);
-            const axisViewBack = cameraControl._isKeyDownForAction(cameraControl.AXIS_VIEW_BACK);
-            const axisViewLeft = cameraControl._isKeyDownForAction(cameraControl.AXIS_VIEW_LEFT);
-            const axisViewFront = cameraControl._isKeyDownForAction(cameraControl.AXIS_VIEW_FRONT);
-            const axisViewTop = cameraControl._isKeyDownForAction(cameraControl.AXIS_VIEW_TOP);
-            const axisViewBottom = cameraControl._isKeyDownForAction(cameraControl.AXIS_VIEW_BOTTOM);
-
-            if ((!axisViewRight) && (!axisViewBack) && (!axisViewLeft) && (!axisViewFront) && (!axisViewTop) && (!axisViewBottom)) {
-                return;
-            }
-
-            const aabb = scene.aabb;
-            const diag = math.getAABB3Diag(aabb);
-
-            math.getAABB3Center(aabb, center);
-
-            const dist = Math.abs(diag / Math.tan(controllers.cameraFlight.fitFOV * math.DEGTORAD));
-
-            if (axisViewRight) {
-
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldRight, dist, tempVec3a$3), tempVec3d$1));
-                tempCameraTarget.look.set(center);
-                tempCameraTarget.up.set(camera.worldUp);
-
-            } else if (axisViewBack) {
-
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldForward, dist, tempVec3a$3), tempVec3d$1));
-                tempCameraTarget.look.set(center);
-                tempCameraTarget.up.set(camera.worldUp);
-
-            } else if (axisViewLeft) {
-
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldRight, -dist, tempVec3a$3), tempVec3d$1));
-                tempCameraTarget.look.set(center);
-                tempCameraTarget.up.set(camera.worldUp);
-
-            } else if (axisViewFront) {
-
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldForward, -dist, tempVec3a$3), tempVec3d$1));
-                tempCameraTarget.look.set(center);
-                tempCameraTarget.up.set(camera.worldUp);
-
-            } else if (axisViewTop) {
-
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldUp, dist, tempVec3a$3), tempVec3d$1));
-                tempCameraTarget.look.set(center);
-                tempCameraTarget.up.set(math.normalizeVec3(math.mulVec3Scalar(camera.worldForward, 1, tempVec3b$1), tempVec3c$1));
-
-            } else if (axisViewBottom) {
-
-                tempCameraTarget.eye.set(math.addVec3(center, math.mulVec3Scalar(camera.worldUp, -dist, tempVec3a$3), tempVec3d$1));
-                tempCameraTarget.look.set(center);
-                tempCameraTarget.up.set(math.normalizeVec3(math.mulVec3Scalar(camera.worldForward, -1, tempVec3b$1)));
-            }
-
-            if ((!configs.firstPerson) && configs.followPointer) {
-                controllers.pivotController.startPivot(center);
-            }
-
-            if (controllers.cameraFlight.duration > 0) {
-                controllers.cameraFlight.flyTo(tempCameraTarget, () => {
-                    if (controllers.pivotController.getPivoting() && configs.followPointer) {
-                        controllers.pivotController.showPivot();
-                    }
-                });
-
-            } else {
-                controllers.cameraFlight.jumpTo(tempCameraTarget);
-                if (controllers.pivotController.getPivoting() && configs.followPointer) {
-                    controllers.pivotController.showPivot();
-                }
-            }
-        });
-    }
-
-    reset() {
-    }
-
-    destroy() {
-        document.removeEventListener("keydown", this._documentKeyDownHandler);
-    }
-}
-
-/**
- * @private
- */
-class MousePickHandler {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-
-        const pickController = controllers.pickController;
-        const pivotController = controllers.pivotController;
-        const cameraControl = controllers.cameraControl;
-
-        this._clicks = 0;
-        this._timeout = null;
-        this._lastPickedEntityId = null;
-
-        let leftDown = false;
-        let rightDown = false;
-
-        const canvas = this._scene.canvas.canvas;
-
-        const flyCameraTo = (pickResult) => {
-            let pos;
-            if (pickResult && pickResult.worldPos) {
-                pos = pickResult.worldPos;
-            }
-            const aabb = pickResult ? pickResult.entity.aabb : scene.aabb;
-            if (pos) { // Fly to look at point, don't change eye->look dist
-                const camera = scene.camera;
-                const diff = math.subVec3(camera.eye, camera.look, []);
-                controllers.cameraFlight.flyTo({
-                    // look: pos,
-                    // eye: xeokit.math.addVec3(pos, diff, []),
-                    // up: camera.up,
-                    aabb: aabb
-                });
-                // TODO: Option to back off to fit AABB in view
-            } else {// Fly to fit target boundary in view
-                controllers.cameraFlight.flyTo({
-                    aabb: aabb
-                });
-            }
-        };
-
-        canvas.addEventListener("mousemove", this._canvasMouseMoveHandler = (e) => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            if (leftDown || rightDown) {
-                return;
-            }
-
-            const hoverSubs = cameraControl.hasSubs("hover");
-            const hoverOutSubs = cameraControl.hasSubs("hoverOut");
-            const hoverOffSubs = cameraControl.hasSubs("hoverOff");
-            const hoverSurfaceSubs = cameraControl.hasSubs("hoverSurface");
-
-            if (hoverSubs || hoverOutSubs || hoverOffSubs || hoverSurfaceSubs) {
-
-                pickController.pickCursorPos = states.pointerCanvasPos;
-                pickController.schedulePickEntity = true;
-                pickController.schedulePickSurface = hoverSurfaceSubs;
-
-                pickController.update();
-
-                if (pickController.pickResult) {
-
-                    const pickedEntityId = pickController.pickResult.entity.id;
-
-                    if (this._lastPickedEntityId !== pickedEntityId) {
-
-                        if (this._lastPickedEntityId !== undefined) {
-
-                            cameraControl.fire("hoverOut", { // Hovered off an entity
-                                entity: scene.objects[this._lastPickedEntityId]
-                            }, true);
-                        }
-
-                        cameraControl.fire("hoverEnter", pickController.pickResult, true); // Hovering over a new entity
-
-                        this._lastPickedEntityId = pickedEntityId;
-                    }
-
-                    cameraControl.fire("hover", pickController.pickResult, true);
-
-                    if (pickController.pickResult.worldPos) { // Hovering the surface of an entity
-                        cameraControl.fire("hoverSurface", pickController.pickResult, true);
-                    }
-
-                } else {
-
-                    if (this._lastPickedEntityId !== undefined) {
-
-                        cameraControl.fire("hoverOut", { // Hovered off an entity
-                            entity: scene.objects[this._lastPickedEntityId]
-                        }, true);
-
-                        this._lastPickedEntityId = undefined;
-                    }
-
-                    cameraControl.fire("hoverOff", { // Not hovering on any entity
-                        canvasPos: pickController.pickCursorPos
-                    }, true);
-                }
-            }
-        });
-
-        canvas.addEventListener('mousedown', this._canvasMouseDownHandler = (e) => {
-
-            if (e.which === 1) {
-                leftDown = true;
-            }
-
-            if (e.which === 3) {
-                rightDown = true;
-            }
-
-            const leftButtonDown = (e.which === 1);
-
-            if (!leftButtonDown) {
-                return;
-            }
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            // Left mouse button down to start pivoting
-
-            states.mouseDownClientX = e.clientX;
-            states.mouseDownClientY = e.clientY;
-            states.mouseDownCursorX = states.pointerCanvasPos[0];
-            states.mouseDownCursorY = states.pointerCanvasPos[1];
-
-            if ((!configs.firstPerson) && configs.followPointer) {
-
-                pickController.pickCursorPos = states.pointerCanvasPos;
-                pickController.schedulePickSurface = true;
-
-                pickController.update();
-
-                if (e.which === 1) {// Left button
-                    if (pickController.pickResult) {
-                        pivotController.startPivot(pickController.pickResult.worldPos);
-                    } else {
-                        pivotController.startPivot(); // Continue to use last pivot point
-                    }
-                }
-            }
-        });
-
-        document.addEventListener('mouseup', this._documentMouseUpHandler = (e) => {
-
-            if (e.which === 1) {
-                leftDown = false;
-            }
-
-            if (e.which === 3) {
-                rightDown = false;
-            }
-        });
-
-        canvas.addEventListener('mouseup', this._canvasMouseUpHandler = (e) => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            const leftButtonUp = (e.which === 1);
-
-            if (!leftButtonUp) {
-                return;
-            }
-
-            // Left mouse button up to possibly pick or double-pick
-
-            pivotController.hidePivot();
-
-            if (Math.abs(e.clientX - states.mouseDownClientX) > 3 || Math.abs(e.clientY - states.mouseDownClientY) > 3) {
-                return;
-            }
-
-            const pickedSubs = cameraControl.hasSubs("picked");
-            const pickedNothingSubs = cameraControl.hasSubs("pickedNothing");
-            const pickedSurfaceSubs = cameraControl.hasSubs("pickedSurface");
-            const doublePickedSubs = cameraControl.hasSubs("doublePicked");
-            const doublePickedSurfaceSubs = cameraControl.hasSubs("doublePickedSurface");
-            const doublePickedNothingSubs = cameraControl.hasSubs("doublePickedNothing");
-
-            if ((!configs.doublePickFlyTo) &&
-                (!doublePickedSubs) &&
-                (!doublePickedSurfaceSubs) &&
-                (!doublePickedNothingSubs)) {
-
-                //  Avoid the single/double click differentiation timeout
-
-                if (pickedSubs || pickedNothingSubs || pickedSurfaceSubs) {
-
-                    pickController.pickCursorPos = states.pointerCanvasPos;
-                    pickController.schedulePickEntity = true;
-                    pickController.schedulePickSurface = pickedSurfaceSubs;
-                    pickController.update();
-
-                    if (pickController.pickResult) {
-
-                        cameraControl.fire("picked", pickController.pickResult, true);
-
-                        if (pickController.pickedSurface) {
-                            cameraControl.fire("pickedSurface", pickController.pickResult, true);
-                        }
-                    } else {
-                        cameraControl.fire("pickedNothing", {
-                            canvasPos: states.pointerCanvasPos
-                        }, true);
-                    }
-                }
-
-                this._clicks = 0;
-
-                return;
-            }
-
-            this._clicks++;
-
-            if (this._clicks === 1) { // First click
-
-                this._timeout = setTimeout(() => {
-
-                    pickController.pickCursorPos = states.pointerCanvasPos;
-                    pickController.schedulePickEntity = configs.doublePickFlyTo;
-                    pickController.schedulePickSurface = pickedSurfaceSubs;
-                    pickController.update();
-
-                    if (pickController.pickResult) {
-
-                        cameraControl.fire("picked", pickController.pickResult, true);
-
-                        if (pickController.pickedSurface) {
-
-                            cameraControl.fire("pickedSurface", pickController.pickResult, true);
-
-                            if ((!configs.firstPerson) && configs.followPointer) {
-                                controllers.pivotController.startPivot(pickController.pickResult.worldPos);
-                                controllers.pivotController.showPivot();
-                            }
-                        }
-                    } else {
-                        cameraControl.fire("pickedNothing", {
-                            canvasPos: states.pointerCanvasPos
-                        }, true);
-                    }
-
-                    this._clicks = 0;
-
-                }, 250);  // FIXME: Too short for track pads
-
-            } else { // Second click
-
-                if (this._timeout !== null) {
-                    window.clearTimeout(this._timeout);
-                    this._timeout = null;
-                }
-
-                pickController.pickCursorPos = states.pointerCanvasPos;
-                pickController.schedulePickEntity = configs.doublePickFlyTo;
-                pickController.schedulePickSurface = pickController.schedulePickEntity && doublePickedSurfaceSubs;
-                pickController.update();
-
-                if (pickController.pickResult) {
-
-                    cameraControl.fire("doublePicked", pickController.pickResult, true);
-
-                    if (pickController.pickedSurface) {
-                        cameraControl.fire("doublePickedSurface", pickController.pickResult, true);
-                    }
-
-                    if (configs.doublePickFlyTo) {
-
-                        flyCameraTo(pickController.pickResult);
-
-                        if ((!configs.firstPerson) && configs.followPointer) {
-
-                            const pickedEntityAABB = pickController.pickResult.entity.aabb;
-                            const pickedEntityCenterPos = math.getAABB3Center(pickedEntityAABB);
-
-                            controllers.pivotController.startPivot(pickedEntityCenterPos);
-                            controllers.pivotController.showPivot();
-                        }
-                    }
-
-                } else {
-
-                    cameraControl.fire("doublePickedNothing", {
-                        canvasPos: states.pointerCanvasPos
-                    }, true);
-
-                    if (configs.doublePickFlyTo) {
-
-                        flyCameraTo();
-
-                        if ((!configs.firstPerson) && configs.followPointer) {
-
-                            const sceneAABB = scene.aabb;
-                            const sceneCenterPos = math.getAABB3Center(sceneAABB);
-
-                            controllers.pivotController.startPivot(sceneCenterPos);
-                            controllers.pivotController.showPivot();
-                        }
-                    }
-                }
-
-                this._clicks = 0;
-            }
-        }, false);
-    }
-
-    reset() {
-        this._clicks = 0;
-        this._lastPickedEntityId = null;
-        if (this._timeout) {
-            window.clearTimeout(this._timeout);
-            this._timeout = null;
-        }
-    }
-
-    destroy() {
-        const canvas = this._scene.canvas.canvas;
-        canvas.removeEventListener("mousemove", this._canvasMouseMoveHandler);
-        canvas.removeEventListener("mousedown", this._canvasMouseDownHandler);
-        document.removeEventListener("mouseup", this._documentMouseUpHandler);
-        canvas.removeEventListener("mouseup", this._canvasMouseUpHandler);
-        if (this._timeout) {
-            window.clearTimeout(this._timeout);
-            this._timeout = null;
-        }
-    }
-}
-
-/**
- * @private
- */
-class KeyboardPanRotateDollyHandler {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-        const input = scene.input;
-
-        const keyDownMap = [];
-
-        const canvas = scene.canvas.canvas;
-
-        const pickController = controllers.pickController;
-
-        let mouseMovedSinceLastKeyboardDolly = true;
-
-        document.addEventListener("mousemove", this._documentMouseMoveHandler = () => {
-            mouseMovedSinceLastKeyboardDolly = true;
-        });
-
-        document.addEventListener("keydown", this._documentKeyDownHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled) || (!scene.input.keyboardEnabled)) {
-                return;
-            }
-            if (!states.mouseover) {
-                return;
-            }
-            const keyCode = e.keyCode;
-            keyDownMap[keyCode] = true;
-
-            if (keyCode === input.KEY_SHIFT) {
-                canvas.style.cursor = "move";
-            }
-        });
-
-        document.addEventListener("keyup", this._documentKeyUpHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled) || (!scene.input.keyboardEnabled)) {
-                return;
-            }
-            if (!states.mouseover) {
-                return;
-            }
-            const keyCode = e.keyCode;
-            keyDownMap[keyCode] = false;
-
-            if (keyCode === input.KEY_SHIFT) {
-                canvas.style.cursor = "default";
-            }
-        });
-
-        this._onTick = scene.on("tick", (e) => {
-
-            if (!(configs.active && configs.pointerEnabled) || (!scene.input.keyboardEnabled)) {
-                return;
-            }
-
-            if (!states.mouseover) {
-                return;
-            }
-
-            const cameraControl = controllers.cameraControl;
-            const elapsedSecs = (e.deltaTime / 1000.0);
-
-            //-------------------------------------------------------------------------------------------------
-            // Keyboard rotation
-            //-------------------------------------------------------------------------------------------------
-
-            if (!configs.planView) {
-
-                const rotateYPos = cameraControl._isKeyDownForAction(cameraControl.ROTATE_Y_POS, keyDownMap);
-                const rotateYNeg = cameraControl._isKeyDownForAction(cameraControl.ROTATE_Y_NEG, keyDownMap);
-                const rotateXPos = cameraControl._isKeyDownForAction(cameraControl.ROTATE_X_POS, keyDownMap);
-                const rotateXNeg = cameraControl._isKeyDownForAction(cameraControl.ROTATE_X_NEG, keyDownMap);
-
-                const orbitDelta = elapsedSecs * configs.keyboardRotationRate;
-
-                if (rotateYPos || rotateYNeg || rotateXPos || rotateXNeg) {
-
-                    if ((!configs.firstPerson) && configs.followPointer) {
-                        controllers.pivotController.startPivot();
-                    }
-
-                    if (rotateYPos) {
-                        updates.rotateDeltaY += orbitDelta;
-
-                    } else if (rotateYNeg) {
-                        updates.rotateDeltaY -= orbitDelta;
-                    }
-
-                    if (rotateXPos) {
-                        updates.rotateDeltaX += orbitDelta;
-
-                    } else if (rotateXNeg) {
-                        updates.rotateDeltaX -= orbitDelta;
-                    }
-
-                    if ((!configs.firstPerson) && configs.followPointer) {
-                        controllers.pivotController.startPivot();
-                    }
-                }
-            }
-
-            //-------------------------------------------------------------------------------------------------
-            // Keyboard panning
-            //-------------------------------------------------------------------------------------------------
-
-            if (!keyDownMap[input.KEY_CTRL] && !keyDownMap[input.KEY_ALT]) {
-
-                const dollyBackwards = cameraControl._isKeyDownForAction(cameraControl.DOLLY_BACKWARDS, keyDownMap);
-                const dollyForwards = cameraControl._isKeyDownForAction(cameraControl.DOLLY_FORWARDS, keyDownMap);
-
-                if (dollyBackwards || dollyForwards) {
-
-                    const dollyDelta = elapsedSecs * configs.keyboardDollyRate;
-
-                    if ((!configs.firstPerson) && configs.followPointer) {
-                        controllers.pivotController.startPivot();
-                    }
-                    if (dollyForwards) {
-                        updates.dollyDelta -= dollyDelta;
-                    } else if (dollyBackwards) {
-                        updates.dollyDelta += dollyDelta;
-                    }
-
-                    if (mouseMovedSinceLastKeyboardDolly) {
-                        states.followPointerDirty = true;
-                        mouseMovedSinceLastKeyboardDolly = false;
-                    }
-                }
-            }
-
-            const panForwards = cameraControl._isKeyDownForAction(cameraControl.PAN_FORWARDS, keyDownMap);
-            const panBackwards = cameraControl._isKeyDownForAction(cameraControl.PAN_BACKWARDS, keyDownMap);
-            const panLeft = cameraControl._isKeyDownForAction(cameraControl.PAN_LEFT, keyDownMap);
-            const panRight = cameraControl._isKeyDownForAction(cameraControl.PAN_RIGHT, keyDownMap);
-            const panUp = cameraControl._isKeyDownForAction(cameraControl.PAN_UP, keyDownMap);
-            const panDown = cameraControl._isKeyDownForAction(cameraControl.PAN_DOWN, keyDownMap);
-
-            const panDelta = (keyDownMap[input.KEY_ALT] ? 0.3 : 1.0) * elapsedSecs * configs.keyboardPanRate; // ALT for slower pan rate
-
-            if (panForwards || panBackwards || panLeft || panRight || panUp || panDown) {
-
-                if ((!configs.firstPerson) && configs.followPointer) {
-                    controllers.pivotController.startPivot();
-                }
-
-                if (panDown) {
-                    updates.panDeltaY += panDelta;
-
-                } else if (panUp) {
-                    updates.panDeltaY += -panDelta;
-                }
-
-                if (panRight) {
-                    updates.panDeltaX += -panDelta;
-
-                } else if (panLeft) {
-                    updates.panDeltaX += panDelta;
-                }
-
-                if (panBackwards) {
-                    updates.panDeltaZ += panDelta;
-
-                } else if (panForwards) {
-                    updates.panDeltaZ += -panDelta;
-                }
-            }
-        });
-    }
-
-    reset() {
-    }
-
-    destroy() {
-
-        this._scene.off(this._onTick);
-
-        document.removeEventListener("mousemove", this._documentMouseMoveHandler);
-        document.removeEventListener("keydown", this._documentKeyDownHandler);
-        document.removeEventListener("keyup", this._documentKeyUpHandler);
-    }
-}
-
-const SCALE_DOLLY_EACH_FRAME = 1; // Recalculate dolly speed for eye->target distance on each Nth frame
-const EPSILON = 0.001;
-const tempVec3$2 = math.vec3();
-
-/**
- * Handles camera updates on each "tick" that were scheduled by the various controllers.
- *
- * @private
- */
-class CameraUpdater {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-        const camera = scene.camera;
-        const pickController = controllers.pickController;
-        const pivotController = controllers.pivotController;
-        const panController = controllers.panController;
-
-        let countDown = SCALE_DOLLY_EACH_FRAME; // Decrements on each tick
-        let dollyDistFactor = 1.0; // Calculated when countDown is zero
-
-        this._onTick = scene.on("tick", (e) => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            let cursorType = "default";
-
-            //----------------------------------------------------------------------------------------------------------
-            // Dolly decay
-            //------------------------------------------------------------------------------------  ----------------------
-
-            if (Math.abs(updates.dollyDelta) < EPSILON) {
-                updates.dollyDelta = 0;
-            }
-
-            //----------------------------------------------------------------------------------------------------------
-            // Rotation decay
-            //----------------------------------------------------------------------------------------------------------
-
-            if (Math.abs(updates.rotateDeltaX) < EPSILON) {
-                updates.rotateDeltaX = 0;
-            }
-
-            if (Math.abs(updates.rotateDeltaY) < EPSILON) {
-                updates.rotateDeltaY = 0;
-            }
-
-            if (updates.rotateDeltaX !== 0 || updates.rotateDeltaY !== 0) {
-                updates.dollyDelta = 0;
-            }
-
-            //----------------------------------------------------------------------------------------------------------
-            // Dolly speed eye->look scaling
-            //
-            // If pointer is over an object, then dolly speed is proportional to the distance to that object.
-            //
-            // If pointer is not over an object, then dolly speed is proportional to the distance to the last
-            // object the pointer was over. This is so that we can dolly to structures that may have gaps through
-            // which empty background shows, that the pointer may inadvertently be over. In these cases, we don't
-            // want dolly speed wildly varying depending on how accurately the user avoids the gaps with the pointer.
-            //----------------------------------------------------------------------------------------------------------
-
-            if (configs.firstPerson && (!configs.followPointer)) ; else if (--countDown <= 0) {
-
-                countDown = SCALE_DOLLY_EACH_FRAME;
-
-                if (updates.dollyDelta !== 0) {
-                    if (updates.rotateDeltaY === 0 && updates.rotateDeltaX === 0) {
-
-                        if (configs.followPointer && states.followPointerDirty) {
-
-                            pickController.pickCursorPos = states.pointerCanvasPos;
-                            pickController.schedulePickSurface = true;
-                            pickController.update();
-
-                            if (pickController.pickResult && pickController.pickResult.worldPos) {
-                                const worldPos = pickController.pickResult.worldPos;
-                                pivotController.setPivotPos(worldPos);
-                                pivotController.hidePivot();
-                            } else {
-                                dollyDistFactor = 1.0;
-                            }
-
-                            states.followPointerDirty = false;
-                        }
-                    }
-
-                    const dist = Math.abs(math.lenVec3(math.subVec3(pivotController.getPivotPos(), scene.camera.eye, tempVec3$2)));
-
-                    dollyDistFactor = dist / configs.dollyProximityThreshold;
-
-                    if (dollyDistFactor < configs.dollyMinSpeed) {
-                        dollyDistFactor = configs.dollyMinSpeed;
-                    }
-                }
-            }
-
-            let dollyDeltaForDist = (updates.dollyDelta * dollyDistFactor);
-
-            //----------------------------------------------------------------------------------------------------------
-            // Rotation
-            //----------------------------------------------------------------------------------------------------------
-
-            if (updates.rotateDeltaY !== 0 || updates.rotateDeltaX !== 0) {
-
-                if (pivotController.getPivoting() && configs.followPointer) {
-                    pivotController.continuePivot(updates.rotateDeltaY, updates.rotateDeltaX);
-                    pivotController.showPivot();
-
-                } else {
-
-                    if (updates.rotateDeltaX !== 0) {
-                        if (configs.firstPerson) {
-                            camera.pitch(-updates.rotateDeltaX);
-                        } else {
-                            camera.orbitPitch(updates.rotateDeltaX);
-                        }
-                    }
-
-                    if (updates.rotateDeltaY !== 0) {
-                        if (configs.firstPerson) {
-                            camera.yaw(updates.rotateDeltaY);
-                        } else {
-                            camera.orbitYaw(updates.rotateDeltaY);
-                        }
-                    }
-                }
-
-                updates.rotateDeltaX *= configs.rotationInertia;
-                updates.rotateDeltaY *= configs.rotationInertia;
-
-                cursorType = "grabbing";
-            }
-
-            //----------------------------------------------------------------------------------------------------------
-            // Panning
-            //----------------------------------------------------------------------------------------------------------
-
-            if (Math.abs(updates.panDeltaX) < EPSILON) {
-                updates.panDeltaX = 0;
-            }
-
-            if (Math.abs(updates.panDeltaY) < EPSILON) {
-                updates.panDeltaY = 0;
-            }
-
-            if (Math.abs(updates.panDeltaZ) < EPSILON) {
-                updates.panDeltaZ = 0;
-            }
-
-            if (updates.panDeltaX !== 0 || updates.panDeltaY !== 0 || updates.panDeltaZ !== 0) {
-
-                if (pivotController.getPivoting() && configs.followPointer) {
-                    pivotController.showPivot();
-                }
-
-                const vec = math.vec3();
-
-                vec[0] = updates.panDeltaX;
-                vec[1] = updates.panDeltaY;
-                vec[2] = updates.panDeltaZ;
-
-                let verticalEye;
-                let verticalLook;
-
-                if (configs.constrainVertical) {
-
-                    if (camera.xUp) {
-                        verticalEye = camera.eye[0];
-                        verticalLook = camera.look[0];
-                    } else if (camera.yUp) {
-                        verticalEye = camera.eye[1];
-                        verticalLook = camera.look[1];
-                    } else if (camera.zUp) {
-                        verticalEye = camera.eye[2];
-                        verticalLook = camera.look[2];
-                    }
-
-                    camera.pan(vec);
-
-                    const eye = camera.eye;
-                    const look = camera.look;
-
-                    if (camera.xUp) {
-                        eye[0] = verticalEye;
-                        look[0] = verticalLook;
-                    } else if (camera.yUp) {
-                        eye[1] = verticalEye;
-                        look[1] = verticalLook;
-                    } else if (camera.zUp) {
-                        eye[2] = verticalEye;
-                        look[2] = verticalLook;
-                    }
-
-                    camera.eye = eye;
-                    camera.look = look;
-
-                } else {
-                    camera.pan(vec);
-                }
-
-                cursorType = "grabbing";
-            }
-
-            updates.panDeltaX *= configs.panInertia;
-            updates.panDeltaY *= configs.panInertia;
-            updates.panDeltaZ *= configs.panInertia;
-
-            //----------------------------------------------------------------------------------------------------------
-            // Dollying
-            //----------------------------------------------------------------------------------------------------------
-
-            if (dollyDeltaForDist !== 0) {
-
-                if (dollyDeltaForDist < 0) {
-                    cursorType = "zoom-in";
-                } else {
-                    cursorType = "zoom-out";
-                }
-
-                if (configs.firstPerson) {
-
-                    let verticalEye;
-                    let verticalLook;
-
-                    if (configs.constrainVertical) {
-                        if (camera.xUp) {
-                            verticalEye = camera.eye[0];
-                            verticalLook = camera.look[0];
-                        } else if (camera.yUp) {
-                            verticalEye = camera.eye[1];
-                            verticalLook = camera.look[1];
-                        } else if (camera.zUp) {
-                            verticalEye = camera.eye[2];
-                            verticalLook = camera.look[2];
-                        }
-                    }
-
-                    if (updates.inputFromMouse && configs.followPointer) { // Using mouse input
-                        panController.dollyToCanvasPos(states.pointerCanvasPos, -dollyDeltaForDist);
-                    } else {
-                        camera.pan([0, 0, dollyDeltaForDist]);
-                    }
-
-                    if (configs.constrainVertical) {
-                        const eye = camera.eye;
-                        const look = camera.look;
-                        if (camera.xUp) {
-                            eye[0] = verticalEye;
-                            look[0] = verticalLook;
-                        } else if (camera.yUp) {
-                            eye[1] = verticalEye;
-                            look[1] = verticalLook;
-                        } else if (camera.zUp) {
-                            eye[2] = verticalEye;
-                            look[2] = verticalLook;
-                        }
-                        camera.eye = eye;
-                        camera.look = look;
-                    }
-
-                } else if (configs.planView) {
-
-                    if (updates.inputFromMouse && configs.followPointer) {
-
-                        // Pan-to-canvas pos works better for ortho
-
-                        if (dollyDeltaForDist > 0) {
-                            camera.pan([0, 0, dollyDeltaForDist]);
-                        } else {
-                            panController.dollyToWorldPos(pivotController.getPivotPos(), -dollyDeltaForDist);
-                        }
-                    } else {
-                        panController.dollyToCanvasPos(states.pointerCanvasPos, -dollyDeltaForDist);
-                    }
-
-                } else { // Orbiting
-
-                    if (configs.followPointer) {
-
-                        if (camera.projection === "perspective") {
-                            camera.ortho.scale = camera.ortho.scale + dollyDeltaForDist;
-                            panController.dollyToWorldPos(pivotController.getPivotPos(), -dollyDeltaForDist); // FIXME: What about when pivotPos undefined?
-                        } else {
-                            panController.dollyToCanvasPos(states.pointerCanvasPos, -dollyDeltaForDist);
-                        }
-
-
-                    } else {
-                        camera.zoom(dollyDeltaForDist);
-                    }
-                }
-
-                //  camera.ortho.scale = camera.ortho.scale + (.5 * dollyDeltaForDist);
-
-                updates.dollyDelta *= configs.dollyInertia;
-            }
-
-            pickController.fireEvents();
-
-            document.body.style.cursor = cursorType;
-        });
-    }
-
-
-    destroy() {
-        this._scene.off(this._onTick);
-    }
-}
-
-/**
- * @private
- */
-class MouseMiscHandler {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-
-        const canvas = this._scene.canvas.canvas;
-
-        canvas.addEventListener("mouseenter", this._mouseEnterHandler = () => {
-            states.mouseover = true;
-        });
-
-        canvas.addEventListener("mouseleave", this._mouseLeaveHandler = () => {
-            states.mouseover = false;
-            canvas.style.cursor = "default";
-        });
-
-        canvas.addEventListener("mousemove", this._mouseMoveHandler = (e) => {
-            getCanvasPosFromEvent$1(e, states.pointerCanvasPos);
-        });
-
-        canvas.addEventListener("mousedown", this._mouseDownHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-            getCanvasPosFromEvent$1(e, states.pointerCanvasPos);
-            states.mouseover = true;
-        });
-
-        canvas.addEventListener("mouseup", this._mouseUpHandler = (e) => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-        });
-    }
-
-    reset() {
-    }
-
-    destroy() {
-
-        const canvas = this._scene.canvas.canvas;
-
-        canvas.removeEventListener("mousemove", this._mouseMoveHandler);
-        canvas.removeEventListener("mouseenter", this._mouseEnterHandler);
-        canvas.removeEventListener("mouseleave", this._mouseLeaveHandler);
-        canvas.removeEventListener("mousedown", this._mouseDownHandler);
-        canvas.removeEventListener("mouseup", this._mouseUpHandler);
-    }
-}
-
-function getCanvasPosFromEvent$1(event, canvasPos) {
-    if (!event) {
-        event = window.event;
-        canvasPos[0] = event.x;
-        canvasPos[1] = event.y;
-    } else {
-        let element = event.target;
-        let totalOffsetLeft = 0;
-        let totalOffsetTop = 0;
-        while (element.offsetParent) {
-            totalOffsetLeft += element.offsetLeft;
-            totalOffsetTop += element.offsetTop;
-            element = element.offsetParent;
-        }
-        canvasPos[0] = event.pageX - totalOffsetLeft;
-        canvasPos[1] = event.pageY - totalOffsetTop;
-    }
-    return canvasPos;
-}
-
-/**
- * @private
- */
-class TouchPanRotateAndDollyHandler {
-
-    constructor(scene, controllers, configs, states, updates) {
-
-        this._scene = scene;
-
-        const pickController = controllers.pickController;
-        const pivotController = controllers.pivotController;
-
-        const tapStartPos = math.vec2();
-        let tapStartTime = -1;
-
-        const lastTouches = [];
-        let numTouches = 0;
-
-        const touch0Vec = math.vec2();
-        const touch1Vec = math.vec2();
-
-        const canvas = this._scene.canvas.canvas;
-
-        let waitForTick = false;
-
-        this._onTick = scene.on("tick", () => {
-            waitForTick = false;
-        });
-
-
-        canvas.addEventListener("touchstart", this._canvasTouchStartHandler = (event) => {
-
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-
-            const touches = event.touches;
-            const changedTouches = event.changedTouches;
-
-            states.touchStartTime = Date.now();
-
-            if (touches.length === 1 && changedTouches.length === 1) {
-                tapStartTime = states.touchStartTime;
-                tapStartPos[0] = touches[0].pageX;
-                tapStartPos[1] = touches[0].pageY;
-
-                if (configs.followPointer) {
-
-                    pickController.pickCursorPos = tapStartPos;
-                    pickController.schedulePickSurface = true;
-                    pickController.update();
-
-                    if (!configs.planView) {
-                        if (pickController.picked && pickController.pickedSurface && pickController.pickResult) {
-
-                            pivotController.startPivot(pickController.pickResult.worldPos);
-                            pivotController.showPivot();
-
-                        } else {
-                            pivotController.startPivot(); // Continue to use last pivot point
-                            pivotController.showPivot();
-                        }
-                    }
-                }
-
-            } else {
-                tapStartTime = -1;
-            }
-
-            if (touches.length === 2) {
-                const touch0 = touches[0];
-                const touch1 = touches[1];
-                const currentMiddleTouch = math.geometricMeanVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
-
-                pickController.pickCursorPos = currentMiddleTouch;
-                pickController.schedulePickSurface = true;
-                pickController.update();
-            }
-
-            while (lastTouches.length < touches.length) {
-                lastTouches.push(math.vec2());
-            }
-
-            for (let i = 0, len = touches.length; i < len; ++i) {
-                lastTouches[i][0] = touches[i].pageX;
-                lastTouches[i][1] = touches[i].pageY;
-            }
-
-            numTouches = touches.length;
-
-            event.stopPropagation();
-
-        }, {passive: true});
-
-        canvas.addEventListener("touchmove", this._canvasTouchMoveHandler = (event) => {
-            if (!(configs.active && configs.pointerEnabled)) {
-                return;
-            }
-            if (waitForTick) {
-                // Limit changes detection to one per frame
-                return;
-            }
-            waitForTick = true;
-            // Scaling drag-rotate to canvas boundary
-
-            const canvasBoundary = scene.canvas.boundary;
-            const canvasWidth = canvasBoundary[2] - canvasBoundary[0];
-            const canvasHeight = canvasBoundary[3] - canvasBoundary[1];
-
-            const touches = event.touches;
-
-            if (event.touches.length !== numTouches) {
-                // Two fingers were pressed, then one of them is removed
-                // We don't want to rotate in this case (weird behavior)
-                return;
-            }
-
-            if (numTouches === 1) {
-                const touch0 = touches[0];
-
-                //-----------------------------------------------------------------------------------------------
-                // Drag rotation
-                //-----------------------------------------------------------------------------------------------
-
-                if (configs.planView) { // No rotating in plan-view mode
-
-                    math.subVec2([touch0.pageX, touch0.pageY], lastTouches[0], touch0Vec);
-
-                    const xPanDelta = touch0Vec[0];
-                    const yPanDelta = touch0Vec[1];
-
-                    const camera = scene.camera;
-
-                    // We use only canvasHeight here so that aspect ratio does not distort speed
-
-                    if (camera.projection === "perspective") {
-
-                        const depth = Math.abs( scene.camera.eyeLookDist);
-                        const targetDistance = depth * Math.tan((camera.perspective.fov / 2) * Math.PI / 180.0);
-
-                        updates.panDeltaX += (xPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
-                        updates.panDeltaY += (yPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
-
-                    } else {
-
-                        updates.panDeltaX += 0.5 * camera.ortho.scale * (xPanDelta / canvasHeight) * configs.touchPanRate;
-                        updates.panDeltaY += 0.5 * camera.ortho.scale * (yPanDelta / canvasHeight) * configs.touchPanRate;
-                    }
-
-                } else {
-                    updates.rotateDeltaY -= ((touch0.pageX - lastTouches[0][0]) / canvasWidth) * configs.dragRotationRate / 2; // Full horizontal rotation
-                    updates.rotateDeltaX += ((touch0.pageY - lastTouches[0][1]) / canvasHeight) * (configs.dragRotationRate / 4); // Half vertical rotation
-                }
-
-            } else if (numTouches === 2) {
-
-                const touch0 = touches[0];
-                const touch1 = touches[1];
-
-                const lastMiddleTouch = math.geometricMeanVec2(lastTouches[0], lastTouches[1]);
-                const currentMiddleTouch = math.geometricMeanVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
-
-                const touchDelta = math.vec2();
-
-                math.subVec2(lastMiddleTouch, currentMiddleTouch, touchDelta);
-
-
-                // PANNING
-                const xPanDelta = touchDelta[0];
-                const yPanDelta = touchDelta[1];
-
-                const camera = scene.camera;
-
-                // We use only canvasHeight here so that aspect ratio does not distort speed
-
-                if (camera.projection === "perspective") {
-                    const pickedWorldPos = pickController.pickResult ? pickController.pickResult.worldPos : scene.center;
-
-                    const depth = Math.abs(math.lenVec3(math.subVec3(pickedWorldPos, scene.camera.eye, [])));
-                    const targetDistance = depth * Math.tan((camera.perspective.fov / 2) * Math.PI / 180.0);
-
-                    updates.panDeltaX -= (xPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
-                    updates.panDeltaY -= (yPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
-
-                } else {
-
-                    updates.panDeltaX -= 0.5 * camera.ortho.scale * (xPanDelta / canvasHeight) * configs.touchPanRate;
-                    updates.panDeltaY -= 0.5 * camera.ortho.scale * (yPanDelta / canvasHeight) * configs.touchPanRate;
-                }
-
-                // Dollying
-
-                const d1 = math.distVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
-                const d2 = math.distVec2(lastTouches[0], lastTouches[1]);
-
-                updates.dollyDelta = (d2 - d1) * configs.touchDollyRate;
-
-                states.pointerCanvasPos = currentMiddleTouch;
-            }
-
-            for (let i = 0; i < numTouches; ++i) {
-                lastTouches[i][0] = touches[i].pageX;
-                lastTouches[i][1] = touches[i].pageY;
-            }
-            event.stopPropagation();
-
-        }, {passive: true});
-    }
-
-    reset() {
-    }
-
-    destroy() {
-        const canvas = this._scene.canvas.canvas;
-        canvas.removeEventListener("touchstart", this._canvasTouchStartHandler);
-        canvas.removeEventListener("touchmove", this._canvasTouchMoveHandler);
-        this._scene.off(this._onTick);
-    }
-}
-
-/**
- * @desc Controls the {@link Camera} with user input, and fires events when the user interacts with pickable {@link Entity}s.
- *
- * # Contents
- *
- * * [Overview](#overview)
- * * [Examples](#examples)
- * * [Orbit Mode](#orbit-mode)
- *      + [Following the Pointer in Orbit Mode](#--following-the-pointer-in-orbit-mode--)
- *      + [Showing the Pivot Position](#--showing-the-pivot-position--)
- *      + [Axis-Aligned Views in Orbit Mode](#--axis-aligned-views-in-orbit-mode--)
- *      + [View-Fitting Entitys in Orbit Mode](#--view-fitting-entitys-in-orbit-mode--)
- * * [First-Person Mode](#first-person-mode)
- *      + [Following the Pointer in First-Person Mode](#--following-the-pointer-in-first-person-mode--)
- *      + [Constraining Vertical Position in First-Person Mode](#--constraining-vertical-position-in-first-person-mode--)
- *      + [Axis-Aligned Views in First-Person Mode](#--axis-aligned-views-in-first-person-mode--)
- *      + [View-Fitting Entitys in First-Person Mode](#--view-fitting-entitys-in-first-person-mode--)
- * * [Plan-View Mode](#plan-view-mode)
- *      + [Following the Pointer in Plan-View Mode](#--following-the-pointer-in-plan-view-mode--)
- *      + [Axis-Aligned Views in Plan-View Mode](#--axis-aligned-views-in-plan-view-mode--)
- * * [CameraControl Events](#cameracontrol-events)
- *      + ["hover"](#---hover---)
- *      + ["hoverOff"](#---hoveroff---)
- *      + ["hoverEnter"](#---hoverenter---)
- *      + ["hoverOut"](#---hoverout---)
- *      + ["picked"](#---picked---)
- *      + ["pickedSurface"](#---pickedsurface---)
- *      + ["pickedNothing"](#---pickednothing---)
- *      + ["doublePicked"](#---doublepicked---)
- *      + ["doublePickedSurface"](#---doublepickedsurface---)
- *      + ["doublePickedNothing"](#---doublepickednothing---)
- *      + ["rightClick"](#---rightclick---)
- * * [Custom Keyboard Mappings](#custom-keyboard-mappings)
- *
- * <br><br>
- *
- * # Overview
- *
- * * Each {@link Viewer} has a ````CameraControl````, located at {@link Viewer#cameraControl}.
- * * {@link CameraControl#navMode} selects the navigation mode:
- *      * ````"orbit"```` rotates the {@link Camera} position about the target.
- *      * ````"firstPerson"```` rotates the World about the Camera position.
- *      * ````"planView"```` never rotates, but still allows to pan and dolly, typically for an axis-aligned view.
- * * {@link CameraControl#followPointer} makes the Camera follow the mouse or touch pointer.
- * * {@link CameraControl#constrainVertical} locks the Camera to its current height when in first-person mode.
- * * ````CameraControl```` fires pick events when we hover, click or tap on an {@link Entity}.
- * <br><br>
- *
- * # Examples
- *
- * * [Orbit Navigation - Duplex Model](https://xeokit.github.io/xeokit-sdk/examples/#CameraControl_orbit_Duplex)
- * * [Orbit Navigation - Holter Tower Model](https://xeokit.github.io/xeokit-sdk/examples/#CameraControl_orbit_HolterTower)
- * * [First-Person Navigation - Duplex Model](https://xeokit.github.io/xeokit-sdk/examples/#CameraControl_firstPerson_Duplex)
- * * [First-Person Navigation - Holter Tower Model](https://xeokit.github.io/xeokit-sdk/examples/#CameraControl_firstPerson_HolterTower)
- * * [Plan-view Navigation - Schependomlaan Model](https://xeokit.github.io/xeokit-sdk/examples/#CameraControl_planView_Schependomlaan)
- * * [Custom Keyboard Mapping](https://xeokit.github.io/xeokit-sdk/examples/#CameraControl_keyMap)
- * <br><br>
- *
- * # Orbit Mode
- *
- * In orbit mode, ````CameraControl```` orbits the {@link Camera} about the target.
- *
- * To enable orbit mode:
- *
- * ````javascript
- * const cameraControl = myViewer.cameraControl;
- * cameraControl.navMode = "orbit";
- * ````
- *
- * Then orbit by:
- *
- * * left-dragging the mouse,
- * * tap-dragging the touch pad, and
- * * pressing arrow keys, or ````Q```` and ````E```` on a QWERTY keyboard, or ````A```` and ````E```` on an AZERTY keyboard.
- * <br><br>
- *
- * Dolly forwards and backwards by:
- *
- * * spinning the mouse wheel,
- * * pinching on the touch pad, and
- * * pressing the ````+```` and ````-```` keys, or ````W```` and ````S```` on a QWERTY keyboard, or ````Z```` and ````S```` for AZERTY.
- * <br><br>
- *
- * Pan horizontally and vertically by:
- *
- * * right-dragging the mouse,
- * * left-dragging the mouse with the SHIFT key down,
- * * tap-dragging the touch pad with SHIFT down,
- * * pressing the ````A````, ````D````, ````Z```` and ````X```` keys on a QWERTY keyboard, and
- * * pressing the ````Q````, ````D````, ````W```` and ````X```` keys on an AZERTY keyboard,
- * <br><br>
- *
- * ## Following the Pointer in Orbit Mode
- *
- * When {@link CameraControl#followPointer} is ````true````in orbiting mode, the mouse or touch pointer will dynamically
- * indicate the target that the {@link Camera} will orbit, as well as dolly to and from.
- *
- * Lets ensure that we're in orbit mode, then enable the {@link Camera} to follow the pointer:
- *
- * ````javascript
- * cameraControl.navMode = "orbit";
- * cameraControl.followPointer = true;
- * ````
- *
- * When the pointer is over empty space, the target will remain on the last object that the pointer was over.
- *
- * ## Showing the Pivot Position
- *
- * We can configure {@link CameraControl#pivotElement} with an HTML element to indicate the current
- * pivot position. The indicator will appear momentarily each time we move the {@link Camera} while in orbit mode with
- * {@link CameraControl#followPointer} set ````true````.
- *
- * First we'll define some CSS to style our pivot indicator as a black dot with a white border:
- *
- * ````css
- * .camera-pivot-marker {
- *      color: #ffffff;
- *      position: absolute;
- *      width: 25px;
- *      height: 25px;
- *      border-radius: 15px;
- *      border: 2px solid #ebebeb;
- *      background: black;
- *      visibility: hidden;
- *      box-shadow: 5px 5px 15px 1px #000000;
- *      z-index: 10000;
- *      pointer-events: none;
- * }
- * ````
- *
- * Then we'll attach our pivot indicator's HTML element to the ````CameraControl````:
- *
- * ````javascript
- * const pivotElement = document.createRange().createContextualFragment("<div class='camera-pivot-marker'></div>").firstChild;
- *
- * document.body.appendChild(pivotElement);
- *
- * cameraControl.pivotElement = pivotElement;
- * ````
- *
- * ## Axis-Aligned Views in Orbit Mode
- *
- * In orbit mode, we can use keys 1-6 to position the {@link Camera} to look at the center of the {@link Scene} from along each of the
- * six World-space axis. Pressing one of these keys will fly the {@link Camera} to the corresponding axis-aligned view.
- *
- * ## View-Fitting Entitys in Orbit Mode
- *
- * When {@link CameraControl#doublePickFlyTo} is ````true````, we can left-double-click or
- * double-tap (ie. "double-pick") an {@link Entity} to fit it to view. This will cause the {@link Camera}
- * to fly to that Entity. Our target then becomes the center of that Entity. If we are currently pivoting,
- * then our pivot position is then also set to the Entity center.
- *
- * Disable that behaviour by setting {@link CameraControl#doublePickFlyTo} ````false````.
- *
- * # First-Person Mode
- *
- * In first-person mode, ````CameraControl```` rotates the World about the {@link Camera} position.
- *
- * To enable first-person mode:
- *
- * ````javascript
- * cameraControl.navMode = "firstPerson";
- * ````
- *
- * Then rotate by:
- *
- * * left-dragging the mouse,
- * * tap-dragging the touch pad,
- * * pressing arrow keys, or ````Q```` and ````E```` on a QWERTY keyboard, or ````A```` and ````E```` on an AZERTY keyboard.
- * <br><br>
- *
- * Dolly forwards and backwards by:
- *
- * * spinning the mouse wheel,
- * * pinching on the touch pad, and
- * * pressing the ````+```` and ````-```` keys, or ````W```` and ````S```` on a QWERTY keyboard, or ````Z```` and ````S```` for AZERTY.
- * <br><br>
- *
- * Pan left, right, up and down by:
- *
- * * left-dragging or right-dragging the mouse, and
- * * tap-dragging the touch pad with SHIFT down.
- *
- * Pan forwards, backwards, left, right, up and down by pressing the ````WSADZX```` keys on a QWERTY keyboard,
- * or ````WSQDWX```` keys on an AZERTY keyboard.
- * <br><br>
- *
- * ## Following the Pointer in First-Person Mode
- *
- * When {@link CameraControl#followPointer} is ````true```` in first-person mode, the mouse or touch pointer will dynamically
- * indicate the target to which the {@link Camera} will dolly to and from. In first-person mode, however, the World will always rotate
- * about the {@link Camera} position.
- *
- * Lets ensure that we're in first-person mode, then enable the {@link Camera} to follow the pointer:
- *
- * ````javascript
- * cameraControl.navMode = "firstPerson";
- * cameraControl.followPointer = true;
- * ````
- *
- * When the pointer is over empty space, the target will remain the last object that the pointer was over.
- *
- * ## Constraining Vertical Position in First-Person Mode
- *
- * In first-person mode, we can lock the {@link Camera} to its current position on the vertical World axis, which is useful for walk-through navigation:
- *
- * ````javascript
- * cameraControl.constrainVertical = true;
- * ````
- *
- * ## Axis-Aligned Views in First-Person Mode
- *
- * In first-person mode we can use keys 1-6 to position the {@link Camera} to look at the center of
- * the {@link Scene} from along each of the six World-space axis. Pressing one of these keys will fly the {@link Camera} to the
- * corresponding axis-aligned view.
- *
- * ## View-Fitting Entitys in First-Person Mode
- *
- * As in orbit mode, when in first-person mode and {@link CameraControl#doublePickFlyTo} is ````true````, we can double-click
- * or double-tap an {@link Entity} (ie. "double-picking") to fit it in view. This will cause the {@link Camera} to fly to
- * that Entity. Our target then becomes the center of that Entity.
- *
- * Disable that behaviour by setting {@link CameraControl#doublePickFlyTo} ````false````.
- *
- * # Plan-View Mode
- *
- * In plan-view mode, ````CameraControl```` pans and rotates the {@link Camera}, without rotating it.
- *
- * To enable plan-view mode:
- *
- * ````javascript
- * cameraControl.navMode = "planView";
- * ````
- *
- * Dolly forwards and backwards by:
- *
- * * spinning the mouse wheel,
- * * pinching on the touch pad, and
- * * pressing the ````+```` and ````-```` keys.
- *
- * <br>
- * Pan left, right, up and down by:
- *
- * * left-dragging or right-dragging the mouse, and
- * * tap-dragging the touch pad with SHIFT down.
- *
- * Pan forwards, backwards, left, right, up and down by pressing the ````WSADZX```` keys on a QWERTY keyboard,
- * or ````WSQDWX```` keys on an AZERTY keyboard.
- * <br><br>
- *
- * ## Following the Pointer in Plan-View Mode
- *
- * When {@link CameraControl#followPointer} is ````true```` in plan-view mode, the mouse or touch pointer will dynamically
- * indicate the target to which the {@link Camera} will dolly to and from.  In plan-view mode, however, the {@link Camera} cannot rotate.
- *
- * Lets ensure that we're in plan-view mode, then enable the {@link Camera} to follow the pointer:
- *
- * ````javascript
- * cameraControl.navMode = "planView";
- * cameraControl.followPointer = true;
- * ````
- *
- * When the pointer is over empty space, the target will remain the last object that the pointer was over.
- *
- * ## Axis-Aligned Views in Plan-View Mode
- *
- * As in orbit and first-person modes, in plan-view mode we can use keys 1-6 to position the {@link Camera} to look at the center of
- * the {@link Scene} from along each of the six World-space axis. Pressing one of these keys will fly the {@link Camera} to the
- * corresponding axis-aligned view.
- *
- * # CameraControl Events
- *
- * ````CameraControl```` fires events as we interact with {@link Entity}s using mouse or touch input.
- *
- * The following examples demonstrate how to subscribe to those events.
- *
- * The first example shows how to save a handle to a subscription, which we can later use to unsubscribe.
- *
- * ## "hover"
- *
- * Event fired when the pointer moves while hovering over an Entity.
- *
- * ````javascript
- * const onHover = cameraControl.on("hover", (e) => {
- *      const entity = e.entity; // Entity
- *      const canvasPos = e.canvasPos; // 2D canvas position
- * });
- * ````
- *
- * To unsubscribe from the event:
- *
- * ````javascript
- * cameraControl.off(onHover);
- * ````
- *
- * ## "hoverOff"
- *
- * Event fired when the pointer moves while hovering over empty space.
- *
- * ````javascript
- * cameraControl.on("hoverOff", (e) => {
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "hoverEnter"
- *
- * Event fired when the pointer moves onto an Entity.
- *
- * ````javascript
- * cameraControl.on("hoverEnter", (e) => {
- *      const entity = e.entity;
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "hoverOut"
- *
- * Event fired when the pointer moves off an Entity.
- *
- * ````javascript
- * cameraControl.on("hoverOut", (e) => {
- *      const entity = e.entity;
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "picked"
- *
- * Event fired when we left-click or tap on an Entity.
- *
- * ````javascript
- * cameraControl.on("picked", (e) => {
- *      const entity = e.entity;
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "pickedSurface"
- *
- * Event fired when we left-click or tap on the surface of an Entity.
- *
- * ````javascript
- * cameraControl.on("picked", (e) => {
- *      const entity = e.entity;
- *      const canvasPos = e.canvasPos;
- *      const worldPos = e.worldPos; // 3D World-space position
- *      const viewPos = e.viewPos; // 3D View-space position
- *      const worldNormal = e.worldNormal; // 3D World-space normal vector
- * });
- * ````
- *
- * ## "pickedNothing"
- *
- * Event fired when we left-click or tap on empty space.
- *
- * ````javascript
- * cameraControl.on("pickedNothing", (e) => {
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "doublePicked"
- *
- * Event fired wwhen we left-double-click or double-tap on an Entity.
- *
- * ````javascript
- * cameraControl.on("doublePicked", (e) => {
- *      const entity = e.entity;
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "doublePickedSurface"
- *
- * Event fired when we left-double-click or double-tap on the surface of an Entity.
- *
- * ````javascript
- * cameraControl.on("doublePickedSurface", (e) => {
- *      const entity = e.entity;
- *      const canvasPos = e.canvasPos;
- *      const worldPos = e.worldPos;
- *      const viewPos = e.viewPos;
- *      const worldNormal = e.worldNormal;
- * });
- * ````
- *
- * ## "doublePickedNothing"
- *
- * Event fired when we left-double-click or double-tap on empty space.
- *
- * ````javascript
- * cameraControl.on("doublePickedNothing", (e) => {
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## "rightClick"
- *
- * Event fired when we right-click on the canvas.
- *
- * ````javascript
- * cameraControl.on("rightClick", (e) => {
- *      const event = e.event; // Mouse event
- *      const canvasPos = e.canvasPos;
- * });
- * ````
- *
- * ## Custom Keyboard Mappings
- *
- * We can customize````CameraControl```` key bindings as shown below.
- *
- * In this example, we'll just set the default bindings for a QWERTY keyboard.
- *
- * ````javascript
- * const input = myViewer.scene.input;
- *
- * cameraControl.navMode = "orbit";
- * cameraControl.followPointer = true;
- *
- * const keyMap = {};
- *
- * keyMap[cameraControl.PAN_LEFT] = [input.KEY_A];
- * keyMap[cameraControl.PAN_RIGHT] = [input.KEY_D];
- * keyMap[cameraControl.PAN_UP] = [input.KEY_Z];
- * keyMap[cameraControl.PAN_DOWN] = [input.KEY_X];
- * keyMap[cameraControl.DOLLY_FORWARDS] = [input.KEY_W, input.KEY_ADD];
- * keyMap[cameraControl.DOLLY_BACKWARDS] = [input.KEY_S, input.KEY_SUBTRACT];
- * keyMap[cameraControl.ROTATE_X_POS] = [input.KEY_DOWN_ARROW];
- * keyMap[cameraControl.ROTATE_X_NEG] = [input.KEY_UP_ARROW];
- * keyMap[cameraControl.ROTATE_Y_POS] = [input.KEY_LEFT_ARROW];
- * keyMap[cameraControl.ROTATE_Y_NEG] = [input.KEY_RIGHT_ARROW];
- * keyMap[cameraControl.AXIS_VIEW_RIGHT] = [input.KEY_NUM_1];
- * keyMap[cameraControl.AXIS_VIEW_BACK] = [input.KEY_NUM_2];
- * keyMap[cameraControl.AXIS_VIEW_LEFT] = [input.KEY_NUM_3];
- * keyMap[cameraControl.AXIS_VIEW_FRONT] = [input.KEY_NUM_4];
- * keyMap[cameraControl.AXIS_VIEW_TOP] = [input.KEY_NUM_5];
- * keyMap[cameraControl.AXIS_VIEW_BOTTOM] = [input.KEY_NUM_6];
- *
- * cameraControl.keyMap = keyMap;
- * ````
- *
- * We can also just configure default bindings for a specified keyboard layout, like this:
- *
- * ````javascript
- * cameraControl.keyMap = "qwerty";
- * ````
- *
- * Then, ````CameraControl```` will internally set {@link CameraControl#keyMap} to the default key map for the QWERTY
- * layout (which is the same set of mappings we set in the previous example). In other words, if we subsequently
- * read {@link CameraControl#keyMap}, it will now be a key map, instead of the "qwerty" string value we set it to.
- *
- * Supported layouts are, so far:
- *
- * * ````"qwerty"````
- * * ````"azerty"````
- */
-class CameraControl extends Component {
 
     /**
      * @private
@@ -25349,1118 +22010,1877 @@ class CameraControl extends Component {
 
         super(owner, cfg);
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.PAN_LEFT = 0;
+        const self = this;
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.PAN_RIGHT = 1;
+        this._pivoter = new (function () { // Pivots the Camera around an arbitrary World-space position
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.PAN_UP = 2;
+            // Pivot math by: http://www.derschmale.com/
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.PAN_DOWN = 3;
+            const scene = self.scene;
+            const camera = scene.camera;
+            const canvas = scene.canvas;
+            const pivotPoint = new Float32Array(3);
+            let cameraOffset;
+            let azimuth = 0;
+            let polar = 0;
+            let radius = 0;
+            let pivoting = false; // True while pivoting
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.PAN_FORWARDS = 4;
+            const spot = document.createElement("div");
+            spot.innerText = " ";
+            spot.style.color = "#ffffff";
+            spot.style.position = "absolute";
+            spot.style.width = "25px";
+            spot.style.height = "25px";
+            spot.style.left = "0px";
+            spot.style.top = "0px";
+            spot.style["border-radius"] = "15px";
+            spot.style["border"] = "2px solid #ffffff";
+            spot.style["background"] = "black";
+            spot.style.visibility = "hidden";
+            spot.style["box-shadow"] = "5px 5px 15px 1px #000000";
+            spot.style["z-index"] = 0;
+            spot.style["pointer-events"] = "none";
+            document.body.appendChild(spot);
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.PAN_BACKWARDS = 5;
+            (function () {
+                const viewPos = math.vec4();
+                const projPos = math.vec4();
+                const canvasPos = math.vec2();
+                let distDirty = true;
+                camera.on("viewMatrix", function () {
+                    distDirty = true;
+                });
+                camera.on("projMatrix", function () {
+                    distDirty = true;
+                });
+                scene.on("tick", function () {
+                    if (pivoting && distDirty) {
+                        math.transformPoint3(camera.viewMatrix, pivotPoint, viewPos);
+                        viewPos[3] = 1;
+                        math.transformPoint4(camera.projMatrix, viewPos, projPos);
+                        const aabb = canvas.boundary;
+                        canvasPos[0] = Math.floor((1 + projPos[0] / projPos[3]) * aabb[2] / 2);
+                        canvasPos[1] = Math.floor((1 - projPos[1] / projPos[3]) * aabb[3] / 2);
+                        const canvasElem = canvas.canvas;
+                        const rect = canvasElem.getBoundingClientRect();
+                        spot.style.left = (Math.floor(rect.left + canvasPos[0]) - 12) + "px";
+                        spot.style.top = (Math.floor(rect.top + canvasPos[1]) - 12) + "px";
+                        spot.style.visibility = "visible";
+                        distDirty = false;
+                    }
+                });
+            })();
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.ROTATE_X_POS = 6;
+            this.startPivot = function (worldPos) {
+                if (worldPos) { // Use last pivotPoint by default
+                    pivotPoint.set(worldPos);
+                }
+                let lookat = math.lookAtMat4v(camera.eye, camera.look, camera.worldUp);
+                cameraOffset = math.transformPoint3(lookat, pivotPoint);
+                cameraOffset[2] += math.distVec3(camera.eye, pivotPoint);
+                lookat = math.inverseMat4(lookat);
+                const offset = math.transformVec3(lookat, cameraOffset);
+                const diff = math.vec3();
+                math.subVec3(camera.eye, pivotPoint, diff);
+                math.addVec3(diff, offset);
+                if (camera.worldUp[2] === 1) {
+                    const t = diff[1];
+                    diff[1] = diff[2];
+                    diff[2] = t;
+                }
+                radius = math.lenVec3(diff);
+                polar = Math.acos(diff[1] / radius);
+                azimuth = Math.atan2(diff[0], diff[2]);
+                pivoting = true;
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.ROTATE_X_NEG = 7;
+            this.getPivoting = function () {
+                return pivoting;
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.ROTATE_Y_POS = 8;
+            this.setPivotPos = function (worldPos) {
+                pivotPoint.set(worldPos);
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.ROTATE_Y_NEG = 9;
+            this.getPivotPos = function () {
+                return pivotPoint;
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.DOLLY_FORWARDS = 10;
+            this.continuePivot = function (yawInc, pitchInc) {
+                if (!pivoting) {
+                    return;
+                }
+                if (yawInc === 0 && pitchInc === 0) {
+                    return;
+                }
+                if (camera.worldUp[2] === 1) {
+                    dx = -dx;
+                }
+                var dx = -yawInc;
+                const dy = -pitchInc;
+                azimuth += -dx * .01;
+                polar += dy * .01;
+                polar = math.clamp(polar, .001, Math.PI - .001);
+                const pos = [
+                    radius * Math.sin(polar) * Math.sin(azimuth),
+                    radius * Math.cos(polar),
+                    radius * Math.sin(polar) * Math.cos(azimuth)
+                ];
+                if (camera.worldUp[2] === 1) {
+                    const t = pos[1];
+                    pos[1] = pos[2];
+                    pos[2] = t;
+                }
+                // Preserve the eye->look distance, since in xeokit "look" is the point-of-interest, not the direction vector.
+                const eyeLookLen = math.lenVec3(math.subVec3(camera.look, camera.eye, math.vec3()));
+                math.addVec3(pos, pivotPoint);
+                let lookat = math.lookAtMat4v(pos, pivotPoint, camera.worldUp);
+                lookat = math.inverseMat4(lookat);
+                const offset = math.transformVec3(lookat, cameraOffset);
+                lookat[12] -= offset[0];
+                lookat[13] -= offset[1];
+                lookat[14] -= offset[2];
+                const zAxis = [lookat[8], lookat[9], lookat[10]];
+                camera.eye = [lookat[12], lookat[13], lookat[14]];
+                math.subVec3(camera.eye, math.mulVec3Scalar(zAxis, eyeLookLen), camera.look);
+                camera.up = [lookat[4], lookat[5], lookat[6]];
+                spot.style.visibility = "visible";
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.DOLLY_BACKWARDS = 11;
+            this.showPivot = function () {
+                spot.style.visibility = "visible";
+                window.setTimeout(() => {
+                    spot.style.visibility = "hidden";
+                }, 1000);
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.AXIS_VIEW_RIGHT = 12;
+            this.hidePivot = function () {
+                spot.style.visibility = "hidden";
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.AXIS_VIEW_BACK = 13;
+            this.endPivot = function () {
+                pivoting = false;
+            };
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.AXIS_VIEW_LEFT = 14;
+        })();
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.AXIS_VIEW_FRONT = 15;
+        this._cameraFlight = new CameraFlightAnimation(this, {
+            duration: 0.5
+        });
 
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.AXIS_VIEW_TOP = 16;
-
-        /**
-         * Identifies the XX action.
-         * @final
-         * @type {Number}
-         */
-        this.AXIS_VIEW_BOTTOM = 17;
-
-        this._keyMap = {}; // Maps key codes to the above actions
-
-        this.scene.canvas.canvas.oncontextmenu = (e) => {
-            e.preventDefault();
-        };
-
-        // User-settable CameraControl configurations
-
-        this._configs = {
-
-            // Private
-
-            tapInterval: 150, // Millisecs
-            doubleTapInterval: 325, // Millisecs
-            tapDistanceThreshold: 4, // Pixels
-
-            // General
-
-            active: true,
-            keyboardLayout: "qwerty",
-            navMode: "orbit",
-            planView: false,
-            firstPerson: false,
-            followPointer: false,
-            doublePickFlyTo: true,
-            panRightClick: true,
-            showPivot: false,
-            pointerEnabled: true,
-            constrainVertical: false,
-
-            // Rotation
-
-            dragRotationRate: 360.0,
-            keyboardRotationRate: 90.0,
-            rotationInertia: 0.0,
-
-            // Panning
-
-            keyboardPanRate: 1.0,
-            touchPanRate: 1.0,
-            panInertia: 0.5,
-
-            // Dollying
-
-            keyboardDollyRate: 10,
-            mouseWheelDollyRate: 100,
-            touchDollyRate: 0.05,
-            dollyInertia: 0,
-            dollyProximityThreshold: 30.0,
-            dollyMinSpeed: 1.0
-        };
-
-        // Current runtime state of the CameraControl
-
-        this._states = {
-            pointerCanvasPos: math.vec2(),
-            mouseover: false,
-            inputFromMouse: false, // TODO: Is this needed?
-            followPointerDirty: true,
-            mouseDownClientX: 0,
-            mouseDownClientY: 0,
-            mouseDownCursorX: 0,
-            mouseDownCursorY: 0,
-            touchStartTime: null,
-            activeTouches: [],
-            tapStartPos: math.vec2(),
-            tapStartTime: -1,
-            lastTapTime: -1
-        };
-
-        // Updates for CameraUpdater to process on next Scene "tick" event
-
-        this._updates = {
-            rotateDeltaX: 0,
-            rotateDeltaY: 0,
-            panDeltaX: 0,
-            panDeltaY: 0,
-            panDeltaZ: 0,
-            dollyDelta: 0
-        };
-
-        // Controllers to assist input event handlers with controlling the Camera
-
-        const scene = this.scene;
-
-        this._controllers = {
-            cameraControl: this,
-            pickController: new PickController(this, this._configs),
-            pivotController: new PivotController(scene),
-            panController: new PanController(this.scene),
-            cameraFlight: new CameraFlightAnimation(this, {
-                duration: 0.5
-            })
-        };
-
-        // Input event handlers
-
-        this._handlers = [
-            new MouseMiscHandler(this.scene, this._controllers, this._configs, this._states, this._updates),
-            new TouchPanRotateAndDollyHandler(this.scene, this._controllers, this._configs, this._states, this._updates),
-            new MousePanRotateDollyHandler(this.scene, this._controllers, this._configs, this._states, this._updates),
-            new KeyboardAxisViewHandler(this.scene, this._controllers, this._configs, this._states, this._updates),
-            new MousePickHandler(this.scene, this._controllers, this._configs, this._states, this._updates),
-            new KeyboardPanRotateDollyHandler(this.scene, this._controllers, this._configs, this._states, this._updates)
-        ];
-
-        // Applies scheduled updates to the Camera on each Scene "tick" event
-
-        this._cameraUpdater = new CameraUpdater(this.scene, this._controllers, this._configs, this._states, this._updates);
-
-        // Set initial user configurations
-
-        this.navMode = cfg.navMode;
-        if (cfg.planView) {
-            this.planView = cfg.planView;
-        }
-        this.constrainVertical = cfg.constrainVertical;
-        if (cfg.keyboardLayout) {
-            this.keyboardLayout = cfg.keyboardLayout; // Deprecated
-        } else {
-            this.keyMap = cfg.keyMap;
-        }
+        this.planView = cfg.planView;
+        this.firstPerson = cfg.firstPerson;
+        this.walking = cfg.walking;
+        this.keyboardLayout = cfg.keyboardLayout;
         this.doublePickFlyTo = cfg.doublePickFlyTo;
         this.panRightClick = cfg.panRightClick;
         this.active = cfg.active;
-        this.followPointer = cfg.followPointer;
-        this.rotationInertia = cfg.rotationInertia;
-        this.keyboardPanRate = cfg.keyboardPanRate;
-        this.touchPanRate = cfg.touchPanRate;
-        this.keyboardRotationRate = cfg.keyboardRotationRate;
-        this.dragRotationRate = cfg.dragRotationRate;
-        this.touchDollyRate = cfg.touchDollyRate;
-        this.dollyInertia = cfg.dollyInertia;
-        this.dollyProximityThreshold = cfg.dollyProximityThreshold;
-        this.dollyMinSpeed = cfg.dollyMinSpeed;
-        this.panInertia = cfg.panInertia;
+        this.pivoting = cfg.pivoting;
+        this.panToPointer = cfg.panToPointer;
+        this.panToPivot = cfg.panToPivot;
+        this.inertia = cfg.inertia;
         this.pointerEnabled = true;
-        this.keyboardDollyRate = cfg.keyboardDollyRate;
-        this.mouseWheelDollyRate = cfg.mouseWheelDollyRate;
+
+        this._initEvents(); // Set up all the mouse/touch/kb handlers
     }
 
     /**
-     * Sets custom mappings of keys to ````CameraControl```` actions.
+     *  Sets if this CameraControl is active or not.
      *
-     * See class docs for usage.
+     * Default value is ````true````.
      *
-     * @param {{Number:Number}|String} value Either a set of new key mappings, or a string to select a keyboard layout,
-     * which causes ````CameraControl```` to use the default key mappings for that layout.
-     */
-    set keyMap(value) {
-        value = value || "qwerty";
-        if (utils.isString(value)) {
-            const input = this.scene.input;
-            const keyMap = {};
-
-            switch (value) {
-
-                default:
-                    this.error("Unsupported value for 'keyMap': " + value + " defaulting to 'qwerty'");
-                // Intentional fall-through to "qwerty"
-                case "qwerty":
-                    keyMap[this.PAN_LEFT] = [input.KEY_A];
-                    keyMap[this.PAN_RIGHT] = [input.KEY_D];
-                    keyMap[this.PAN_UP] = [input.KEY_Z];
-                    keyMap[this.PAN_DOWN] = [input.KEY_X];
-                    keyMap[this.PAN_BACKWARDS] = [];
-                    keyMap[this.PAN_FORWARDS] = [];
-                    keyMap[this.DOLLY_FORWARDS] = [input.KEY_W, input.KEY_ADD];
-                    keyMap[this.DOLLY_BACKWARDS] = [input.KEY_S, input.KEY_SUBTRACT];
-                    keyMap[this.ROTATE_X_POS] = [input.KEY_DOWN_ARROW];
-                    keyMap[this.ROTATE_X_NEG] = [input.KEY_UP_ARROW];
-                    keyMap[this.ROTATE_Y_POS] = [input.KEY_Q, input.KEY_LEFT_ARROW];
-                    keyMap[this.ROTATE_Y_NEG] = [input.KEY_E, input.KEY_RIGHT_ARROW];
-                    keyMap[this.AXIS_VIEW_RIGHT] = [input.KEY_NUM_1];
-                    keyMap[this.AXIS_VIEW_BACK] = [input.KEY_NUM_2];
-                    keyMap[this.AXIS_VIEW_LEFT] = [input.KEY_NUM_3];
-                    keyMap[this.AXIS_VIEW_FRONT] = [input.KEY_NUM_4];
-                    keyMap[this.AXIS_VIEW_TOP] = [input.KEY_NUM_5];
-                    keyMap[this.AXIS_VIEW_BOTTOM] = [input.KEY_NUM_6];
-                    break;
-
-                case "azerty":
-                    keyMap[this.PAN_LEFT] = [input.KEY_Q];
-                    keyMap[this.PAN_RIGHT] = [input.KEY_D];
-                    keyMap[this.PAN_UP] = [input.KEY_W];
-                    keyMap[this.PAN_DOWN] = [input.KEY_X];
-                    keyMap[this.PAN_BACKWARDS] = [];
-                    keyMap[this.PAN_FORWARDS] = [];
-                    keyMap[this.DOLLY_FORWARDS] = [input.KEY_Z, input.KEY_ADD];
-                    keyMap[this.DOLLY_BACKWARDS] = [input.KEY_S, input.KEY_SUBTRACT];
-                    keyMap[this.ROTATE_X_POS] = [input.KEY_DOWN_ARROW];
-                    keyMap[this.ROTATE_X_NEG] = [input.KEY_UP_ARROW];
-                    keyMap[this.ROTATE_Y_POS] = [input.KEY_A, input.KEY_LEFT_ARROW];
-                    keyMap[this.ROTATE_Y_NEG] = [input.KEY_E, input.KEY_RIGHT_ARROW];
-                    keyMap[this.AXIS_VIEW_RIGHT] = [input.KEY_NUM_1];
-                    keyMap[this.AXIS_VIEW_BACK] = [input.KEY_NUM_2];
-                    keyMap[this.AXIS_VIEW_LEFT] = [input.KEY_NUM_3];
-                    keyMap[this.AXIS_VIEW_FRONT] = [input.KEY_NUM_4];
-                    keyMap[this.AXIS_VIEW_TOP] = [input.KEY_NUM_5];
-                    keyMap[this.AXIS_VIEW_BOTTOM] = [input.KEY_NUM_6];
-                    break;
-            }
-
-            this._keyMap = keyMap;
-        } else {
-            const keyMap = value;
-            this._keyMap = keyMap;
-        }
-    }
-
-    /**
-     * Gets custom mappings of keys to {@link CameraControl} actions.
-     *
-     * @returns {{Number:Number}} Current key mappings.
-     */
-    get keyMap() {
-        return this._keyMap;
-    }
-
-    /**
-     * Returns true if any keys configured for the given action are down.
-     * @param action
-     * @param keyDownMap
-     * @private
-     */
-    _isKeyDownForAction(action, keyDownMap) {
-        const keys = this._keyMap[action];
-        if (!keys) {
-            return false;
-        }
-        if (!keyDownMap) {
-            keyDownMap = this.scene.input.keyDown;
-        }
-        for (let i = 0, len = keys.length; i < len; i++) {
-            const key = keys[i];
-            if (keyDownMap[key]) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Sets the HTMl element to represent the pivot point when {@link CameraControl#followPointer} is true.
-     *
-     * See class comments for an example.
-     *
-     * @param {HTMLElement} element HTML element representing the pivot point.
-     */
-    set pivotElement(element) {
-        this._controllers.pivotController.setPivotElement(element);
-    }
-
-    /**
-     *  Sets if this ````CameraControl```` is active or not.
-     *
-     * When inactive, the ````CameraControl```` will not react to input.
-     *
-     * Default is ````true````.
-     *
-     * @param {Boolean} value Set ````true```` to activate this ````CameraControl````.
+     * @param {Boolean} value Set ````true```` to activate this CameraControl.
      */
     set active(value) {
-        this._configs.active = value !== false;
+        this._active = value !== false;
     }
 
     /**
-     * Gets if this ````CameraControl```` is active or not.
+     * Gets if this CameraControl is active or not.
      *
-     * When inactive, the ````CameraControl```` will not react to input.
+     * Default value is ````true````.
      *
-     * Default is ````true````.
-     *
-     * @returns {Boolean} Returns ````true```` if this ````CameraControl```` is active.
+     * @returns {Boolean} Returns ````true```` if this CameraControl is active.
      */
     get active() {
-        return this._configs.active;
+        return this._active;
     }
 
     /**
-     * Sets the current navigation mode.
+     * Sets whether dragging will pivot the {@link Camera} about the current 3D pivot point.
      *
-     * Accepted values are:
+     * The pivot point is indicated by {@link CameraControl#pivotPos}.
      *
-     * * "orbit" - rotation orbits about the current target or pivot point,
-     * * "firstPerson" - rotation is about the current eye position,
-     * * "planView" - rotation is disabled.
+     * When in pivoting mode, clicking on an {@link Entity} will set {@link CameraControl#pivotPos} to the clicked position on the surface of the Entity.
      *
-     * See class comments for more info.
+     * Default value is ````false````.
      *
-     * @param {String} navMode The navigation mode: "orbit", "firstPerson" or "planView".
+     * @param {Boolean} value Set ````true```` to enable pivoting.
      */
-    set navMode(navMode) {
-        navMode = navMode || "orbit";
-        if (navMode !== "firstPerson" && navMode !== "orbit" && navMode !== "planView") {
-            this.error("Unsupported value for navMode: " + navMode + " - supported values are 'orbit', 'firstPerson' and 'planView' - defaulting to 'orbit'");
-            navMode = "orbit";
-        }
-        this._configs.firstPerson = (navMode === "firstPerson");
-        this._configs.planView = (navMode === "planView");
-        if (this._configs.firstPerson || this._configs.planView) {
-            this._controllers.pivotController.hidePivot();
-            this._controllers.pivotController.endPivot();
-        }
-        this._configs.navMode = navMode;
+    set pivoting(value) {
+        this._pivoting = !!value;
     }
 
     /**
-     * Gets the current navigation mode.
+     * Sets whether dragging will pivot the {@link Camera} about the current 3D pivot point.
      *
-     * @returns {String} The navigation mode: "orbit", "firstPerson" or "planView".
+     * The pivot point is indicated by {@link CameraControl#pivotPos}.
+     *
+     * When in pivoting mode, clicking on an {@link Entity} will set {@link CameraControl#pivotPos} to the clicked position on the surface of the Entity.
+     *
+     * Default value is ````false````.
+     *
+     * @returns {Boolean} Returns ````true```` to enable pivoting.
      */
-    get navMode() {
-        return this._configs.navMode;
+    get pivoting() {
+        return this._pivoting;
     }
 
     /**
-     * Sets whether mouse and touch input is enabled.
+     * Sets the current World-space 3D pivot position.
      *
-     * Default is ````true````.
-     *
-     * Disabling mouse and touch input on ````CameraControl```` is useful when we want to temporarily use mouse or
-     * touch input to interact with some other 3D control, without disturbing the {@link Camera}.
-     *
-     * @param {Boolean} value Set ````true```` to enable mouse and touch input.
-     */
-    set pointerEnabled(value) {
-        this._reset();
-        this._configs.pointerEnabled = !!value;
-    }
-
-    _reset() {
-        for (let i = 0, len = this._handlers.length; i < len; i++) {
-            const handler = this._handlers[i];
-            if (handler.reset) {
-                handler.reset();
-            }
-        }
-
-        this._updates.panDeltaX = 0;
-        this._updates.panDeltaY = 0;
-        this._updates.rotateDeltaX = 0;
-        this._updates.rotateDeltaY = 0;
-        this._updates.dolyDelta = 0;
-    }
-
-    /**
-     * Gets whether mouse and touch input is enabled.
-     *
-     * Default is ````true````.
-     *
-     * Disabling mouse and touch input on ````CameraControl```` is desirable when we want to temporarily use mouse or
-     * touch input to interact with some other 3D control, without interfering with the {@link Camera}.
-     *
-     * @returns {Boolean} Returns ````true```` if mouse and touch input is enabled.
-     */
-    get pointerEnabled() {
-        return this._configs.pointerEnabled;
-    }
-
-    /**
-     * Sets whether the {@link Camera} follows the mouse or touch pointer.
-     *
-     * In orbiting mode, the Camera will orbit about the pointer, and will dolly to and from the pointer.
-     *
-     * In fly-to mode, the Camera will dolly to and from the pointer, however the World will always rotate about the Camera position.
-     *
-     * In plan-view mode, the Camera will dolly to and from the pointer, however the Camera will not rotate.
-     *
-     * Default is ````false````.
-     *
-     * See class comments for more info.
-     *
-     * @param {Boolean} value Set ````true```` to enable the Camera to follow the pointer.
-     */
-    set followPointer(value) {
-        this._configs.followPointer = !!value;
-    }
-
-    /**
-     * Sets whether the {@link Camera} follows the mouse or touch pointer.
-     *
-     * In orbiting mode, the Camera will orbit about the pointer, and will dolly to and from the pointer.
-     *
-     * In fly-to mode, the Camera will dolly to and from the pointer, however the World will always rotate about the Camera position.
-     *
-     * In plan-view mode, the Camera will dolly to and from the pointer, however the Camera will not rotate.
-     *
-     * Default is ````false````.
-     *
-     * See class comments for more info.
-     *
-     * @returns {Boolean} Returns ````true```` if the Camera follows the pointer.
-     */
-    get followPointer() {
-        return this._configs.followPointer;
-    }
-
-    /**
-     * Sets the current World-space 3D target position.
-     *
-     * Only applies when {@link CameraControl#followPointer} is ````true````.
-     *
-     * @param {Number[]} worldPos The new World-space 3D target position.
+     * @param {Number[]} worldPos The new World-space 3D pivot position.
      */
     set pivotPos(worldPos) {
-        this._controllers.pivotController.setPivotPos(worldPos);
+        this._pivoter.setPivotPos(worldPos);
     }
 
     /**
      * Gets the current World-space 3D pivot position.
      *
-     * Only applies when {@link CameraControl#followPointer} is ````true````.
-     *
      * @return {Number[]} worldPos The current World-space 3D pivot position.
      */
     get pivotPos() {
-        return this._controllers.pivotController.getPivotPos();
+        return this._pivoter.getPivotPos();
     }
 
     /**
-     * @deprecated
-     * @param {Boolean} value Set ````true```` to enable dolly-to-pointer behaviour.
-     */
-    set dollyToPointer(value) {
-        this.warn("dollyToPointer property is deprecated - replaced with followPointer");
-        this.followPointer = value;
-    }
-
-    /**
-     * @deprecated
-     * @returns {Boolean} Returns ````true```` if dolly-to-pointer behaviour is enabled.
-     */
-    get dollyToPointer() {
-        this.warn("dollyToPointer property is deprecated - replaced with followPointer");
-        return this.followPointer = value;
-    }
-
-    /**
-     * @deprecated
-     * @param {Boolean} value Set ````true```` to enable dolly-to-pointer behaviour.
+     * Sets whether scrolling the mouse wheel, when the mouse is over an {@link Entity}, will zoom the {@link Camera} towards the hovered point on the Entity's surface.
+     *
+     * Default value is ````false````.
+     *
+     * @param {Boolean} value Set ````true```` to enable pan-to-pointer behaviour.
      */
     set panToPointer(value) {
-        this.warn("panToPointer property is deprecated - replaced with followPointer");
+        this._panToPointer = !!value;
+        if (this._panToPointer) {
+            this._panToPivot = false;
+        }
     }
 
     /**
-     * @deprecated
-     * @returns {Boolean} Returns ````true```` if dolly-to-pointer behaviour is enabled.
+     * Gets whether scrolling the mouse wheel, when the mouse is over an {@link Entity}, will zoom the {@link Camera} towards the hovered point on the Entity's surface.
+     *
+     * Default value is ````false````.
+     *
+     * @returns {Boolean} Returns ````true```` if pan-to-pointer behaviour is enabled.
      */
     get panToPointer() {
-        this.warn("panToPointer property is deprecated - replaced with followPointer");
-        return false;
+        return this._panToPointer;
     }
 
     /**
-     * Sets whether this ````CameraControl```` is in plan-view mode.
+     * Sets whether scrolling the mouse wheel, when mouse is over an {@link Entity}, will zoom the {@link Camera} towards the pivot point.
+     *
+     * Default value is ````false````.
+     *
+     * @param {Boolean} value Set ````true```` to enable pan-to-pivot behaviour.
+     */
+    set panToPivot(value) {
+        this._panToPivot = !!value;
+        if (this._panToPivot) {
+            this._panToPointer = false;
+        }
+    }
+
+    /**
+     * Gets whether scrolling the mouse wheel, when mouse is over an {@link Entity}, will zoom the {@link Camera} towards the pivot point.
+     *
+     * Default value is ````false````.
+     *
+     * @returns {Boolean} Returns ````true```` if enable pan-to-pivot behaviour is enabled.
+     */
+    get panToPivot() {
+        return this._panToPivot;
+    }
+
+    /**
+     * Sets whether this CameraControl is in plan-view mode.
      *
      * When in plan-view mode, rotation is disabled.
      *
-     * Default is ````false````.
-     *
-     * Deprecated - use {@link CameraControl#navMode} instead.
+     * Default value is ````false````.
      *
      * @param {Boolean} value Set ````true```` to enable plan-view mode.
-     * @deprecated
      */
     set planView(value) {
-        this._configs.planView = !!value;
-        this._configs.firstPerson = false;
-        if (this._configs.planView) {
-            this._controllers.pivotController.hidePivot();
-            this._controllers.pivotController.endPivot();
-        }
-        this.warn("planView property is deprecated - replaced with navMode");
+        this._planView = !!value;
     }
 
     /**
-     * Gets whether this ````CameraControl```` is in plan-view mode.
+     * Gets whether this CameraControl is in plan-view mode.
      *
      * When in plan-view mode, rotation is disabled.
      *
-     * Default is ````false````.
-     *
-     * Deprecated - use {@link CameraControl#navMode} instead.
+     * Default value is ````false````.
      *
      * @returns {Boolean} Returns ````true```` if plan-view mode is enabled.
-     * @deprecated
      */
     get planView() {
-        this.warn("planView property is deprecated - replaced with navMode");
-        return this._configs.planView;
+        return this._planView;
     }
 
     /**
-     * Sets whether this ````CameraControl```` is in first-person mode.
+     * Sets whether this CameraControl is in first-person mode.
      *
      * In "first person" mode (disabled by default) the look position rotates about the eye position. Otherwise,  {@link Camera#eye} rotates about {@link Camera#look}.
      *
-     * Default is ````false````.
-     *
-     * Deprecated - use {@link CameraControl#navMode} instead.
+     * Default value is ````false````.
      *
      * @param {Boolean} value Set ````true```` to enable first-person mode.
-     * @deprecated
      */
     set firstPerson(value) {
-        this.warn("firstPerson property is deprecated - replaced with navMode");
-        this._configs.firstPerson = !!value;
-        this._configs.planView = false;
-        if (this._configs.firstPerson) {
-            this._controllers.pivotController.hidePivot();
-            this._controllers.pivotController.endPivot();
+        this._firstPerson = !!value;
+        if (this._firstPerson) {
+            this._pivoter.hidePivot();
+            this._pivoter.endPivot();
         }
     }
 
     /**
-     * Gets whether this ````CameraControl```` is in first-person mode.
+     * Gets whether this CameraControl is in first-person mode.
      *
      * In "first person" mode (disabled by default) the look position rotates about the eye position. Otherwise,  {@link Camera#eye} rotates about {@link Camera#look}.
      *
-     * Default is ````false````.
-     *
-     * Deprecated - use {@link CameraControl#navMode} instead.
+     * Default value is ````false````.
      *
      * @returns {Boolean} Returns ````true```` if first-person mode is enabled.
-     * @deprecated
      */
     get firstPerson() {
-        this.warn("firstPerson property is deprecated - replaced with navMode");
-        return this._configs.firstPerson;
+        return this._firstPerson;
     }
 
     /**
-     * Sets whether to vertically constrain the {@link Camera} position for first-person navigation.
+     * Sets whether this CameraControl is in walking mode.
      *
-     * When set ````true````, this constrains {@link Camera#eye} to its current vertical position.
+     * When set ````true````, this constrains {@link Camera#eye} movement to the horizontal X-Z plane. When doing a walkthrough,
+     * this is useful to allow us to look upwards or downwards as we move, while keeping us moving in the  horizontal plane.
      *
-     * Only applies when {@link CameraControl#navMode} is ````"firstPerson"````.
+     * This only has an effect when {@link CameraControl#firstPerson} is ````true````.
      *
-     * Default is ````false````.
+     * Default value is ````false````.
      *
-     * @param {Boolean} value Set ````true```` to vertically constrain the Camera.
+     * @param {Boolean} value Set ````true```` to enable walking mode.
      */
-    set constrainVertical(value) {
-        this._configs.constrainVertical = !!value;
+    set walking(value) {
+        this._walking = !!value;
     }
 
     /**
-     * Gets whether to vertically constrain the {@link Camera} position for first-person navigation.
+     * Gets whether this CameraControl is in walking mode.
      *
-     * When set ````true````, this constrains {@link Camera#eye} to its current vertical position.
+     * When set ````true````, this constrains {@link Camera#eye} movement to the horizontal X-Z plane. When doing a walkthrough,
+     * this is useful to allow us to look upwards or downwards as we move, while keeping us moving in the  horizontal plane.
      *
-     * Only applies when {@link CameraControl#navMode} is ````"firstPerson"````.
+     * This only has an effect when {@link CameraControl#firstPerson} is ````true````.
      *
-     * Default is ````false````.
+     * Default value is ````false````.
      *
-     * @returns {Boolean} ````true```` when Camera is vertically constrained.
+     * @returns {Boolean} Returns ````true```` when in walking mode.
      */
-    get constrainVertical() {
-        return this._configs.constrainVertical;
+    get walking() {
+        return this._walking;
     }
 
     /**
      * Sets whether double-picking an {@link Entity} causes the {@link Camera} to fly to its boundary.
      *
-     * Default is ````false````.
+     * Default value is ````false````.
      *
      * @param {Boolean} value Set ````true```` to enable double-pick-fly-to mode.
      */
     set doublePickFlyTo(value) {
-        this._configs.doublePickFlyTo = value !== false;
+        this._doublePickFlyTo = value !== false;
     }
 
     /**
      * Gets whether double-picking an {@link Entity} causes the {@link Camera} to fly to its boundary.
      *
-     * Default is ````false````.
+     * Default value is ````false````.
      *
      * @returns {Boolean} Returns ````true```` when double-pick-fly-to mode is enabled.
      */
     get doublePickFlyTo() {
-        return this._configs.doublePickFlyTo;
+        return this._doublePickFlyTo;
     }
 
     /**
      * Sets whether either right-clicking (true) or middle-clicking (false) pans the {@link Camera}.
      *
-     * Default is ````true````.
+     * Default value is ````true````.
      *
      * @param {Boolean} value Set ````false```` to disable pan on right-click.
      */
     set panRightClick(value) {
-        this._configs.panRightClick = value !== false;
+        this._panRightClick = value !== false;
     }
 
     /**
      * Gets whether right-clicking pans the {@link Camera}.
      *
-     * Default is ````true````.
+     * Default value is ````true````.
      *
      * @returns {Boolean} Returns ````false```` when pan on right-click is disabled.
      */
     get panRightClick() {
-        return this._configs.panRightClick;
+        return this._panRightClick;
     }
 
     /**
-     * Sets a factor in range ````[0..1]```` indicating how much the {@link Camera} keeps moving after you finish rotating it.
+     * Sets a factor in range ````[0..1]```` indicating how much the camera keeps moving after you finish panning or rotating it.
      *
      * A value of ````0.0```` causes it to immediately stop, ````0.5```` causes its movement to decay 50% on each tick,
-     * while ````1.0```` causes no decay, allowing it continue moving, by the current rate of rotation.
+     * while ````1.0```` causes no decay, allowing it continue moving, by the current rate of pan or rotation.
      *
-     * You may choose an inertia of zero when you want be able to precisely rotate the Camera,
-     * without interference from inertia. Zero inertia can also mean that less frames are rendered while
-     * you are rotating the Camera.
+     * You may choose an inertia of zero when you want be able to precisely position or rotate the camera,
+     * without interference from inertia. ero inertia can also mean that less frames are rendered while
+     * you are positioning the camera.
      *
-     * Default is ````0.0````.
+     * Default value is ````0.5````.
      *
-     * Does not apply when {@link CameraControl#navMode} is ````"planView"````, which disallows rotation.
-     *
-     * @param {Number} rotationInertia New inertial factor.
+     * @param {Number} value New inertial factor.
      */
-    set rotationInertia(rotationInertia) {
-        this._configs.rotationInertia = (rotationInertia !== undefined && rotationInertia !== null) ? rotationInertia : 0.0;
+    set inertia(value) {
+        this._inertia = value === undefined ? 0.5 : value;
     }
 
     /**
-     * Gets the rotation inertia factor.
+     * Gets the inertia factor.
      *
-     * Default is ````0.0````.
-     *
-     * Does not apply when {@link CameraControl#navMode} is ````"planView"````, which disallows rotation.
+     * Default value is ````0.5````.
      *
      * @returns {Number} The inertia factor.
      */
-    get rotationInertia() {
-        return this._configs.rotationInertia;
+    get inertia() {
+        return this._inertia;
     }
 
     /**
-     * Sets how much the {@link Camera} pans each second with keyboard input.
+     * Sets whether canvas pointer events are enabled.
      *
-     * Default is ````5.0````, to pan the Camera ````5.0```` World-space units every second that
-     * a panning key is depressed. See the ````CameraControl```` class documentation for which keys control
-     * panning.
+     * Default value is ````true````.
      *
-     * Panning direction is aligned to our Camera's orientation. When we pan horizontally, we pan
-     * to our left and right, when we pan vertically, we pan upwards and downwards, and when we pan forwards
-     * and backwards, we pan along the direction the Camera is pointing.
-     *
-     * Unlike dollying when {@link followPointer} is ````true````, panning does not follow the pointer.
-     *
-     * @param {Number} keyboardPanRate The new keyboard pan rate.
+     * @param {Boolean} value Set ````true```` to enable drag events.
      */
-    set keyboardPanRate(keyboardPanRate) {
-        this._configs.keyboardPanRate = (keyboardPanRate !== null && keyboardPanRate !== undefined) ? keyboardPanRate : 5.0;
+    set pointerEnabled(value) {
+        this._pointerEnabled = !!value;
     }
 
-
     /**
-     * Sets how fast the camera pans on touch panning
+     * Gets whether canvas pointer events are enabled.
      *
-     * @param {Number} touchPanRate The new touch pan rate.
+     * Default value is ````true````.
+     *
+     * @returns {Boolean} Returns ````true```` to enable drag events.
      */
-    set touchPanRate(touchPanRate) {
-        this._configs.touchPanRate = (touchPanRate !== null && touchPanRate !== undefined) ? touchPanRate : 1.0;
+    get pointerEnabled() {
+        return this._pointerEnabled;
     }
 
     /**
-     * Gets how fast the {@link Camera} pans on touch panning
-     *
-     * Default is ````1.0````.
-     *
-     * @returns {Number} The current touch pan rate.
-     */
-    get touchPanRate() {
-        return this._configs.touchPanRate;
-    }
-
-    /**
-     * Gets how much the {@link Camera} pans each second with keyboard input.
-     *
-     * Default is ````5.0````.
-     *
-     * @returns {Number} The current keyboard pan rate.
-     */
-    get keyboardPanRate() {
-        return this._configs.keyboardPanRate;
-    }
-
-    /**
-     * Sets how many degrees per second the {@link Camera} rotates/orbits with keyboard input.
-     *
-     * Default is ````90.0````, to rotate/orbit the Camera ````90.0```` degrees every second that
-     * a rotation key is depressed. See the ````CameraControl```` class documentation for which keys control
-     * rotation/orbit.
-     *
-     * @param {Number} keyboardRotationRate The new keyboard rotation rate.
-     */
-    set keyboardRotationRate(keyboardRotationRate) {
-        this._configs.keyboardRotationRate = (keyboardRotationRate !== null && keyboardRotationRate !== undefined) ? keyboardRotationRate : 90.0;
-    }
-
-    /**
-     * Sets how many degrees per second the {@link Camera} rotates/orbits with keyboard input.
-     *
-     * Default is ````90.0````.
-     *
-     * @returns {Number} The current keyboard rotation rate.
-     */
-    get keyboardRotationRate() {
-        return this._configs.keyboardRotationRate;
-    }
-
-    /**
-     * Sets the current drag rotation rate.
-     *
-     * This configures how many degrees the {@link Camera} rotates/orbits for a full sweep of the canvas by mouse or touch dragging.
-     *
-     * For example, a value of ````360.0```` indicates that the ````Camera```` rotates/orbits ````360.0```` degrees horizontally
-     * when we sweep the entire width of the canvas.
-     *
-     * ````CameraControl```` makes vertical rotation half as sensitive as horizontal rotation, so that we don't tend to
-     * flip upside-down. Therefore, a value of ````360.0```` rotates/orbits the ````Camera```` through ````180.0```` degrees
-     * vertically when we sweep the entire height of the canvas.
-     *
-     * Default is ````360.0````.
-     *
-     * @param {Number} dragRotationRate The new drag rotation rate.
-     */
-    set dragRotationRate(dragRotationRate) {
-        this._configs.dragRotationRate = (dragRotationRate !== null && dragRotationRate !== undefined) ? dragRotationRate : 360.0;
-    }
-
-    /**
-     * Gets the current drag rotation rate.
-     *
-     * Default is ````360.0````.
-     *
-     * @returns {Number} The current drag rotation rate.
-     */
-    get dragRotationRate() {
-        return this._configs.dragRotationRate;
-    }
-
-    /**
-     * Sets how much the {@link Camera} dollys each second with keyboard input.
-     *
-     * Default is ````15.0````, to dolly the {@link Camera} ````15.0```` World-space units per second while we hold down
-     * the ````+```` and ````-```` keys.
-     *
-     * @param {Number} keyboardDollyRate The new keyboard dolly rate.
-     */
-    set keyboardDollyRate(keyboardDollyRate) {
-        this._configs.keyboardDollyRate = (keyboardDollyRate !== null && keyboardDollyRate !== undefined) ? keyboardDollyRate : 15.0;
-    }
-
-    /**
-     * Gets how much the {@link Camera} dollys each second with keyboard input.
-     *
-     * Default is ````15.0````.
-     *
-     * @returns {Number} The current keyboard dolly rate.
-     */
-    get keyboardDollyRate() {
-        return this._configs.keyboardDollyRate;
-    }
-
-    /**
-     * Sets how much the {@link Camera} dollys with touch input.
-     *
-     * Default is ````0.05````
-     *
-     * @param {Number} touchDollyRate The new touch dolly rate.
-     */
-    set touchDollyRate(touchDollyRate) {
-        this._configs.touchDollyRate = (touchDollyRate !== null && touchDollyRate !== undefined) ? touchDollyRate : 0.05;
-    }
-
-    /**
-     * Gets how much the {@link Camera} dollys each second with touch input.
-     *
-     * Default is ````0.05````.
-     *
-     * @returns {Number} The current touch dolly rate.
-     */
-    get touchDollyRate() {
-        return this._configs.touchDollyRate;
-    }
-
-    /**
-     * Sets how much the {@link Camera} dollys each second while the mouse wheel is spinning.
-     *
-     * Default is ````100.0````, to dolly the {@link Camera} ````10.0```` World-space units per second as we spin
-     * the mouse wheel.
-     *
-     * @param {Number} mouseWheelDollyRate The new mouse wheel dolly rate.
-     */
-    set mouseWheelDollyRate(mouseWheelDollyRate) {
-        this._configs.mouseWheelDollyRate = (mouseWheelDollyRate !== null && mouseWheelDollyRate !== undefined) ? mouseWheelDollyRate : 100.0;
-    }
-
-    /**
-     * Gets how much the {@link Camera} dollys each second while the mouse wheel is spinning.
-     *
-     * Default is ````100.0````.
-     *
-     * @returns {Number} The current mouseWheel dolly rate.
-     */
-    get mouseWheelDollyRate() {
-        return this._configs.mouseWheelDollyRate;
-    }
-
-    /**
-     * Sets the dolly inertia factor.
-     *
-     * This factor configures how much the {@link Camera} keeps moving after you finish dollying it.
-     *
-     * This factor is a value in range ````[0..1]````. A value of ````0.0```` causes dollying to immediately stop,
-     * ````0.5```` causes dollying to decay 50% on each animation frame, while ````1.0```` causes no decay, which allows dollying
-     * to continue until further input stops it.
-     *
-     * You might set ````dollyInertia```` to zero when you want be able to precisely position or rotate the Camera,
-     * without interference from inertia. This also means that xeokit renders less frames while dollying the Camera,
-     * which can improve rendering performance.
-     *
-     * Default is ````0````.
-     *
-     * @param {Number} dollyInertia New dolly inertia factor.
-     */
-    set dollyInertia(dollyInertia) {
-        this._configs.dollyInertia = (dollyInertia !== undefined && dollyInertia !== null) ? dollyInertia : 0;
-    }
-
-    /**
-     * Gets the dolly inertia factor.
-     *
-     * Default is ````0````.
-     *
-     * @returns {Number} The current dolly inertia factor.
-     */
-    get dollyInertia() {
-        return this._configs.dollyInertia;
-    }
-
-    /**
-     * Sets the proximity to the closest object below which dolly speed decreases, and above which dolly speed increases.
-     *
-     * Default is ````35.0````.
-     *
-     * @param {Number} dollyProximityThreshold New dolly proximity threshold.
-     */
-    set dollyProximityThreshold(dollyProximityThreshold) {
-        this._configs.dollyProximityThreshold = (dollyProximityThreshold !== undefined && dollyProximityThreshold !== null) ? dollyProximityThreshold : 35.0;
-    }
-
-    /**
-     * Gets the proximity to the closest object below which dolly speed decreases, and above which dolly speed increases.
-     *
-     * Default is ````35.0````.
-     *
-     * @returns {Number} The current dolly proximity threshold.
-     */
-    get dollyProximityThreshold() {
-        return this._configs.dollyProximityThreshold;
-    }
-
-    /**
-     * Sets the minimum dolly speed.
-     *
-     * Default is ````0.05````.
-     *
-     * @param {Number} dollyMinSpeed New dolly minimum speed.
-     */
-    set dollyMinSpeed(dollyMinSpeed) {
-        this._configs.dollyMinSpeed = (dollyMinSpeed !== undefined && dollyMinSpeed !== null) ? dollyMinSpeed : 0.05;
-    }
-
-    /**
-     * Gets the minimum dolly speed.
-     *
-     * Default is ````0.05````.
-     *
-     * @returns {Number} The current minimum dolly speed.
-     */
-    get dollyMinSpeed() {
-        return this._configs.dollyMinSpeed;
-    }
-
-    /**
-     * Sets the pan inertia factor.
-     *
-     * This factor configures how much the {@link Camera} keeps moving after you finish panning it.
-     *
-     * This factor is a value in range ````[0..1]````. A value of ````0.0```` causes panning to immediately stop,
-     * ````0.5```` causes panning to decay 50% on each animation frame, while ````1.0```` causes no decay, which allows panning
-     * to continue until further input stops it.
-     *
-     * You might set ````panInertia```` to zero when you want be able to precisely position or rotate the Camera,
-     * without interference from inertia. This also means that xeokit renders less frames while panning the Camera,
-     * wich can improve rendering performance.
-     *
-     * Default is ````0.5````.
-     *
-     * @param {Number} panInertia New pan inertia factor.
-     */
-    set panInertia(panInertia) {
-        this._configs.panInertia = (panInertia !== undefined && panInertia !== null) ? panInertia : 0.5;
-    }
-
-    /**
-     * Gets the pan inertia factor.
-     *
-     * Default is ````0.5````.
-     *
-     * @returns {Number} The current pan inertia factor.
-     */
-    get panInertia() {
-        return this._configs.panInertia;
-    }
-
-    /**
-     * Sets the keyboard layout.
-     *
-     * Supported layouts are:
-     *
-     * * ````"qwerty"```` (default)
-     * * ````"azerty"````
-     *
-     * @deprecated
-     * @param {String} value Selects the keyboard layout.
-     */
-    set keyboardLayout(value) {
-        // this.warn("keyboardLayout property is deprecated - use keyMap property instead");
-        value = value || "qwerty";
-        if (value !== "qwerty" && value !== "azerty") {
-            this.error("Unsupported value for keyboardLayout - defaulting to 'qwerty'");
-            value = "qwerty";
-        }
-        this._configs.keyboardLayout = value;
-        this.keyMap = this._configs.keyboardLayout;
-    }
-
-    /**
-     * Gets the keyboard layout.
-     *
-     * Supported layouts are:
-     *
-     * * ````"qwerty"```` (default)
-     * * ````"azerty"````
-     *
-     * @deprecated
-     * @returns {String} The current keyboard layout.
-     */
-    get keyboardLayout() {
-        return this._configs.keyboardLayout;
-    }
-
-    /**
-     * Destroys this ````CameraControl````.
      * @private
      */
+    set keyboardLayout(value) {
+        this._keyboardLayout = value || "qwerty";
+    }
+
+    /**
+     * @private
+     */
+    get keyboardLayout() {
+        return this._keyboardLayout;
+    }
+
+    _initEvents() {
+
+        const self = this;
+        const scene = this.scene;
+        const input = scene.input;
+        const camera = scene.camera;
+        const canvas = this.scene.canvas.canvas;
+        let over = false;
+        const mouseOrbitRate = 0.4;
+        const mousePanRate = 0.4;
+        const mouseZoomRate = 0.8;
+        const keyboardOrbitRate = .02;
+        const keyboardPanRate = .02;
+        const keyboardZoomRate = .02;
+        const touchRotateRate = 0.3;
+        const touchPanRate = 0.2;
+        const touchZoomRate = 0.05;
+
+        canvas.oncontextmenu = function (e) {
+            e.preventDefault();
+        };
+
+        const getCanvasPosFromEvent = function (event, canvasPos) {
+            if (!event) {
+                event = window.event;
+                canvasPos[0] = event.x;
+                canvasPos[1] = event.y;
+            } else {
+                let element = event.target;
+                let totalOffsetLeft = 0;
+                let totalOffsetTop = 0;
+                while (element.offsetParent) {
+                    totalOffsetLeft += element.offsetLeft;
+                    totalOffsetTop += element.offsetTop;
+                    element = element.offsetParent;
+                }
+                canvasPos[0] = event.pageX - totalOffsetLeft;
+                canvasPos[1] = event.pageY - totalOffsetTop;
+            }
+            return canvasPos;
+        };
+
+        const pickCursorPos = [0, 0];
+        let needPickEntity = false;
+        let needPickSurface = false;
+        let lastPickedEntityId;
+        let pickResult;
+        let pickedSurface = false;
+
+        function updatePick() {
+            if (!self._pointerEnabled) {
+                return;
+            }
+            if (!needPickEntity && !needPickSurface) {
+                return;
+            }
+            pickedSurface = false;
+            if (needPickSurface || self.hasSubs("hoverSurface")) {
+                pickResult = scene.pick({
+                    pickSurface: true,
+                    canvasPos: pickCursorPos
+                });
+            } else { // needPickEntity == true
+                pickResult = scene.pick({
+                    canvasPos: pickCursorPos
+                });
+            }
+            if (pickResult) {
+                const pickedEntityId = pickResult.entity.id;
+                if (lastPickedEntityId !== pickedEntityId) {
+                    if (lastPickedEntityId !== undefined) {
+
+                        /**
+                         * Fired whenever the pointer no longer hovers over an {@link Entity}.
+                         * @event hoverOut
+                         * @param entity The Entity
+                         */
+                        self.fire("hoverOut", {
+                            entity: scene.objects[lastPickedEntityId]
+                        }, true);
+                    }
+
+                    /**
+                     * Fired when the pointer is over a new {@link Entity}.
+                     * @event hoverEnter
+                     * @param pickResult A pick pickResult result containing the ID of the Entity - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                     */
+                    self.fire("hoverEnter", pickResult, true);
+                    lastPickedEntityId = pickedEntityId;
+                }
+                /**
+                 * Fired continuously while the pointer is moving while hovering over an {@link Entity}.
+                 * @event hover
+                 * @param pickResult A pick pickResult result containing the ID of the Entity - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                 */
+                self.fire("hover", pickResult, true);
+                if (pickResult.worldPos) {
+                    pickedSurface = true;
+
+                    /**
+                     * Fired while the pointer hovers over the surface of an {@link Entity}.
+                     *
+                     * This event provides 3D information about the point on the surface that the pointer is
+                     * hovering over.
+                     *
+                     * @event hoverSurface
+                     * @param pickResult A surface pick pickResult result, containing the ID of the Entity and 3D info on the
+                     * surface position - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                     */
+                    self.fire("hoverSurface", pickResult, true);
+                }
+            } else {
+                if (lastPickedEntityId !== undefined) {
+                    /**
+                     * Fired whenever the pointer no longer hovers over an {@link Entity}.
+                     * @event hoverOut
+                     * @param entity The Entity
+                     */
+                    self.fire("hoverOut", {
+                        entity: scene.objects[lastPickedEntityId]
+                    }, true);
+                    lastPickedEntityId = undefined;
+                }
+                /**
+                 * Fired continuously while the pointer is moving but not hovering over anything.
+                 *
+                 * @event hoverOff
+                 */
+                self.fire("hoverOff", {
+                    canvasPos: pickCursorPos
+                }, true);
+            }
+            needPickEntity = false;
+            needPickSurface = false;
+        }
+
+        scene.on("tick", updatePick);
+
+        //------------------------------------------------------------------------------------
+        // Mouse, touch and keyboard camera control
+        //------------------------------------------------------------------------------------
+
+        (function () {
+
+            let rotateVx = 0;
+            let rotateVy = 0;
+            let panVx = 0;
+            let panVy = 0;
+            let panVz = 0;
+            let vZoom = 0;
+            const mousePos = math.vec2();
+            let panToMouse = false;
+
+            let ctrlDown = false;
+            let altDown = false;
+            let shiftDown = false;
+            const keyDown = {};
+
+            const EPSILON = 0.001;
+
+            const getEyeLookDist = (function () {
+                const vec = new Float32Array(3);
+                return function () {
+                    return math.lenVec3(math.subVec3(camera.look, camera.eye, vec));
+                };
+            })();
+
+            const getInverseProjectMat = (function () {
+                let projMatDirty = true;
+                camera.on("projMatrix", function () {
+                    projMatDirty = true;
+                });
+                const inverseProjectMat = math.mat4();
+                return function () {
+                    if (projMatDirty) {
+                        math.inverseMat4(camera.projMatrix, inverseProjectMat);
+                    }
+                    return inverseProjectMat;
+                }
+            })();
+
+            const getTransposedProjectMat = (function () {
+                let projMatDirty = true;
+                camera.on("projMatrix", function () {
+                    projMatDirty = true;
+                });
+                const transposedProjectMat = math.mat4();
+                return function () {
+                    if (projMatDirty) {
+                        math.transposeMat4(camera.projMatrix, transposedProjectMat);
+                    }
+                    return transposedProjectMat;
+                }
+            })();
+
+            const getInverseViewMat = (function () {
+                let viewMatDirty = true;
+                camera.on("viewMatrix", function () {
+                    viewMatDirty = true;
+                });
+                const inverseViewMat = math.mat4();
+                return function () {
+                    if (viewMatDirty) {
+                        math.inverseMat4(camera.viewMatrix, inverseViewMat);
+                    }
+                    return inverseViewMat;
+                }
+            })();
+
+            const getSceneDiagSize = (function () {
+                let sceneSizeDirty = true;
+                let diag = 1; // Just in case
+                scene.on("boundary", function () {
+                    sceneSizeDirty = true;
+                });
+                return function () {
+                    if (sceneSizeDirty) {
+                        diag = math.getAABB3Diag(scene.aabb);
+                    }
+                    return diag;
+                };
+            })();
+
+            const panToMousePos = (function () {
+
+                const cp = math.vec4();
+                const viewPos = math.vec4();
+                const worldPos = math.vec4();
+                const eyeCursorVec = math.vec3();
+
+                const unproject = function (inverseProjMat, inverseViewMat, mousePos, z, viewPos, worldPos) {
+                    const canvas = scene.canvas.canvas;
+                    const halfCanvasWidth = canvas.offsetWidth / 2.0;
+                    const halfCanvasHeight = canvas.offsetHeight / 2.0;
+                    cp[0] = (mousePos[0] - halfCanvasWidth) / halfCanvasWidth;
+                    cp[1] = (mousePos[1] - halfCanvasHeight) / halfCanvasHeight;
+                    cp[2] = z;
+                    cp[3] = 1.0;
+                    math.mulMat4v4(inverseProjMat, cp, viewPos);
+                    math.mulVec3Scalar(viewPos, 1.0 / viewPos[3]); // Normalize homogeneous coord
+                    viewPos[3] = 1.0;
+                    viewPos[1] *= -1; // TODO: Why is this reversed?
+                    math.mulMat4v4(inverseViewMat, viewPos, worldPos);
+                };
+
+                return function (mousePos, factor) {
+                    const inverseProjMat = getInverseProjectMat();
+                    const inverseViewMat = getInverseViewMat();
+
+                    // Get last two columns of projection matrix
+                    const transposedProjectMat = getTransposedProjectMat();
+                    const Pt3 = transposedProjectMat.subarray(8, 12);
+                    const Pt4 = transposedProjectMat.subarray(12);
+                    const D = [0, 0, -( getSceneDiagSize()), 1];
+                    const Z = math.dotVec4(D, Pt3) / math.dotVec4(D, Pt4);
+
+                    unproject(inverseProjMat, inverseViewMat, mousePos, Z, viewPos, worldPos);
+
+                    math.subVec3(worldPos, camera.eye, eyeCursorVec);
+                    math.normalizeVec3(eyeCursorVec);
+
+                    const px = eyeCursorVec[0] * factor;
+                    const py = eyeCursorVec[1] * factor;
+                    const pz = eyeCursorVec[2] * factor;
+
+                    const eye = camera.eye;
+                    const look = camera.look;
+
+                    camera.eye = [eye[0] + px, eye[1] + py, eye[2] + pz];
+                    camera.look = [look[0] + px, look[1] + py, look[2] + pz];
+                };
+            })();
+
+            const panToWorldPos = (function () {
+                const eyeCursorVec = math.vec3();
+                return function (worldPos, factor) {
+                    math.subVec3(worldPos, camera.eye, eyeCursorVec);
+                    math.normalizeVec3(eyeCursorVec);
+                    const px = eyeCursorVec[0] * factor;
+                    const py = eyeCursorVec[1] * factor;
+                    const pz = eyeCursorVec[2] * factor;
+                    const eye = camera.eye;
+                    const look = camera.look;
+                    camera.eye = [eye[0] + px, eye[1] + py, eye[2] + pz];
+                    camera.look = [look[0] + px, look[1] + py, look[2] + pz];
+                };
+            })();
+
+            scene.on("tick", function () {
+
+                const cameraInertia = self._inertia;
+
+                if (Math.abs(rotateVx) < EPSILON) {
+                    rotateVx = 0;
+                }
+
+                if (Math.abs(rotateVy) < EPSILON) {
+                    rotateVy = 0;
+                }
+
+                if (rotateVy !== 0 || rotateVx !== 0) {
+
+                    if (self._pivoter.getPivoting()) {
+                        self._pivoter.continuePivot(rotateVy, rotateVx);
+
+                    } else {
+
+                        if (rotateVx !== 0) {
+
+                            if (self._firstPerson) {
+                                camera.pitch(-rotateVx);
+
+                            } else {
+                                camera.orbitPitch(rotateVx);
+                            }
+                        }
+
+                        if (rotateVy !== 0) {
+
+                            if (self._firstPerson) {
+                                camera.yaw(rotateVy);
+
+                            } else {
+                                camera.orbitYaw(rotateVy);
+                            }
+                        }
+                    }
+
+                    rotateVx *= cameraInertia;
+                    rotateVy *= cameraInertia;
+                } else {
+                    self._pivoter.hidePivot();
+                }
+
+                if (Math.abs(panVx) < EPSILON) {
+                    panVx = 0;
+                }
+
+                if (Math.abs(panVy) < EPSILON) {
+                    panVy = 0;
+                }
+
+                if (Math.abs(panVz) < EPSILON) {
+                    panVz = 0;
+                }
+
+                if (panVx !== 0 || panVy !== 0 || panVz !== 0) {
+                    const f = getEyeLookDist() / 80;
+                    if (self._walking) {
+                        let y = camera.eye[1];
+                        camera.pan([panVx * f, panVy * f, panVz * f]);
+                        let eye = camera.eye;
+                        eye[1] = y;
+                        camera.eye = eye;
+                    } else {
+                        if (self._pivoter.getPivoting()) {
+                            self._pivoter.showPivot();
+                        }
+                        camera.pan([panVx * f, panVy * f, panVz * f]);
+                    }
+                }
+
+                panVx *= cameraInertia;
+                panVy *= cameraInertia;
+                panVz *= cameraInertia;
+
+                if (Math.abs(vZoom) < EPSILON) {
+                    vZoom = 0;
+                }
+
+                if (vZoom !== 0) {
+                    if (self._firstPerson) {
+                        let y;
+                        if (self._walking) {
+                            y = camera.eye[1];
+                        }
+                        if (panToMouse) { // Using mouse input
+                            panToMousePos(mousePos, -vZoom * 2);
+                        } else {
+                            camera.pan([0, 0, vZoom]); // Touchscreen input with no cursor
+                        }
+                        if (self._walking) {
+                            let eye = camera.eye;
+                            eye[1] = y;
+                            camera.eye = eye;
+                        }
+                    } else {
+                        // Do both zoom and ortho scale so that we can switch projections without weird scale jumps
+                        if (self._panToPointer) {
+                            panToMousePos(mousePos, -vZoom * 2);
+                        } else if (self._panToPivot) {
+                            panToWorldPos(self._pivoter.getPivotPos(), -vZoom); // FIXME: What about when pivotPos undefined?
+                        } else {
+                            camera.zoom(vZoom);
+                        }
+                        camera.ortho.scale = camera.ortho.scale + vZoom;
+                    }
+                    vZoom *= cameraInertia;
+                }
+            });
+
+            function getZoomRate() {
+                const aabb = scene.aabb;
+                const xsize = aabb[3] - aabb[0];
+                const ysize = aabb[4] - aabb[1];
+                const zsize = aabb[5] - aabb[2];
+                let max = (xsize > ysize ? xsize : ysize);
+                max = (zsize > max ? zsize : max);
+                return max / 30;
+            }
+
+            document.addEventListener("keydown", function (e) {
+                if (!self._active || (!scene.input.keyboardEnabled)) {
+                    return;
+                }
+                if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+                    ctrlDown = e.ctrlKey || e.keyCode === 17 || e.metaKey; // !important, treat Windows or Mac Command Key as ctrl
+                    altDown = e.altKey || e.keyCode === 18;
+                    shiftDown = e.keyCode === 16;
+                    keyDown[e.keyCode] = true;
+                }
+            }, true);
+
+            document.addEventListener("keyup", function (e) {
+                if (!self._active || (!scene.input.keyboardEnabled)) {
+                    return;
+                }
+                if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+                    if (e.ctrlKey || e.keyCode === 17) {
+                        ctrlDown = false;
+                    }
+                    if (e.altKey || e.keyCode === 18) {
+                        altDown = false;
+                    }
+                    if (e.keyCode === 16) {
+                        shiftDown = false;
+                    }
+                    keyDown[e.keyCode] = false;
+                }
+            });
+
+            // Mouse camera rotate, pan and zoom
+
+            (function () {
+
+                let lastX;
+                let lastY;
+                let lastXDown = 0;
+                let lastYDown = 0;
+                let xDelta = 0;
+                let yDelta = 0;
+                let down = false;
+                let mouseDownMiddle;
+                let mouseDownRight;
+
+                canvas.addEventListener("mousedown", function (e) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    over = true;
+                    switch (e.which) {
+                        case 1: // Left button
+                            self.scene.canvas.canvas.style.cursor = "move";
+                            down = true;
+                            xDelta = 0;
+                            yDelta = 0;
+                            getCanvasPosFromEvent(e, mousePos);
+                            lastX = mousePos[0];
+                            lastY = mousePos[1];
+                            lastXDown = mousePos[0];
+                            lastYDown = mousePos[1];
+                            break;
+                        case 2: // Middle/both buttons
+                            mouseDownMiddle = true;
+                            if (!self._panRightClick) {
+                                self.scene.canvas.canvas.style.cursor = "move";
+                                down = true;
+                                xDelta = 0;
+                                yDelta = 0;
+                                getCanvasPosFromEvent(e, mousePos);
+                                lastX = mousePos[0];
+                                lastY = mousePos[1];
+                                lastXDown = mousePos[0];
+                                lastYDown = mousePos[1];
+                            }
+                            break;
+                        case 3: // Right button
+                            mouseDownRight = true;
+                            if (self._panRightClick) {
+                                self.scene.canvas.canvas.style.cursor = "move";
+                                down = true;
+                                xDelta = 0;
+                                yDelta = 0;
+                                getCanvasPosFromEvent(e, mousePos);
+                                lastX = mousePos[0];
+                                lastY = mousePos[1];
+                                lastXDown = mousePos[0];
+                                lastYDown = mousePos[1];
+                            }
+                            break;
+                    }
+                });
+
+                canvas.addEventListener("mouseup", function (e) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    switch (e.which) {
+                        case 1: // Left button
+                            break;
+                        case 2: // Middle/both buttons
+                            mouseDownMiddle = false;
+                            break;
+                        case 3: // Right button
+                            mouseDownRight = false;
+                            getCanvasPosFromEvent(e, mousePos);
+                            const x = mousePos[0];
+                            const y = mousePos[1];
+                            if (Math.abs(x - lastXDown) < 3 && Math.abs(y - lastYDown) < 3) {
+                                self.fire("rightClick", {
+                                    canvasPos: pickCursorPos,
+                                    event: e
+                                }, true);
+                            }
+                            break;
+                    }
+                    self.scene.canvas.canvas.style.removeProperty("cursor");
+                    down = false;
+                    xDelta = 0;
+                    yDelta = 0;
+                });
+
+                document.addEventListener("mouseup", function (e) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    switch (e.which) {
+                        case 1: // Left button
+                            break;
+                        case 2: // Middle/both buttons
+                            mouseDownMiddle = false;
+                            break;
+                        case 3: // Right button
+                            mouseDownRight = false;
+                            break;
+                    }
+                    self.scene.canvas.canvas.style.removeProperty("cursor");
+                    down = false;
+                    xDelta = 0;
+                    yDelta = 0;
+                });
+
+                canvas.addEventListener("mouseenter", function () {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    over = true;
+                    xDelta = 0;
+                    yDelta = 0;
+                });
+
+                canvas.addEventListener("mouseleave", function () {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    over = false;
+                    xDelta = 0;
+                    yDelta = 0;
+                });
+
+                canvas.addEventListener("mousemove", function (e) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    if (!over) {
+                        return;
+                    }
+                    getCanvasPosFromEvent(e, mousePos);
+                    panToMouse = true;
+                    if (!down) {
+                        return;
+                    }
+                    const x = mousePos[0];
+                    const y = mousePos[1];
+                    xDelta += (x - lastX) * mouseOrbitRate;
+                    yDelta += (y - lastY) * mouseOrbitRate;
+                    lastX = x;
+                    lastY = y;
+                });
+
+                scene.on("tick", function () {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    if (Math.abs(xDelta) === 0 && Math.abs(yDelta) === 0) {
+                        return;
+                    }
+
+                    const panning = shiftDown || (!self._panRightClick && mouseDownMiddle) || (self._panRightClick && mouseDownRight);
+
+                    if (panning) {
+
+                        // Panning
+                        if (shiftDown || (!self._panRightClick && mouseDownMiddle) || (self._panRightClick && mouseDownRight)) {
+                            panVx = xDelta * mousePanRate;
+                            panVy = yDelta * mousePanRate;
+                        }
+
+                    } else {
+
+                        if (!self._planView) {
+
+                            // Orbiting
+
+                            rotateVy = -xDelta * mouseOrbitRate;
+                            rotateVx = yDelta * mouseOrbitRate;
+                        }
+                    }
+
+                    xDelta = 0;
+                    yDelta = 0;
+                });
+
+                // Mouse wheel zoom
+
+                canvas.addEventListener("wheel", function (e) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    const delta = Math.max(-1, Math.min(1, -e.deltaY * 40));
+                    if (delta === 0) {
+                        return;
+                    }
+                    const d = delta / Math.abs(delta);
+                    vZoom = -d * getZoomRate() * mouseZoomRate;
+                    e.preventDefault();
+                });
+
+                // Keyboard zoom
+
+                scene.on("tick", function (e) {
+                    if (!(self._active && self._pointerEnabled) || (!scene.input.keyboardEnabled)) {
+                        return;
+                    }
+                    if (!over) {
+                        return;
+                    }
+                    const elapsed = e.deltaTime;
+                    if (!self.ctrlDown && !self.altDown) {
+                        const wkey = input.keyDown[input.KEY_ADD];
+                        const skey = input.keyDown[input.KEY_SUBTRACT];
+                        if (wkey || skey) {
+                            if (self._pivoting) {
+                                self._pivoter.startPivot();
+                            }
+                            if (skey) {
+                                vZoom = elapsed * getZoomRate() * keyboardZoomRate;
+                            } else if (wkey) {
+                                vZoom = -elapsed * getZoomRate() * keyboardZoomRate;
+                            }
+                        }
+                    }
+                });
+
+                // Keyboard panning
+
+                (function () {
+
+                    scene.on("tick", function (e) {
+                        if (!(self._active && self._pointerEnabled) || (!scene.input.keyboardEnabled)) {
+                            return;
+                        }
+                        if (!over) {
+                            return;
+                        }
+
+                        const elapsed = e.deltaTime;
+
+                        // if (!self.ctrlDown && !self.altDown) {
+                        let front, back, left, right, up, down;
+                        if (self._keyboardLayout === 'azerty') {
+                            front = input.keyDown[input.KEY_Z];
+                            back = input.keyDown[input.KEY_S];
+                            left = input.keyDown[input.KEY_Q];
+                            right = input.keyDown[input.KEY_D];
+                            up = input.keyDown[input.KEY_W];
+                            down = input.keyDown[input.KEY_X];
+                        } else {
+                            front = input.keyDown[input.KEY_W];
+                            back = input.keyDown[input.KEY_S];
+                            left = input.keyDown[input.KEY_A];
+                            right = input.keyDown[input.KEY_D];
+                            up = input.keyDown[input.KEY_Z];
+                            down = input.keyDown[input.KEY_X];
+                        }
+                        if (front || back || left || right || up || down) {
+                            if (self._pivoting) {
+                                self._pivoter.startPivot();
+                            }
+                            if (down) {
+                                panVy += elapsed * keyboardPanRate;
+                            } else if (up) {
+                                panVy += -elapsed * keyboardPanRate;
+                            }
+                            if (right) {
+                                panVx += -elapsed * keyboardPanRate;
+                            } else if (left) {
+                                panVx += elapsed * keyboardPanRate;
+                            }
+                            if (back) {
+                                panVz = elapsed * keyboardPanRate;
+                            } else if (front) {
+                                panVz = -elapsed * keyboardPanRate;
+                            }
+                        }
+                        //          }
+                    });
+                })();
+            })();
+
+            // Touch camera rotate, pan and zoom
+
+            (function () {
+                const tapStartPos = new Float32Array(2);
+
+                const lastTouches = [];
+                let numTouches = 0;
+
+                const touch0Vec = new Float32Array(2);
+                const touch1Vec = new Float32Array(2);
+
+                const MODE_CHANGE_TIMEOUT = 50;
+                const MODE_NONE = 0;
+                const MODE_ROTATE = 1;
+                const MODE_PAN = 1 << 1;
+                const MODE_ZOOM = 1 << 2;
+                let currentMode = MODE_NONE;
+                let transitionTime = Date.now();
+
+                function checkMode(mode) {
+                    const currentTime = Date.now();
+                    if (currentMode === MODE_NONE) {
+                        currentMode = mode;
+                        return true;
+                    }
+                    if (currentMode === mode) {
+                        return currentTime - transitionTime > MODE_CHANGE_TIMEOUT;
+                    }
+                    currentMode = mode;
+                    transitionTime = currentTime;
+                    return false;
+                }
+
+                canvas.addEventListener("touchstart", function (event) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    const touches = event.touches;
+                    const changedTouches = event.changedTouches;
+
+                    if (touches.length === 1 && changedTouches.length === 1) {
+                        tapStartPos[0] = touches[0].pageX;
+                        tapStartPos[1] = touches[0].pageY;
+                    }
+
+                    while (lastTouches.length < touches.length) {
+                        lastTouches.push(new Float32Array(2));
+                    }
+
+                    for (let i = 0, len = touches.length; i < len; ++i) {
+                        lastTouches[i][0] = touches[i].pageX;
+                        lastTouches[i][1] = touches[i].pageY;
+                    }
+
+                    currentMode = MODE_NONE;
+                    numTouches = touches.length;
+
+                    event.stopPropagation();
+                }, {passive: true});
+
+                canvas.addEventListener("touchmove", function (event) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    const touches = event.touches;
+
+                    if (numTouches === 1) {
+
+                        var touch0 = touches[0];
+
+                        if (checkMode(MODE_ROTATE)) {
+                            const deltaX = touch0.pageX - lastTouches[0][0];
+                            const deltaY = touch0.pageY - lastTouches[0][1];
+                            const rotateX = deltaX * touchRotateRate;
+                            const rotateY = deltaY * touchRotateRate;
+                            rotateVx += rotateY;
+                            rotateVy += -rotateX;
+                        }
+
+                    } else if (numTouches === 2) {
+
+                        var touch0 = touches[0];
+                        const touch1 = touches[1];
+
+                        math.subVec2([touch0.pageX, touch0.pageY], lastTouches[0], touch0Vec);
+                        math.subVec2([touch1.pageX, touch1.pageY], lastTouches[1], touch1Vec);
+
+                        const panning = math.dotVec2(touch0Vec, touch1Vec) > 0;
+
+                        if (panning && checkMode(MODE_PAN)) {
+                            math.subVec2([touch0.pageX, touch0.pageY], lastTouches[0], touch0Vec);
+                            panVx += touch0Vec[0] * touchPanRate;
+                            panVy += touch0Vec[1] * touchPanRate;
+                        }
+
+                        if (!panning && checkMode(MODE_ZOOM)) {
+                            const d1 = math.distVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
+                            const d2 = math.distVec2(lastTouches[0], lastTouches[1]);
+                            vZoom = (d2 - d1) * getZoomRate() * touchZoomRate;
+                        }
+                    }
+
+                    for (let i = 0; i < numTouches; ++i) {
+                        lastTouches[i][0] = touches[i].pageX;
+                        lastTouches[i][1] = touches[i].pageY;
+                    }
+
+                    event.stopPropagation();
+                }, {passive: true});
+
+            })();
+
+            // Keyboard rotation
+
+            (function () {
+
+                scene.on("tick", function (e) {
+                    if (!(self._active && self._pointerEnabled) || (!scene.input.keyboardEnabled)) {
+                        return;
+                    }
+                    if (!over) {
+                        return;
+                    }
+                    if (self._planView) {
+                        return;
+                    }
+                    const elapsed = e.deltaTime;
+                    const left = input.keyDown[input.KEY_LEFT_ARROW];
+                    const right = input.keyDown[input.KEY_RIGHT_ARROW];
+                    const up = input.keyDown[input.KEY_UP_ARROW];
+                    const down = input.keyDown[input.KEY_DOWN_ARROW];
+                    if (left || right || up || down) {
+                        if (self._pivoting) {
+                            self._pivoter.startPivot();
+                        }
+                        if (right) {
+                            rotateVy += -elapsed * keyboardOrbitRate;
+
+                        } else if (left) {
+                            rotateVy += elapsed * keyboardOrbitRate;
+                        }
+                        if (down) {
+                            rotateVx += elapsed * keyboardOrbitRate;
+
+                        } else if (up) {
+                            rotateVx += -elapsed * keyboardOrbitRate;
+                        }
+                    }
+                });
+            })();
+
+            // First-person rotation about vertical axis with A and E keys for AZERTY layout
+
+            (function () {
+
+                scene.on("tick", function (e) {
+                    if (!(self._active && self._pointerEnabled) || (!scene.input.keyboardEnabled)) {
+                        return;
+                    }
+                    if (!over) {
+                        return;
+                    }
+                    const elapsed = e.deltaTime;
+                    let rotateLeft;
+                    let rotateRight;
+                    if (self._keyboardLayout === 'azerty') {
+                        rotateLeft = input.keyDown[input.KEY_A];
+                        rotateRight = input.keyDown[input.KEY_E];
+                    } else {
+                        rotateLeft = input.keyDown[input.KEY_Q];
+                        rotateRight = input.keyDown[input.KEY_E];
+                    }
+                    if (rotateRight || rotateLeft) {
+                        if (rotateLeft) {
+                            rotateVy += elapsed * keyboardOrbitRate;
+                        } else if (rotateRight) {
+                            rotateVy += -elapsed * keyboardOrbitRate;
+                        }
+                    }
+                });
+
+            })();
+        })();
+
+        //------------------------------------------------------------------------------------
+        // Mouse and touch picking
+        //------------------------------------------------------------------------------------
+
+        (function () {
+
+            // Mouse picking
+
+            (function () {
+
+                canvas.addEventListener("mousemove", function (e) {
+
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+
+                    getCanvasPosFromEvent(e, pickCursorPos);
+
+                    if (self.hasSubs("hover") || self.hasSubs("hoverOut") || self.hasSubs("hoverOff") || self.hasSubs("hoverSurface")) {
+                        needPickEntity = true;
+                    }
+                });
+
+                let downX;
+                let downY;
+                let downCursorX;
+                let downCursorY;
+
+                canvas.addEventListener('mousedown', function (e) {
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+                    downX = e.clientX;
+                    downY = e.clientY;
+                    downCursorX = pickCursorPos[0];
+                    downCursorY = pickCursorPos[1];
+
+                    needPickSurface = self._pivoting;
+                    updatePick();
+                    if (self._pivoting) {
+                        if (e.which === 1) {// Left button
+                            if (pickResult) {
+                                self._pivoter.startPivot(pickResult.worldPos);
+                            } else {
+                                self._pivoter.startPivot(); // Continue to use last pivot point
+                            }
+                        }
+                    }
+                });
+
+                canvas.addEventListener('mouseup', (function (e) {
+
+                    let clicks = 0;
+                    let timeout;
+
+                    return function (e) {
+
+                        if (!(self._active && self._pointerEnabled)) {
+                            return;
+                        }
+
+                        self._pivoter.hidePivot();
+
+                        if (Math.abs(e.clientX - downX) > 3 || Math.abs(e.clientY - downY) > 3) {
+                            return;
+                        }
+
+                        if (!self._doublePickFlyTo && !self.hasSubs("doublePicked") && !self.hasSubs("doublePickedSurface") && !self.hasSubs("doublePickedNothing")) {
+
+                            //  Avoid the single/double click differentiation timeout
+
+                            needPickSurface = !!self.hasSubs("pickedSurface");
+
+                            updatePick();
+
+                            if (pickResult) {
+
+                                /**
+                                 * Fired whenever the pointer has picked (ie. clicked or tapped) an {@link Entity}.
+                                 *
+                                 * @event picked
+                                 * @param pickResult A surface pick pickResult result containing the ID of the Entity - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                                 */
+                                self.fire("picked", pickResult, true);
+                                if (pickedSurface) {
+
+                                    /**
+                                     * Fired when the pointer has picked (ie. clicked or tapped) the surface of an {@link Entity}.
+                                     *
+                                     * This event provides 3D information about the point on the surface that the pointer has picked.
+                                     *
+                                     * @event pickedSurface
+                                     * @param pickResult A surface pick pickResult result, containing the ID of the Entity and 3D info on the
+                                     * surface possition - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                                     */
+                                    self.fire("pickedSurface", pickResult, true);
+                                }
+                            } else {
+
+                                /**
+                                 * Fired when the pointer attempted a pick (ie. clicked or tapped), but has pickResult nothing.
+                                 *
+                                 * @event pickedNothing
+                                 */
+                                self.fire("pickedNothing", {}, true);
+                            }
+
+                            return;
+                        }
+
+                        clicks++;
+
+                        if (clicks === 1) {
+                            timeout = setTimeout(function () {
+
+                                needPickEntity = self._doublePickFlyTo;
+                                needPickSurface = needPickEntity || !!self.hasSubs("pickedSurface");
+                                pickCursorPos[0] = downCursorX;
+                                pickCursorPos[1] = downCursorY;
+
+                                updatePick();
+
+                                if (pickResult) {
+                                    self.fire("picked", pickResult, true);
+                                    if (pickedSurface) {
+                                        self.fire("pickedSurface", pickResult, true);
+                                    }
+                                } else {
+                                    self.fire("pickedNothing", {}, true);
+                                }
+
+                                clicks = 0;
+                            }, 250);  // FIXME: Too short for track pads
+
+                        } else {
+
+                            clearTimeout(timeout);
+
+                            needPickEntity = self._doublePickFlyTo;
+                            needPickSurface = needPickEntity && !!self.hasSubs("doublePickedSurface");
+
+                            updatePick();
+
+                            if (pickResult) {
+                                /**
+                                 * Fired whenever the pointer has double-picked (ie. double-clicked or double-tapped) an {@link Entity}.
+                                 *
+                                 * @event picked
+                                 * @param pickResult A surface pick pickResult result containing the ID of the Entity - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                                 */
+                                self.fire("doublePicked", pickResult, true);
+                                if (pickedSurface) {
+                                    /**
+                                     * Fired when the pointer has double-picked (ie. double-clicked or double-tapped) the surface of an {@link Entity}.
+                                     *
+                                     * This event provides 3D information about the point on the surface that the pointer has picked.
+                                     *
+                                     * @event doublePickedSurface
+                                     * @param pickResult A surface pick pickResult result, containing the ID of the Entity and 3D info on the
+                                     * surface possition - see {@link Scene/pick:method"}}Scene#pick(){{/crossLink}}.
+                                     */
+                                    self.fire("doublePickedSurface", pickResult, true);
+                                }
+                                if (self._doublePickFlyTo) {
+                                    self._flyTo(pickResult);
+                                }
+                            } else {
+
+                                /**
+                                 * Fired when the pointer attempted a double-pick (ie. double-clicked or double-tapped), but has pickResult nothing.
+                                 *
+                                 * @event doublePickedNothing
+                                 */
+                                self.fire("doublePickedNothing", true);
+                                if (self._doublePickFlyTo) {
+                                    self._flyTo();
+                                }
+                            }
+                            clicks = 0;
+                        }
+                    };
+                })(), false);
+
+            })();
+
+            // Touch picking
+
+            (function () {
+
+                const TAP_INTERVAL = 150;
+                const DBL_TAP_INTERVAL = 325;
+                const TAP_DISTANCE_THRESHOLD = 4;
+
+                let touchStartTime;
+                const activeTouches = [];
+                const tapStartPos = new Float32Array(2);
+                let tapStartTime = -1;
+                let lastTapTime = -1;
+
+                canvas.addEventListener("touchstart", function (event) {
+
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+
+                    const touches = event.touches;
+                    const changedTouches = event.changedTouches;
+
+                    touchStartTime = Date.now();
+
+                    if (touches.length === 1 && changedTouches.length === 1) {
+                        tapStartTime = touchStartTime;
+                        tapStartPos[0] = touches[0].pageX;
+                        tapStartPos[1] = touches[0].pageY;
+                    } else {
+                        tapStartTime = -1;
+                    }
+
+                    while (activeTouches.length < touches.length) {
+                        activeTouches.push(new Float32Array(2));
+                    }
+
+                    for (let i = 0, len = touches.length; i < len; ++i) {
+                        activeTouches[i][0] = touches[i].pageX;
+                        activeTouches[i][1] = touches[i].pageY;
+                    }
+
+                    activeTouches.length = touches.length;
+
+                    event.stopPropagation();
+                }, {passive: true});
+
+                //canvas.addEventListener("touchmove", function (event) {
+                //    event.preventDefault();
+                //    event.stopPropagation();
+                //});
+
+                canvas.addEventListener("touchend", function (event) {
+
+                    if (!(self._active && self._pointerEnabled)) {
+                        return;
+                    }
+
+                    const currentTime = Date.now();
+                    const touches = event.touches;
+                    const changedTouches = event.changedTouches;
+
+                    // process tap
+
+                    if (touches.length === 0 && changedTouches.length === 1) {
+
+                        if (tapStartTime > -1 && currentTime - tapStartTime < TAP_INTERVAL) {
+
+                            if (lastTapTime > -1 && tapStartTime - lastTapTime < DBL_TAP_INTERVAL) {
+
+                                // Double-tap
+
+                                pickCursorPos[0] = Math.round(changedTouches[0].clientX);
+                                pickCursorPos[1] = Math.round(changedTouches[0].clientY);
+                                needPickEntity = true;
+                                needPickSurface = !!self.hasSubs("pickedSurface");
+
+                                updatePick();
+
+                                if (pickResult) {
+                                    self.fire("doublePicked", pickResult, true);
+                                    if (pickedSurface) {
+                                        self.fire("doublePickedSurface", pickResult, true);
+                                    }
+                                    if (self._doublePickFlyTo) {
+                                        self._flyTo(pickResult);
+                                    }
+                                } else {
+                                    self.fire("doublePickedNothing", true);
+                                    if (self._doublePickFlyTo) {
+                                        self._flyTo();
+                                    }
+                                }
+
+                                lastTapTime = -1;
+
+                            } else if (math.distVec2(activeTouches[0], tapStartPos) < TAP_DISTANCE_THRESHOLD) {
+
+                                // Single-tap
+
+                                pickCursorPos[0] = Math.round(changedTouches[0].clientX);
+                                pickCursorPos[1] = Math.round(changedTouches[0].clientY);
+                                needPickEntity = true;
+                                needPickSurface = !!self.hasSubs("pickedSurface");
+
+                                updatePick();
+
+                                if (pickResult) {
+                                    self.fire("picked", pickResult, true);
+                                    if (pickedSurface) {
+                                        self.fire("pickedSurface", pickResult, true);
+                                    }
+                                } else {
+                                    self.fire("pickedNothing", {}, true);
+                                }
+
+                                lastTapTime = currentTime;
+                            }
+
+                            tapStartTime = -1;
+                        }
+                    }
+
+                    activeTouches.length = touches.length;
+
+                    for (let i = 0, len = touches.length; i < len; ++i) {
+                        activeTouches[i][0] = touches[i].pageX;
+                        activeTouches[i][1] = touches[i].pageY;
+                    }
+
+                    event.stopPropagation();
+                }, {passive: true});
+            })();
+        })();
+
+        //------------------------------------------------------------------------------------
+        // Keyboard camera axis views
+        //------------------------------------------------------------------------------------
+
+        (function () {
+
+            const KEY_NUM_1 = 49;
+            const KEY_NUM_2 = 50;
+            const KEY_NUM_3 = 51;
+            const KEY_NUM_4 = 52;
+            const KEY_NUM_5 = 53;
+            const KEY_NUM_6 = 54;
+
+            const center = math.vec3();
+            const tempVec3a = math.vec3();
+            const tempVec3b = math.vec3();
+            const tempVec3c = math.vec3();
+
+            const cameraTarget = {
+                eye: new Float32Array(3),
+                look: new Float32Array(3),
+                up: new Float32Array(3)
+            };
+
+            document.addEventListener("keydown", function (e) {
+
+                if (!(self._active && self._pointerEnabled) || (!scene.input.keyboardEnabled)) {
+                    return;
+                }
+
+                if (!over) {
+                    return;
+                }
+
+                const keyCode = e.keyCode;
+
+                if (keyCode !== KEY_NUM_1 &&
+                    keyCode !== KEY_NUM_2 &&
+                    keyCode !== KEY_NUM_3 &&
+                    keyCode !== KEY_NUM_4 &&
+                    keyCode !== KEY_NUM_5 &&
+                    keyCode !== KEY_NUM_6) {
+                    return;
+                }
+
+                const aabb = scene.aabb;
+                const diag = math.getAABB3Diag(aabb);
+                center[0] = aabb[0] + aabb[3] / 2.0;
+                center[1] = aabb[1] + aabb[4] / 2.0;
+                center[2] = aabb[2] + aabb[5] / 2.0;
+                const dist = Math.abs((diag) / Math.tan(self._cameraFlight.fitFOV / 2));
+
+                switch (keyCode) {
+
+                    case KEY_NUM_1: // Right
+
+                        cameraTarget.eye.set(math.mulVec3Scalar(camera.worldRight, dist, tempVec3a));
+                        cameraTarget.look.set(center);
+                        cameraTarget.up.set(camera.worldUp);
+
+                        break;
+
+                    case KEY_NUM_2: // Back
+
+                        cameraTarget.eye.set(math.mulVec3Scalar(camera.worldForward, dist, tempVec3a));
+                        cameraTarget.look.set(center);
+                        cameraTarget.up.set(camera.worldUp);
+
+                        break;
+
+                    case KEY_NUM_3: // Left
+
+                        cameraTarget.eye.set(math.mulVec3Scalar(camera.worldRight, -dist, tempVec3a));
+                        cameraTarget.look.set(center);
+                        cameraTarget.up.set(camera.worldUp);
+
+                        break;
+
+                    case KEY_NUM_4: // Front
+
+                        cameraTarget.eye.set(math.mulVec3Scalar(camera.worldForward, -dist, tempVec3a));
+                        cameraTarget.look.set(center);
+                        cameraTarget.up.set(camera.worldUp);
+
+                        break;
+
+                    case KEY_NUM_5: // Top
+
+                        cameraTarget.eye.set(math.mulVec3Scalar(camera.worldUp, dist, tempVec3a));
+                        cameraTarget.look.set(center);
+                        cameraTarget.up.set(math.normalizeVec3(math.mulVec3Scalar(camera.worldForward, 1, tempVec3b), tempVec3c));
+
+                        break;
+
+                    case KEY_NUM_6: // Bottom
+
+                        cameraTarget.eye.set(math.mulVec3Scalar(camera.worldUp, -dist, tempVec3a));
+                        cameraTarget.look.set(center);
+                        cameraTarget.up.set(math.normalizeVec3(math.mulVec3Scalar(camera.worldForward, -1, tempVec3b)));
+
+                        break;
+
+                    default:
+                        return;
+                }
+
+                if (self._cameraFlight.duration > 0) {
+                    self._cameraFlight.flyTo(cameraTarget);
+                } else {
+                    self._cameraFlight.jumpTo(cameraTarget);
+                }
+            });
+
+        })();
+    }
+
+    _flyTo(pickResult) {
+
+        let pos;
+
+        if (pickResult && pickResult.worldPos) {
+            pos = pickResult.worldPos;
+        }
+
+        const aabb = pickResult ? pickResult.entity.aabb : this.scene.aabb;
+
+        if (pos) {
+
+            // Fly to look at point, don't change eye->look dist
+
+            const camera = this.scene.camera;
+            const diff = math.subVec3(camera.eye, camera.look, []);
+
+            this._cameraFlight.flyTo({
+                // look: pos,
+                // eye: xeokit.math.addVec3(pos, diff, []),
+                // up: camera.up,
+                aabb: aabb
+            });
+
+            // TODO: Option to back off to fit AABB in view
+
+        } else {
+
+            // Fly to fit target boundary in view
+
+            this._cameraFlight.flyTo({
+                aabb: aabb
+            });
+        }
+    }
+
     destroy() {
-        this._destroyHandlers();
-        this._destroyControllers();
-        this._cameraUpdater.destroy();
+        this.active = false;
         super.destroy();
-    }
-
-    _destroyHandlers() {
-        for (let i = 0, len = this._handlers.length; i < len; i++) {
-            const handler = this._handlers[i];
-            if (handler.destroy) {
-                handler.destroy();
-            }
-        }
-    }
-
-    _destroyControllers() {
-        for (let i = 0, len = this._controllers.length; i < len; i++) {
-            const controller = this._controllers[i];
-            if (controller.destroy) {
-                controller.destroy();
-            }
-        }
     }
 }
 
@@ -26484,7 +23904,7 @@ class MetaModel {
     /**
      * @private
      */
-    constructor(metaScene, id, projectId, revisionId, author, createdAt, creatingApplication, schema, rootMetaObject) {
+    constructor(metaScene, id, projectId, revisionId, rootMetaObject) {
 
         /**
          * Globally-unique ID.
@@ -26506,54 +23926,11 @@ class MetaModel {
         this.projectId = projectId;
 
         /**
-         * The revision ID, if available.
-         *
-         * Will be undefined if not available.
-         *
+         * The revision ID
          * @property revisionId
          * @type {String|Number}
          */
         this.revisionId = revisionId;
-
-        /**
-         * The model author, if available.
-         *
-         * Will be undefined if not available.
-         *
-         * @property author
-         * @type {String}
-         */
-        this.author = author;
-
-        /**
-         * The date the model was created, if available.
-         *
-         * Will be undefined if not available.
-         *
-         * @property createdAt
-         * @type {String}
-         */
-        this.createdAt = createdAt;
-
-        /**
-         * The application that created the model, if available.
-         *
-         * Will be undefined if not available.
-         *
-         * @property creatingApplication
-         * @type {String}
-         */
-        this.creatingApplication = creatingApplication;
-
-        /**
-         * The model schema version, if available.
-         *
-         * Will be undefined if not available.
-         *
-         * @property schema
-         * @type {String}
-         */
-        this.schema = schema;
 
         /**
          * Metadata on the {@link Scene}.
@@ -26932,10 +24309,6 @@ class MetaScene {
         const projectId = metaModelData.projectId || "none";
         const revisionId = metaModelData.revisionId || "none";
         const newObjects = metaModelData.metaObjects;
-        const author = metaModelData.author;
-        const createdAt = metaModelData.createdAt;
-        const creatingApplication = metaModelData.creatingApplication;
-        const schema = metaModelData.schema;
         // if (options.excludeTypes) {
         //     excludeTypes = {};
         //     for (let i = 0, len = options.excludeTypes.length; i < len; i++) {
@@ -26943,7 +24316,7 @@ class MetaScene {
         //     }
         // }
 
-        const metaModel = new MetaModel(this, id, projectId, revisionId, author, createdAt, creatingApplication, schema, null);
+        const metaModel = new MetaModel(this, id, projectId, revisionId, null);
 
         this.metaModels[id] = metaModel;
 
@@ -27135,9 +24508,7 @@ class Viewer {
      * @param {Number} [cfg.scale=1] The number of Real-space units in each World-space coordinate system unit.
      * @param {Number[]} [cfg.origin=[0,0,0]] The Real-space 3D origin, in current measurement units, at which the World-space coordinate origin ````[0,0,0]```` sits.
      * @param {Boolean} [cfg.saoEnabled=false] Whether to enable Scalable Ambient Obscurance (SAO) effect. See {@link SAO} for more info.
-     * @param {Boolean} [cfg.antialias=true] Whether to enable anti-aliasing.
      * @throws {String} Throws an exception when both canvasId or canvasElement are missing or they aren't pointing to a valid HTMLCanvasElement.
-     * @param {Boolean} [cfg.alphaDepthMask=true] Whether writing into the depth buffer is enabled or disabled when rendering transparent objects.
      */
     constructor(cfg) {
 
@@ -27160,8 +24531,7 @@ class Viewer {
             webgl2: false,
             contextAttr: {
                 preserveDrawingBuffer: cfg.preserveDrawingBuffer !== false,
-                premultipliedAlpha: (!!cfg.premultipliedAlpha),
-                antialias: (cfg.antialias !== false)
+                premultipliedAlpha: (!!cfg.premultipliedAlpha)
             },
             spinnerElementId: cfg.spinnerElementId,
             transparent: (cfg.transparent !== false),
@@ -27173,8 +24543,7 @@ class Viewer {
             units: cfg.units,
             scale: cfg.scale,
             origin: cfg.origin,
-            saoEnabled: cfg.saoEnabled,
-            alphaDepthMask: (cfg.alphaDepthMask !== false)
+            saoEnabled: cfg.saoEnabled
         });
 
         /**
@@ -27345,22 +24714,7 @@ class Viewer {
     }
 
     /**
-     * Enter snapshot mode.
-     *
-     * Switches rendering to a hidden snapshot canvas.
-     *
-     * Exit snapshot mode using {@link Viewer#endSnapshot}.
-     */
-    beginSnapshot() {
-        if (this._snapshotBegun) {
-            return;
-        }
-        this.scene._renderer.beginSnapshot();
-        this._snapshotBegun = true;
-    }
-
-    /**
-     * Gets a snapshot of this Viewer's {@link Scene} as a Base64-encoded image.
+     * Returns a snapshot of this Viewer's canvas as a Base64-encoded image.
      *
      * #### Usage:
      *
@@ -27375,16 +24729,9 @@ class Viewer {
      * @param {Number} [params.width] Desired width of result in pixels - defaults to width of canvas.
      * @param {Number} [params.height] Desired height of result in pixels - defaults to height of canvas.
      * @param {String} [params.format="jpeg"] Desired format; "jpeg", "png" or "bmp".
-     * @returns {String} String-encoded image data URI.
+     * @returns {String} String-encoded image data.
      */
     getSnapshot(params = {}) {
-
-        const needFinishSnapshot = (!this._snapshotBegun);
-
-        if (!this._snapshotBegun) {
-            this.beginSnapshot();
-        }
-
         this.sendToPlugins("snapshotStarting"); // Tells plugins to hide things that shouldn't be in snapshot
 
         const resize = (params.width !== undefined && params.height !== undefined);
@@ -27402,9 +24749,9 @@ class Viewer {
             canvas.style.height = height + "px";
         }
 
-        this.scene._renderer.renderSnapshot();
+        this.scene.render(true);
 
-        const imageDataURI = this.scene._renderer.readSnapshot(params);
+        const imageData = this.scene.canvas._getSnapshot(params);
 
         if (resize) {
             canvas.style.width = saveCssWidth;
@@ -27417,26 +24764,7 @@ class Viewer {
 
         this.sendToPlugins("snapshotFinished");
 
-        if (needFinishSnapshot) {
-            this.endSnapshot();
-        }
-
-        return imageDataURI;
-    }
-
-    /**
-     * Exists snapshot mode.
-     *
-     * Switches rendering back to the main canvas.
-     *
-     */
-    endSnapshot() {
-        if (!this._snapshotBegun) {
-            return;
-        }
-        this.scene._renderer.endSnapshot();
-        this.scene._renderer.render({force: true});
-        this._snapshotBegun = false;
+        return imageData;
     }
 
     /** Destroys this Viewer.
@@ -27511,12 +24839,12 @@ class PerformanceMesh {
         /**
          * World-space 3D axis-aligned bounding box (AABB).
          *
-         * Represented by a six-element Float64Array containing the min/max extents of the
+         * Represented by a six-element Float32Array containing the min/max extents of the
          * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
          *
          * @property aabb
          * @final
-         * @type {Float64Array}
+         * @type {Number[]}
          */
         this.aabb = math.AABB3();
 
@@ -27528,16 +24856,6 @@ class PerformanceMesh {
         this._colorizing = false;
 
         this.numTriangles = 0;
-
-        /**
-         * 3D origin of the PerformanceMesh's vertex positions, if they are in relative-to-center (RTC) coordinates.
-         *
-         * When this is defined, then the positions are RTC, which means that they are relative to this position.
-         *
-         * @property rtcCenter
-         * @type {Float64Array}
-         */
-        this.rtcCenter = null;
     }
 
     /**
@@ -27596,13 +24914,6 @@ class PerformanceMesh {
     /**
      * @private
      */
-    _setOffset(offset) {
-        this._layer.setOffset(this._portionId, offset);
-    }
-
-    /**
-     * @private
-     */
     _setHighlighted(flags) {
         this._layer.setHighlighted(this._portionId, flags);
     }
@@ -27645,15 +24956,8 @@ class PerformanceMesh {
     /**
      * @private
      */
-    _setPickable(flags2) {
-        this._layer.setPickable(this._portionId, flags2);
-    }
-
-    /**
-     * @private
-     */
-    _setCulled(flags2) {
-        this._layer.setCulled(this._portionId, flags2);
+    _setPickable(flags) {
+        this._layer.setPickable(this._portionId, flags);
     }
 
     /** @private */
@@ -27743,8 +25047,8 @@ class PerformanceNode {
          * @type {Scene}
          * @final
          */
-        this.scene = model.scene;
-
+         this.scene = model.scene;
+        
         /**
          * The PerformanceModel that contains this PerformanceNode.
          * @property model
@@ -27779,9 +25083,6 @@ class PerformanceNode {
 
         this._flags = flags;
         this._aabb = aabb;
-        this._offsetAABB = math.AABB3(aabb);
-
-        this._offset = math.vec3();
 
         if (this._isObject) {
             model.scene._registerObject(this);
@@ -27824,13 +25125,13 @@ class PerformanceNode {
     /**
      * World-space 3D axis-aligned bounding box (AABB) of this PerformanceNode.
      *
-     * Represented by a six-element Float64Array containing the min/max extents of the
+     * Represented by a six-element Float32Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
-     * @type {Float64Array}
+     * @type {Number[]}
      */
     get aabb() {
-        return this._offsetAABB;
+        return this._aabb;
     }
 
     /**
@@ -28038,19 +25339,7 @@ class PerformanceNode {
      *
      * @type {Boolean}
      */
-    set culled(culled) {
-        if (!!(this._flags & RENDER_FLAGS.CULLED) === culled) {
-            return; // Redundant update
-        }
-        if (culled) {
-            this._flags = this._flags | RENDER_FLAGS.CULLED;
-        } else {
-            this._flags = this._flags & ~RENDER_FLAGS.CULLED;
-        }
-        for (var i = 0, len = this.meshes.length; i < len; i++) {
-            this.meshes[i]._setCulled(this._flags);
-        }
-        this.model.glRedraw();
+    set culled(culled) { // TODO
     }
 
     /**
@@ -28060,8 +25349,8 @@ class PerformanceNode {
      *
      * @type {Boolean}
      */
-    get culled() {
-        return this._getFlag(RENDER_FLAGS.CULLED);
+    get culled() { // TODO
+        return false;
     }
 
     /**
@@ -28158,7 +25447,7 @@ class PerformanceNode {
     }
 
     /**
-     * Sets the PerformanceNode's RGB colorize color.
+     * Gets the PerformanceNode's RGB colorize color, multiplies by the PerformanceNode's rendered fragment colors.
      *
      * Each element of the color is in range ````[0..1]````.
      *
@@ -28185,7 +25474,7 @@ class PerformanceNode {
     }
 
     /**
-     * Gets the PerformanceNode's RGB colorize color.
+     * Gets the PerformanceNode's RGB colorize color, multiplies by the PerformanceNode's rendered fragment colors.
      *
      * Each element of the color is in range ````[0..1]````.
      *
@@ -28213,26 +25502,18 @@ class PerformanceNode {
         if (this.meshes.length === 0) {
             return;
         }
-        const opacityUpdated = (opacity !== null && opacity !== undefined);
-        if (opacityUpdated) {
-            if (opacity < 0) {
-                opacity = 0;
-            } else if (opacity > 1) {
-                opacity = 1;
-            }
-            opacity = Math.floor(opacity * 255.0); // Quantize
-            var lastOpacity = (this.meshes[0]._colorize[3] / 255.0);
-            if (lastOpacity === opacity) {
-                return;
-            }
-        } else {
-            opacity = 255.0;
+        if (opacity < 0) {
+            opacity = 0;
+        } else if (opacity > 1) {
+            opacity = 1;
         }
-        for (let i = 0, len = this.meshes.length; i < len; i++) {
+        opacity = Math.floor(opacity * 255.0); // Quantize
+        var lastOpacity = (this.meshes[0]._colorize[3] / 255.0);
+        if (lastOpacity === opacity) {
+            return;
+        }
+        for (var i = 0, len = this.meshes.length; i < len; i++) {
             this.meshes[i]._setOpacity(opacity);
-        }
-        if (this._isObject) {
-            this.scene._objectOpacityUpdated(this, opacityUpdated);
         }
         this.model.glRedraw();
     }
@@ -28250,53 +25531,6 @@ class PerformanceNode {
         } else {
             return 1.0;
         }
-    }
-
-    /**
-     * Sets the PerformanceNode's 3D World-space offset.
-     *
-     * The offset dynamically translates the PerformanceNode in World-space.
-     *
-     * Default value is ````[0, 0, 0]````.
-     *
-     * Provide a null or undefined value to reset to the default value.
-     *
-     * @type {Number[]}
-     */
-    set offset(offset) {
-        if (offset) {
-            this._offset[0] = offset[0];
-            this._offset[1] = offset[1];
-            this._offset[2] = offset[2];
-        } else {
-            this._offset[0] = 0;
-            this._offset[1] = 0;
-            this._offset[2] = 0;
-        }
-        for (let i = 0, len = this.meshes.length; i < len; i++) {
-            this.meshes[i]._setOffset(this._offset);
-        }
-        this._offsetAABB[0] = this._aabb[0] + this._offset[0];
-        this._offsetAABB[1] = this._aabb[1] + this._offset[1];
-        this._offsetAABB[2] = this._aabb[2] + this._offset[2];
-        this._offsetAABB[3] = this._aabb[3] + this._offset[0];
-        this._offsetAABB[4] = this._aabb[4] + this._offset[1];
-        this._offsetAABB[5] = this._aabb[5] + this._offset[2];
-        this.scene._aabbDirty = true;
-        this.scene._objectOffsetUpdated(this, offset);
-        this.model._aabbDirty = true;
-        this.model.glRedraw();
-    }
-
-    /**
-     * Gets the PerformanceNode's 3D World-space offset.
-     *
-     * Default value is ````[0,0,0]````.
-     *
-     * @type {Number[]}
-     */
-    get offset() {
-        return this._offset;
     }
 
     /**
@@ -28384,9 +25618,10 @@ class PerformanceNode {
             if (this.highlighted) {
                 scene._objectHighlightedUpdated(this);
             }
-            this.scene._objectColorizeUpdated(this, false);
-            this.scene._objectOpacityUpdated(this, false);
-            this.scene._objectOffsetUpdated(this, false);
+            if (this._isObject) {
+                const colorized = false;
+                this.scene._objectColorizeUpdated(this, colorized);
+            }
         }
         for (var i = 0, len = this.meshes.length; i < len; i++) {
             this.meshes[i]._destroy();
@@ -28394,6 +25629,52 @@ class PerformanceNode {
         scene._aabbDirty = true;
     }
 
+}
+
+const bigIndicesSupported$1 = WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"];
+const SLICING = true;
+const MAX_VERTS =  (bigIndicesSupported$1 ? 5000000 : 65530) ;
+
+/**
+ * @private
+ */
+class BatchingBuffer {
+    constructor() {
+        this.slicing = SLICING;
+        this.maxVerts = MAX_VERTS;
+        this.positions = new Float32Array(MAX_VERTS * 3); // Uncompressed
+        this.colors = new Uint8Array(MAX_VERTS * 4); // Compressed
+        this.quantizedPositions = new Uint16Array(MAX_VERTS * 3); // Compressed
+        this.normals = new Int8Array(MAX_VERTS * 3); // Compressed
+        this.pickColors = new Uint8Array(MAX_VERTS * 4); // Compressed
+        this.flags = new Uint8Array(MAX_VERTS * 4);
+        this.flags2 = new Uint8Array(MAX_VERTS * 4);
+        this.indices = bigIndicesSupported$1 ? new Uint32Array(MAX_VERTS) : new Uint16Array(MAX_VERTS);
+        this.edgeIndices = bigIndicesSupported$1 ? new Uint32Array(MAX_VERTS) : new Uint16Array(MAX_VERTS);
+        this.lenPositions = 0;
+        this.lenColors = 0;
+        this.lenNormals = 0;
+        this.lenPickColors = 0;
+        this.lenFlags = 0;
+        this.lenIndices = 0;
+        this.lenEdgeIndices = 0;
+    }
+}
+
+const freeBuffers = [];
+
+/**
+ * @private
+ */
+function getBatchingBuffer() {
+    return freeBuffers.length > 0 ? freeBuffers.pop() : new BatchingBuffer();
+}
+
+/**
+ * @private
+ */
+function putBatchingBuffer(buffer) {
+    freeBuffers.push(buffer);
 }
 
 /**
@@ -28406,12 +25687,10 @@ class BatchingLayerScratchMemory {
 
     constructor() {
         this._uint8Arrays = {};
-        this._float32Arrays = {};
     }
 
     _clear() {
         this._uint8Arrays = {};
-        this._float32Arrays = {};
     }
 
     getUInt8Array(len) {
@@ -28421,15 +25700,6 @@ class BatchingLayerScratchMemory {
             this._uint8Arrays[len] = uint8Array;
         }
         return uint8Array;
-    }
-
-    getFloat32Array(len) {
-        let float32Array = this._float32Arrays[len];
-        if (!float32Array) {
-            float32Array = new Float32Array(len);
-            this._float32Arrays[len] = float32Array;
-        }
-        return float32Array;
     }
 }
 
@@ -28486,8 +25756,10 @@ function buildVertex(scene) {
     src.push("attribute vec3 normal;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
-    src.push("attribute vec3 offset;");
+
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
 
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
@@ -28530,16 +25802,16 @@ function buildVertex(scene) {
 
     src.push("void main(void) {");
 
+
     src.push("bool visible      = (float(flags.x) > 0.0);");
     src.push("bool xrayed       = (float(flags.y) > 0.0);");
     src.push("bool highlighted  = (float(flags.z) > 0.0);");
     src.push("bool selected     = (float(flags.w) > 0.0);");
-    src.push("bool culled       = (float(flags2.w) > 0.0);");
 
     src.push("bool transparent  = ((float(color.a) / 255.0) < 1.0);");
 
     src.push(`if (
-    culled || !visible || 
+    !visible ||  
     (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (transparent || xrayed)) || 
     (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} && (!transparent || xrayed || highlighted || selected)) || 
     (renderPass == ${RENDER_PASSES.XRAYED} && (!xrayed || highlighted || selected)) || 
@@ -28550,8 +25822,7 @@ function buildVertex(scene) {
 
     src.push("} else {");
 
-    src.push("vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("vec4 worldPosition = (positionsDecodeMatrix * vec4(position, 1.0)); ");
     src.push("vec4 viewPosition  = viewMatrix * worldPosition; ");
 
     src.push("vec4 worldNormal =  vec4(octDecode(normal.xy), 0.0); ");
@@ -28593,8 +25864,7 @@ function buildVertex(scene) {
         src.push("reflectedColor += lambertian * (lightColor" + i + ".rgb * lightColor" + i + ".a);");
     }
 
-    src.push("vec3 rgb = (vec3(float(color.r) / 255.0, float(color.g) / 255.0, float(color.b) / 255.0));");
-    src.push("vColor =  vec4((lightAmbient.rgb * lightAmbient.a * rgb) + (reflectedColor * rgb), float(color.a) / 255.0);");
+    src.push("vColor =  vec4(reflectedColor * ((lightAmbient.rgb * lightAmbient.a) + vec3(float(color.r) / 255.0, float(color.g) / 255.0, float(color.b) / 255.0)), float(color.a) / 255.0);");
 
     if (clipping) {
         src.push("vWorldPosition = worldPosition;");
@@ -28676,7 +25946,6 @@ function buildFragment(scene, withSAO) {
 }
 
 const tempVec4$1 = math.vec4();
-const tempVec3a$4 = math.vec3();
 
 /**
  * @private
@@ -28684,12 +25953,10 @@ const tempVec3a$4 = math.vec3();
 class BatchingDrawRenderer {
 
     constructor(scene, withSAO) {
-
         this._scene = scene;
         this._withSAO = withSAO;
         this._hash = this._getHash();
         this._shaderSource = new BatchingDrawShaderSource(this._scene, this._withSAO);
-
         this._allocate();
     }
 
@@ -28702,119 +25969,50 @@ class BatchingDrawRenderer {
         return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
     }
 
-    drawLayer(frameCtx, batchingLayer, renderPass) {
-
+    drawLayer(frameCtx, layer, renderPass) {
         const scene = this._scene;
-        const model = batchingLayer.model;
+        const model = layer.model;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
             this._allocate();
-            if (this.errors) {
-                return;
-            }
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
-            loadSectionPlanes = true;
         }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$4);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
         gl.uniform1i(this._uRenderPass, renderPass);
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(state.normalsBuf);
         }
-
         if (this._aColor) {
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
-
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
-
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-
         state.indicesBuf.bind();
-
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
     _allocate() {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const lightsState = scene._lightsState;
         const sectionPlanesState = scene._sectionPlanesState;
-
         this._program = new Program(gl, this._shaderSource);
-
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
-
         const program = this._program;
-
         this._uRenderPass = program.getLocation("renderPass");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
@@ -28825,7 +26023,6 @@ class BatchingDrawRenderer {
         this._uLightDir = [];
         this._uLightPos = [];
         this._uLightAttenuation = [];
-
         const lights = lightsState.lights;
         let light;
 
@@ -28854,9 +26051,7 @@ class BatchingDrawRenderer {
                     break;
             }
         }
-
         this._uSectionPlanes = [];
-
         const sectionPlanes = sectionPlanesState.sectionPlanes;
         for (let i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
@@ -28865,36 +26060,31 @@ class BatchingDrawRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
-
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
-
         if (this._withSAO) {
+            this._uSAOEnabled = program.getLocation("uSAOEnabled");
             this._uOcclusionTexture = "uOcclusionTexture";
             this._uSAOParams = program.getLocation("uSAOParams");
         }
     }
 
     _bindProgram(frameCtx) {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
-        const lights = scene._lightsState.lights;
-        const camera = scene.camera;
-
+        const lightsState = scene._lightsState;
+        const sectionPlanesState = scene._sectionPlanesState;
+        const lights = lightsState.lights;
+        let light;
         program.bind();
-
+        const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-
         for (let i = 0, len = lights.length; i < len; i++) {
-
-            const light = lights[i];
-
+            light = lights[i];
             if (this._uLightAmbient[i]) {
                 gl.uniform4f(this._uLightAmbient[i], light.color[0], light.color[1], light.color[2], light.intensity);
             } else {
@@ -28912,7 +26102,30 @@ class BatchingDrawRenderer {
                 }
             }
         }
-
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
         if (this._withSAO) {
             const sao = scene.sao;
             const saoEnabled = sao.possible;
@@ -28957,10 +26170,17 @@ function buildVertex$1(scene) {
 
     src.push("// Batched fill vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
     src.push("uniform mat4 viewMatrix;");
@@ -28972,7 +26192,6 @@ function buildVertex$1(scene) {
         src.push("varying vec4 vWorldPosition;");
         src.push("varying vec4 vFlags2;");
     }
-
     src.push("void main(void) {");
 
     src.push("bool visible      = (float(flags.x) > 0.0);");
@@ -28980,12 +26199,11 @@ function buildVertex$1(scene) {
     src.push("bool highlighted  = (float(flags.z) > 0.0);");
     src.push("bool selected     = (float(flags.w) > 0.0);");
     src.push("bool clippable    = (float(flags2.x) > 0.0);");
-    src.push("bool culled       = (float(flags2.w) > 0.0);");
 
     src.push("bool transparent  = (color.a < 1.0);"); // Color comes from EmphasisMaterial.fillColor, so is not quantized
 
     src.push(`if (
-    culled || !visible ||
+    !visible || 
     (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (transparent || xrayed)) || 
     (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} && (!transparent || xrayed || highlighted || selected)) || 
     (renderPass == ${RENDER_PASSES.XRAYED} && (!xrayed || highlighted || selected)) || 
@@ -28995,8 +26213,7 @@ function buildVertex$1(scene) {
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("} else {");
 
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("vWorldPosition = worldPosition;");
@@ -29052,9 +26269,6 @@ function buildFragment$1(scene) {
     return src;
 }
 
-const defaultColor = new Float32Array([1, 1, 1]);
-const tempVec3a$5 = math.vec3();
-
 /**
  * @private
  */
@@ -29075,75 +26289,34 @@ class BatchingFillRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer, renderPass) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer, renderPass) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
             this._allocate();
             if (this.errors) {
                 return;
             }
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
-
-        const viewMat = (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
-
-        gl.uniformMatrix4fv(this._uModelMatrix, false, model.worldMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$5);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
         gl.uniform1i(this._uRenderPass, renderPass);
-
+        gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, model.worldMatrix);
+        this._aPosition.bindArrayBuffer(state.positionsBuf);
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
+        }
+        if (this._aFlags2) {
+            this._aFlags2.bindArrayBuffer(state.flags2Buf);
+        }
+        state.indicesBuf.bind();
         if (renderPass === RENDER_PASSES.XRAYED) {
             const material = scene.xrayMaterial._state;
             const fillColor = material.fillColor;
@@ -29162,25 +26335,6 @@ class BatchingFillRenderer {
         } else {
             gl.uniform4fv(this._uColor, defaultColor);
         }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
-        }
-
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-
-        state.indicesBuf.bind();
-
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -29201,8 +26355,8 @@ class BatchingFillRenderer {
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uColor = program.getLocation("color");
         this._uSectionPlanes = [];
-        const sectionPlanes = sectionPlanesState.sectionPlanes;
-        for (let i = 0, len = sectionPlanes.length; i < len; i++) {
+        const clips = sectionPlanesState.sectionPlanes;
+        for (let i = 0, len = clips.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
                 pos: program.getLocation("sectionPlanePos" + i),
@@ -29210,7 +26364,6 @@ class BatchingFillRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
     }
@@ -29219,9 +26372,34 @@ class BatchingFillRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -29252,10 +26430,17 @@ function buildVertex$2(scene) {
 
     src.push("// Batched geometry edges drawing vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
 
@@ -29267,7 +26452,6 @@ function buildVertex$2(scene) {
         src.push("varying vec4 vWorldPosition;");
         src.push("varying vec4 vFlags2;");
     }
-
     src.push("uniform vec4 color;");
 
     src.push("void main(void) {");
@@ -29283,14 +26467,13 @@ function buildVertex$2(scene) {
     src.push("bool highlighted  = (float(flags.z) > 0.0);");
     src.push("bool selected     = (float(flags.w) > 0.0);");
     src.push("bool edges        = (float(flags2.y) > 0.0);");
-    src.push("bool culled       = (float(flags2.w) > 0.0);");
 
     src.push("bool transparent  = (color.a < 1.0);"); // Color comes from EdgeMaterial.edgeColor, so is not quantized
 
     src.push(`if (
-    culled || !visible ||
-    (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (!edges || transparent || xrayed)) ||
-    (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} &&  (!edges || !transparent || xrayed || highlighted || selected)) ||
+    !visible || !edges ||
+    (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (transparent || xrayed)) ||
+    (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} &&  (!transparent || xrayed || highlighted || selected)) ||
     (renderPass == ${RENDER_PASSES.XRAYED} && (!xrayed || highlighted || selected)) ||
     (renderPass == ${RENDER_PASSES.HIGHLIGHTED} && !highlighted) ||
     (renderPass == ${RENDER_PASSES.SELECTED} && !selected)) {`);
@@ -29299,8 +26482,7 @@ function buildVertex$2(scene) {
 
     src.push("} else {");
 
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
 
     if (clipping) {
@@ -29358,8 +26540,6 @@ function buildFragment$2(scene) {
     return src;
 }
 
-const tempVec3a$6 = math.vec3();
-
 /**
  * @private
  */
@@ -29380,73 +26560,22 @@ class BatchingEdgesRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer, renderPass) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer, renderPass) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
-            this._allocate(batchingLayer);
+            this._allocate();
             if (this.errors) {
                 return;
             }
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
-
-        const viewMat = (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$6);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
         let material;
-
         if (renderPass === RENDER_PASSES.XRAYED) {
             material = scene.xrayMaterial._state;
         } else if (renderPass === RENDER_PASSES.HIGHLIGHTED) {
@@ -29456,24 +26585,17 @@ class BatchingEdgesRenderer {
         } else {
             material = scene.edgeMaterial._state;
         }
-
         const edgeColor = material.edgeColor;
         const edgeAlpha = material.edgeAlpha;
         gl.uniform4f(this._uColor, edgeColor[0], edgeColor[1], edgeColor[2], edgeAlpha);
-
         if (frameCtx.lineWidth !== material.edgeWidth) {
             gl.lineWidth(material.edgeWidth);
             frameCtx.lineWidth = material.edgeWidth;
         }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
         gl.uniform1i(this._uRenderPass, renderPass);
-
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
@@ -29481,7 +26603,6 @@ class BatchingEdgesRenderer {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
         state.edgeIndicesBuf.bind();
-
         gl.drawElements(gl.LINES, state.edgeIndicesBuf.numItems, state.edgeIndicesBuf.itemType, 0);
     }
 
@@ -29510,7 +26631,6 @@ class BatchingEdgesRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
     }
@@ -29519,9 +26639,34 @@ class BatchingEdgesRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -29553,7 +26698,6 @@ function buildVertex$3(scene) {
     src.push("// Batched geometry picking vertex shader");
 
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
 
@@ -29574,12 +26718,10 @@ function buildVertex$3(scene) {
     src.push("void main(void) {");
     src.push("  bool visible   = (float(flags.x) > 0.0);");
     src.push("  bool pickable  = (float(flags2.z) > 0.0);");
-    src.push("  bool culled    = (float(flags2.w) > 0.0);");
-    src.push("  if (culled || (!pickInvisible && !visible) ||  !pickable) {");
+    src.push("  if ((!pickInvisible && !visible) || !pickable) {");
     src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("  } else {");
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); "); // Batched positions are baked in World-space
     src.push("      vec4 viewPosition  = viewMatrix * worldPosition; ");
     src.push("      vPickColor = vec4(float(pickColor.r) / 255.0, float(pickColor.g) / 255.0, float(pickColor.b) / 255.0, float(pickColor.a) / 255.0);");
     if (clipping) {
@@ -29634,8 +26776,6 @@ function buildFragment$3(scene) {
     return src;
 }
 
-const tempVec3a$7 = math.vec3();
-
 /**
  * @private
  */
@@ -29656,118 +26796,50 @@ class BatchingPickMeshRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
-            this._allocate(batchingLayer);
+            this._allocate(layer);
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
-            loadSectionPlanes = true;
         }
-
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const viewMatrix = rtcCenter ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$7);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
-
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
-
         if (this._aPickColor) {
             this._aPickColor.bindArrayBuffer(state.pickColorsBuf);
         }
-
         state.indicesBuf.bind();
-
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
     _allocate() {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
-
         this._program = new Program(gl, this._shaderSource);
-
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
-
         const program = this._program;
-
         this._uPickInvisible = program.getLocation("pickInvisible");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
-
         const sectionPlanes = sectionPlanesState.sectionPlanes;
-
         for (var i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
@@ -29775,25 +26847,45 @@ class BatchingPickMeshRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
-
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aPickColor = program.getAttribute("pickColor");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
     }
 
     _bindProgram(frameCtx) {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         const camera = scene.camera;
-
         program.bind();
-
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix || camera.project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -29825,7 +26917,6 @@ function buildVertex$4(scene) {
     src.push("// Batched geometry depth vertex shader");
 
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
 
@@ -29842,12 +26933,10 @@ function buildVertex$4(scene) {
     src.push("void main(void) {");
     src.push("  bool visible   = (float(flags.x) > 0.0);");
     src.push("  bool pickable  = (float(flags2.z) > 0.0);");
-    src.push("  bool culled    = (float(flags2.w) > 0.0);");
-    src.push("  if (culled || (!pickInvisible && !visible) || !pickable) {");
+    src.push("  if ((!pickInvisible && !visible) || !pickable) {");
     src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("  } else {");
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); "); // Batched positions are baked in World-space
     src.push("      vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("      vWorldPosition = worldPosition;");
@@ -29912,8 +27001,6 @@ function buildFragment$4(scene) {
     return src;
 }
 
-const tempVec3a$8 = math.vec3();
-
 /**
  * @private
  */
@@ -29934,98 +27021,37 @@ class BatchingPickDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
+        const state = layer._state;
         const projectState = scene.camera.project._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
         if (!this._program) {
             this._allocate();
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
-
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const viewMatrix = rtcCenter ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
-
         gl.uniform1f(this._uZNear, projectState.near);
         gl.uniform1f(this._uZFar, projectState.far);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        this._aPosition.bindArrayBuffer(state.positionsBuf);
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$8);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
+        if (this._aFlags2) {
+            this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
+        state.indicesBuf.bind();
 
         //=============================================================
         // TODO: Use drawElements count and offset to draw only one entity
         //=============================================================
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
-        }
-
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-
-        state.indicesBuf.bind();
 
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
@@ -30054,7 +27080,6 @@ class BatchingPickDepthRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
         this._uZNear = program.getLocation("zNear");
@@ -30062,8 +27087,36 @@ class BatchingPickDepthRenderer {
     }
 
     _bindProgram() {
-        this._program.bind();
-
+        const scene = this._scene;
+        const gl = scene.canvas.gl;
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        const camera = scene.camera;
+        program.bind();
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -30092,9 +27145,7 @@ function buildVertex$5(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry normals vertex shader");
-
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
@@ -30117,12 +27168,10 @@ function buildVertex$5(scene) {
     src.push("void main(void) {");
     src.push("  bool visible   = (float(flags.x) > 0.0);");
     src.push("  bool pickable  = (float(flags2.z) > 0.0);");
-    src.push("  bool culled    = (float(flags2.w) > 0.0);");
-    src.push("  if (culled || (!pickInvisible && !visible) ||  !pickable) {");
+    src.push("  if ((!pickInvisible && !visible) || !pickable) {");
     src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("  } else {");
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); "); // Batched positions are baked in World-space
     src.push("      vec4 viewPosition  = viewMatrix * worldPosition; ");
     src.push("      vec3 worldNormal =  octDecode(normal.xy); ");
     src.push("      vWorldNormal = worldNormal;");
@@ -30178,8 +27227,6 @@ function buildFragment$5(scene) {
     return src;
 }
 
-const tempVec3a$9 = math.vec3();
-
 /**
  * @private
  */
@@ -30200,98 +27247,39 @@ class BatchingPickNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
-            this._allocate(batchingLayer);
+            this._allocate(layer);
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
-
+        // In practice, these binds will only happen once per frame
+        // because we pick normals on a single previously-picked mesh
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const viewMatrix = rtcCenter ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        this._aPosition.bindArrayBuffer(state.positionsBuf);
+        if (this._aNormal) {
+            this._aNormal.bindArrayBuffer(state.normalsBuf);
         }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$9);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
         }
+        if (this._aFlags2) {
+            this._aFlags2.bindArrayBuffer(state.flags2Buf);
+        }
+        state.indicesBuf.bind();
 
         //=============================================================
         // TODO: Use drawElements count and offset to draw only one entity
         //=============================================================
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-
-        if (this._aNormal) {
-            this._aNormal.bindArrayBuffer(state.normalsBuf);
-        }
-
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
-        }
-
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-
-        state.indicesBuf.bind();
 
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
@@ -30320,14 +27308,42 @@ class BatchingPickNormalsRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
     }
 
     _bindProgram() {
-        this._program.bind();
+        const scene = this._scene;
+        const gl = scene.canvas.gl;
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        const camera = scene.camera;
+        program.bind();
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -30356,12 +27372,12 @@ function buildVertex$6(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched occlusion vertex shader");
-
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("uniform mat4 positionsDecodeMatrix;");
@@ -30371,13 +27387,11 @@ function buildVertex$6(scene) {
     }
     src.push("void main(void) {");
     src.push("  bool visible   = (float(flags.x) > 0.0);");
-    src.push("  bool culled   = (float(flags2.w) > 0.0);");
     src.push("  bool transparent  = ((float(color.a) / 255.0) < 1.0);");
-    src.push("  if (culled || !visible || transparent) {");
+    src.push("  if (!visible || transparent) {");
     src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("  } else {");
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); "); // Batched positions are baked in World-space
     src.push("      vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("      vWorldPosition = worldPosition;");
@@ -30430,8 +27444,6 @@ function buildFragment$6(scene) {
     return src;
 }
 
-const tempVec3a$a = math.vec3();
-
 /**
  * @private
  */
@@ -30452,93 +27464,31 @@ class BatchingOcclusionRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
+        const state = layer._state;
         const camera = scene.camera;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
         if (!this._program) {
-            this._allocate(batchingLayer);
-            if (this.errors) {
-                return;
-            }
+            this._allocate(layer);
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
-
-        const viewMat = (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix;
-        gl.uniformMatrix4fv(this._uViewMatrix, false, viewMat);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$a);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-
         if (this._aColor) {
             this._aColor.bindArrayBuffer(state.colorsBuf);
         }
-
         this._aFlags.bindArrayBuffer(state.flagsBuf);
-
         if (this._aFlags2) { // Won't be in shader when not clipping
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
-
         state.indicesBuf.bind();
-
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -30565,14 +27515,41 @@ class BatchingOcclusionRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
     }
 
     _bindProgram() {
-        this._program.bind();
+        const scene = this._scene;
+        const gl = scene.canvas.gl;
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        program.bind();
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -30602,10 +27579,11 @@ function buildVertex$7(scene) {
     const src = [];
     src.push("// Batched geometry depth vertex shader");
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("uniform mat4 positionsDecodeMatrix;");
@@ -30618,12 +27596,10 @@ function buildVertex$7(scene) {
     src.push("  bool visible        = (float(flags.x) > 0.0);");
     src.push("  bool xrayed         = (float(flags.y) > 0.0);");
     src.push("  bool transparent    = ((float(color.a) / 255.0) < 1.0);");
-    src.push("  bool culled         = (float(flags2.w) > 0.0);");
-    src.push(`  if (culled || !visible || transparent || xrayed) {`);
+    src.push(`  if (!visible || transparent || xrayed) {`);
     src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);");
     src.push("  } else {");
     src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("      vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("      vWorldPosition = worldPosition;");
@@ -30686,8 +27662,6 @@ function buildFragment$7(scene) {
     return src;
 }
 
-const tempVec3a$b = math.vec3();
-
 /**
  * @private
  */
@@ -30708,112 +27682,49 @@ class BatchingDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, batchingLayer) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
             this._allocate();
-            if (this.errors) {
-                return;
-            }
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
-            this._bindProgram();
-            loadSectionPlanes = true;
+            this._bindProgram(frameCtx);
         }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$b);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
+        if (this._aColor) { // Needed for masking out transparent entities using alpha channel
+            this._aColor.bindArrayBuffer(state.colorsBuf);
         }
-
-        this._aColor.bindArrayBuffer(state.colorsBuf); // Needed for masking out transparent entities using alpha channel
-
-        this._aFlags.bindArrayBuffer(state.flagsBuf);
-
+        if (this._aFlags) {
+            this._aFlags.bindArrayBuffer(state.flagsBuf);
+        }
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
-
         state.indicesBuf.bind();
-
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
     _allocate() {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
-
         this._program = new Program(gl, this._shaderSource);
-
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
-
         const program = this._program;
-
         this._uRenderPass = program.getLocation("renderPass");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
-
         const sectionPlanes = sectionPlanesState.sectionPlanes;
         for (let i = 0, len = sectionPlanes.length; i < len; i++) {
             this._uSectionPlanes.push({
@@ -30822,9 +27733,7 @@ class BatchingDepthRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
-
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
@@ -30833,8 +27742,35 @@ class BatchingDepthRenderer {
     _bindProgram() {
         const scene = this._scene;
         const gl = scene.canvas.gl;
-        this._program.bind();
-        gl.uniformMatrix4fv(this._uProjMatrix, false, scene.camera.projMatrix);
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        program.bind();
+        const camera = scene.camera;
+        gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -30864,13 +27800,13 @@ function buildVertex$8(scene) {
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Batched geometry normals vertex shader");
-
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("uniform mat4 viewNormalMatrix;");
@@ -30891,12 +27827,10 @@ function buildVertex$8(scene) {
     src.push("  bool visible        = (float(flags.x) > 0.0);");
     src.push("  bool xrayed         = (float(flags.y) > 0.0);");
     src.push("  bool transparent    = ((float(color.a) / 255.0) < 1.0);");
-    src.push("  bool culled         = (float(flags2.w) > 0.0);");
-    src.push(`  if (culled || !visible || transparent || xrayed) {`);
+    src.push(`  if (!visible || transparent || xrayed) {`);
     src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);");
     src.push("  } else {");
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
+    src.push("      vec4 worldPosition  = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("      vec4 viewPosition   = viewMatrix * worldPosition; ");
     src.push("      vec4 worldNormal    = vec4(octDecode(normal.xy), 0.0); ");
     src.push("      vec3 viewNormal     = normalize((viewNormalMatrix * worldNormal).xyz);");
@@ -30956,9 +27890,6 @@ function buildFragment$8(scene) {
     return src;
 }
 
-const tempVec3a$c = math.vec3();
-const tempMat4a = math.mat4();
-
 /**
  * @private
  */
@@ -30979,76 +27910,22 @@ class BatchingNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, batchingLayer) {
-
-        const model = batchingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        const rtcCenter = batchingLayer._state.rtcCenter;
-
+        const state = layer._state;
         if (!this._program) {
-            this._allocate(batchingLayer);
-            if (this.errors) {
-                return;
-            }
+            this._allocate(layer);
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
-            this._bindProgram(batchingLayer);
-            loadSectionPlanes = true;
+            this._bindProgram();
         }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$c);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-        this._aOffset.bindArrayBuffer(state.offsetsBuf);
         this._aNormal.bindArrayBuffer(state.normalsBuf);
         this._aColor.bindArrayBuffer(state.colorsBuf);// Needed for masking out transparent entities using alpha channel
         this._aFlags.bindArrayBuffer(state.flagsBuf);
@@ -31056,7 +27933,6 @@ class BatchingNormalsRenderer {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
         }
         state.indicesBuf.bind();
-
         gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
     }
 
@@ -31085,7 +27961,6 @@ class BatchingNormalsRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
@@ -31099,234 +27974,34 @@ class BatchingNormalsRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-    }
-
-    webglContextRestored() {
-        this._program = null;
-    }
-
-    destroy() {
-        if (this._program) {
-            this._program.destroy();
-        }
-        this._program = null;
-    }
-}
-
-/**
- * @private
- * @constructor
- */
-const BatchingShadowShaderSource = function (scene, withSAO) {
-    this.vertex = buildVertex$9(scene);
-    this.fragment = buildFragment$9(scene);
-};
-
-function buildVertex$9(scene) {
-    const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
-    const src = [];
-    src.push("// Batched geometry shadow vertex shader");
-    src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
-    src.push("attribute vec4 color;");
-    src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
-    src.push("uniform mat4 shadowViewMatrix;");
-    src.push("uniform mat4 shadowProjMatrix;");
-    src.push("uniform mat4 positionsDecodeMatrix;");
-    if (clipping) {
-        src.push("varying vec4 vWorldPosition;");
-        src.push("varying vec4 vFlags2;");
-    }
-    src.push("varying vec4 vViewPosition;");
-    src.push("void main(void) {");
-    src.push("  bool visible        = (float(flags.x) > 0.0);");
-    src.push("  bool transparent    = ((float(color.a) / 255.0) < 1.0);");
-    src.push("  if (!visible || transparent) {");
-    src.push("      gl_Position = vec4(0.0, 0.0, 0.0, 0.0);");
-    src.push("  } else {");
-    src.push("      vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("      worldPosition.xyz = worldPosition.xyz + offset;");
-    src.push("      vec4 viewPosition  = shadowViewMatrix * worldPosition; ");
-    if (clipping) {
-        src.push("      vWorldPosition = worldPosition;");
-        src.push("      vFlags2 = flags2;");
-    }
-    src.push("      vViewPosition = viewPosition;");
-    src.push("      gl_Position = shadowProjMatrix * viewPosition;");
-    src.push("  }");
-    src.push("}");
-    return src;
-}
-
-function buildFragment$9(scene) {
-    const sectionPlanesState = scene._sectionPlanesState;
-    const clipping = (sectionPlanesState.sectionPlanes.length > 0);
-    const src = [];
-    src.push("// Batched geometry shadow fragment shader");
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-    if (clipping) {
-        src.push("varying vec4 vWorldPosition;");
-        src.push("varying vec4 vFlags2;");
-        for (let i = 0; i < sectionPlanesState.sectionPlanes.length; i++) {
-            src.push("uniform bool sectionPlaneActive" + i + ";");
-            src.push("uniform vec3 sectionPlanePos" + i + ";");
-            src.push("uniform vec3 sectionPlaneDir" + i + ";");
-        }
-    }
-    src.push("varying vec4 vViewPosition;");
-
-    src.push("vec4 encodeFloat( const in float v ) {");
-    src.push("  const vec4 bitShift = vec4(256 * 256 * 256, 256 * 256, 256, 1.0);");
-    src.push("  const vec4 bitMask = vec4(0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);");
-    src.push("  vec4 comp = fract(v * bitShift);");
-    src.push("  comp -= comp.xxyz * bitMask;");
-    src.push("  return comp;");
-    src.push("}");
-
-    src.push("void main(void) {");
-    if (clipping) {
-        src.push("  bool clippable = (float(vFlags2.x) > 0.0);");
-        src.push("  if (clippable) {");
-        src.push("      float dist = 0.0;");
-        for (var i = 0; i < sectionPlanesState.sectionPlanes.length; i++) {
-            src.push("      if (sectionPlaneActive" + i + ") {");
-            src.push("          dist += clamp(dot(-sectionPlaneDir" + i + ".xyz, vWorldPosition.xyz - sectionPlanePos" + i + ".xyz), 0.0, 1000.0);");
-            src.push("      }");
-        }
-        src.push("      if (dist > 0.0) { discard; }");
-        src.push("  }");
-    }
-    src.push("    gl_FragColor = encodeFloat( gl_FragCoord.z); ");
-    src.push("}");
-    return src;
-}
-
-const tempVec3a$d = math.vec3();
-
-/**
- * Renders BatchingLayer fragment depths to a shadow map.
- *
- * @private
- */
-class BatchingShadowRenderer {
-
-    constructor(scene) {
-        this._scene = scene;
-        this._hash = this._getHash();
-        this._shaderSource = new BatchingShadowShaderSource(this._scene);
-        this._allocate();
-    }
-
-    getValid() {
-        return this._hash === this._getHash();
-    };
-
-    _getHash() {
-        return this._scene._sectionPlanesState.getHash();
-    }
-
-    drawLayer( frameCtx, batchingLayer) {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const state = batchingLayer._state;
-        if (!this._program) {
-            this._allocate();
-        }
-        if (frameCtx.lastProgramId !== this._program.id) {
-            frameCtx.lastProgramId = this._program.id;
-            this._bindProgram(frameCtx);
-        }
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, batchingLayer._state.positionsDecodeMatrix);
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-        if (this._aColor) { // Needed for masking out transparent entities using alpha channel
-            this._aColor.bindArrayBuffer(state.colorsBuf);
-        }
-        if (this._aFlags) {
-            this._aFlags.bindArrayBuffer(state.flagsBuf);
-        }
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-        }
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-        }
-        state.indicesBuf.bind();
-
-        // TODO: Section planes need to be set if RTC center has changed since last RTC center recorded on frameCtx
-
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
+        if (sectionPlanesState.sectionPlanes.length > 0) {
             const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const baseIndex = batchingLayer.layerIndex * numSectionPlanes;
-            const renderFlags = model.renderFlags;
-            const rtcCenter = batchingLayer._state.rtcCenter;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    if (rtcCenter) {
-                        const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$d);
-                        gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                    } else {
-                        gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                    }
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = sectionPlanes[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
                     gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
                 }
             }
         }
-
-        gl.drawElements(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
-    }
-
-    _allocate() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const sectionPlanesState = scene._sectionPlanesState;
-        this._program = new Program(gl, this._shaderSource);
-        if (this._program.errors) {
-            this.errors = this._program.errors;
-            return;
-        }
-        const program = this._program;
-        this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
-        this._uShadowViewMatrix = program.getLocation("shadowViewMatrix");
-        this._uShadowProjMatrix = program.getLocation("shadowProjMatrix");
-        this._uSectionPlanes = [];
-        const sectionPlanes = sectionPlanesState.sectionPlanes;
-        for (let i = 0, len = sectionPlanes.length; i < len; i++) {
-            this._uSectionPlanes.push({
-                active: program.getLocation("sectionPlaneActive" + i),
-                pos: program.getLocation("sectionPlanePos" + i),
-                dir: program.getLocation("sectionPlaneDir" + i)
-            });
-        }
-        this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
-        this._aColor = program.getAttribute("color");
-        this._aFlags = program.getAttribute("flags");
-        this._aFlags2 = program.getAttribute("flags2");
-    }
-
-    _bindProgram(frameCtx) {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        program.bind();
-        gl.uniformMatrix4fv(this._uShadowViewMatrix, false, frameCtx.shadowViewMatrix);
-        gl.uniformMatrix4fv(this._uShadowProjMatrix, false, frameCtx.shadowProjMatrix);
-        this._lastLightId = null;
     }
 
     webglContextRestored() {
@@ -31391,10 +28066,6 @@ class BatchingRenderers {
             this.occlusionRenderer.destroy();
             this.occlusionRenderer = null;
         }
-        if (this.shadowRenderer && (!this.shadowRenderer.getValid())) {
-            this.shadowRenderer.destroy();
-            this.shadowRenderer = null;
-        }
         this._createRenderers();
     }
 
@@ -31430,45 +28101,19 @@ class BatchingRenderers {
         if (!this.normalsRenderer) {
             this.normalsRenderer = new BatchingNormalsRenderer(this._scene);
         }
-        if (!this.shadowRenderer) {
-            this.shadowRenderer = new BatchingShadowRenderer(this._scene);
-        }
     }
 
     _destroy() {
-        if (this.drawRenderer) {
-            this.drawRenderer.destroy();
-        }
-        if (this.drawRendererWithSAO) {
-            this.drawRendererWithSAO.destroy();
-        }
-        if (this.depthRenderer) {
-            this.depthRenderer.destroy();
-        }
-        if (this.normalsRenderer) {
-            this.normalsRenderer.destroy();
-        }
-        if (this.fillRenderer) {
-            this.fillRenderer.destroy();
-        }
-        if (this.edgesRenderer) {
-            this.edgesRenderer.destroy();
-        }
-        if (this.pickMeshRenderer) {
-            this.pickMeshRenderer.destroy();
-        }
-        if (this.pickDepthRenderer) {
-            this.pickDepthRenderer.destroy();
-        }
-        if (this.pickNormalsRenderer) {
-            this.pickNormalsRenderer.destroy();
-        }
-        if (this.occlusionRenderer) {
-            this.occlusionRenderer.destroy();
-        }
-        if (this.shadowRenderer) {
-            this.shadowRenderer.destroy();
-        }
+        this.drawRenderer.destroy();
+        this.drawRendererWithSAO.destroy();
+        this.depthRenderer.destroy();
+        this.normalsRenderer.destroy();
+        this.fillRenderer.destroy();
+        this.edgesRenderer.destroy();
+        this.pickMeshRenderer.destroy();
+        this.pickDepthRenderer.destroy();
+        this.pickNormalsRenderer.destroy();
+        this.occlusionRenderer.destroy();
     }
 }
 
@@ -31492,34 +28137,11 @@ function getBatchingRenderers(scene) {
     return batchingRenderers;
 }
 
-const bigIndicesSupported$1 = WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"];
-const MAX_VERTS = bigIndicesSupported$1 ? 5000000 : 65530;
-const MAX_INDICES = MAX_VERTS * 3; // Rough rule-of-thumb
-
-/**
- * @private
- */
-class BatchingBuffer {
-    constructor() {
-        this.maxVerts = MAX_VERTS;
-        this.maxIndices = MAX_INDICES;
-        this.positions = [];
-        this.colors = [];
-        this.normals = [];
-        this.pickColors = [];
-        this.flags = [];
-        this.flags2 = [];
-        this.offsets = [];
-        this.indices = [];
-        this.edgeIndices = [];
-    }
-}
-
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
-const tempVec4a$1 = math.vec4([0, 0, 0, 1]);
-const tempVec4b$1 = math.vec4([0, 0, 0, 1]);
-const tempVec4c$1 = math.vec4([0, 0, 0, 1]);
+const tempVec3a = math.vec4([0, 0, 0, 1]);
+const tempVec3b$1 = math.vec4([0, 0, 0, 1]);
+const tempVec3c$1 = math.vec4([0, 0, 0, 1]);
 const tempOBB3 = math.OBB3();
 
 /**
@@ -31530,24 +28152,14 @@ class BatchingLayer {
     /**
      * @param model
      * @param cfg
-     * @param cfg.layerIndex
-     * @param cfg.positionsDecodeMatrix
-     * @param cfg.rtcCenter
      * @param cfg.buffer
      * @param cfg.scratchMemory
      * @param cfg.primitive
      */
     constructor(model, cfg) {
-
-        /**
-         * Index of this BatchingLayer in {@link PerformanceModel#_layerList}.
-         * @type {Number}
-         */
-        this.layerIndex = cfg.layerIndex;
-
         this._batchingRenderers = getBatchingRenderers(model.scene);
         this.model = model;
-        this._buffer = new BatchingBuffer();
+        this._buffer = cfg.buffer;
         this._scratchMemory = cfg.scratchMemory;
         var primitiveName = cfg.primitive || "triangles";
         var primitive;
@@ -31584,15 +28196,13 @@ class BatchingLayer {
             primitiveName: primitiveName,
             primitive: primitive,
             positionsBuf: null,
-            offsetsBuf: null,
             normalsBuf: null,
-            colorsBuf: null,
+            colorsbuf: null,
             flagsBuf: null,
             flags2Buf: null,
             indicesBuf: null,
             edgeIndicesBuf: null,
-            positionsDecodeMatrix: math.mat4(),
-            rtcCenter: null
+            positionsDecodeMatrix: math.mat4()
         });
 
         // These counts are used to avoid unnecessary render passes
@@ -31602,10 +28212,10 @@ class BatchingLayer {
         this._numXRayedLayerPortions = 0;
         this._numSelectedLayerPortions = 0;
         this._numHighlightedLayerPortions = 0;
-        this._numClippableLayerPortions = 0;
         this._numEdgesLayerPortions = 0;
         this._numPickableLayerPortions = 0;
-        this._numCulledLayerPortions = 0;
+
+        //this.pickObjectBaseIndex = cfg.pickObjectBaseIndex;
 
         this._modelAABB = math.collapseAABB3(); // Model-space AABB
         this._portions = [];
@@ -31613,34 +28223,24 @@ class BatchingLayer {
         this._finalized = false;
         this._positionsDecodeMatrix = cfg.positionsDecodeMatrix;
         this._preCompressed = (!!this._positionsDecodeMatrix);
-
-        if (cfg.rtcCenter) {
-            this._state.rtcCenter = math.vec3(cfg.rtcCenter);
-        }
-
-        /**
-         * The axis-aligned World-space boundary of this BatchingLayer's positions.
-         * @type {*|Float64Array}
-         */
-        this.aabb = math.collapseAABB3();
     }
 
     /**
      * Tests if there is room for another portion in this BatchingLayer.
      *
      * @param lenPositions Number of positions we'd like to create in the portion.
-     * @param lenIndices Number of indices we'd like to create in this portion.
-     * @returns {boolean} True if OK to create another portion.
+     * @returns {boolean} True if OK to creatye another portion.
      */
-    canCreatePortion(lenPositions, lenIndices) {
+    canCreatePortion(lenPositions) {
         if (this._finalized) {
             throw "Already finalized";
         }
-        return ((this._buffer.positions.length + lenPositions) < (this._buffer.maxVerts * 3) && (this._buffer.indices.length + lenIndices) < (this._buffer.maxIndices));
+        return (!this._finalized && this._buffer.lenPositions + lenPositions) < (this._buffer.maxVerts * 3);
     }
 
     /**
-     * Creates a new portion within this BatchingLayer, returns the new portion ID.
+     *
+     * Creates a new portion within this InstancingLayer, returns the new portion ID.
      *
      * Gives the portion the specified geometry, flags, color and matrix.
      *
@@ -31664,16 +28264,15 @@ class BatchingLayer {
         }
 
         const buffer = this._buffer;
-        const positionsIndex = buffer.positions.length;
+        const positionsIndex = buffer.lenPositions;
         const vertsIndex = positionsIndex / 3;
         const numVerts = positions.length / 3;
         const lenPositions = positions.length;
 
         if (this._preCompressed) {
 
-            for (let i = 0, len = positions.length; i < len; i++) {
-                buffer.positions.push(positions[i]);
-            }
+            buffer.positions.set(positions, buffer.lenPositions);
+            buffer.lenPositions += lenPositions;
 
             const bounds = geometryCompressionUtils.getPositionsBounds(positions);
 
@@ -31695,79 +28294,64 @@ class BatchingLayer {
 
         } else {
 
-            const positionsBase = buffer.positions.length;
-
-            for (let i = 0, len = positions.length; i < len; i++) {
-                buffer.positions.push(positions[i]);
-            }
+            buffer.positions.set(positions, buffer.lenPositions);
 
             if (meshMatrix) {
 
-                for (let i = positionsBase, len = positionsBase + lenPositions; i < len; i += 3) {
+                for (let i = buffer.lenPositions, len = buffer.lenPositions + lenPositions; i < len; i += 3) {
 
-                    tempVec4a$1[0] = buffer.positions[i + 0];
-                    tempVec4a$1[1] = buffer.positions[i + 1];
-                    tempVec4a$1[2] = buffer.positions[i + 2];
+                    tempVec3a[0] = buffer.positions[i + 0];
+                    tempVec3a[1] = buffer.positions[i + 1];
+                    tempVec3a[2] = buffer.positions[i + 2];
 
-                    math.transformPoint4(meshMatrix, tempVec4a$1, tempVec4b$1);
+                    math.transformPoint4(meshMatrix, tempVec3a, tempVec3b$1);
 
-                    buffer.positions[i + 0] = tempVec4b$1[0];
-                    buffer.positions[i + 1] = tempVec4b$1[1];
-                    buffer.positions[i + 2] = tempVec4b$1[2];
+                    buffer.positions[i + 0] = tempVec3b$1[0];
+                    buffer.positions[i + 1] = tempVec3b$1[1];
+                    buffer.positions[i + 2] = tempVec3b$1[2];
 
-                    math.expandAABB3Point3(this._modelAABB, tempVec4b$1);
+                    math.expandAABB3Point3(this._modelAABB, tempVec3b$1);
 
                     if (worldMatrix) {
-                        math.transformPoint4(worldMatrix, tempVec4b$1, tempVec4c$1);
-                        math.expandAABB3Point3(worldAABB, tempVec4c$1);
+                        math.transformPoint4(worldMatrix, tempVec3b$1, tempVec3c$1);
+                        math.expandAABB3Point3(worldAABB, tempVec3c$1);
                     } else {
-                        math.expandAABB3Point3(worldAABB, tempVec4b$1);
+                        math.expandAABB3Point3(worldAABB, tempVec3b$1);
                     }
                 }
 
             } else {
 
-                for (let i = positionsBase, len = positionsBase + lenPositions; i < len; i += 3) {
+                for (let i = buffer.lenPositions, len = buffer.lenPositions + lenPositions; i < len; i += 3) {
 
-                    tempVec4a$1[0] = buffer.positions[i + 0];
-                    tempVec4a$1[1] = buffer.positions[i + 1];
-                    tempVec4a$1[2] = buffer.positions[i + 2];
+                    tempVec3a[0] = buffer.positions[i + 0];
+                    tempVec3a[1] = buffer.positions[i + 1];
+                    tempVec3a[2] = buffer.positions[i + 2];
 
-                    math.expandAABB3Point3(this._modelAABB, tempVec4a$1);
+                    math.expandAABB3Point3(this._modelAABB, tempVec3a);
 
                     if (worldMatrix) {
-                        math.transformPoint4(worldMatrix, tempVec4a$1, tempVec4b$1);
-                        math.expandAABB3Point3(worldAABB, tempVec4b$1);
+                        math.transformPoint4(worldMatrix, tempVec3a, tempVec3b$1);
+                        math.expandAABB3Point3(worldAABB, tempVec3b$1);
                     } else {
-                        math.expandAABB3Point3(worldAABB, tempVec4a$1);
+                        math.expandAABB3Point3(worldAABB, tempVec3a);
                     }
                 }
             }
-        }
 
-        if (this._state.rtcCenter) {
-            const rtcCenter = this._state.rtcCenter;
-            worldAABB[0] += rtcCenter[0];
-            worldAABB[1] += rtcCenter[1];
-            worldAABB[2] += rtcCenter[2];
-            worldAABB[3] += rtcCenter[0];
-            worldAABB[4] += rtcCenter[1];
-            worldAABB[5] += rtcCenter[2];
+            buffer.lenPositions += lenPositions;
         }
-
-        math.expandAABB3(this.aabb, worldAABB);
 
         if (normals) {
 
             if (this._preCompressed) {
 
-                for (let i = 0, len = normals.length; i < len; i++) {
-                    buffer.normals.push(normals[i]);
-                }
+                buffer.normals.set(normals, buffer.lenNormals);
+                buffer.lenNormals += normals.length;
 
             } else {
 
-                const modelNormalMatrix = tempMat4;
+                var modelNormalMatrix = tempMat4;
 
                 if (meshMatrix) {
                     math.inverseMat4(math.transposeMat4(meshMatrix, tempMat4b), modelNormalMatrix); // Note: order of inverse and transpose doesn't matter
@@ -31776,12 +28360,13 @@ class BatchingLayer {
                     math.identityMat4(modelNormalMatrix, modelNormalMatrix);
                 }
 
-                transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, buffer.normals, buffer.normals.length);
+                buffer.lenNormals = transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, buffer.normals, buffer.lenNormals);
             }
         }
 
         if (flags !== undefined) {
 
+            const lenFlags = (numVerts * 4);
             const visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
             const xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
             const highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
@@ -31789,18 +28374,17 @@ class BatchingLayer {
             const clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
             const edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
             const pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
-            const culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
 
-            for (let i = 0; i < numVerts; i++) {
-                buffer.flags.push(visible);
-                buffer.flags.push(xrayed);
-                buffer.flags.push(highlighted);
-                buffer.flags.push(selected);
-                buffer.flags2.push(clippable);
-                buffer.flags2.push(edges);
-                buffer.flags2.push(pickable);
-                buffer.flags2.push(culled);
+            for (var i = buffer.lenFlags, len = buffer.lenFlags + lenFlags; i < len; i += 4) {
+                buffer.flags[i + 0] = visible;
+                buffer.flags[i + 1] = xrayed;
+                buffer.flags[i + 2] = highlighted;
+                buffer.flags[i + 3] = selected;
+                buffer.flags2[i + 0] = clippable;
+                buffer.flags2[i + 1] = edges;
+                buffer.flags2[i + 2] = pickable;
             }
+            buffer.lenFlags += lenFlags;
             if (visible) {
                 this._numVisibleLayerPortions++;
                 this.model.numVisibleLayerPortions++;
@@ -31817,10 +28401,6 @@ class BatchingLayer {
                 this._numSelectedLayerPortions++;
                 this.model.numSelectedLayerPortions++;
             }
-            if (clippable) {
-                this._numClippableLayerPortions++;
-                this.model.numClippableLayerPortions++;
-            }
             if (edges) {
                 this._numEdgesLayerPortions++;
                 this.model.numEdgesLayerPortions++;
@@ -31829,13 +28409,9 @@ class BatchingLayer {
                 this._numPickableLayerPortions++;
                 this.model.numPickableLayerPortions++;
             }
-            if (culled) {
-                this._numCulledLayerPortions++;
-                this.model.numCulledLayerPortions++;
-            }
         }
-
         if (color) {
+            const lenColors = (numVerts * 4);
 
             const r = color[0]; // Color is pre-quantized by PerformanceModel
             const g = color[1];
@@ -31843,46 +28419,42 @@ class BatchingLayer {
 
             const a = opacity;
 
-            for (let i = 0; i < numVerts; i++) {
-                buffer.colors.push(r);
-                buffer.colors.push(g);
-                buffer.colors.push(b);
-                buffer.colors.push(opacity);
+            for (var i = buffer.lenColors, len = buffer.lenColors + lenColors; i < len; i += 4) {
+                buffer.colors[i + 0] = r;
+                buffer.colors[i + 1] = g;
+                buffer.colors[i + 2] = b;
+                buffer.colors[i + 3] = opacity;
             }
+            buffer.lenColors += lenColors;
             if (a < 255) {
                 this._numTransparentLayerPortions++;
                 this.model.numTransparentLayerPortions++;
             }
         }
         if (indices) {
-            for (let i = 0, len = indices.length; i < len; i++) {
-                buffer.indices.push(indices[i] + vertsIndex);
+            for (var i = 0, len = indices.length; i < len; i++) {
+                buffer.indices[buffer.lenIndices + i] = indices[i] + vertsIndex;
             }
+            buffer.lenIndices += indices.length;
         }
         if (edgeIndices) {
-            for (let i = 0, len = edgeIndices.length; i < len; i++) {
-                buffer.edgeIndices.push(edgeIndices[i] + vertsIndex);
+            for (var i = 0, len = edgeIndices.length; i < len; i++) {
+                buffer.edgeIndices[buffer.lenEdgeIndices + i] = edgeIndices[i] + vertsIndex;
             }
+            buffer.lenEdgeIndices += edgeIndices.length;
         }
         {
-            const pickColorsBase = buffer.pickColors.length;
             const lenPickColors = numVerts * 4;
-            for (let i = pickColorsBase, len = pickColorsBase + lenPickColors; i < len; i += 4) {
-                buffer.pickColors.push(pickColor[0]);
-                buffer.pickColors.push(pickColor[1]);
-                buffer.pickColors.push(pickColor[2]);
-                buffer.pickColors.push(pickColor[3]);
+            for (var i = buffer.lenPickColors, len = buffer.lenPickColors + lenPickColors; i < len; i += 4) {
+                buffer.pickColors[i + 0] = pickColor[0];
+                buffer.pickColors[i + 1] = pickColor[1];
+                buffer.pickColors[i + 2] = pickColor[2];
+                buffer.pickColors[i + 3] = pickColor[3];
             }
+            buffer.lenPickColors += lenPickColors;
         }
 
-        for (let i = 0; i < numVerts; i++) {
-            buffer.offsets.push(0);
-            buffer.offsets.push(0);
-            buffer.offsets.push(0);
-        }
-
-        const portionId = this._portions.length / 2;
-
+        var portionId = this._portions.length / 2;
         this._portions.push(vertsIndex);
         this._portions.push(numVerts);
 
@@ -31898,7 +28470,7 @@ class BatchingLayer {
      */
     finalize() {
         if (this._finalized) {
-            this.model.error("Already finalized");
+            this.error("Already finalized");
             return;
         }
 
@@ -31906,67 +28478,55 @@ class BatchingLayer {
         const gl = this.model.scene.canvas.gl;
         const buffer = this._buffer;
 
-        if (buffer.positions.length > 0) {
-            if (this._preCompressed) {
-                state.positionsDecodeMatrix = this._positionsDecodeMatrix;
-                const positions = new Uint16Array(buffer.positions);
-                state.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, positions, buffer.positions.length, 3, gl.STATIC_DRAW);
-            } else {
-                const positions = new Float32Array(buffer.positions);
-                const quantizedPositions = new Uint16Array(positions.length);
-                quantizePositions(positions, buffer.positions.length, this._modelAABB, quantizedPositions, state.positionsDecodeMatrix); // BOTTLENECK
-                state.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, quantizedPositions, buffer.positions.length, 3, gl.STATIC_DRAW);
+        if (this._preCompressed) {
+            state.positionsDecodeMatrix = this._positionsDecodeMatrix;
+            state.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.positions.slice(0, buffer.lenPositions), buffer.lenPositions, 3, gl.STATIC_DRAW);
+        } else {
+            quantizePositions(buffer.positions, buffer.lenPositions, this._modelAABB, buffer.quantizedPositions, state.positionsDecodeMatrix); // BOTTLENECK
+
+            if (buffer.lenPositions > 0) {
+                state.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.quantizedPositions.slice(0, buffer.lenPositions), buffer.lenPositions, 3, gl.STATIC_DRAW);
             }
         }
 
-        if (buffer.normals.length > 0) {
-            const normals = new Int8Array(buffer.normals);
+        if (buffer.lenNormals > 0) {
             let normalized = true; // For oct encoded UInts
             //let normalized = false; // For scaled
-            state.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, normals, buffer.normals.length, 3, gl.STATIC_DRAW, normalized);
+            state.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.normals.slice(0, buffer.lenNormals), buffer.lenNormals, 3, gl.STATIC_DRAW, normalized);
         }
-
-        if (buffer.colors.length > 0) {
-            const colors = new Uint8Array(buffer.colors);
+        if (buffer.lenColors > 0) {
             let normalized = false;
-            state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, colors, buffer.colors.length, 4, gl.DYNAMIC_DRAW, normalized);
+            state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.colors.slice(0, buffer.Colors), buffer.lenColors, 4, gl.DYNAMIC_DRAW, normalized);
         }
-
-        if (buffer.flags.length > 0) {
-            const flags = new Uint8Array(buffer.flags);
-            const flags2 = new Uint8Array(buffer.flags2);
+        if (buffer.lenFlags > 0) {
             let normalized = true;
-            state.flagsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, flags, buffer.flags.length, 4, gl.DYNAMIC_DRAW, normalized);
-            state.flags2Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, flags2, buffer.flags.length, 4, gl.DYNAMIC_DRAW, normalized);
+            state.flagsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.flags.slice(0, buffer.lenFlags), buffer.lenFlags, 4, gl.DYNAMIC_DRAW, normalized);
+            state.flags2Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.flags2.slice(0, buffer.lenFlags), buffer.lenFlags, 4, gl.DYNAMIC_DRAW, normalized);
         }
-
-        if (buffer.pickColors.length > 0) {
-            const pickColors = new Uint8Array(buffer.pickColors);
+        if (buffer.lenPickColors > 0) {
             let normalized = false;
-            state.pickColorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, pickColors, buffer.pickColors.length, 4, gl.STATIC_DRAW, normalized);
+            state.pickColorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, buffer.pickColors.slice(0, buffer.lenPickColors), buffer.lenPickColors, 4, gl.STATIC_DRAW, normalized);
+        }
+        if (buffer.lenIndices > 0) {
+            state.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, buffer.indices.slice(0, buffer.lenIndices), buffer.lenIndices, 1, gl.STATIC_DRAW);
+        }
+        if (buffer.lenEdgeIndices > 0) {
+            state.edgeIndicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, buffer.edgeIndices.slice(0, buffer.lenEdgeIndices), buffer.lenEdgeIndices, 1, gl.STATIC_DRAW);
         }
 
-        if (buffer.offsets.length > 0) {
-            const offsets = new Float32Array(buffer.offsets);
-            state.offsetsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, offsets, buffer.offsets.length, 3, gl.DYNAMIC_DRAW);
-        }
-
-        const bigIndicesSupported = WEBGL_INFO.SUPPORTED_EXTENSIONS["OES_element_index_uint"];
-
-        if (buffer.indices.length > 0) {
-            const indices = bigIndicesSupported ? new Uint32Array(buffer.indices) : new Uint16Array(buffer.indices);
-            state.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, indices, buffer.indices.length, 1, gl.STATIC_DRAW);
-        }
-        if (buffer.edgeIndices.length > 0) {
-            const edgeIndices = bigIndicesSupported ? new Uint32Array(buffer.edgeIndices) : new Uint16Array(buffer.edgeIndices);
-            state.edgeIndicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, edgeIndices, buffer.edgeIndices.length, 1, gl.STATIC_DRAW);
-        }
+        buffer.lenPositions = 0;
+        buffer.lenColors = 0;
+        buffer.lenNormals = 0;
+        buffer.lenFlags = 0;
+        buffer.lenPickColors = 0;
+        buffer.lenIndices = 0;
+        buffer.lenEdgeIndices = 0;
 
         this._buffer = null;
         this._finalized = true;
     }
 
-    // The following setters are called by PerformanceMesh, in turn called by PerformanceNode, only after the layer is finalized.
+    // The following setters are called by PerformanceModelMesh, in turn called by PerformanceModelNode, only after the layer is finalized.
     // It's important that these are called after finalize() in order to maintain integrity of counts like _numVisibleLayerPortions etc.
 
     initFlags(portionId, flags) {
@@ -31986,10 +28546,6 @@ class BatchingLayer {
             this._numSelectedLayerPortions++;
             this.model.numSelectedLayerPortions++;
         }
-        if (flags & RENDER_FLAGS.CLIPPABLE) {
-            this._numClippableLayerPortions++;
-            this.model.numClippableLayerPortions++;
-        }
         if (flags & RENDER_FLAGS.EDGES) {
             this._numEdgesLayerPortions++;
             this.model.numEdgesLayerPortions++;
@@ -31997,10 +28553,6 @@ class BatchingLayer {
         if (flags & RENDER_FLAGS.PICKABLE) {
             this._numPickableLayerPortions++;
             this.model.numPickableLayerPortions++;
-        }
-        if (flags & RENDER_FLAGS.CULLED) {
-            this._numCulledLayerPortions++;
-            this.model.numCulledLayerPortions++;
         }
         this._setFlags(portionId, flags);
         this._setFlags2(portionId, flags);
@@ -32080,27 +28632,6 @@ class BatchingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        if (flags & RENDER_FLAGS.CLIPPABLE) {
-            this._numClippableLayerPortions++;
-            this.model.numClippableLayerPortions++;
-        } else {
-            this._numClippableLayerPortions--;
-            this.model.numClippableLayerPortions--;
-        }
-        this._setFlags2(portionId, flags);
-    }
-
-    setCulled(portionId, flags) {
-        if (!this._finalized) {
-            throw "Not finalized";
-        }
-        if (flags & RENDER_FLAGS.CULLED) {
-            this._numCulledLayerPortions++;
-            this.model.numCulledLayerPortions++;
-        } else {
-            this._numCulledLayerPortions--;
-            this.model.numCulledLayerPortions--;
-        }
         this._setFlags2(portionId, flags);
     }
 
@@ -32128,12 +28659,12 @@ class BatchingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        const portionsIdx = portionId * 2;
-        const vertexBase = this._portions[portionsIdx];
-        const numVerts = this._portions[portionsIdx + 1];
-        const firstColor = vertexBase * 4;
-        const lenColor = numVerts * 4;
-        const tempArray = this._scratchMemory.getUInt8Array(lenColor);
+        var portionsIdx = portionId * 2;
+        var vertexBase = this._portions[portionsIdx];
+        var numVerts = this._portions[portionsIdx + 1];
+        var firstColor = vertexBase * 4;
+        var lenColor = numVerts * 4;
+        const tempArray = this._scratchMemory.getUInt8Array(numVerts);
         const r = color[0];
         const g = color[1];
         const b = color[2];
@@ -32192,42 +28723,19 @@ class BatchingLayer {
         var clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
         var edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
         var pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
-        var culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
         const tempArray = this._scratchMemory.getUInt8Array(lenFlags);
         for (var i = 0; i < lenFlags; i += 4) {
             tempArray[i + 0] = clippable;
             tempArray[i + 1] = edges;
             tempArray[i + 2] = pickable;
-            tempArray[i + 3] = culled;
         }
         this._state.flags2Buf.setData(tempArray, firstFlag, lenFlags);
-    }
-
-    setOffset(portionId, offset) {
-        if (!this._finalized) {
-            throw "Not finalized";
-        }
-        const portionsIdx = portionId * 2;
-        const vertexBase = this._portions[portionsIdx];
-        const numVerts = this._portions[portionsIdx + 1];
-        const firstOffset = vertexBase * 3;
-        const lenOffsets = numVerts * 3;
-        const tempArray = this._scratchMemory.getFloat32Array(lenOffsets);
-        const x = offset[0];
-        const y = offset[1];
-        const z = offset[2];
-        for (let i = 0; i < lenOffsets; i += 3) {
-            tempArray[i + 0] = x;
-            tempArray[i + 1] = y;
-            tempArray[i + 2] = z;
-        }
-        this._state.offsetsBuf.setData(tempArray, firstOffset, lenOffsets);
     }
 
     //-- NORMAL --------------------------------------------------------------------------------------------------------
 
     drawNormalFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (frameCtx.withSAO) {
@@ -32242,7 +28750,7 @@ class BatchingLayer {
     }
 
     drawNormalEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32251,7 +28759,7 @@ class BatchingLayer {
     }
 
     drawNormalFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === 0 || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === 0 || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (this._batchingRenderers.drawRenderer) {
@@ -32260,7 +28768,7 @@ class BatchingLayer {
     }
 
     drawNormalTransparentEdges(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0 || this._numTransparentLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0 || this._numTransparentLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32268,10 +28776,10 @@ class BatchingLayer {
         }
     }
 
-    //-- Post effects support------------------------------------------------------------------------------------------------
+    //-- SPost effects supprt------------------------------------------------------------------------------------------------
 
     drawDepth(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (this._batchingRenderers.depthRenderer) {
@@ -32280,7 +28788,7 @@ class BatchingLayer {
     }
 
     drawNormals(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (this._batchingRenderers.normalsRenderer) {
@@ -32291,7 +28799,7 @@ class BatchingLayer {
     //-- XRAYED--------------------------------------------------------------------------------------------------------
 
     drawXRayedFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.fillRenderer) {
@@ -32300,7 +28808,7 @@ class BatchingLayer {
     }
 
     drawXRayedEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32309,7 +28817,7 @@ class BatchingLayer {
     }
 
     drawXRayedFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.fillRenderer) {
@@ -32318,7 +28826,7 @@ class BatchingLayer {
     }
 
     drawXRayedEdgesTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32329,7 +28837,7 @@ class BatchingLayer {
     //-- HIGHLIGHTED ---------------------------------------------------------------------------------------------------
 
     drawHighlightedFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.fillRenderer) {
@@ -32338,7 +28846,7 @@ class BatchingLayer {
     }
 
     drawHighlightedEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32347,7 +28855,7 @@ class BatchingLayer {
     }
 
     drawHighlightedFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.fillRenderer) {
@@ -32356,7 +28864,7 @@ class BatchingLayer {
     }
 
     drawHighlightedEdgesTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32367,7 +28875,7 @@ class BatchingLayer {
     //-- SELECTED ------------------------------------------------------------------------------------------------------
 
     drawSelectedFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.fillRenderer) {
@@ -32376,7 +28884,7 @@ class BatchingLayer {
     }
 
     drawSelectedEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32385,7 +28893,7 @@ class BatchingLayer {
     }
 
     drawSelectedFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.fillRenderer) {
@@ -32394,7 +28902,7 @@ class BatchingLayer {
     }
 
     drawSelectedEdgesTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.edgesRenderer) {
@@ -32405,7 +28913,7 @@ class BatchingLayer {
     //---- PICKING ----------------------------------------------------------------------------------------------------
 
     drawPickMesh(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.pickMeshRenderer) {
@@ -32414,7 +28922,7 @@ class BatchingLayer {
     }
 
     drawPickDepths(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.pickDepthRenderer) {
@@ -32423,7 +28931,7 @@ class BatchingLayer {
     }
 
     drawPickNormals(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.pickNormalsRenderer) {
@@ -32434,22 +28942,11 @@ class BatchingLayer {
     //---- OCCLUSION TESTING -------------------------------------------------------------------------------------------
 
     drawOcclusion(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._batchingRenderers.occlusionRenderer) {
             this._batchingRenderers.occlusionRenderer.drawLayer(frameCtx, this);
-        }
-    }
-
-    //---- SHADOWS -----------------------------------------------------------------------------------------------------
-
-    drawShadow(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
-            return;
-        }
-        if (this._batchingRenderers.shadowRenderer) {
-            this._batchingRenderers.shadowRenderer.drawLayer(frameCtx, this);
         }
     }
 
@@ -32458,10 +28955,6 @@ class BatchingLayer {
         if (state.positionsBuf) {
             state.positionsBuf.destroy();
             state.positionsBuf = null;
-        }
-        if (state.offsetsBuf) {
-            state.offsetsBuf.destroy();
-            state.offsetsBuf = null;
         }
         if (state.normalsBuf) {
             state.normalsBuf.destroy();
@@ -32510,7 +29003,8 @@ var quantizePositions = (function () { // http://cg.postech.ac.kr/research/mesh_
         const xMultiplier = maxInt / xwid;
         const yMultiplier = maxInt / ywid;
         const zMultiplier = maxInt / zwid;
-        for (let i = 0; i < lenPositions; i += 3) {
+        let i;
+        for (i = 0; i < lenPositions; i += 3) {
             quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
             quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
             quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
@@ -32613,11 +29107,11 @@ function dot$1(p, vec3) { // Dot product of a normal in an array against a candi
  * @private
  */
 const InstancingDrawShaderSource = function (scene, withSAO) {
-    this.vertex = buildVertex$a(scene);
-    this.fragment = buildFragment$a(scene, withSAO);
+    this.vertex = buildVertex$9(scene);
+    this.fragment = buildFragment$9(scene, withSAO);
 };
 
-function buildVertex$a(scene) {
+function buildVertex$9(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const lightsState = scene._lightsState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -32634,9 +29128,11 @@ function buildVertex$a(scene) {
     src.push("attribute vec2 normal;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
 
-    src.push("attribute vec3 offset;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
+
 
     src.push("attribute vec4 modelMatrixCol0;"); // Modeling matrix
     src.push("attribute vec4 modelMatrixCol1;");
@@ -32691,11 +29187,11 @@ function buildVertex$a(scene) {
     src.push("bool xrayed       = (float(flags.y) > 0.0);");
     src.push("bool highlighted  = (float(flags.z) > 0.0);");
     src.push("bool selected     = (float(flags.w) > 0.0);");
-    src.push("bool culled       = (float(flags2.w) > 0.0);");
-    src.push("bool transparent  = (float(color.a) < 255.0);");
+
+    src.push("bool transparent  = ((float(color.a) / 255.0) < 1.0);");
 
     src.push(`if 
-    (culled || !visible || 
+    (!visible || 
     (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (transparent || xrayed)) || 
     (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} && (!transparent || xrayed || highlighted || selected)) || 
     (renderPass == ${RENDER_PASSES.XRAYED} && (!xrayed || highlighted || selected)) || 
@@ -32706,8 +29202,8 @@ function buildVertex$a(scene) {
     src.push("} else {");
 
     src.push("vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
+
     src.push("worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("worldPosition.xyz = worldPosition.xyz + offset;");
 
     src.push("vec4 viewPosition  = viewMatrix * worldPosition; ");
 
@@ -32749,8 +29245,7 @@ function buildVertex$a(scene) {
         src.push("reflectedColor += lambertian * (lightColor" + i + ".rgb * lightColor" + i + ".a);");
     }
 
-    src.push("vec3 rgb = (vec3(float(color.r) / 255.0, float(color.g) / 255.0, float(color.b) / 255.0));");
-    src.push("vColor =  vec4((lightAmbient.rgb * lightAmbient.a * rgb) + (reflectedColor * rgb), float(color.a) / 255.0);");
+    src.push("vColor = vec4(reflectedColor * ((lightAmbient.rgb * lightAmbient.a) + vec3(float(color.r) / 255.0, float(color.g) / 255.0, float(color.b) / 255.0)), float(color.a) / 255.0);");
 
     if (clipping) {
         src.push("vWorldPosition = worldPosition;");
@@ -32762,7 +29257,7 @@ function buildVertex$a(scene) {
     return src;
 }
 
-function buildFragment$a(scene, withSAO) {
+function buildFragment$9(scene, withSAO) {
     const sectionPlanesState = scene._sectionPlanesState;
     let i;
     let len;
@@ -32835,11 +29330,6 @@ function buildFragment$a(scene, withSAO) {
 }
 
 const tempVec4$2 = math.vec4();
-const tempVec3a$e = math.vec3();
-
-const tempMat4a$1 = math.mat4();
-const tempMat4b$1 = math.mat4();
-
 
 /**
  * @private
@@ -32850,7 +29340,7 @@ class InstancingDrawRenderer {
         this._scene = scene;
         this._withSAO = withSAO;
         this._hash = this._getHash();
-        this._shaderSource = new InstancingDrawShaderSource(this._scene, this._withSAO);
+        this._shaderSource = new InstancingDrawShaderSource(this._scene);
         this._allocate();
     }
 
@@ -32860,17 +29350,15 @@ class InstancingDrawRenderer {
 
     _getHash() {
         const scene = this._scene;
-        return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this._withSAO ? "sao" : "nosao")].join(";");
+        return [scene._lightsState.getHash(), scene._sectionPlanesState.getHash(), (this.withSAO ? "sao" : "nosao")].join(";");
     }
 
-    drawLayer(frameCtx, instancingLayer, renderPass) {
-
-        const model = instancingLayer.model;
+    drawLayer(frameCtx, layer, renderPass) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -32879,60 +29367,17 @@ class InstancingDrawRenderer {
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
-            loadSectionPlanes = true;
-        }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
-        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$e);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
+        gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -32951,6 +29396,7 @@ class InstancingDrawRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelNormalMatrixCol2.location, 1);
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
+
         this._aNormal.bindArrayBuffer(state.normalsBuf);
 
         this._aColor.bindArrayBuffer(state.colorsBuf);
@@ -32963,12 +29409,6 @@ class InstancingDrawRenderer {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
         state.indicesBuf.bind();
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
@@ -32981,13 +29421,8 @@ class InstancingDrawRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelNormalMatrixCol2.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
-
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
@@ -33064,7 +29499,6 @@ class InstancingDrawRenderer {
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
-        this._aOffset = program.getAttribute("offset");
 
         this._aModelMatrixCol0 = program.getAttribute("modelMatrixCol0");
         this._aModelMatrixCol1 = program.getAttribute("modelMatrixCol1");
@@ -33074,6 +29508,7 @@ class InstancingDrawRenderer {
         this._aModelNormalMatrixCol1 = program.getAttribute("modelNormalMatrixCol1");
         this._aModelNormalMatrixCol2 = program.getAttribute("modelNormalMatrixCol2");
 
+        this._uSAOEnabled = program.getLocation("uSAOEnabled");
         this._uOcclusionTexture = "uOcclusionTexture";
         this._uSAOParams = program.getLocation("uSAOParams");
     }
@@ -33083,7 +29518,9 @@ class InstancingDrawRenderer {
         const gl = scene.canvas.gl;
         const program = this._program;
         const lightsState = scene._lightsState;
+        const sectionPlanesState = scene._sectionPlanesState;
         const lights = lightsState.lights;
+
         let light;
         program.bind();
         const camera = scene.camera;
@@ -33104,6 +29541,30 @@ class InstancingDrawRenderer {
                 }
                 if (this._uLightDir[i]) {
                     gl.uniform3fv(this._uLightDir[i], light.dir);
+                }
+            }
+        }
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
                 }
             }
         }
@@ -33139,23 +29600,32 @@ class InstancingDrawRenderer {
  * @private
  */
 const InstancingFillShaderSource = function (scene) {
-    this.vertex = buildVertex$b(scene);
-    this.fragment = buildFragment$b(scene);
+    this.vertex = buildVertex$a(scene);
+    this.fragment = buildFragment$a(scene);
 };
 
-function buildVertex$b(scene) {
+function buildVertex$a(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
 
     src.push("// Instancing fill vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("uniform int renderPass;");
 
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
 
     src.push("attribute vec4 modelMatrixCol0;"); // Modeling matrix
     src.push("attribute vec4 modelMatrixCol1;");
@@ -33178,12 +29648,11 @@ function buildVertex$b(scene) {
     src.push("bool xrayed       = (float(flags.y) > 0.0);");
     src.push("bool highlighted  = (float(flags.z) > 0.0);");
     src.push("bool selected     = (float(flags.w) > 0.0);");
-    src.push("bool culled       = (float(flags2.w) > 0.0);");
 
     src.push("bool transparent  = (color.a < 1.0);"); // Color comes from EmphasisMaterial.fillColor, so is not quantized
 
-    src.push(`if (
-    culled || !visible ||
+    src.push(`if
+    (!visible ||
     (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (transparent || xrayed)) || 
     (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} && (!transparent || xrayed || highlighted || selected)) || 
     (renderPass == ${RENDER_PASSES.XRAYED} && (!xrayed || highlighted || selected)) || 
@@ -33195,7 +29664,6 @@ function buildVertex$b(scene) {
 
     src.push("vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("vec4 viewPosition  = viewMatrix * worldPosition; ");
 
     if (clipping) {
@@ -33208,7 +29676,7 @@ function buildVertex$b(scene) {
     return src;
 }
 
-function buildFragment$b(scene) {
+function buildFragment$a(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -33250,8 +29718,6 @@ function buildFragment$b(scene) {
     return src;
 }
 
-const tempVec3a$f = math.vec3();
-
 /**
  * @private
  */
@@ -33272,73 +29738,30 @@ class InstancingFillRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer, renderPass) {
+    drawLayer(frameCtx, layer, renderPass) {
 
-        const model = instancingLayer.model;
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
-            this._allocate(instancingLayer.model.scene);
+            this._allocate(layer.model.scene);
             if (this.errors) {
                 return;
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
-        }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$f);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -33356,11 +29779,6 @@ class InstancingFillRenderer {
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf, gl.UNSIGNED_BYTE, true);
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
-        }
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
         }
 
         state.indicesBuf.bind();
@@ -33384,7 +29802,7 @@ class InstancingFillRenderer {
             gl.uniform4f(this._uColor, fillColor[0], fillColor[1], fillColor[2], fillAlpha);
 
         } else {
-            gl.uniform4fv(this._uColor, math.vec3([1, 1, 1]));
+            gl.uniform4fv(this._uColor, defaultColorize);
         }
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
@@ -33396,9 +29814,6 @@ class InstancingFillRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
         if (this._aFlags2) {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
@@ -33429,7 +29844,6 @@ class InstancingFillRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
         this._aModelMatrixCol0 = program.getAttribute("modelMatrixCol0");
@@ -33441,9 +29855,35 @@ class InstancingFillRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
+        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -33462,19 +29902,26 @@ class InstancingFillRenderer {
  * @private
  */
 const InstancingEdgesShaderSource = function (scene) {
-    this.vertex = buildVertex$c(scene);
-    this.fragment = buildFragment$c(scene);
+    this.vertex = buildVertex$b(scene);
+    this.fragment = buildFragment$b(scene);
 };
 
-function buildVertex$c(scene) {
+function buildVertex$b(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing edges vertex shader");
 
+    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+    src.push("precision highp float;");
+    src.push("precision highp int;");
+    src.push("#else");
+    src.push("precision mediump float;");
+    src.push("precision mediump int;");
+    src.push("#endif");
+
     src.push("uniform int renderPass;");
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
     src.push("attribute vec4 modelMatrixCol0;"); // Modeling matrix
@@ -33495,14 +29942,13 @@ function buildVertex$c(scene) {
     src.push("bool highlighted  = (float(flags.z) > 0.0);");
     src.push("bool selected     = (float(flags.w) > 0.0);");
     src.push("bool edges        = (float(flags2.y) > 0.0);");
-    src.push("bool culled  = (float(flags2.w) > 0.0);");
 
     src.push("bool transparent  = (color.a < 1.0);"); // Color comes from EdgeMaterial.edgeColor, so is not quantized
 
-    src.push(`if (
-    culled || !visible || 
-    (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (!edges || transparent || xrayed)) ||
-    (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} &&  (!edges || !transparent || xrayed || highlighted || selected)) ||
+    src.push(`
+     if (!visible || !edges ||
+        (renderPass == ${RENDER_PASSES.NORMAL_OPAQUE} && (transparent || xrayed)) ||
+    (renderPass == ${RENDER_PASSES.NORMAL_TRANSPARENT} &&  (!transparent || xrayed || highlighted || selected)) ||
     (renderPass == ${RENDER_PASSES.XRAYED} && (!xrayed || highlighted || selected)) ||
     (renderPass == ${RENDER_PASSES.HIGHLIGHTED} && !highlighted) ||
     (renderPass == ${RENDER_PASSES.SELECTED} && !selected)) {`);
@@ -33511,7 +29957,6 @@ function buildVertex$c(scene) {
     src.push("} else {");
     src.push("vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("vWorldPosition = worldPosition;");
@@ -33524,7 +29969,7 @@ function buildVertex$c(scene) {
 }
 
 
-function buildFragment$c(scene) {
+function buildFragment$b(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     let i;
@@ -33568,8 +30013,6 @@ function buildFragment$c(scene) {
     return src;
 }
 
-const tempVec3a$g = math.vec3();
-
 /**
  * @private
  */
@@ -33590,69 +30033,23 @@ class InstancingEdgesRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer, renderPass) {
-
-        const model = instancingLayer.model;
+    drawLayer(frameCtx, layer, renderPass) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
-            this._allocate(instancingLayer);
+            this._allocate(layer);
             if (this.errors) {
                 return;
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
-        }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$g);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
         }
 
         let material;
@@ -33668,7 +30065,6 @@ class InstancingEdgesRenderer {
 
         const edgeColor = material.edgeColor;
         const edgeAlpha = material.edgeAlpha;
-
         gl.uniform4f(this._uColor, edgeColor[0], edgeColor[1], edgeColor[2], edgeAlpha);
 
         if (frameCtx.lineWidth !== material.edgeWidth) {
@@ -33677,12 +30073,13 @@ class InstancingEdgesRenderer {
         }
 
         gl.uniform1i(this._uRenderPass, renderPass);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
         this._aModelMatrixCol2.bindArrayBuffer(state.modelMatrixCol2Buf);
-
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 1);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 1);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 1);
@@ -33699,22 +30096,12 @@ class InstancingEdgesRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
         state.edgeIndicesBuf.bind();
-
         instanceExt.drawElementsInstancedANGLE(gl.LINES, state.edgeIndicesBuf.numItems, state.edgeIndicesBuf.itemType, 0, state.numInstances);
 
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 0); // TODO: Is this needed
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
-        }
 
         if (this._aFlags) {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
@@ -33751,7 +30138,6 @@ class InstancingEdgesRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
         this._aModelMatrixCol0 = program.getAttribute("modelMatrixCol0");
@@ -33765,7 +30151,33 @@ class InstancingEdgesRenderer {
         const program = this._program;
         program.bind();
         const camera = scene.camera;
+        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        const sectionPlanesState = scene._sectionPlanesState;
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -33784,11 +30196,11 @@ class InstancingEdgesRenderer {
  * @private
  */
 const InstancingPickMeshShaderSource = function (scene) {
-    this.vertex = buildVertex$d(scene);
-    this.fragment = buildFragment$d(scene);
+    this.vertex = buildVertex$c(scene);
+    this.fragment = buildFragment$c(scene);
 };
 
-function buildVertex$d(scene) {
+function buildVertex$c(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -33796,7 +30208,6 @@ function buildVertex$d(scene) {
     src.push("// Instancing geometry picking vertex shader");
 
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
     src.push("attribute vec4 pickColor;");
@@ -33818,22 +30229,21 @@ function buildVertex$d(scene) {
     src.push("void main(void) {");
     src.push("bool visible   = (float(flags.x) > 0.0);");
     src.push("bool pickable  = (float(flags2.z) > 0.0);");
-    src.push("bool culled    = (float(flags2.w) > 0.0);");
-    src.push(`if ( culled || (!pickInvisible && !visible) || !pickable) {`);
+    src.push(`if ((!pickInvisible && !visible) || !pickable) {`);
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("} else {");
 
 
     src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
+
     src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
 
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
 
     src.push("  vPickColor = vec4(float(pickColor.r) / 255.0, float(pickColor.g) / 255.0, float(pickColor.b) / 255.0, float(pickColor.a) / 255.0);");
     if (clipping) {
         src.push("  vWorldPosition = worldPosition;");
-        src.push("  vFlags2 = flags2;");
+        src.push("vFlags2 = flags2;");
     }
     src.push("  gl_Position = projMatrix * viewPosition;");
     src.push("}");
@@ -33841,7 +30251,7 @@ function buildVertex$d(scene) {
     return src;
 }
 
-function buildFragment$d(scene) {
+function buildFragment$c(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -33883,19 +30293,15 @@ function buildFragment$d(scene) {
     return src;
 }
 
-const tempVec3a$h = math.vec3();
-
 /**
  * @private
  */
 class InstancingPickMeshRenderer {
 
     constructor(scene) {
-
         this._scene = scene;
         this._hash = this._getHash();
         this._shaderSource = new InstancingPickMeshShaderSource(this._scene);
-
         this._allocate();
     }
 
@@ -33907,14 +30313,13 @@ class InstancingPickMeshRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer) {
+    drawLayer(frameCtx, layer) {
 
-        const model = instancingLayer.model;
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -33923,19 +30328,13 @@ class InstancingPickMeshRenderer {
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram(frameCtx);
-            loadSectionPlanes = true;
         }
 
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const rtcPickViewMatrix = (rtcCenter) ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -33958,51 +30357,7 @@ class InstancingPickMeshRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
         state.indicesBuf.bind();
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$h);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
 
@@ -34013,41 +30368,28 @@ class InstancingPickMeshRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aPickColor.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
-
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
     _allocate() {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
-
         this._program = new Program(gl, this._shaderSource);
-
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
-
         this._instanceExt = gl.getExtension("ANGLE_instanced_arrays");
-
         const program = this._program;
-
         this._uPickInvisible = program.getLocation("pickInvisible");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
-
         const clips = sectionPlanesState.sectionPlanes;
-
         for (let i = 0, len = clips.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
@@ -34055,9 +30397,7 @@ class InstancingPickMeshRenderer {
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
-
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aPickColor = program.getAttribute("pickColor");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
@@ -34070,10 +30410,37 @@ class InstancingPickMeshRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const lightsState = scene._lightsState;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
+        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -34092,17 +30459,16 @@ class InstancingPickMeshRenderer {
  * @private
  */
 const InstancingPickDepthShaderSource = function (scene) {
-    this.vertex = buildVertex$e(scene);
-    this.fragment = buildFragment$e(scene);
+    this.vertex = buildVertex$d(scene);
+    this.fragment = buildFragment$d(scene);
 };
 
-function buildVertex$e(scene) {
+function buildVertex$d(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth vertex shader");
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
     src.push("attribute vec4 modelMatrixCol0;"); // Modeling matrix
@@ -34120,17 +30486,14 @@ function buildVertex$e(scene) {
     src.push("void main(void) {");
     src.push("bool visible   = (float(flags.x) > 0.0);");
     src.push("bool pickable  = (float(flags2.z) > 0.0);");
-    src.push("bool culled    = (float(flags2.w) > 0.0);");
-    src.push("if (culled || (!pickInvisible && !visible) || !pickable) {");
+    src.push("if ((!pickInvisible && !visible) || !pickable) {");
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("} else {");
     src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("  vWorldPosition = worldPosition;");
-        src.push("  vFlags2 = flags2;");
     }
     src.push("  vViewPosition = viewPosition;");
     src.push("  gl_Position = projMatrix * viewPosition;");
@@ -34139,7 +30502,7 @@ function buildVertex$e(scene) {
     return src;
 }
 
-function buildFragment$e(scene) {
+function buildFragment$d(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -34191,8 +30554,6 @@ function buildFragment$e(scene) {
     return src;
 }
 
-const tempVec3a$i = math.vec3();
-
 /**
  * @private
  */
@@ -34213,84 +30574,37 @@ class InstancingPickDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer) {
+    drawLayer(frameCtx, layer) {
 
-        const model = instancingLayer.model;
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
-            this._allocate(instancingLayer);
+            this._allocate(layer);
             if (this.errors) {
                 return;
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
 
         const camera = scene.camera;
         const projectState = camera.project._state;
 
+        // In practice, these binds will only happen once per frame because we pick normals on a single previously-picked mesh
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const rtcPickViewMatrix = (rtcCenter) ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
-
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
         gl.uniform1f(this._uZNear, projectState.near);
         gl.uniform1f(this._uZFar, projectState.far);
 
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$i);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34310,11 +30624,6 @@ class InstancingPickDepthRenderer {
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
         }
 
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
         state.indicesBuf.bind();
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
@@ -34329,47 +30638,33 @@ class InstancingPickDepthRenderer {
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
         }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
-        }
     }
 
     _allocate() {
-
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const sectionPlanesState = scene._sectionPlanesState;
-
         this._program = new Program(gl, this._shaderSource);
-
         if (this._program.errors) {
             this.errors = this._program.errors;
             return;
         }
-
         this._instanceExt = gl.getExtension("ANGLE_instanced_arrays");
-
         const program = this._program;
-
         this._uPickInvisible = program.getLocation("pickInvisible");
         this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
         this._uViewMatrix = program.getLocation("viewMatrix");
         this._uProjMatrix = program.getLocation("projMatrix");
         this._uSectionPlanes = [];
-
         const clips = sectionPlanesState.sectionPlanes;
-
-        for (let i = 0, len = clips.length; i < len; i++) {
+        for (var i = 0, len = clips.length; i < len; i++) {
             this._uSectionPlanes.push({
                 active: program.getLocation("sectionPlaneActive" + i),
                 pos: program.getLocation("sectionPlanePos" + i),
                 dir: program.getLocation("sectionPlaneDir" + i)
             });
         }
-
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
         this._aModelMatrixCol0 = program.getAttribute("modelMatrixCol0");
@@ -34380,8 +30675,35 @@ class InstancingPickDepthRenderer {
     }
 
     _bindProgram() {
-        this._program.bind();
-
+        const scene = this._scene;
+        const gl = scene.canvas.gl;
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        program.bind();
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -34400,17 +30722,16 @@ class InstancingPickDepthRenderer {
  * @private
  */
 const InstancingPickNormalsShaderSource = function (scene) {
-    this.vertex = buildVertex$f(scene);
-    this.fragment = buildFragment$f(scene);
+    this.vertex = buildVertex$e(scene);
+    this.fragment = buildFragment$e(scene);
 };
 
-function buildVertex$f(scene) {
+function buildVertex$e(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry normals vertex shader");
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec2 normal;");
     src.push("attribute vec4 flags;");
     src.push("attribute vec4 flags2;");
@@ -34439,13 +30760,11 @@ function buildVertex$f(scene) {
     src.push("void main(void) {");
     src.push("bool visible   = (float(flags.x) > 0.0);");
     src.push("bool pickable  = (float(flags2.z) > 0.0);");
-    src.push("bool culled    = (float(flags2.w) > 0.0);");
-    src.push("  if (culled || (!pickInvisible && !visible) || !pickable) {");
+    src.push("  if ((!pickInvisible && !visible) || !pickable) {");
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("} else {");
     src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
     src.push("  vec4 modelNormal = vec4(octDecode(normal.xy), 0.0); ");
     src.push("  vec3 worldNormal = vec3(dot(modelNormal, modelNormalMatrixCol0), dot(modelNormal, modelNormalMatrixCol1), dot(modelNormal, modelNormalMatrixCol2));");
@@ -34459,7 +30778,7 @@ function buildVertex$f(scene) {
     return src;
 }
 
-function buildFragment$f(scene) {
+function buildFragment$e(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -34501,8 +30820,6 @@ function buildFragment$f(scene) {
     return src;
 }
 
-const tempVec3a$j = math.vec3();
-
 /**
  * @private
  */
@@ -34523,81 +30840,33 @@ class InstancingPickNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer) {
-
-        const model = instancingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
-            this._allocate(instancingLayer);
+            this._allocate(layer);
             if (this.errors) {
                 return;
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
-            this._bindProgram();
-            loadSectionPlanes = true;
+            this._bindProgram(frameCtx);
         }
 
         // In practice, these binds will only happen once per frame
         // because we pick normals on a single previously-picked mesh
 
         gl.uniform1i(this._uPickInvisible, frameCtx.pickInvisible);
-
-        const pickViewMatrix = frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix;
-        const rtcPickViewMatrix = (rtcCenter) ? createRTCViewMat(pickViewMatrix, rtcCenter) : pickViewMatrix;
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, rtcPickViewMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, frameCtx.pickViewMatrix ? model.getPickViewMatrix(frameCtx.pickViewMatrix) : model.viewMatrix);
         gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
 
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$j);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34618,16 +30887,12 @@ class InstancingPickNormalsRenderer {
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aNormal.bindArrayBuffer(state.normalsBuf);
         this._aFlags.bindArrayBuffer(state.flagsBuf);
+
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 1);
 
         if (this._aFlags2) {
             this._aFlags2.bindArrayBuffer(state.flags2Buf);
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
-        }
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
         }
 
         state.indicesBuf.bind();
@@ -34644,10 +30909,6 @@ class InstancingPickNormalsRenderer {
 
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
@@ -34684,7 +30945,6 @@ class InstancingPickNormalsRenderer {
         }
 
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
@@ -34699,7 +30959,35 @@ class InstancingPickNormalsRenderer {
     }
 
     _bindProgram() {
-        this._program.bind();
+        const scene = this._scene;
+        const gl = scene.canvas.gl;
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        program.bind();
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -34718,20 +31006,21 @@ class InstancingPickNormalsRenderer {
  * @private
  */
 const InstancingOcclusionShaderSource = function (scene) {
-    this.vertex = buildVertex$g(scene);
-    this.fragment = buildFragment$g(scene);
+    this.vertex = buildVertex$f(scene);
+    this.fragment = buildFragment$f(scene);
 };
 
-function buildVertex$g(scene) {
+function buildVertex$f(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing occlusion vertex shader");
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
     src.push("attribute vec4 modelMatrixCol0;"); // Modeling matrix
     src.push("attribute vec4 modelMatrixCol1;");
     src.push("attribute vec4 modelMatrixCol2;");
@@ -34746,13 +31035,11 @@ function buildVertex$g(scene) {
     src.push("void main(void) {");
     src.push("bool visible   = (float(flags.x) > 0.0);");
     src.push("bool transparent  = ((float(color.a) / 255.0) < 1.0);");
-    src.push("bool culled  = (float(flags2.w) > 0.0);");
-    src.push(`if (culled || !visible || transparent) {`);                // Non-pickable meshes cannot be occluders
+    src.push(`if (!visible || transparent) {`);                // Non-pickable meshes cannot be occluders
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);");  // Cull vertex
     src.push("} else {");
     src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
     if (clipping) {
         src.push("  vWorldPosition = worldPosition;");
@@ -34764,7 +31051,7 @@ function buildVertex$g(scene) {
     return src;
 }
 
-function buildFragment$g(scene) {
+function buildFragment$f(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -34805,8 +31092,6 @@ function buildFragment$g(scene) {
     return src;
 }
 
-const tempVec3a$k = math.vec3();
-
 /**
  * @private
  */
@@ -34827,14 +31112,13 @@ class InstancingOcclusionRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer) {
+    drawLayer(frameCtx, layer) {
 
-        const model = instancingLayer.model;
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -34843,56 +31127,13 @@ class InstancingOcclusionRenderer {
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
 
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$k);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -34908,11 +31149,6 @@ class InstancingOcclusionRenderer {
         }
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
 
         this._aFlags.bindArrayBuffer(state.flagsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 1);
@@ -34937,9 +31173,6 @@ class InstancingOcclusionRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
@@ -34967,7 +31200,6 @@ class InstancingOcclusionRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
@@ -34980,9 +31212,35 @@ class InstancingOcclusionRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
+        const cameraState = camera._state;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -35001,21 +31259,21 @@ class InstancingOcclusionRenderer {
  * @private
  */
 const InstancingDepthShaderSource = function (scene) {
-    this.vertex = buildVertex$h(scene);
-    this.fragment = buildFragment$h(scene);
+    this.vertex = buildVertex$g(scene);
+    this.fragment = buildFragment$g(scene);
 };
 
-function buildVertex$h(scene) {
+function buildVertex$g(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth drawing vertex shader");
-
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
     src.push("attribute vec4 modelMatrixCol0;");
     src.push("attribute vec4 modelMatrixCol1;");
     src.push("attribute vec4 modelMatrixCol2;");
@@ -35031,13 +31289,11 @@ function buildVertex$h(scene) {
     src.push("bool visible      = (float(flags.x) > 0.0);");
     src.push("bool xrayed       = (float(flags.y) > 0.0);");
     src.push("bool transparent  = ((float(color.a) / 255.0) < 1.0);");
-    src.push("bool culled  = (float(flags2.w) > 0.0);");
-    src.push(`if ( culled || !visible || transparent || xrayed) {`);
+    src.push(`if (!visible || transparent || xrayed) {`);
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("} else {");
     src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
 
     if (clipping) {
@@ -35051,7 +31307,7 @@ function buildVertex$h(scene) {
     return src;
 }
 
-function buildFragment$h(scene) {
+function buildFragment$g(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     let i;
     let len;
@@ -35108,8 +31364,6 @@ function buildFragment$h(scene) {
     return src;
 }
 
-const tempVec3a$l = math.vec3();
-
 /**
  * @private
  */
@@ -35130,14 +31384,12 @@ class InstancingDepthRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer(frameCtx, instancingLayer) {
-
-        const model = instancingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
 
         if (!this._program) {
             this._allocate();
@@ -35146,54 +31398,13 @@ class InstancingDepthRenderer {
             }
         }
 
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
 
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$l);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -35203,16 +31414,8 @@ class InstancingDepthRenderer {
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 1);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 1);
 
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
-
         this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
-        this._aColor.bindArrayBuffer(state.colorsBuf); // Needed for masking out transparent entities using alpha channel
+        this._aColor.bindArrayBuffer(state.colorsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
 
         this._aFlags.bindArrayBuffer(state.flagsBuf);
@@ -35235,10 +31438,6 @@ class InstancingDepthRenderer {
 
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
@@ -35266,7 +31465,6 @@ class InstancingDepthRenderer {
             });
         }
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
         this._aFlags2 = program.getAttribute("flags2");
@@ -35278,9 +31476,36 @@ class InstancingDepthRenderer {
     _bindProgram() {
         const scene = this._scene;
         const gl = scene.canvas.gl;
-        this._program.bind();
+        const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
+        const projectState = scene.camera.project._state;
+        program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
+                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+                }
+            }
+        }
     }
 
     webglContextRestored() {
@@ -35299,21 +31524,22 @@ class InstancingDepthRenderer {
  * @private
  */
 const InstancingNormalsShaderSource = function (scene) {
-    this.vertex = buildVertex$i(scene);
-    this.fragment = buildFragment$i(scene);
+    this.vertex = buildVertex$h(scene);
+    this.fragment = buildFragment$h(scene);
 };
 
-function buildVertex$i(scene) {
+function buildVertex$h(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
     src.push("// Instancing geometry depth drawing vertex shader");
     src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
     src.push("attribute vec3 normal;");
     src.push("attribute vec4 color;");
     src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
+    if (clipping) {
+        src.push("attribute vec4 flags2;");
+    }
     src.push("attribute vec4 modelMatrixCol0;");
     src.push("attribute vec4 modelMatrixCol1;");
     src.push("attribute vec4 modelMatrixCol2;");
@@ -35336,14 +31562,12 @@ function buildVertex$i(scene) {
     src.push("void main(void) {");
     src.push("bool visible      = (float(flags.x) > 0.0);");
     src.push("bool xrayed       = (float(flags.y) > 0.0);");
-    src.push("bool culled       = (float(flags2.w) > 0.0);");
     src.push("bool transparent  = ((float(color.a) / 255.0) < 1.0);");
-    src.push(`if (culled || !visible || transparent || xrayed) {`);
+    src.push(`if (!visible || transparent || xrayed) {`);
     src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
     src.push("} else {");
     src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
     src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("  vec4 viewPosition  = viewMatrix * worldPosition; ");
     src.push("  vec4 worldNormal    = vec4(octDecode(normal.xy), 0.0); ");
     src.push("  vec3 viewNormal     = normalize((viewNormalMatrix * worldNormal).xyz);");
@@ -35359,7 +31583,7 @@ function buildVertex$i(scene) {
     return src;
 }
 
-function buildFragment$i(scene) {
+function buildFragment$h(scene) {
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
     const src = [];
@@ -35404,9 +31628,6 @@ function buildFragment$i(scene) {
     return src;
 }
 
-const tempVec3a$m = math.vec3();
-const tempMat4a$2 = math.mat4();
-
 /**
  * @private
  */
@@ -35427,73 +31648,25 @@ class InstancingNormalsRenderer {
         return this._scene._sectionPlanesState.getHash();
     }
 
-    drawLayer( frameCtx, instancingLayer) {
-
-        const model = instancingLayer.model;
+    drawLayer(frameCtx, layer) {
+        const model = layer.model;
         const scene = model.scene;
         const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
+        const state = layer._state;
         const instanceExt = this._instanceExt;
-        const rtcCenter = instancingLayer._state.rtcCenter;
-
         if (!this._program) {
-            this._allocate(instancingLayer);
+            this._allocate(layer);
             if (this.errors) {
                 return;
             }
         }
-
-        let loadSectionPlanes = false;
-
         if (frameCtx.lastProgramId !== this._program.id) {
             frameCtx.lastProgramId = this._program.id;
             this._bindProgram();
-            loadSectionPlanes = true;
         }
-
-        gl.uniformMatrix4fv(this._uViewMatrix, false, (rtcCenter) ? createRTCViewMat(model.viewMatrix, rtcCenter) : model.viewMatrix);
+        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, layer._state.positionsDecodeMatrix);
+        gl.uniformMatrix4fv(this._uViewMatrix, false, model.viewMatrix);
         gl.uniformMatrix4fv(this._uViewNormalMatrix, false, model.viewNormalMatrix);
-
-        if (rtcCenter) {
-            if (frameCtx.lastRTCCenter) {
-                if (!math.compareVec3(rtcCenter, frameCtx.lastRTCCenter)) {
-                    frameCtx.lastRTCCenter = rtcCenter;
-                    loadSectionPlanes = true;
-                }
-            } else {
-                frameCtx.lastRTCCenter = rtcCenter;
-                loadSectionPlanes = true;
-            }
-        } else if (frameCtx.lastRTCCenter) {
-            frameCtx.lastRTCCenter = null;
-            loadSectionPlanes = true;
-        }
-
-        if (loadSectionPlanes) {
-            const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-            if (numSectionPlanes > 0) {
-                const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-                const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-                const renderFlags = model.renderFlags;
-                for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                    const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                    const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                    gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                    if (active) {
-                        const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                        if (rtcCenter) {
-                            const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$m);
-                            gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                        } else {
-                            gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                        }
-                        gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                    }
-                }
-            }
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
 
         this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
         this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
@@ -35505,12 +31678,6 @@ class InstancingNormalsRenderer {
 
         this._aPosition.bindArrayBuffer(state.positionsBuf);
         this._aNormal.bindArrayBuffer(state.normalsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
         this._aColor.bindArrayBuffer(state.colorsBuf);
         instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
 
@@ -35525,7 +31692,6 @@ class InstancingNormalsRenderer {
         state.indicesBuf.bind();
 
         instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
-
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 0);
         instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
@@ -35534,10 +31700,6 @@ class InstancingNormalsRenderer {
 
         if (this._aFlags2) { // Won't be in shader when not clipping
             instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
         }
     }
 
@@ -35573,7 +31735,6 @@ class InstancingNormalsRenderer {
         }
 
         this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
         this._aNormal = program.getAttribute("normal");
         this._aColor = program.getAttribute("color");
         this._aFlags = program.getAttribute("flags");
@@ -35589,284 +31750,34 @@ class InstancingNormalsRenderer {
         const scene = this._scene;
         const gl = scene.canvas.gl;
         const program = this._program;
+        const sectionPlanesState = scene._sectionPlanesState;
         program.bind();
         const camera = scene.camera;
         gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
-    }
-
-    webglContextRestored() {
-        this._program = null;
-    }
-
-    destroy() {
-        if (this._program) {
-            this._program.destroy();
-        }
-        this._program = null;
-    }
-}
-
-/**
- * @private
- */
-const InstancingShadowShaderSource = function (scene) {
-    this.vertex = buildVertex$j(scene);
-    this.fragment = buildFragment$j(scene);
-};
-
-function buildVertex$j(scene) {
-    const sectionPlanesState = scene._sectionPlanesState;
-    const clipping = sectionPlanesState.sectionPlanes.length > 0;
-    const src = [];
-    src.push("// Instancing geometry shadow drawing vertex shader");
-    src.push("attribute vec3 position;");
-    src.push("attribute vec3 offset;");
-    src.push("attribute vec4 color;");
-    src.push("attribute vec4 flags;");
-    src.push("attribute vec4 flags2;");
-    src.push("attribute vec4 modelMatrixCol0;");
-    src.push("attribute vec4 modelMatrixCol1;");
-    src.push("attribute vec4 modelMatrixCol2;");
-    src.push("uniform mat4 shadowViewMatrix;");
-    src.push("uniform mat4 shadowProjMatrix;");
-    src.push("uniform mat4 positionsDecodeMatrix;");
-    if (clipping) {
-        src.push("varying vec4 vWorldPosition;");
-        src.push("varying vec4 vFlags2;");
-    }
-    src.push("varying vec4 vViewPosition;");
-    src.push("void main(void) {");
-    src.push("bool visible      = (float(flags.x) > 0.0);");
-    src.push("bool transparent  = ((float(color.a) / 255.0) < 1.0);");
-    src.push(`if (!visible || transparent) {`);
-    src.push("   gl_Position = vec4(0.0, 0.0, 0.0, 0.0);"); // Cull vertex
-    src.push("} else {");
-    src.push("  vec4 worldPosition = positionsDecodeMatrix * vec4(position, 1.0); ");
-    src.push("  worldPosition = vec4(dot(worldPosition, modelMatrixCol0), dot(worldPosition, modelMatrixCol1), dot(worldPosition, modelMatrixCol2), 1.0);");
-    src.push("  worldPosition.xyz = worldPosition.xyz + offset;");
-    src.push("  vec4 viewPosition  = shadowViewMatrix * worldPosition; ");
-
-    if (clipping) {
-        src.push("vWorldPosition = worldPosition;");
-        src.push("vFlags2 = flags2;");
-    }
-    src.push("  vViewPosition = viewPosition;");
-    src.push("  gl_Position = shadowProjMatrix * viewPosition;");
-    src.push("}");
-    src.push("}");
-    return src;
-}
-
-function buildFragment$j(scene) {
-    const sectionPlanesState = scene._sectionPlanesState;
-    let i;
-    let len;
-    const clipping = sectionPlanesState.sectionPlanes.length > 0;
-    const src = [];
-    src.push("// Instancing geometry shadow drawing fragment shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
-    if (clipping) {
-        src.push("varying vec4 vWorldPosition;");
-        src.push("varying vec4 vFlags2;");
-        for (i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
-            src.push("uniform bool sectionPlaneActive" + i + ";");
-            src.push("uniform vec3 sectionPlanePos" + i + ";");
-            src.push("uniform vec3 sectionPlaneDir" + i + ";");
-        }
-    }
-    src.push("varying vec4 vViewPosition;");
-
-    src.push("vec4 encodeFloat( const in float v ) {");
-    src.push("  const vec4 bitShift = vec4(256 * 256 * 256, 256 * 256, 256, 1.0);");
-    src.push("  const vec4 bitMask = vec4(0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);");
-    src.push("  vec4 comp = fract(v * bitShift);");
-    src.push("  comp -= comp.xxyz * bitMask;");
-    src.push("  return comp;");
-    src.push("}");
-
-    src.push("void main(void) {");
-    if (clipping) {
-        src.push("  bool clippable = (float(vFlags2.x) > 0.0);");
-        src.push("  if (clippable) {");
-        src.push("  float dist = 0.0;");
-        for (i = 0, len = sectionPlanesState.sectionPlanes.length; i < len; i++) {
-            src.push("if (sectionPlaneActive" + i + ") {");
-            src.push("   dist += clamp(dot(-sectionPlaneDir" + i + ".xyz, vWorldPosition.xyz - sectionPlanePos" + i + ".xyz), 0.0, 1000.0);");
-            src.push("}");
-        }
-        src.push("if (dist > 0.0) { discard; }");
-        src.push("}");
-    }
-    src.push("    gl_FragColor = encodeFloat( gl_FragCoord.z); ");
-    src.push("}");
-    return src;
-}
-
-const tempVec3a$n = math.vec3();
-
-/**
- * Renders InstancingLayer fragment depths to a shadow map.
- *
- * @private
- */
-class InstancingShadowRenderer {
-
-    constructor(scene) {
-        this._scene = scene;
-        this._hash = this._getHash();
-        this._lastLightId = null;
-        this._shaderSource = new InstancingShadowShaderSource(this._scene);
-        this._allocate();
-    }
-
-    getValid() {
-        return this._hash === this._getHash();
-    };
-
-    _getHash() {
-        return this._scene._sectionPlanesState.getHash();
-    }
-
-    drawLayer( frameCtx, instancingLayer) {
-        const model = instancingLayer.model;
-        const scene = model.scene;
-        const gl = scene.canvas.gl;
-        const state = instancingLayer._state;
-        const instanceExt = this._instanceExt;
-
-        if (!this._program) {
-            this._allocate();
-            if (this.errors) {
-                return;
-            }
-        }
-
-        if (frameCtx.lastProgramId !== this._program.id) {
-            frameCtx.lastProgramId = this._program.id;
-            this._bindProgram(frameCtx, instancingLayer);
-        }
-
-        gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, instancingLayer._state.positionsDecodeMatrix);
-
-        this._aModelMatrixCol0.bindArrayBuffer(state.modelMatrixCol0Buf);
-        this._aModelMatrixCol1.bindArrayBuffer(state.modelMatrixCol1Buf);
-        this._aModelMatrixCol2.bindArrayBuffer(state.modelMatrixCol2Buf);
-
-        instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 1);
-        instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 1);
-        instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 1);
-
-        this._aPosition.bindArrayBuffer(state.positionsBuf);
-
-        if (this._aOffset) {
-            this._aOffset.bindArrayBuffer(state.offsetsBuf);
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 1);
-        }
-
-        this._aColor.bindArrayBuffer(state.colorsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 1);
-
-        this._aFlags.bindArrayBuffer(state.flagsBuf);
-        instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 1);
-
-        if (this._aFlags2) {
-            this._aFlags2.bindArrayBuffer(state.flags2Buf);
-            instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 1);
-        }
-
-        // TODO: Section planes need to be set if RTC center has changed since last RTC center recorded on frameCtx
-
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const baseIndex = instancingLayer.layerIndex * numSectionPlanes;
-            const renderFlags = model.renderFlags;
-            const rtcCenter = instancingLayer._state.rtcCenter;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[baseIndex + sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    if (rtcCenter) {
-                        const rtcSectionPlanePos = getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$n);
-                        gl.uniform3fv(sectionPlaneUniforms.pos, rtcSectionPlanePos);
-                    } else {
-                        gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
-                    }
+        if (sectionPlanesState.sectionPlanes.length > 0) {
+            const clips = scene._sectionPlanesState.sectionPlanes;
+            let sectionPlaneUniforms;
+            let uSectionPlaneActive;
+            let sectionPlane;
+            let uSectionPlanePos;
+            let uSectionPlaneDir;
+            for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+                sectionPlaneUniforms = this._uSectionPlanes[i];
+                uSectionPlaneActive = sectionPlaneUniforms.active;
+                sectionPlane = clips[i];
+                if (uSectionPlaneActive) {
+                    gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+                }
+                uSectionPlanePos = sectionPlaneUniforms.pos;
+                if (uSectionPlanePos) {
+                    gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+                }
+                uSectionPlaneDir = sectionPlaneUniforms.dir;
+                if (uSectionPlaneDir) {
                     gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
                 }
             }
         }
-
-        state.indicesBuf.bind();
-
-        instanceExt.drawElementsInstancedANGLE(state.primitive, state.indicesBuf.numItems, state.indicesBuf.itemType, 0, state.numInstances);
-
-        instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol0.location, 0);
-        instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol1.location, 0);
-        instanceExt.vertexAttribDivisorANGLE(this._aModelMatrixCol2.location, 0);
-        instanceExt.vertexAttribDivisorANGLE(this._aColor.location, 0);
-        instanceExt.vertexAttribDivisorANGLE(this._aFlags.location, 0);
-
-        if (this._aFlags2) { // Won't be in shader when not clipping
-            instanceExt.vertexAttribDivisorANGLE(this._aFlags2.location, 0);
-        }
-
-        if (this._aOffset) {
-            instanceExt.vertexAttribDivisorANGLE(this._aOffset.location, 0);
-        }
-    }
-
-    _allocate() {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const sectionPlanesState = scene._sectionPlanesState;
-        this._program = new Program(gl, this._shaderSource);
-        if (this._program.errors) {
-            this.errors = this._program.errors;
-            return;
-        }
-        this._instanceExt = gl.getExtension("ANGLE_instanced_arrays");
-        const program = this._program;
-        this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
-        this._uShadowViewMatrix = program.getLocation("shadowViewMatrix");
-        this._uShadowProjMatrix = program.getLocation("shadowProjMatrix");
-        this._uSectionPlanes = [];
-        const clips = sectionPlanesState.sectionPlanes;
-        for (let i = 0, len = clips.length; i < len; i++) {
-            this._uSectionPlanes.push({
-                active: program.getLocation("sectionPlaneActive" + i),
-                pos: program.getLocation("sectionPlanePos" + i),
-                dir: program.getLocation("sectionPlaneDir" + i)
-            });
-        }
-        this._aPosition = program.getAttribute("position");
-        this._aOffset = program.getAttribute("offset");
-        this._aColor = program.getAttribute("color");
-        this._aFlags = program.getAttribute("flags");
-        this._aFlags2 = program.getAttribute("flags2");
-        this._aModelMatrixCol0 = program.getAttribute("modelMatrixCol0");
-        this._aModelMatrixCol1 = program.getAttribute("modelMatrixCol1");
-        this._aModelMatrixCol2 = program.getAttribute("modelMatrixCol2");
-    }
-
-    _bindProgram(frameCtx, instancingLayer) {
-        const scene = this._scene;
-        const gl = scene.canvas.gl;
-        const program = this._program;
-        program.bind();
-        gl.uniformMatrix4fv(this._uShadowViewMatrix, false, frameCtx.shadowViewMatrix);
-        gl.uniformMatrix4fv(this._uShadowProjMatrix, false, frameCtx.shadowProjMatrix);
-        this._lastLightId = null;
     }
 
     webglContextRestored() {
@@ -35931,10 +31842,6 @@ class InstancingRenderers {
             this.occlusionRenderer.destroy();
             this.occlusionRenderer = null;
         }
-        if (this.shadowRenderer && (!this.shadowRenderer.getValid())) {
-            this.shadowRenderer.destroy();
-            this.shadowRenderer = null;
-        }
         this._createRenderers();
     }
 
@@ -35970,45 +31877,19 @@ class InstancingRenderers {
         if (!this.normalsRenderer) {
             this.normalsRenderer = new InstancingNormalsRenderer(this._scene);
         }
-        if (!this.shadowRenderer) {
-            this.shadowRenderer = new InstancingShadowRenderer(this._scene);
-        }
     }
 
     _destroy() {
-        if (this.drawRenderer) {
-            this.drawRenderer.destroy();
-        }
-        if (this.drawRendererWithSAO) {
-            this.drawRendererWithSAO.destroy();
-        }
-        if (this.depthRenderer) {
-            this.depthRenderer.destroy();
-        }
-        if (this.normalsRenderer) {
-            this.normalsRenderer.destroy();
-        }
-        if (this.fillRenderer) {
-            this.fillRenderer.destroy();
-        }
-        if (this.edgesRenderer) {
-            this.edgesRenderer.destroy();
-        }
-        if (this.pickMeshRenderer) {
-            this.pickMeshRenderer.destroy();
-        }
-        if (this.pickDepthRenderer) {
-            this.pickDepthRenderer.destroy();
-        }
-        if (this.pickNormalsRenderer) {
-            this.pickNormalsRenderer.destroy();
-        }
-        if (this.occlusionRenderer) {
-            this.occlusionRenderer.destroy();
-        }
-        if (this.shadowRenderer) {
-            this.shadowRenderer.destroy();
-        }
+        this.drawRenderer.destroy();
+        this.drawRendererWithSAO.destroy();
+        this.depthRenderer.destroy();
+        this.normalsRenderer.destroy();
+        this.fillRenderer.destroy();
+        this.edgesRenderer.destroy();
+        this.pickMeshRenderer.destroy();
+        this.pickDepthRenderer.destroy();
+        this.pickNormalsRenderer.destroy();
+        this.occlusionRenderer.destroy();
     }
 }
 
@@ -36021,7 +31902,7 @@ function getInstancingRenderers(scene) {
         instancingRenderers = new InstancingRenderers(scene);
         sceneInstancingRenderers[sceneId] = instancingRenderers;
         instancingRenderers._compile();
-        scene.on("compile", () => {
+        scene.on("compiling", () => {
             instancingRenderers._compile();
         });
         scene.on("destroyed", () => {
@@ -36037,10 +31918,9 @@ const MAX_VERTS$1 = bigIndicesSupported$2 ? 5000000 : 65530;
 const quantizedPositions = new Uint16Array(MAX_VERTS$1 * 3);
 const compressedNormals = new Int8Array(MAX_VERTS$1 * 3);
 const tempUint8Vec4 = new Uint8Array(4);
-const tempVec3a$o = math.vec3();
-const tempVec4a$2 = math.vec4([0, 0, 0, 1]);
-const tempVec4b$2 = math.vec4([0, 0, 0, 1]);
-const tempVec4c$2 = math.vec4([0, 0, 0, 1]);
+const tempVec3a$1 = math.vec4([0, 0, 0, 1]);
+const tempVec3b$2 = math.vec4([0, 0, 0, 1]);
+const tempVec3c$2 = math.vec4([0, 0, 0, 1]);
 
 /**
  * @private
@@ -36050,32 +31930,19 @@ class InstancingLayer {
     /**
      * @param model
      * @param cfg
-     * @param cfg.layerIndex
      * @param cfg.primitive
      * @param cfg.positions Flat float Local-space positions array.
      * @param cfg.normals Flat float normals array.
      * @param cfg.indices Flat int indices array.
      * @param cfg.edgeIndices Flat int edges indices array.
-     * @param cfg.edgeThreshold
-     * @param cfg.rtcCenter
      */
     constructor(model, cfg) {
-
-        /**
-         * Index of this InstancingLayer in PerformanceModel#_layerList
-         * @type {Number}
-         */
-        this.layerIndex = cfg.layerIndex;
-
         this._instancingRenderers = getInstancingRenderers(model.scene);
         this.model = model;
         this._aabb = math.collapseAABB3();
-
-        let primitiveName = cfg.primitive || "triangles";
-        let primitive;
-
+        var primitiveName = cfg.primitive || "triangles";
+        var primitive;
         const gl = model.scene.canvas.gl;
-
         switch (primitiveName) {
             case "points":
                 primitive = gl.POINTS;
@@ -36103,14 +31970,12 @@ class InstancingLayer {
                 primitive = gl.TRIANGLES;
                 primitiveName = "triangles";
         }
-
-        const stateCfg = {
+        var stateCfg = {
             primitiveName: primitiveName,
             primitive: primitive,
             positionsDecodeMatrix: math.mat4(),
             numInstances: 0,
-            obb: math.OBB3(),
-            rtcCenter: null
+            obb: math.OBB3()
         };
 
         const preCompressed = (!!cfg.positionsDecodeMatrix);
@@ -36139,18 +32004,17 @@ class InstancingLayer {
                 stateCfg.positionsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, quantizedPositions, lenPositions, 3, gl.STATIC_DRAW, normalized);
             }
         }
-
         if (cfg.normals) {
 
             if (preCompressed) {
 
-                const normalized = true; // For oct-encoded UInt8
+                let normalized = true; // For oct-encoded UInt8
                 stateCfg.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, cfg.normals, cfg.normals.length, 3, gl.STATIC_DRAW, normalized);
 
             } else {
 
-                const lenCompressedNormals = octEncodeNormals(cfg.normals, cfg.normals.length, compressedNormals, 0);
-                const normalized = true; // For oct-encoded UInt8
+                var lenCompressedNormals = octEncodeNormals(cfg.normals, cfg.normals.length, compressedNormals, 0);
+                let normalized = true; // For oct-encoded UInt8
                 stateCfg.normalsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, compressedNormals, lenCompressedNormals, 3, gl.STATIC_DRAW, normalized);
             }
         }
@@ -36159,9 +32023,9 @@ class InstancingLayer {
             stateCfg.indicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, bigIndicesSupported$2 ? new Uint32Array(cfg.indices) : new Uint16Array(cfg.indices), cfg.indices.length, 1, gl.STATIC_DRAW);
         }
 
-        let edgeIndices = cfg.edgeIndices;
+        var edgeIndices = cfg.edgeIndices;
         if (!edgeIndices) {
-            edgeIndices = buildEdgeIndices(cfg.positions, cfg.indices, null, cfg.edgeThreshold || 10);
+            edgeIndices = buildEdgeIndices(cfg.positions, cfg.indices, null, 10);
         }
 
         stateCfg.edgeIndicesBuf = new ArrayBuf(gl, gl.ELEMENT_ARRAY_BUFFER, bigIndicesSupported$2 ? new Uint32Array(edgeIndices) : new Uint16Array(edgeIndices), edgeIndices.length, 1, gl.STATIC_DRAW);
@@ -36175,10 +32039,8 @@ class InstancingLayer {
         this._numXRayedLayerPortions = 0;
         this._numHighlightedLayerPortions = 0;
         this._numSelectedLayerPortions = 0;
-        this._numClippableLayerPortions = 0;
         this._numEdgesLayerPortions = 0;
         this._numPickableLayerPortions = 0;
-        this._numCulledLayerPortions = 0;
 
         /** @private */
         this.numIndices = (cfg.indices) ? cfg.indices.length / 3 : 0;
@@ -36188,7 +32050,6 @@ class InstancingLayer {
         this._flags2 = [];
         this._colors = [];
         this._pickColors = [];
-        this._offsets = [];
 
         // Modeling matrix per instance, array for each column
         this._modelMatrixCol0 = [];
@@ -36202,17 +32063,7 @@ class InstancingLayer {
 
         this._portions = [];
 
-        if (cfg.rtcCenter) {
-            this._state.rtcCenter = math.vec3(cfg.rtcCenter);
-        }
-
         this._finalized = false;
-
-        /**
-         * The axis-aligned World-space boundary of this InstancingLayer's positions.
-         * @type {*|Float64Array}
-         */
-        this.aabb = math.collapseAABB3();
     }
 
     /**
@@ -36239,14 +32090,13 @@ class InstancingLayer {
 
         // TODO: find AABB for portion by transforming the geometry local AABB by the given meshMatrix?
 
-        const visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
-        const xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
-        const highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
-        const selected = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
-        const clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
-        const edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
-        const pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
-        const culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
+        var visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
+        var xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
+        var highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
+        var selected = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
+        var clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
+        var edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
+        var pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
 
         this._flags.push(visible);
         this._flags.push(xrayed);
@@ -36256,7 +32106,7 @@ class InstancingLayer {
         this._flags2.push(clippable);
         this._flags2.push(edges);
         this._flags2.push(pickable);
-        this._flags2.push(culled);
+        this._flags2.push(0); // Unused
 
         if (visible) {
             this._numVisibleLayerPortions++;
@@ -36274,10 +32124,6 @@ class InstancingLayer {
             this._numSelectedLayerPortions++;
             this.model.numSelectedLayerPortions++;
         }
-        if (clippable) {
-            this._numClippableLayerPortions++;
-            this.model.numClippableLayerPortions++;
-        }
         if (edges) {
             this._numEdgesLayerPortions++;
             this.model.numEdgesLayerPortions++;
@@ -36286,29 +32132,19 @@ class InstancingLayer {
             this._numPickableLayerPortions++;
             this.model.numPickableLayerPortions++;
         }
-        if (culled) {
-            this._numCulledLayerPortions++;
-            this.model.numCulledLayerPortions++;
-        }
 
         const r = rgbaInt[0]; // Color is pre-quantized by PerformanceModel
         const g = rgbaInt[1];
         const b = rgbaInt[2];
         const a = rgbaInt[3];
-
         if (opacity < 255) {
             this._numTransparentLayerPortions++;
             this.model.numTransparentLayerPortions++;
         }
-
         this._colors.push(r);
         this._colors.push(g);
         this._colors.push(b);
         this._colors.push(opacity);
-
-        this._offsets.push(0);
-        this._offsets.push(0);
-        this._offsets.push(0);
 
         this._modelMatrixCol0.push(meshMatrix[0]);
         this._modelMatrixCol0.push(meshMatrix[4]);
@@ -36355,36 +32191,24 @@ class InstancingLayer {
         // Expand AABB
 
         math.collapseAABB3(worldAABB);
-        const obb = this._state.obb;
-        const lenPositions = obb.length;
-        for (let i = 0; i < lenPositions; i += 4) {
-            tempVec4a$2[0] = obb[i + 0];
-            tempVec4a$2[1] = obb[i + 1];
-            tempVec4a$2[2] = obb[i + 2];
-            math.transformPoint4(meshMatrix, tempVec4a$2, tempVec4b$2);
+        var obb = this._state.obb;
+        var lenPositions = obb.length;
+        for (var i = 0; i < lenPositions; i += 4) {
+            tempVec3a$1[0] = obb[i + 0];
+            tempVec3a$1[1] = obb[i + 1];
+            tempVec3a$1[2] = obb[i + 2];
+            math.transformPoint4(meshMatrix, tempVec3a$1, tempVec3b$2);
             if (worldMatrix) {
-                math.transformPoint4(worldMatrix, tempVec4b$2, tempVec4c$2);
-                math.expandAABB3Point3(worldAABB, tempVec4c$2);
+                math.transformPoint4(worldMatrix, tempVec3b$2, tempVec3c$2);
+                math.expandAABB3Point3(worldAABB, tempVec3c$2);
             } else {
-                math.expandAABB3Point3(worldAABB, tempVec4b$2);
+                math.expandAABB3Point3(worldAABB, tempVec3b$2);
             }
         }
 
-        if (this._state.rtcCenter) {
-            const rtcCenter = this._state.rtcCenter;
-            worldAABB[0] += rtcCenter[0];
-            worldAABB[1] += rtcCenter[1];
-            worldAABB[2] += rtcCenter[2];
-            worldAABB[3] += rtcCenter[0];
-            worldAABB[4] += rtcCenter[1];
-            worldAABB[5] += rtcCenter[2];
-        }
-
-        math.expandAABB3(this.aabb, worldAABB);
-
         this._state.numInstances++;
 
-        const portionId = this._portions.length;
+        var portionId = this._portions.length;
         this._portions.push({});
 
         this._numPortions++;
@@ -36399,25 +32223,20 @@ class InstancingLayer {
         }
         const gl = this.model.scene.canvas.gl;
         if (this._colors.length > 0) {
-            const normalized = false;
+            let normalized = false;
             this._state.colorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._colors), this._colors.length, 4, gl.DYNAMIC_DRAW, normalized);
             this._colors = []; // Release memory
         }
         if (this._flags.length > 0) {
-            const normalized = true;
+            let normalized = true;
             this._state.flagsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._flags), this._flags.length, 4, gl.DYNAMIC_DRAW, normalized);
             this._state.flags2Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._flags2), this._flags2.length, 4, gl.DYNAMIC_DRAW, normalized);
             this._flags = [];
             this._flags2 = [];
         }
-        if (this._offsets.length > 0) {
-            const normalized = false;
-            this._state.offsetsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._offsets), this._offsets.length, 3, gl.DYNAMIC_DRAW, normalized);
-            this._offsets = []; // Release memory
-        }
         if (this._modelMatrixCol0.length > 0) {
 
-            const normalized = false;
+            let normalized = false;
 
             this._state.modelMatrixCol0Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._modelMatrixCol0), this._modelMatrixCol0.length, 4, gl.STATIC_DRAW, normalized);
             this._state.modelMatrixCol1Buf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Float32Array(this._modelMatrixCol1), this._modelMatrixCol1.length, 4, gl.STATIC_DRAW, normalized);
@@ -36434,14 +32253,14 @@ class InstancingLayer {
             this._modelNormalMatrixCol2 = [];
         }
         if (this._pickColors.length > 0) {
-            const normalized = false;
+            let normalized = false;
             this._state.pickColorsBuf = new ArrayBuf(gl, gl.ARRAY_BUFFER, new Uint8Array(this._pickColors), this._pickColors.length, 4, gl.STATIC_DRAW, normalized);
             this._pickColors = []; // Release memory
         }
         this._finalized = true;
     }
 
-    // The following setters are called by PerformanceMesh, in turn called by PerformanceNode, only after the layer is finalized.
+    // The following setters are called by PerformanceMesh, in turn called by PerformanceModelNode, only after the layer is finalized.
     // It's important that these are called after finalize() in order to maintain integrity of counts like _numVisibleLayerPortions etc.
 
     initFlags(portionId, flags) {
@@ -36461,10 +32280,6 @@ class InstancingLayer {
             this._numSelectedLayerPortions++;
             this.model.numSelectedLayerPortions++;
         }
-        if (flags & RENDER_FLAGS.CLIPPABLE) {
-            this._numClippableLayerPortions++;
-            this.model.numClippableLayerPortions++;
-        }
         if (flags & RENDER_FLAGS.EDGES) {
             this._numEdgesLayerPortions++;
             this.model.numEdgesLayerPortions++;
@@ -36472,10 +32287,6 @@ class InstancingLayer {
         if (flags & RENDER_FLAGS.PICKABLE) {
             this._numPickableLayerPortions++;
             this.model.numPickableLayerPortions++;
-        }
-        if (flags & RENDER_FLAGS.CULLED) {
-            this._numCulledLayerPortions++;
-            this.model.numCulledLayerPortions++;
         }
         this._setFlags(portionId, flags);
         this._setFlags2(portionId, flags);
@@ -36555,13 +32366,6 @@ class InstancingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        if (flags & RENDER_FLAGS.CLIPPABLE) {
-            this._numClippableLayerPortions++;
-            this.model.numClippableLayerPortions++;
-        } else {
-            this._numClippableLayerPortions--;
-            this.model.numClippableLayerPortions--;
-        }
         this._setFlags2(portionId, flags);
     }
 
@@ -36581,20 +32385,6 @@ class InstancingLayer {
         } else {
             this._numPickableLayerPortions--;
             this.model.numPickableLayerPortions--;
-        }
-        this._setFlags2(portionId, flags);
-    }
-
-    setCulled(portionId, flags) {
-        if (!this._finalized) {
-            throw "Not finalized";
-        }
-        if (flags & RENDER_FLAGS.CULLED) {
-            this._numCulledLayerPortions++;
-            this.model.numCulledLayerPortions++;
-        } else {
-            this._numCulledLayerPortions--;
-            this.model.numCulledLayerPortions--;
         }
         this._setFlags2(portionId, flags);
     }
@@ -36654,10 +32444,10 @@ class InstancingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        const visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
-        const xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
-        const highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
-        const selected = !!(flags & RENDER_FLAGS.SELECTED) ? 255 : 0;
+        var visible = !!(flags & RENDER_FLAGS.VISIBLE) ? 255 : 0;
+        var xrayed = !!(flags & RENDER_FLAGS.XRAYED) ? 255 : 0;
+        var highlighted = !!(flags & RENDER_FLAGS.HIGHLIGHTED) ? 255 : 0;
+        var selected = !!(flags & RENDER_FLAGS.SELECTED) ? 255 : 0;
         tempUint8Vec4[0] = visible;
         tempUint8Vec4[1] = xrayed;
         tempUint8Vec4[2] = highlighted;
@@ -36669,31 +32459,19 @@ class InstancingLayer {
         if (!this._finalized) {
             throw "Not finalized";
         }
-        const clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
-        const edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
-        const pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
-        const culled = !!(flags & RENDER_FLAGS.CULLED) ? 255 : 0;
+        var clippable = !!(flags & RENDER_FLAGS.CLIPPABLE) ? 255 : 0;
+        var edges = !!(flags & RENDER_FLAGS.EDGES) ? 255 : 0;
+        var pickable = !!(flags & RENDER_FLAGS.PICKABLE) ? 255 : 0;
         tempUint8Vec4[0] = clippable;
         tempUint8Vec4[1] = edges;
         tempUint8Vec4[2] = pickable;
-        tempUint8Vec4[3] = culled;
         this._state.flags2Buf.setData(tempUint8Vec4, portionId * 4, 4);
-    }
-
-    setOffset(portionId, offset) {
-        if (!this._finalized) {
-            throw "Not finalized";
-        }
-        tempVec3a$o[0] = offset[0];
-        tempVec3a$o[1] = offset[1];
-        tempVec3a$o[2] = offset[2];
-        this._state.offsetsBuf.setData(tempVec3a$o, portionId * 3, 3);
     }
 
     //-- NORMAL --------------------------------------------------------------------------------------------------------
 
     drawNormalFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (frameCtx.withSAO) {
@@ -36708,7 +32486,7 @@ class InstancingLayer {
     }
 
     drawNormalEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36717,7 +32495,7 @@ class InstancingLayer {
     }
 
     drawNormalFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === 0 || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === 0 || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (this._instancingRenderers.drawRenderer) {
@@ -36726,7 +32504,7 @@ class InstancingLayer {
     }
 
     drawNormalTransparentEdges(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0 || this._numTransparentLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numEdgesLayerPortions === 0 || this._numTransparentLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36737,7 +32515,7 @@ class InstancingLayer {
     //--  Post effects support -----------------------------------------------------------------------------------------
 
     drawDepth(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (this._instancingRenderers.depthRenderer) {
@@ -36746,7 +32524,7 @@ class InstancingLayer {
     }
 
     drawNormals(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
+        if (this._numVisibleLayerPortions === 0 || this._numTransparentLayerPortions === this._numPortions || this._numXRayedLayerPortions === this._numPortions) {
             return;
         }
         if (this._instancingRenderers.normalsRenderer) {
@@ -36757,7 +32535,7 @@ class InstancingLayer {
     //-- XRAYED--------------------------------------------------------------------------------------------------------
 
     drawXRayedFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.fillRenderer) {
@@ -36766,7 +32544,7 @@ class InstancingLayer {
     }
 
     drawXRayedEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36775,7 +32553,7 @@ class InstancingLayer {
     }
 
     drawXRayedFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.fillRenderer) {
@@ -36784,7 +32562,7 @@ class InstancingLayer {
     }
 
     drawXRayedEdgesTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numXRayedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36795,7 +32573,7 @@ class InstancingLayer {
     //-- HIGHLIGHTED ---------------------------------------------------------------------------------------------------
 
     drawHighlightedFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.fillRenderer) {
@@ -36804,7 +32582,7 @@ class InstancingLayer {
     }
 
     drawHighlightedEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36813,7 +32591,7 @@ class InstancingLayer {
     }
 
     drawHighlightedFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.fillRenderer) {
@@ -36822,7 +32600,7 @@ class InstancingLayer {
     }
 
     drawHighlightedEdgesTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numHighlightedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36833,7 +32611,7 @@ class InstancingLayer {
     //-- SELECTED ------------------------------------------------------------------------------------------------------
 
     drawSelectedFillOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.fillRenderer) {
@@ -36842,7 +32620,7 @@ class InstancingLayer {
     }
 
     drawSelectedEdgesOpaque(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36851,7 +32629,7 @@ class InstancingLayer {
     }
 
     drawSelectedFillTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.fillRenderer) {
@@ -36860,7 +32638,7 @@ class InstancingLayer {
     }
 
     drawSelectedEdgesTransparent(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.edgesRenderer) {
@@ -36871,7 +32649,7 @@ class InstancingLayer {
     //---- PICKING ----------------------------------------------------------------------------------------------------
 
     drawPickMesh(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.pickMeshRenderer) {
@@ -36880,7 +32658,7 @@ class InstancingLayer {
     }
 
     drawPickDepths(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.pickDepthRenderer) {
@@ -36889,7 +32667,7 @@ class InstancingLayer {
     }
 
     drawPickNormals(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.pickNormalsRenderer) {
@@ -36900,22 +32678,11 @@ class InstancingLayer {
     //---- OCCLUSION TESTING -------------------------------------------------------------------------------------------
 
     drawOcclusion(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
+        if (this._numVisibleLayerPortions === 0) {
             return;
         }
         if (this._instancingRenderers.occlusionRenderer) {
             this._instancingRenderers.occlusionRenderer.drawLayer(frameCtx, this);
-        }
-    }
-
-    //---- SHADOWS -----------------------------------------------------------------------------------------------------
-
-    drawShadow(frameCtx) {
-        if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
-            return;
-        }
-        if (this._instancingRenderers.shadowRenderer) {
-            this._instancingRenderers.shadowRenderer.drawLayer(frameCtx, this);
         }
     }
 
@@ -36940,10 +32707,6 @@ class InstancingLayer {
         if (state.flags2Buf) {
             state.flags2Buf.destroy();
             state.flags2Buf = null;
-        }
-        if (state.offsetsBuf) {
-            state.offsetsBuf.destroy();
-            state.offsetsBuf = null;
         }
         if (state.modelMatrixCol0Buf) {
             state.modelMatrixCol0Buf.destroy();
@@ -36985,7 +32748,7 @@ class InstancingLayer {
     }
 }
 
-const quantizePositions$1 = (function () { // http://cg.postech.ac.kr/research/mesh_comp_mobile/mesh_comp_mobile_conference.pdf
+var quantizePositions$1 = (function () { // http://cg.postech.ac.kr/research/mesh_comp_mobile/mesh_comp_mobile_conference.pdf
     const translate = math.mat4();
     const scale = math.mat4();
     const scalar = math.vec3();
@@ -37003,8 +32766,8 @@ const quantizePositions$1 = (function () { // http://cg.postech.ac.kr/research/m
         const xMultiplier = xmax !== xmin ? 65535 / (xmax - xmin) : 0;
         const yMultiplier = ymax !== ymin ? 65535 / (ymax - ymin) : 0;
         const zMultiplier = zmax !== zmin ? 65535 / (zmax - zmin) : 0;
-
-        for (let i = 0; i < lenPositions; i += 3) {
+        let i;
+        for (i = 0; i < lenPositions; i += 3) {
             quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
             quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
             quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
@@ -37095,203 +32858,9 @@ function dot$2(array, i, vec3) { // Dot product of a normal in an array against 
     return array[i] * vec3[0] + array[i + 1] * vec3[1] + array[i + 2] * vec3[2];
 }
 
-/**
- * Indicates what rendering needs to be done for the layers within a {@link Drawable}.
- *
- * Each Drawable has a RenderFlags in {@link Drawable#renderFlags}.
- *
- * Before rendering each frame, {@link Renderer} will call {@link Drawable#rebuildRenderFlags} on each {@link Drawable}.
- *
- * Then, when rendering a frame, Renderer will apply rendering passes to each Drawable according on what flags are set in {@link Drawable#renderFlags}.
- *
- * @private
- */
-class RenderFlags {
-
-    /**
-     * @private
-     */
-    constructor() {
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate which layers are visible within the {@link Drawable}.
-         *
-         * This is a list of IDs of visible layers within the {@link Drawable}. The IDs will be whatever the
-         * {@link Drawable} uses to identify its layers, usually integers.
-         *
-         * @property visibleLayers
-         * @type {Number[]}
-         */
-        this.visibleLayers = [];
-
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate which {@link SectionPlane}s are active within each layer of the {@link Drawable}.
-         *
-         * Layout is as follows:
-         *
-         * ````[
-         *      false, false, true, // Layer 0, SectionPlanes 0, 1, 2
-         *      false, true, true,  // Layer 1, SectionPlanes 0, 1, 2
-         *      true, false, true   // Layer 2, SectionPlanes 0, 1, 2
-         * ]````
-         *
-         * @property sectionPlanesActivePerLayer
-         * @type {Boolean[]}
-         */
-        this.sectionPlanesActivePerLayer = [];
-
-        this.reset();
-    }
-
-    /**
-     * @private
-     */
-    reset() {
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate whether the {@link Drawable} is culled.
-         * 
-         * When this is ````false````, then all of the other properties on ````RenderFlags```` will remain at their default values.
-         * 
-         * @property culled
-         * @type {Boolean}
-         */
-        this.culled = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the number of layers within the {@link Drawable}.
-         *
-         * @property numLayers
-         * @type {Number}
-         */
-        this.numLayers = 0;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the number of visible layers within the {@link Drawable}.
-         *
-         * @property numVisibleLayers
-         * @type {Number}
-         */
-        this.numVisibleLayers = 0;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillOpaque}.
-         * @property normalFillOpaque
-         * @type {boolean}
-         */
-        this.normalFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesOpaque}.
-         * @property normalEdgesOpaque
-         * @type {boolean}
-         */
-        this.normalEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalFillTransparent}.
-         * @property normalFillTransparent
-         * @type {boolean}
-         */
-        this.normalFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawNormalEdgesTransparent}.
-         * @property normalEdgesTransparent
-         * @type {boolean}
-         */
-        this.normalEdgesTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillOpaque}.
-         * @property xrayedFillOpaque
-         * @type {boolean}
-         */
-        this.xrayedFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedEdgesOpaque}.
-         * @property xrayedEdgesOpaque
-         * @type {boolean}
-         */
-        this.xrayedEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawXRayedFillTransparent}.
-         * @property xrayedFillTransparent
-         * @type {boolean}
-         */
-        this.xrayedFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #xrayedEdgesTransparent}.
-         * @property xrayedEdgesTransparent
-         * @type {boolean}
-         */
-        this.xrayedEdgesTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #drawHighlightedFillOpaque}.
-         * @property highlightedFillOpaque
-         * @type {boolean}
-         */
-        this.highlightedFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesOpaque}.
-         * @property highlightedEdgesOpaque
-         * @type {boolean}
-         */
-        this.highlightedEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedFillTransparent}.
-         * @property highlightedFillTransparent
-         * @type {boolean}
-         */
-        this.highlightedFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #highlightedEdgesTransparent}.
-         * @property highlightedEdgesTransparent
-         * @type {boolean}
-         */
-        this.highlightedEdgesTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillOpaque}.
-         * @property selectedFillOpaque
-         * @type {boolean}
-         */
-        this.selectedFillOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesOpaque}.
-         * @property selectedEdgesOpaque
-         * @type {boolean}
-         */
-        this.selectedEdgesOpaque = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedFillTransparent}.
-         * @property selectedFillTransparent
-         * @type {boolean}
-         */
-        this.selectedFillTransparent = false;
-
-        /**
-         * Set by {@link Drawable#rebuildRenderFlags} to indicate the {@link Drawable} needs {@link Drawable #selectedEdgesTransparent}.
-         * @property selectedEdgesTransparent
-         * @type {boolean}
-         */
-        this.selectedEdgesTransparent = false;
-    }
-}
-
 const instancedArraysSupported = WEBGL_INFO.SUPPORTED_EXTENSIONS["ANGLE_instanced_arrays"];
 
-const tempMat4$1 = math.mat4();
+var tempMat4$1 = math.mat4();
 
 const defaultScale = math.vec3([1, 1, 1]);
 const defaultPosition = math.vec3([0, 0, 0]);
@@ -37301,783 +32870,14 @@ const defaultQuaternion = math.identityQuaternion();
 /**
  * @desc A high-performance model representation for efficient rendering and low memory usage.
  *
- * # Examples
+ * ## Examples
  *
  * * [PerformanceModel using geometry batching](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
- * * [PerformanceModel using geometry batching and RTC coordinates](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching_rtcCenter)
  * * [PerformanceModel using geometry instancing](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)
- * * [PerformanceModel using geometry instancing and RTC coordinates](http://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing_rtcCenter)
  *
- * # Overview
+ * ## User Guide
  *
- * While xeokit's standard [scene graph](https://github.com/xeokit/xeokit-sdk/wiki/Scene-Graphs) is great for gizmos and medium-sized models, it doesn't scale up to millions of objects in terms of memory and rendering efficiency.
- *
- * For huge models, we have the ````PerformanceModel```` representation, which is optimized to pack large amounts of geometry into memory and render it efficiently using WebGL.
- *
- * ````PerformanceModel```` is the default model representation loaded by {@link GLTFLoaderPlugin}, {@link XKTLoaderPlugin} and {@link BIMServerLoaderPlugin}.
- *
- * In this tutorial you'll learn how to use ````PerformanceModel```` to create high-detail content programmatically. Ordinarily you'd be learning about ````PerformanceModel```` if you were writing your own model loader plugins.
- *
- * # Contents
- *
- * - [PerformanceModel](#performancemodel)
- * - [GPU-Resident Geometry](#gpu-resident-geometry)
- * - [Picking](#picking)
- * - [Example 1: Geometry Instancing](#example-1--geometry-instancing)
- * - [Finalizing a PerformanceModel](#finalizing-a-performancemodel)
- * - [Finding Entities](#finding-entities)
- * - [Example 2: Geometry Batching](#example-2--geometry-batching)
- * - [Classifying with Metadata](#classifying-with-metadata)
- * - [Querying Metadata](#querying-metadata)
- * - [Metadata Structure](#metadata-structure)
- * - [RTC Coordinates](#rtc-coordinates)
- *   - [Example 3: RTC Coordinates with Geometry Instancing](#example-2--rtc-coordinates-with-geometry-instancing)
- *   - [Example 4: RTC Coordinates with Geometry Batching](#example-2--rtc-coordinates-with-geometry-batching)
- *
- * ## PerformanceModel
- *
- * ````PerformanceModel```` uses two rendering techniques internally:
- *
- * 1. ***Geometry batching*** for unique geometries, combining those into a single WebGL geometry buffer, to render in one draw call, and
- * 2. ***geometry instancing*** for geometries that are shared by multiple meshes, rendering all instances of each shared geometry in one draw call.
- *
- * <br>
- * These techniques come with certain limitations:
- *
- * * Non-realistic rendering - while scene graphs can use xeokit's full set of material workflows, ````PerformanceModel```` uses simple Lambertian shading without textures.
- * * Static transforms - transforms within a ````PerformanceModel```` are static and cannot be dynamically translated, rotated and scaled the way {@link Node}s and {@link Mesh}es in scene graphs can.
- * * Immutable model representation - while scene graph {@link Node}s and
- * {@link Mesh}es can be dynamically plugged together, ````PerformanceModel```` is immutable,
- * since it packs its geometries into buffers and instanced arrays.
- *
- * ````PerformanceModel````'s API allows us to exploit batching and instancing, while exposing its elements as
- * abstract {@link Entity} types.
- *
- * {@link Entity} is the abstract base class for
- * the various xeokit components that represent models, objects, or anonymous visible elements. An Entity has a unique ID and can be
- * individually shown, hidden, selected, highlighted, ghosted, culled, picked and clipped, and has its own World-space boundary.
- *
- * * A ````PerformanceModel```` is an {@link Entity} that represents a model.
- * * A ````PerformanceModel```` represents each of its objects with an {@link Entity}.
- * * Each {@link Entity} has one or more meshes that define its shape.
- * * Each mesh has either its own unique geometry, or shares a geometry with other meshes.
- *
- * ## GPU-Resident Geometry
- *
- * For a low memory footprint, ````PerformanceModel```` stores its geometries in GPU memory only, compressed (quantized) as integers. Unfortunately, GPU-resident geometry is
- * not readable by JavaScript.
- *
- *
- * ## Example 1: Geometry Instancing
- *
- * In the example below, we'll use a ````PerformanceModel````
- * to build a simple table model using geometry instancing.
- *
- * We'll start by adding a reusable box-shaped geometry to our ````PerformanceModel````.
- *
- * Then, for each object in our model we'll add an {@link Entity}
- * that has a mesh that instances our box geometry, transforming and coloring the instance.
- *
- * [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)
- *
- * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing)]
- *
- * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {PerformanceModel} from "../src/viewer/scene/PerformanceModels/PerformanceModel.js";
- *
- * const viewer = new Viewer({
- *     canvasId: "myCanvas",
- *     transparent: true
- * });
- *
- * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
- * viewer.scene.camera.look = [0, -5.75, 0];
- * viewer.scene.camera.up = [0.37, 0.91, -0.11];
- *
- * // Build a PerformanceModel representing a table
- * // with four legs, using geometry instancing
- *
- * const performanceModel = new PerformanceModel(viewer.scene, {
- *     id: "table",
- *     isModel: true, // <--- Registers PerformanceModel in viewer.scene.models
- *     position: [0, 0, 0],
- *     scale: [1, 1, 1],
- *     rotation: [0, 0, 0]
- * });
- *
- * // Create a reusable geometry within the PerformanceModel
- * // We'll instance this geometry by five meshes
- *
- * performanceModel.createGeometry({
- *
- *     id: "myBoxGeometry",
- *
- *     // The primitive type - allowed values are "points", "lines",
- *     // "line-loop", "line-strip", "triangles", "triangle-strip"
- *     // and "triangle-fan".  See the OpenGL/WebGL specification docs
- *     // for how the coordinate arrays are supposed to be laid out.
- *     primitive: "triangles",
- *
- *     // The vertices - eight for our cube, each
- *     // one spanning three array elements for X,Y and Z
- *     positions: [
- *          1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, // v0-v1-v2-v3 front
- *          1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, // v0-v3-v4-v1 right
- *          1, 1, 1, 1, 1, -1, -1, 1, -1, -1, 1, 1, // v0-v1-v6-v1 top
- *          -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, // v1-v6-v7-v2 left
- *          -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, // v7-v4-v3-v2 bottom
- *          1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1 // v4-v7-v6-v1 back
- *     ],
- *
- *     // Normal vectors, one for each vertex
- *     normals: [
- *         0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, // v0-v1-v2-v3 front
- *         1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, // v0-v3-v4-v5 right
- *         0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, // v0-v5-v6-v1 top
- *         -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, // v1-v6-v7-v2 left
- *         0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, // v7-v4-v3-v2 bottom
- *         0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1 // v4-v7-v6-v5 back
- *     ],
- *
- *     // Indices - these organise the positions and and normals
- *     // into geometric primitives in accordance with the "primitive" parameter,
- *     // in this case a set of three indices for each triangle.
- *     //
- *     // Note that each triangle is specified in counter-clockwise winding order.
- *     //
- *     indices: [
- *         0, 1, 2, 0, 2, 3, // front
- *         4, 5, 6, 4, 6, 7, // right
- *         8, 9, 10, 8, 10, 11, // top
- *         12, 13, 14, 12, 14, 15, // left
- *         16, 17, 18, 16, 18, 19, // bottom
- *         20, 21, 22, 20, 22, 23
- *     ]
- * });
- *
- * // Red table leg
- *
- * performanceModel.createMesh({
- *     id: "redLegMesh",
- *     geometryId: "myBoxGeometry",
- *     position: [-4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1, 0.3, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     id: "redLeg",
- *     meshIds: ["redLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Green table leg
- *
- * performanceModel.createMesh({
- *     id: "greenLegMesh",
- *     geometryId: "myBoxGeometry",
- *     position: [4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 1.0, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     id: "greenLeg",
- *     meshIds: ["greenLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Blue table leg
- *
- * performanceModel.createMesh({
- *     id: "blueLegMesh",
- *     geometryId: "myBoxGeometry",
- *     position: [4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     id: "blueLeg",
- *     meshIds: ["blueLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Yellow table leg
- *
- * performanceModel.createMesh({
- *      id: "yellowLegMesh",
- *      geometryId: "myBoxGeometry",
- *      position: [-4, -6, 4],
- *      scale: [1, 3, 1],
- *      rotation: [0, 0, 0],
- *      color: [1.0, 1.0, 0.0]
- * });
- *
- * performanceModel.createEntity({
- *     id: "yellowLeg",
- *     meshIds: ["yellowLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Purple table top
- *
- * performanceModel.createMesh({
- *     id: "purpleTableTopMesh",
- *     geometryId: "myBoxGeometry",
- *     position: [0, -3, 0],
- *     scale: [6, 0.5, 6],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     id: "purpleTableTop",
- *     meshIds: ["purpleTableTopMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *  ````
- *
- * ## Finalizing a PerformanceModel
- *
- * Before we can view and interact with our ````PerformanceModel````, we need to **finalize** it. Internally, this causes the ````PerformanceModel```` to build the
- * vertex buffer objects (VBOs) that support our geometry instances. When using geometry batching (see next example),
- * this causes ````PerformanceModel```` to build the VBOs that combine the batched geometries. Note that you can do both instancing and
- * batching within the same ````PerformanceModel````.
- *
- * Once finalized, we can't add anything more to our ````PerformanceModel````.
- *
- * ```` javascript
- * performanceModel.finalize();
- * ````
- *
- * ## Finding Entities
- *
- * As mentioned earlier, {@link Entity} is
- * the abstract base class for components that represent models, objects, or just
- * anonymous visible elements.
- *
- * Since we created configured our ````PerformanceModel```` with ````isModel: true````,
- * we're able to find it as an Entity by ID in ````viewer.scene.models````. Likewise, since
- * we configured each of its Entities with ````isObject: true````, we're able to
- * find them in  ````viewer.scene.objects````.
- *
- *
- * ````javascript
- * // Get the whole table model Entity
- * const table = viewer.scene.models["table"];
- *
- *  // Get some leg object Entities
- * const redLeg = viewer.scene.objects["redLeg"];
- * const greenLeg = viewer.scene.objects["greenLeg"];
- * const blueLeg = viewer.scene.objects["blueLeg"];
- * ````
- *
- * ## Example 2: Geometry Batching
- *
- * Let's once more use a ````PerformanceModel````
- * to build the simple table model, this time exploiting geometry batching.
- *
- *  [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
- *
- * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)]
- *
- * ````javascript
- * import {Viewer} from "../src/viewer/Viewer.js";
- * import {PerformanceModel} from "../src/viewer/scene/PerformanceModel/PerformanceModel.js";
- *
- * const viewer = new Viewer({
- *     canvasId: "myCanvas",
- *     transparent: true
- * });
- *
- * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
- * viewer.scene.camera.look = [0, -5.75, 0];
- * viewer.scene.camera.up = [0.37, 0.91, -0.11];
- *
- * // Create a PerformanceModel representing a table with four legs, using geometry batching
- * const performanceModel = new PerformanceModel(viewer.scene, {
- *     id: "table",
- *     isModel: true,  // <--- Registers PerformanceModel in viewer.scene.models
- *     position: [0, 0, 0],
- *     scale: [1, 1, 1],
- *     rotation: [0, 0, 0]
- * });
- *
- * // Red table leg
- *
- * performanceModel.createMesh({
- *     id: "redLegMesh",
- *
- *     // Geometry arrays are same as for the earlier batching example
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [-4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1, 0.3, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     id: "redLeg",
- *     meshIds: ["redLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Green table leg
- *
- * performanceModel.createMesh({
- *     id: "greenLegMesh",
- *     primitive: "triangles",
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 1.0, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     id: "greenLeg",
- *     meshIds: ["greenLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Blue table leg
- *
- * performanceModel.createMesh({
- *     id: "blueLegMesh",
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     id: "blueLeg",
- *     meshIds: ["blueLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Yellow table leg object
- *
- * performanceModel.createMesh({
- *     id: "yellowLegMesh",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [-4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 1.0, 0.0]
- * });
- *
- * performanceModel.createEntity({
- *     id: "yellowLeg",
- *     meshIds: ["yellowLegMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Purple table top
- *
- * performanceModel.createMesh({
- *     id: "purpleTableTopMesh",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [0, -3, 0],
- *     scale: [6, 0.5, 6],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     id: "purpleTableTop",
- *     meshIds: ["purpleTableTopMesh"],
- *     isObject: true // <---- Registers Entity by ID on viewer.scene.objects
- * });
- *
- * // Finalize the PerformanceModel.
- *
- * performanceModel.finalize();
- *
- * // Find BigModelNodes by their model and object IDs
- *
- * // Get the whole table model
- * const table = viewer.scene.models["table"];
- *
- * // Get some leg objects
- * const redLeg = viewer.scene.objects["redLeg"];
- * const greenLeg = viewer.scene.objects["greenLeg"];
- * const blueLeg = viewer.scene.objects["blueLeg"];
- * ````
- *
- * ## Classifying with Metadata
- *
- * In the previous examples, we used ````PerformanceModel```` to build
- * two versions of the same table model, to demonstrate geometry batching and geometry instancing.
- *
- * We'll now classify our {@link Entity}s with metadata. This metadata
- * will work the same for both our examples, since they create the exact same structure of {@link Entity}s
- * to represent their models and objects. The abstract Entity type is, after all, intended to provide an abstract interface through which differently-implemented scene content can be accessed uniformly.
- *
- * To create the metadata, we'll create a {@link MetaModel} for our model,
- * with a {@link MetaObject} for each of it's objects. The MetaModel and MetaObjects
- * get the same IDs as the {@link Entity}s that represent their model and objects within our scene.
- *
- * ```` javascript
- * const furnitureMetaModel = viewer.metaScene.createMetaModel("furniture", {         // Creates a MetaModel in the MetaScene
- *
- *      "projectId": "myTableProject",
- *      "revisionId": "V1.0",
- *
- *      "metaObjects": [
- *          {                               // Creates a MetaObject in the MetaModel
- *              "id": "table",
- *              "name": "Table",            // Same ID as an object Entity
- *              "type": "furniture",        // Arbitrary type, could be IFC type
- *              "properties": {             // Arbitrary properties, could be IfcPropertySet
- *                  "cost": "200"
- *              }
- *          },
- *          {
- *              "id": "redLeg",
- *              "name": "Red table Leg",
- *              "type": "leg",
- *              "parent": "table",           // References first MetaObject as parent
- *              "properties": {
- *                  "material": "wood"
- *              }
- *          },
- *          {
- *              "id": "greenLeg",           // Node with corresponding id does not need to exist
- *              "name": "Green table leg",  // and MetaObject does not need to exist for Node with an id
- *              "type": "leg",
- *              "parent": "table",
- *              "properties": {
- *                  "material": "wood"
- *              }
- *          },
- *          {
- *              "id": "blueLeg",
- *              "name": "Blue table leg",
- *              "type": "leg",
- *              "parent": "table",
- *              "properties": {
- *                  "material": "wood"
- *              }
- *          },
- *          {
- *              "id": "yellowLeg",
- *              "name": "Yellow table leg",
- *              "type": "leg",
- *              "parent": "table",
- *              "properties": {
- *                  "material": "wood"
- *              }
- *          },
- *          {
- *              "id": "tableTop",
- *              "name": "Purple table top",
- *              "type": "surface",
- *              "parent": "table",
- *              "properties": {
- *                  "material": "formica",
- *                  "width": "60",
- *                  "depth": "60",
- *                  "thickness": "5"
- *              }
- *          }
- *      ]
- *  });
- * ````
- *
- * ## Querying Metadata
- *
- * Having created and classified our model (either the instancing or batching example), we can now find the {@link MetaModel}
- * and {@link MetaObject}s using the IDs of their
- * corresponding {@link Entity}s.
- *
- * ````JavaScript
- * const furnitureMetaModel = scene.metaScene.metaModels["furniture"];
- *
- * const redLegMetaObject = scene.metaScene.metaObjects["redLeg"];
- * ````
- *
- * In the snippet below, we'll log metadata on each {@link Entity} we click on:
- *
- * ````JavaScript
- * viewer.scene.input.on("mouseclicked", function (coords) {
- *
- *      const hit = viewer.scene.pick({
- *          canvasPos: coords
- *      });
- *
- *      if (hit) {
- *          const entity = hit.entity;
- *          const metaObject = viewer.metaScene.metaObjects[entity.id];
- *          if (metaObject) {
- *              console.log(JSON.stringify(metaObject.getJSON(), null, "\t"));
- *          }
- *      }
- *  });
- * ````
- *
- * ## Metadata Structure
- *
- * The {@link MetaModel}
- * organizes its {@link MetaObject}s in
- * a tree that describes their structural composition:
- *
- * ````JavaScript
- * // Get metadata on the root object
- * const tableMetaObject = furnitureMetaModel.rootMetaObject;
- *
- * // Get metadata on the leg objects
- * const redLegMetaObject = tableMetaObject.children[0];
- * const greenLegMetaObject = tableMetaObject.children[1];
- * const blueLegMetaObject = tableMetaObject.children[2];
- * const yellowLegMetaObject = tableMetaObject.children[3];
- * ````
- *
- * Given an {@link Entity}, we can find the object or model of which it is a part, or the objects that comprise it. We can also generate UI
- * components from the metadata, such as the tree view demonstrated in [this demo](https://xeokit.github.io/xeokit-sdk/examples/#BIMOffline_glTF_OTCConferenceCenter).
- *
- * This hierarchy allows us to express the hierarchical structure of a model while representing it in
- * various ways in the 3D scene (such as with ````PerformanceModel````, which
- * has a non-hierarchical scene representation).
- *
- * Note also that a {@link MetaObject} does not need to have a corresponding
- * {@link Entity} and vice-versa.
- *
- * # RTC Coordinates for 64-Bit Precision
- *
- * ````PerformanceModel```` can emulate 64-bit precision on GPUs using relative-to-center (RTC) coordinates.
- *
- * Consider a model that contains many small objects, but with such large spatial extents that 32 bits of GPU precision (accurate to ~7 digits) will not be sufficient to render all of the the objects without jittering.
- *
- * To prevent jittering, we could spatially subdivide the objects into "tiles". Each tile would have a center position, and the positions of the objects within the tile would be relative to that center ("RTC coordinates").
- *
- * While the center positions of the tiles would be 64-bit values, the object positions only need to be 32-bit.
- *
- * Internally, when rendering an object with RTC coordinates, xeokit first temporarily translates the camera viewing matrix by the object's tile's RTC center, on the CPU, using 64-bit math.
- *
- * Then xeokit loads the viewing matrix into its WebGL shaders, where math happens at 32-bit precision. Within the shaders, the matrix is effectively down-cast to 32-bit precision, and the object's 32-bit vertex positions are transformed by the matrix.
- *
- * We see no jittering, because with RTC a detectable loss of GPU accuracy only starts happening to objects as they become very distant from the camera viewpoint, at which point they are too small to be discernible anyway.
- *
- * ## RTC Coordinates with Geometry Instancing
- *
- * To use RTC with ````PerformanceModel```` geometry instancing, we specify an RTC center for the geometry. Then ````PerformanceModel```` assumes that all meshes that instance that geometry are within the same RTC coordinate system, ie. the meshes ````position```` and ````rotation```` properties are assumed to be relative to the geometry's ````rtcCenter````.
- *
- * For simplicity, our example's meshes all instance the same geometry. Therefore, our example model has only one RTC center.
- *
- * Note that the axis-aligned World-space boundary (AABB) of our model is ````[ -6, -9, -6, 1000000006, -2.5, 1000000006]````.
- *
- * [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
- *
- * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_instancing_rtcCenter)]
- *
- * ````javascript
- * const rtcCenter = [100000000, 0, 100000000];
- *
- * performanceModel.createGeometry({
- *     id: "box",
- *     rtcCenter: rtcCenter, // This geometry's positions, and the transforms of all meshes that instance the geometry, are relative to the RTC center
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg1",
- *     geometryId: "box",
- *     position: [-4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1, 0.3, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg1"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg2",
- *     geometryId: "box",
- *     position: [4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 1.0, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg2"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg3",
- *     geometryId: "box",
- *     position: [4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg3"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg4",
- *     geometryId: "box",
- *     position: [-4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 1.0, 0.0]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg4"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "top",
- *     geometryId: "box",
- *     position: [0, -3, 0],
- *     scale: [6, 0.5, 6],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["top"],
- *     isObject: true
- * });
- * ````
- *
- * ## RTC Coordinates with Geometry Batching
- *
- * To use RTC with ````PerformanceModel```` geometry batching, we specify an RTC center (````rtcCenter````) for each mesh. For performance, we try to have as many meshes share the same value for ````rtcCenter```` as possible. Each mesh's ````positions````, ````position```` and ````rotation```` properties are assumed to be relative to ````rtcCenter````.
- *
- * For simplicity, the meshes in our example all share the same RTC center.
- *
- * The axis-aligned World-space boundary (AABB) of our model is ````[ -6, -9, -6, 1000000006, -2.5, 1000000006]````.
- *
- * [![](http://xeokit.io/img/docs/sceneGraph.png)](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching)
- *
- * * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#sceneRepresentation_PerformanceModel_batching_rtcCenter)]
- *
- * ````javascript
- * const rtcCenter = [100000000, 0, 100000000];
- *
- * performanceModel.createMesh({
- *     id: "leg1",
- *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [-4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1, 0.3, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg1"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg2",
- *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [4, -6, -4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 1.0, 0.3]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg2"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg3",
- *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [0.3, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg3"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "leg4",
- *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [-4, -6, 4],
- *     scale: [1, 3, 1],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 1.0, 0.0]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["leg4"],
- *     isObject: true
- * });
- *
- * performanceModel.createMesh({
- *     id: "top",
- *     rtcCenter: rtcCenter, // This mesh's positions and transforms are relative to the RTC center
- *     primitive: "triangles",
- *     positions: [ 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1 ... ],
- *     normals: [ 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, ... ],
- *     indices: [ 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, ... ],
- *     position: [0, -3, 0],
- *     scale: [6, 0.5, 6],
- *     rotation: [0, 0, 0],
- *     color: [1.0, 0.3, 1.0]
- * });
- *
- * performanceModel.createEntity({
- *     meshIds: ["top"],
- *     isObject: true
- * });
- ````
+ * * [High Performance Model Representation](https://github.com/xeokit/xeokit-sdk/wiki/High-Performance-Model-Representation)
  *
  * @implements {Drawable}
  * @implements {Entity}
@@ -38106,29 +32906,23 @@ class PerformanceModel extends Component {
      * @param {Number[]} [cfg.colorize=[1.0,1.0,1.0]] PerformanceModel's initial RGB colorize color, multiplies by the rendered fragment colors.
      * @param {Number} [cfg.opacity=1.0] PerformanceModel's initial opacity factor, multiplies by the rendered fragment alpha.
      * @param {Boolean} [cfg.saoEnabled=true] Indicates if Scalable Ambient Obscurance (SAO) will apply to this PerformanceModel. SAO is configured by the Scene's {@link SAO} component.
-     * @param {Boolean} [cfg.backfaces=false] Indicates if backfaces are visible.
-     * @param {Number} [cfg.edgeThreshold=10] When xraying, highlighting, selecting or edging, this is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
      */
     constructor(owner, cfg = {}) {
 
         super(owner, cfg);
 
         this._aabb = math.collapseAABB3();
-        this._aabbDirty = false;
         this._layerList = []; // For GL state efficiency when drawing, InstancingLayers are in first part, BatchingLayers are in second
         this._nodeList = [];
-
         this._lastDecodeMatrix = null;
 
         this._instancingLayers = {};
         this._currentBatchingLayer = null;
+        this._batchingBuffer = getBatchingBuffer();
         this._batchingScratchMemory = getBatchingLayerScratchMemory(this);
 
         this._meshes = {};
         this._nodes = {};
-
-        /** @private **/
-        this.renderFlags = new RenderFlags();
 
         /**
          * @private
@@ -38177,23 +32971,11 @@ class PerformanceModel extends Component {
          */
         this.numPickableLayerPortions = 0;
 
-        /**
-         * @private
-         */
-        this.numClippableLayerPortions = 0;
-
-        /**
-         * @private
-         */
-        this.numCulledLayerPortions = 0;
-
         /** @private */
         this.numEntities = 0;
 
         /** @private */
         this._numTriangles = 0;
-
-        this._edgeThreshold = cfg.edgeThreshold || 10;
 
         this.visible = cfg.visible;
         this.culled = cfg.culled;
@@ -38208,7 +32990,6 @@ class PerformanceModel extends Component {
         this.edges = cfg.edges;
         this.colorize = cfg.colorize;
         this.opacity = cfg.opacity;
-        this.backfaces = cfg.backfaces;
 
         // Build static matrix
 
@@ -38399,9 +33180,8 @@ class PerformanceModel extends Component {
      * @param {Number[]} cfg.positions Flat array of positions.
      * @param {Number[]} cfg.normals Flat array of normal vectors.
      * @param {Number[]} cfg.indices Array of triangle indices.
-     * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. These are automatically generated internally if not supplied, using the ````edgeThreshold```` given to the ````PerformanceModel```` constructor.
+     * @param {Number[]} cfg.edgeIndices Array of edge line indices.
      * @param {Number[]} [cfg.positionsDecodeMatrix] A 4x4 matrix for decompressing ````positions````.
-     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center. When this is given, then ````positions```` are assumed to be relative to this center.
      */
     createGeometry(cfg) {
         if (!instancedArraysSupported) {
@@ -38417,10 +33197,7 @@ class PerformanceModel extends Component {
             this.error("Geometry already created: " + geometryId);
             return;
         }
-        const instancingLayer = new InstancingLayer(this, utils.apply({
-            layerIndex: 0, // This is set in #finalize()
-            edgeThreshold: this._edgeThreshold
-        }, cfg));
+        const instancingLayer = new InstancingLayer(this, cfg);
         this._instancingLayers[geometryId] = instancingLayer;
         this._layerList.push(instancingLayer);
         this.numGeometries++;
@@ -38444,14 +33221,9 @@ class PerformanceModel extends Component {
      * that the ````positions```` and ````normals```` arrays are compressed. When compressed, ````positions```` will be
      * quantized and in World-space, and ````normals```` will be oct-encoded and in World-space.
      *
-     * If you accompany the arrays with an  ````rtcCenter````, then ````createMesh()```` will assume
-     * that the ````positions```` are in relative-to-center (RTC) coordinates, with ````rtcCenter```` being the origin of their
-     * RTC coordinate system.
-     *
-     * When providing either ````positionsDecodeMatrix```` or ````rtcCenter````, ````createMesh()```` will start a new
-     * batch each time either of those two parameters change since the last call. Therefore, to combine arrays into the
-     * minimum number of batches, it's best for performance to create your shared meshes in runs that have the same value
-     * for ````positionsDecodeMatrix```` and ````rtcCenter````.
+     * When creating compressed batches, ````createMesh()```` will start a new batch each time ````positionsDecodeMatrix````
+     * changes. Therefore, to combine arrays into the minimum number of batches, it's best for performance to create
+     * your shared meshes in runs that have the value for ````positionsDecodeMatrix````.
      *
      * Note that ````positions````, ````normals```` and ````indices```` are all required together.
      *
@@ -38462,11 +33234,8 @@ class PerformanceModel extends Component {
      * @param {Number[]} [cfg.positions] Flat array of geometry positions. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.normals] Flat array of normal vectors. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.positionsDecodeMatrix] A 4x4 matrix for decompressing ````positions````.
-     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center. When this is given, then ````positions```` are assumed to be relative to this center.
      * @param {Number[]} [cfg.indices] Array of triangle indices. Ignored when ````geometryId```` is given.
-     * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. If ````geometryId```` is not given, edge line indices are
-     * automatically generated internally if not given, using the ````edgeThreshold```` given to the ````PerformanceModel````
-     * constructor. This parameter is ignored when ````geometryId```` is given.
+     * @param {Number[]} [cfg.edgeIndices] Array of edge line indices. Ignored when ````geometryId```` is given.
      * @param {Number[]} [cfg.position=[0,0,0]] Local 3D position. of the mesh
      * @param {Number[]} [cfg.scale=[1,1,1]] Scale of the mesh.
      * @param {Number[]} [cfg.rotation=[0,0,0]] Rotation of the mesh as Euler angles given in degrees, for each of the X, Y and Z axis.
@@ -38500,9 +33269,9 @@ class PerformanceModel extends Component {
             }
         }
 
-        let flags = 0;
-        let layer;
-        let portionId;
+        var flags = 0;
+        var layer;
+        var portionId;
 
         const color = (cfg.color) ? new Uint8Array([Math.floor(cfg.color[0] * 255), Math.floor(cfg.color[1] * 255), Math.floor(cfg.color[2] * 255)]) : [255, 255, 255];
         const opacity = (cfg.opacity !== undefined && cfg.opacity !== null) ? Math.floor(cfg.opacity * 255) : 255;
@@ -38511,9 +33280,9 @@ class PerformanceModel extends Component {
             this.numTransparentLayerPortions++;
         }
 
-        const mesh = new PerformanceMesh(this, id, color, opacity);
+        var mesh = new PerformanceMesh(this, id, color, opacity);
 
-        const pickId = mesh.pickId;
+        var pickId = mesh.pickId;
 
         const a = pickId >> 24 & 0xFF;
         const b = pickId >> 16 & 0xFF;
@@ -38539,7 +33308,7 @@ class PerformanceModel extends Component {
                 meshMatrix = math.composeMat4(position, defaultQuaternion, scale, tempMat4$1);
             }
 
-            const instancingLayer = this._instancingLayers[geometryId];
+            var instancingLayer = this._instancingLayers[geometryId];
             layer = instancingLayer;
             portionId = instancingLayer.createPortion(flags, color, opacity, meshMatrix, worldMatrix, aabb, pickColor);
             math.expandAABB3(this._aabb, aabb);
@@ -38548,28 +33317,26 @@ class PerformanceModel extends Component {
             this._numTriangles += numTriangles;
             mesh.numTriangles = numTriangles;
 
-            mesh.rtcCenter = instancingLayer.rtcCenter;
-
         } else { // Batching
 
-            let primitive = cfg.primitive || "triangles";
+            var primitive = cfg.primitive || "triangles";
             if (primitive !== "points" && primitive !== "lines" && primitive !== "line-loop" &&
                 primitive !== "line-strip" && primitive !== "triangles" && primitive !== "triangle-strip" && primitive !== "triangle-fan") {
                 this.error(`Unsupported value for 'primitive': '${primitive}' - supported values are 'points', 'lines', 'line-loop', 'line-strip', 'triangles', 'triangle-strip' and 'triangle-fan'. Defaulting to 'triangles'.`);
                 primitive = "triangles";
             }
 
-            let indices = cfg.indices;
-            let edgeIndices = cfg.edgeIndices;
+            var indices = cfg.indices;
+            var edgeIndices = cfg.edgeIndices;
 
-            let positions = cfg.positions;
+            var positions = cfg.positions;
 
             if (!positions) {
                 this.error("Config missing: positions (no meshIds provided, so expecting geometry arrays instead)");
                 return null;
             }
 
-            let normals = cfg.normals;
+            var normals = cfg.normals;
 
             if (!normals) {
                 this.error("Config missing: normals (no meshIds provided, so expecting geometry arrays instead)");
@@ -38581,53 +33348,34 @@ class PerformanceModel extends Component {
                 return null;
             }
 
-            let needNewBatchingLayer = false;
-
-            if (cfg.rtcCenter) {
-                if (!this._lastRTCCenter) {
-                    needNewBatchingLayer = true;
-                    this._lastRTCCenter = math.vec3(cfg.rtcCenter);
-                } else {
-                    if (!math.compareVec3(this._lastRTCCenter, cfg.rtcCenter)) {
-                        needNewBatchingLayer = true;
-                        this._lastRTCCenter.set(cfg.rtcCenter);
-                    }
-                }
-            }
             if (cfg.positionsDecodeMatrix) {
                 if (!this._lastDecodeMatrix) {
-                    needNewBatchingLayer = true;
                     this._lastDecodeMatrix = math.mat4(cfg.positionsDecodeMatrix);
-
                 } else {
                     if (!math.compareMat4(this._lastDecodeMatrix, cfg.positionsDecodeMatrix)) {
-                        needNewBatchingLayer = true;
+                        if (this._currentBatchingLayer) {
+                            this._currentBatchingLayer.finalize();
+                            this._currentBatchingLayer = null;
+                        }
                         this._lastDecodeMatrix.set(cfg.positionsDecodeMatrix);
                     }
                 }
             }
 
-            if (needNewBatchingLayer) {
-                if (this._currentBatchingLayer) {
-                    this._currentBatchingLayer.finalize();
-                    this._currentBatchingLayer = null;
-                }
-            }
-
             if (this._currentBatchingLayer) {
-                if (!this._currentBatchingLayer.canCreatePortion(positions.length, indices.length)) {
+                if (!this._currentBatchingLayer.canCreatePortion(positions.length)) {
                     this._currentBatchingLayer.finalize();
                     this._currentBatchingLayer = null;
                 }
             }
 
             if (!this._currentBatchingLayer) {
+                // console.log("New batching layer");
                 this._currentBatchingLayer = new BatchingLayer(this, {
-                    layerIndex: 0, // This is set in #finalize()
                     primitive: "triangles",
+                    buffer: this._batchingBuffer,
                     scratchMemory: this._batchingScratchMemory,
-                    positionsDecodeMatrix: cfg.positionsDecodeMatrix,  // Can be undefined
-                    rtcCenter: cfg.rtcCenter // Can be undefined
+                    positionsDecodeMatrix: cfg.positionsDecodeMatrix,
                 });
                 this._layerList.push(this._currentBatchingLayer);
             }
@@ -38635,7 +33383,7 @@ class PerformanceModel extends Component {
             layer = this._currentBatchingLayer;
 
             if (!edgeIndices && indices) {
-                edgeIndices = buildEdgeIndices(positions, indices, null, this._edgeThreshold);
+                edgeIndices = buildEdgeIndices(positions, indices, null, 10);
             }
 
             let meshMatrix;
@@ -38663,8 +33411,6 @@ class PerformanceModel extends Component {
             const numTriangles = Math.round(indices.length / 3);
             this._numTriangles += numTriangles;
             mesh.numTriangles = numTriangles;
-
-            mesh.rtcCenter = cfg.rtcCenter;
         }
 
         mesh.parent = null; // Will be set within PerformanceModelNode constructor
@@ -38713,11 +33459,11 @@ class PerformanceModel extends Component {
             this.error("Config missing: meshIds");
             return;
         }
-        let i;
-        let len;
-        let meshId;
-        let mesh;
-        let meshes = [];
+        var i;
+        var len;
+        var meshId;
+        var mesh;
+        var meshes = [];
         for (i = 0, len = meshIds.length; i < len; i++) {
             meshId = meshIds[i];
             mesh = this._meshes[meshId];
@@ -38732,15 +33478,12 @@ class PerformanceModel extends Component {
             meshes.push(mesh);
         }
         // Create PerformanceModelNode flags
-        let flags = 0;
+        var flags = 0;
         if (this._visible && cfg.visible !== false) {
             flags = flags | RENDER_FLAGS.VISIBLE;
         }
         if (this._pickable && cfg.pickable !== false) {
             flags = flags | RENDER_FLAGS.PICKABLE;
-        }
-        if (this._culled && cfg.culled !== false) {
-            flags = flags | RENDER_FLAGS.CULLED;
         }
         if (this._clippable && cfg.clippable !== false) {
             flags = flags | RENDER_FLAGS.CLIPPABLE;
@@ -38762,7 +33505,7 @@ class PerformanceModel extends Component {
         }
 
         // Create PerformanceModelNode AABB
-        let aabb;
+        var aabb;
         if (meshes.length === 1) {
             aabb = meshes[0].aabb;
         } else {
@@ -38787,80 +33530,25 @@ class PerformanceModel extends Component {
      * Once finalized, you can't add anything more to this PerformanceModel.
      */
     finalize() {
-
         if (this._currentBatchingLayer) {
             this._currentBatchingLayer.finalize();
             this._currentBatchingLayer = null;
         }
-
+        if (this._batchingBuffer) {
+            putBatchingBuffer(this._batchingBuffer);
+            this._batchingBuffer = null;
+        }
         for (const geometryId in this._instancingLayers) {
             if (this._instancingLayers.hasOwnProperty(geometryId)) {
                 this._instancingLayers[geometryId].finalize();
             }
         }
-
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             const node = this._nodeList[i];
             node._finalize();
         }
-
-        // Support WebGL batching by grouping BatchingLayers and InstancingLayers into two runs within layerList
-
-        const sortedLayerList = [];
-        for (let i = 0, len = this._layerList.length; i < len; i++) {
-            const layer = this._layerList[i];
-            if (layer instanceof BatchingLayer) {
-                sortedLayerList.push(layer);
-            } else {
-                sortedLayerList.unshift(layer);
-            }
-        }
-        for (let i = 0, len = sortedLayerList.length; i < len; i++) {
-            const layer = sortedLayerList[i];
-            this._layerList[i] = layer;
-            layer.layerIndex = i;
-        }
-
         this.glRedraw();
-
         this.scene._aabbDirty = true;
-    }
-
-    //------------------------------------------------------------------------------------------------------------------
-    // PerformanceModel members
-    //------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Sets if backfaces are rendered for this PerformanceModel.
-     *
-     * Default is ````false````.
-     *
-     * @type {Boolean}
-     */
-    set backfaces(backfaces) {
-        backfaces = !!backfaces;
-        this._backfaces = backfaces;
-        this.glRedraw();
-    }
-
-    /**
-     * Sets if backfaces are rendered for this PerformanceModel.
-     *
-     * Default is ````false````.
-     *
-     * @type {Boolean}
-     */
-    get backfaces() {
-        return this._backfaces;
-    }
-
-    /**
-     * Gets the list of {@link Entity}s within this PerformanceModel.
-     *
-     * @returns {Entity[]}
-     */
-    get entityList() {
-        return this._nodeList;
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -38899,25 +33587,13 @@ class PerformanceModel extends Component {
     /**
      * Gets the PerformanceModel's World-space 3D axis-aligned bounding box.
      *
-     * Represented by a six-element Float64Array containing the min/max extents of the
+     * Represented by a six-element Float32Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
      */
     get aabb() {
-        if (this._aabbDirty) {
-            this._rebuildAABB();
-        }
         return this._aabb;
-    }
-
-    _rebuildAABB() {
-        math.collapseAABB3(this._aabb);
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
-            const node = this._nodeList[i];
-            math.expandAABB3(this._aabb, node.aabb);
-        }
-        this._aabbDirty = false;
     }
 
     /**
@@ -38939,7 +33615,7 @@ class PerformanceModel extends Component {
     set visible(visible) {
         visible = visible !== false;
         this._visible = visible;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].visible = visible;
         }
         this.glRedraw();
@@ -38964,7 +33640,7 @@ class PerformanceModel extends Component {
     set xrayed(xrayed) {
         xrayed = !!xrayed;
         this._xrayed = xrayed;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].xrayed = xrayed;
         }
         this.glRedraw();
@@ -38987,7 +33663,7 @@ class PerformanceModel extends Component {
     set highlighted(highlighted) {
         highlighted = !!highlighted;
         this._highlighted = highlighted;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].highlighted = highlighted;
         }
         this.glRedraw();
@@ -39010,7 +33686,7 @@ class PerformanceModel extends Component {
     set selected(selected) {
         selected = !!selected;
         this._selected = selected;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].selected = selected;
         }
         this.glRedraw();
@@ -39033,7 +33709,7 @@ class PerformanceModel extends Component {
     set edges(edges) {
         edges = !!edges;
         this._edges = edges;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].edges = edges;
         }
         this.glRedraw();
@@ -39057,10 +33733,7 @@ class PerformanceModel extends Component {
      */
     set culled(culled) {
         culled = !!culled;
-        this._culled = culled;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
-            this._nodeList[i].culled = culled;
-        }
+        this._culled = culled; // Whole PerformanceModel is culled
         this.glRedraw();
     }
 
@@ -39085,7 +33758,7 @@ class PerformanceModel extends Component {
     set clippable(clippable) {
         clippable = clippable !== false;
         this._clippable = clippable;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].clippable = clippable;
         }
         this.glRedraw();
@@ -39110,7 +33783,7 @@ class PerformanceModel extends Component {
     set collidable(collidable) {
         collidable = collidable !== false;
         this._collidable = collidable;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].collidable = collidable;
         }
     }
@@ -39134,7 +33807,7 @@ class PerformanceModel extends Component {
     set pickable(pickable) {
         pickable = pickable !== false;
         this._pickable = pickable;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].pickable = pickable;
         }
     }
@@ -39147,7 +33820,7 @@ class PerformanceModel extends Component {
      * @type {Boolean}
      */
     get pickable() {
-        return (this.numPickableLayerPortions > 0);
+        return this._pickable;
     }
 
     /**
@@ -39161,7 +33834,7 @@ class PerformanceModel extends Component {
      */
     set colorize(colorize) {
         this._colorize = colorize;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].colorize = colorize;
         }
     }
@@ -39186,7 +33859,7 @@ class PerformanceModel extends Component {
      */
     set opacity(opacity) {
         this._opacity = opacity;
-        for (let i = 0, len = this._nodeList.length; i < len; i++) {
+        for (var i = 0, len = this._nodeList.length; i < len; i++) {
             this._nodeList[i].opacity = opacity;
         }
     }
@@ -39207,12 +33880,7 @@ class PerformanceModel extends Component {
      *
      * @type {Boolean}
      */
-    set castsShadow(castsShadow) {
-        castsShadow = (castsShadow !== false);
-        if (castsShadow !== this._castsShadow) {
-            this._castsShadow = castsShadow;
-            this.glRedraw();
-        }
+    set castsShadow(castsShadow) { // TODO
     }
 
     /**
@@ -39220,8 +33888,8 @@ class PerformanceModel extends Component {
      *
      * @type {Boolean}
      */
-    get castsShadow() {
-        return this._castsShadow;
+    get castsShadow() { // TODO
+        return false;
     }
 
     /**
@@ -39229,12 +33897,7 @@ class PerformanceModel extends Component {
      *
      * @type {Boolean}
      */
-    set receivesShadow(receivesShadow) {
-        receivesShadow = (receivesShadow !== false);
-        if (receivesShadow !== this._receivesShadow) {
-            this._receivesShadow = receivesShadow;
-            this.glRedraw();
-        }
+    set receivesShadow(receivesShadow) { // TODO
     }
 
     /**
@@ -39242,8 +33905,8 @@ class PerformanceModel extends Component {
      *
      * @type {Boolean}
      */
-    get receivesShadow() {
-        return this._receivesShadow;
+    get receivesShadow() { // TODO
+        return false;
     }
 
     /**
@@ -39281,84 +33944,13 @@ class PerformanceModel extends Component {
     }
 
     /** @private */
-    rebuildRenderFlags() {
-        this.renderFlags.reset();
-        this._updateRenderFlagsVisibleLayers();
-        if (this.renderFlags.numLayers > 0 && this.renderFlags.numVisibleLayers === 0) {
-            this.renderFlags.culled = true;
-            return;
-        }
-        this._updateRenderFlags();
-    }
+    getRenderFlags(renderFlags) {
 
-    /**
-     * @private
-     */
-    _updateRenderFlagsVisibleLayers() {
-        const renderFlags = this.renderFlags;
-        renderFlags.numLayers = this._layerList.length;
-        renderFlags.numVisibleLayers = 0;
-        for (let layerIndex = 0, len = this._layerList.length; layerIndex < len; layerIndex++) {
-            const layer = this._layerList[layerIndex];
-            const layerVisible = this._getActiveSectionPlanesForLayer(layer);
-            if (layerVisible) {
-                renderFlags.visibleLayers[renderFlags.numVisibleLayers++] = layerIndex;
-            }
-        }
-    }
-
-    /** @private */
-    _getActiveSectionPlanesForLayer(layer) {
-
-        const renderFlags = this.renderFlags;
-        const sectionPlanes = this.scene._sectionPlanesState.sectionPlanes;
-        const numSectionPlanes = sectionPlanes.length;
-        const baseIndex = layer.layerIndex * numSectionPlanes;
-
-        if (numSectionPlanes > 0) {
-            for (let i = 0; i < numSectionPlanes; i++) {
-
-                const sectionPlane = sectionPlanes[i];
-
-                if (!sectionPlane.active) {
-                    renderFlags.sectionPlanesActivePerLayer[baseIndex + i] = false;
-
-                } else {
-
-                    const intersect = math.planeAABB3Intersect(sectionPlane.dir, sectionPlane.dist, layer.aabb);
-                    const outside = (intersect === -1);
-
-                    if (outside) {
-
-                        if (layer._numClippableLayerPortions < layer._numPortions) {
-                            // Layer has objects that cannot be clipped by SectionPlanes
-                            renderFlags.sectionPlanesActivePerLayer[baseIndex + i] = true;
-                        } else {
-                            return false;
-                        }
-                    }
-
-                    const intersecting = (intersect === 0);
-                    renderFlags.sectionPlanesActivePerLayer[baseIndex + i] = intersecting;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    /** @private */
-    _updateRenderFlags() {
+        renderFlags.reset();
 
         if (this.numVisibleLayerPortions === 0) {
             return;
         }
-
-        if (this.numCulledLayerPortions === this.numPortions) {
-            return;
-        }
-
-        const renderFlags = this.renderFlags;
 
         renderFlags.normalFillOpaque = true;
 
@@ -39478,190 +34070,128 @@ class PerformanceModel extends Component {
 
     /** @private */
     drawNormalFillOpaque(frameCtx) {
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawNormalFillOpaque(frameCtx);
+        this.scene.canvas.gl.disable(this.scene.canvas.gl.CULL_FACE);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawNormalFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawDepth(frameCtx) { // Dedicated to SAO because it skips transparent objects
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawDepth(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawDepth(frameCtx);
         }
     }
 
     /** @private */
     drawNormals(frameCtx) { // Dedicated to SAO because it skips transparent objects
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawNormals(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawNormals(frameCtx);
         }
     }
 
     /** @private */
     drawNormalEdgesOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawNormalEdgesOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawNormalEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawNormalFillTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawNormalFillTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawNormalFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawNormalEdgesTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawNormalEdgesTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawNormalEdgesTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedFillOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawXRayedFillOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawXRayedFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedEdgesOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawXRayedEdgesOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawXRayedEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedFillTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawXRayedFillTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawXRayedFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawXRayedEdgesTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawXRayedEdgesTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawXRayedEdgesTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedFillOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawHighlightedFillOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawHighlightedFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedEdgesOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawHighlightedEdgesOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawHighlightedEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedFillTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawHighlightedFillTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawHighlightedFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawHighlightedEdgesTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawHighlightedEdgesTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawHighlightedEdgesTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedFillOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawSelectedFillOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawSelectedFillOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedEdgesOpaque(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawSelectedEdgesOpaque(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawSelectedEdgesOpaque(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedFillTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawSelectedFillTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawSelectedFillTransparent(frameCtx);
         }
     }
 
     /** @private */
     drawSelectedEdgesTransparent(frameCtx) {
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawSelectedEdgesTransparent(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawSelectedEdgesTransparent(frameCtx);
         }
     }
 
@@ -39670,19 +34200,8 @@ class PerformanceModel extends Component {
         if (this.numVisibleLayerPortions === 0) {
             return;
         }
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawPickMesh(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawPickMesh(frameCtx);
         }
     }
 
@@ -39694,19 +34213,8 @@ class PerformanceModel extends Component {
         if (this.numVisibleLayerPortions === 0) {
             return;
         }
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawPickDepths(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawPickDepths(frameCtx);
         }
     }
 
@@ -39718,19 +34226,8 @@ class PerformanceModel extends Component {
         if (this.numVisibleLayerPortions === 0) {
             return;
         }
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawPickNormals(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawPickNormals(frameCtx);
         }
     }
 
@@ -39741,42 +34238,8 @@ class PerformanceModel extends Component {
         if (this.numVisibleLayerPortions === 0) {
             return;
         }
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawOcclusion(frameCtx);
-        }
-    }
-
-    /**
-     * @private
-     */
-    drawShadow(frameCtx) {
-        if (this.numVisibleLayerPortions === 0) {
-            return;
-        }
-        if (frameCtx.backfaces !== this.backfaces) {
-            const gl = this.scene.canvas.gl;
-            if (this.backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frameCtx.backfaces = this.backfaces;
-        }
-        const renderFlags = this.renderFlags;
-        for (let i = 0, len = renderFlags.visibleLayers.length; i < len; i++) {
-            const layerIndex = renderFlags.visibleLayers[i];
-            this._layerList[layerIndex].drawShadow(frameCtx);
+        for (var i = 0, len = this._layerList.length; i < len; i++) {
+            this._layerList[i].drawOcclusion(frameCtx);
         }
     }
 
@@ -39791,6 +34254,10 @@ class PerformanceModel extends Component {
         if (this._currentBatchingLayer) {
             this._currentBatchingLayer.destroy();
             this._currentBatchingLayer = null;
+        }
+        if (this._batchingBuffer) {
+            putBatchingBuffer(this._batchingBuffer);
+            this._batchingBuffer = null;
         }
         this.scene.camera.off(this._onCameraViewMatrix);
         for (let i = 0, len = this._layerList.length; i < len; i++) {
@@ -46955,20 +41422,13 @@ var p = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
-/*
-
- Parser for .XKT Format V1
-
-.XKT specifications: https://github.com/xeokit/xeokit-sdk/wiki/XKT-Format
-
- DEPRECATED
-
- */
-
 let pako = window.pako || p;
-if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
+if (!pako.inflate) {
+    // See https://github.com/nodeca/pako/issues/97
     pako = pako.default;
 }
+
+const XKT_VERSION = 4; // Maximum XKT format version supported by this XKTLoaderPlugin
 
 const decompressColor = (function () {
     const color2 = new Float32Array(3);
@@ -46979,1383 +41439,6 @@ const decompressColor = (function () {
         return color2;
     };
 })();
-
-function extract(elements) {
-    return {
-        positions: elements[0],
-        normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-        meshPositions: elements[4],
-        meshIndices: elements[5],
-        meshEdgesIndices: elements[6],
-        meshColors: elements[7],
-        entityIDs: elements[8],
-        entityMeshes: elements[9],
-        entityIsObjects: elements[10],
-        positionsDecodeMatrix: elements[11]
-    };
-}
-
-function inflate(deflatedData) {
-    return {
-        positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
-        meshPositions: new Uint32Array(pako.inflate(deflatedData.meshPositions).buffer),
-        meshIndices: new Uint32Array(pako.inflate(deflatedData.meshIndices).buffer),
-        meshEdgesIndices: new Uint32Array(pako.inflate(deflatedData.meshEdgesIndices).buffer),
-        meshColors: new Uint8Array(pako.inflate(deflatedData.meshColors).buffer),
-        entityIDs: pako.inflate(deflatedData.entityIDs, {to: 'string'}),
-        entityMeshes: new Uint32Array(pako.inflate(deflatedData.entityMeshes).buffer),
-        entityIsObjects: new Uint8Array(pako.inflate(deflatedData.entityIsObjects).buffer),
-        positionsDecodeMatrix: new Float32Array(pako.inflate(deflatedData.positionsDecodeMatrix).buffer)
-    };
-}
-
-function load(viewer, options, inflatedData, performanceModel) {
-
-    performanceModel.positionsCompression = "precompressed";
-    performanceModel.normalsCompression = "precompressed";
-
-    const positions = inflatedData.positions;
-    const normals = inflatedData.normals;
-    const indices = inflatedData.indices;
-    const edgeIndices = inflatedData.edgeIndices;
-    const meshPositions = inflatedData.meshPositions;
-    const meshIndices = inflatedData.meshIndices;
-    const meshEdgesIndices = inflatedData.meshEdgesIndices;
-    const meshColors = inflatedData.meshColors;
-    const entityIDs = JSON.parse(inflatedData.entityIDs);
-    const entityMeshes = inflatedData.entityMeshes;
-    const entityIsObjects = inflatedData.entityIsObjects;
-    const numMeshes = meshPositions.length;
-    const numEntities = entityMeshes.length;
-
-    for (let i = 0; i < numEntities; i++) {
-
-        const entityId = entityIDs [i];
-        const metaObject = viewer.metaScene.metaObjects[entityId];
-        const entityDefaults = {};
-        const meshDefaults = {};
-
-        if (metaObject) {
-
-            if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
-                continue;
-            }
-
-            if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
-                continue;
-            }
-
-            const props = options.objectDefaults ? options.objectDefaults[metaObject.type] || options.objectDefaults["DEFAULT"] : null;
-
-            if (props) {
-                if (props.visible === false) {
-                    entityDefaults.visible = false;
-                }
-                if (props.pickable === false) {
-                    entityDefaults.pickable = false;
-                }
-                if (props.colorize) {
-                    meshDefaults.color = props.colorize;
-                }
-                if (props.opacity !== undefined && props.opacity !== null) {
-                    meshDefaults.opacity = props.opacity;
-                }
-            }
-        } else {
-            if (options.excludeUnclassifiedObjects) {
-                continue;
-            }
-        }
-
-        const lastEntity = (i === numEntities - 1);
-        const meshIds = [];
-
-        for (let j = entityMeshes [i], jlen = lastEntity ? entityMeshes.length : entityMeshes [i + 1]; j < jlen; j++) {
-
-            const lastMesh = (j === (numMeshes - 1));
-            const meshId = entityId + ".mesh." + j;
-
-            const color = decompressColor(meshColors.subarray((j * 4), (j * 4) + 3));
-            const opacity = meshColors[(j * 4) + 3] / 255.0;
-
-            performanceModel.createMesh(utils.apply(meshDefaults, {
-                id: meshId,
-                primitive: "triangles",
-                positions: positions.subarray(meshPositions [j], lastMesh ? positions.length : meshPositions [j + 1]),
-                normals: normals.subarray(meshPositions [j], lastMesh ? positions.length : meshPositions [j + 1]),
-                indices: indices.subarray(meshIndices [j], lastMesh ? indices.length : meshIndices [j + 1]),
-                edgeIndices: edgeIndices.subarray(meshEdgesIndices [j], lastMesh ? edgeIndices.length : meshEdgesIndices [j + 1]),
-                positionsDecodeMatrix: inflatedData.positionsDecodeMatrix,
-                color: color,
-                opacity: opacity
-            }));
-
-            meshIds.push(meshId);
-        }
-
-        performanceModel.createEntity(utils.apply(entityDefaults, {
-            id: entityId,
-            isObject: (entityIsObjects [i] === 1),
-            meshIds: meshIds
-        }));
-    }
-}
-
-/** @private */
-const ParserV1 = {
-    version: 1,
-    parse: function (viewer, options, elements, performanceModel) {
-        const deflatedData = extract(elements);
-        const inflatedData = inflate(deflatedData);
-        load(viewer, options, inflatedData, performanceModel);
-    }
-};
-
-/*
-
-Parser for .XKT Format V2
-
-DEPRECATED
-
-.XKT specifications: https://github.com/xeokit/xeokit-sdk/wiki/XKT-Format
-
- */
-
-let pako$1 = window.pako || p;
-if (!pako$1.inflate) {  // See https://github.com/nodeca/pako/issues/97
-    pako$1 = pako$1.default;
-}
-
-function extract$1(elements) {
-    return {
-
-        positions: elements[0],
-        normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-
-        meshPositions: elements[4],
-        meshIndices: elements[5],
-        meshEdgesIndices: elements[6],
-        meshColors: elements[7],
-
-        entityIDs: elements[8],
-        entityMeshes: elements[9],
-        entityIsObjects: elements[10],
-
-        positionsDecodeMatrix: elements[11],
-
-        entityMeshIds: elements[12],
-        entityMatrices: elements[13],
-        entityUsesInstancing: elements[14]
-    };
-}
-
-function inflate$1(deflatedData) {
-    return {
-        positions: new Uint16Array(pako$1.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$1.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako$1.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$1.inflate(deflatedData.edgeIndices).buffer),
-
-        meshPositions: new Uint32Array(pako$1.inflate(deflatedData.meshPositions).buffer),
-        meshIndices: new Uint32Array(pako$1.inflate(deflatedData.meshIndices).buffer),
-        meshEdgesIndices: new Uint32Array(pako$1.inflate(deflatedData.meshEdgesIndices).buffer),
-        meshColors: new Uint8Array(pako$1.inflate(deflatedData.meshColors).buffer),
-
-        entityIDs: pako$1.inflate(deflatedData.entityIDs, {to: 'string'}),
-        entityMeshes: new Uint32Array(pako$1.inflate(deflatedData.entityMeshes).buffer),
-        entityIsObjects: new Uint8Array(pako$1.inflate(deflatedData.entityIsObjects).buffer),
-
-        positionsDecodeMatrix: new Float32Array(pako$1.inflate(deflatedData.positionsDecodeMatrix).buffer),
-
-        entityMeshIds: new Uint32Array(pako$1.inflate(deflatedData.entityMeshIds).buffer),
-        entityMatrices: new Float32Array(pako$1.inflate(deflatedData.entityMatrices).buffer),
-        entityUsesInstancing: new Uint8Array(pako$1.inflate(deflatedData.entityUsesInstancing).buffer)
-    };
-}
-
-const decompressColor$1 = (function () {
-    const color2 = new Float32Array(3);
-    return function (color) {
-        color2[0] = color[0] / 255.0;
-        color2[1] = color[1] / 255.0;
-        color2[2] = color[2] / 255.0;
-        return color2;
-    };
-})();
-
-function load$1(viewer, options, inflatedData, performanceModel) {
-
-    performanceModel.positionsCompression = "precompressed";
-    performanceModel.normalsCompression = "precompressed";
-
-    const positions = inflatedData.positions;
-    const normals = inflatedData.normals;
-    const indices = inflatedData.indices;
-    const edgeIndices = inflatedData.edgeIndices;
-    const meshPositions = inflatedData.meshPositions;
-    const meshIndices = inflatedData.meshIndices;
-    const meshEdgesIndices = inflatedData.meshEdgesIndices;
-    const meshColors = inflatedData.meshColors;
-    const entityIDs = JSON.parse(inflatedData.entityIDs);
-    const entityMeshes = inflatedData.entityMeshes;
-    const entityIsObjects = inflatedData.entityIsObjects;
-    const entityMeshIds = inflatedData.entityMeshIds;
-    const entityMatrices = inflatedData.entityMatrices;
-    const entityUsesInstancing = inflatedData.entityUsesInstancing;
-
-    const numMeshes = meshPositions.length;
-    const numEntities = entityMeshes.length;
-
-    const alreadyCreatedGeometries = {};
-
-    for (let i = 0; i < numEntities; i++) {
-
-        const entityId = entityIDs [i];
-        const metaObject = viewer.metaScene.metaObjects[entityId];
-        const entityDefaults = {};
-        const meshDefaults = {};
-        const entityMatrix = entityMatrices.subarray((i * 16), (i * 16) + 16);
-
-        if (metaObject) {
-            if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
-                continue;
-            }
-            if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
-                continue;
-            }
-            const props = options.objectDefaults ? options.objectDefaults[metaObject.type] || options.objectDefaults["DEFAULT"] : null;
-            if (props) {
-                if (props.visible === false) {
-                    entityDefaults.visible = false;
-                }
-                if (props.pickable === false) {
-                    entityDefaults.pickable = false;
-                }
-                if (props.colorize) {
-                    meshDefaults.color = props.colorize;
-                }
-                if (props.opacity !== undefined && props.opacity !== null) {
-                    meshDefaults.opacity = props.opacity;
-                }
-            }
-        } else {
-            if (options.excludeUnclassifiedObjects) {
-                continue;
-            }
-        }
-
-        const lastEntity = (i === numEntities - 1);
-
-        const meshIds = [];
-
-        for (let j = entityMeshes [i], jlen = lastEntity ? entityMeshIds.length : entityMeshes [i + 1]; j < jlen; j++) {
-
-            const jj = entityMeshIds [j];
-
-            const lastMesh = (jj === (numMeshes - 1));
-            const meshId = entityId + ".mesh." + jj;
-
-            const color = decompressColor$1(meshColors.subarray((jj * 4), (jj * 4) + 3));
-            const opacity = meshColors[(jj * 4) + 3] / 255.0;
-
-            const tmpPositions = positions.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
-            const tmpNormals = normals.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
-            const tmpIndices = indices.subarray(meshIndices [jj], lastMesh ? indices.length : meshIndices [jj + 1]);
-            const tmpEdgeIndices = edgeIndices.subarray(meshEdgesIndices [jj], lastMesh ? edgeIndices.length : meshEdgesIndices [jj + 1]);
-
-            if (entityUsesInstancing [i] === 1) {
-
-                const geometryId = "geometry." + jj;
-
-                if (!(geometryId in alreadyCreatedGeometries)) {
-
-                    performanceModel.createGeometry({
-                        id: geometryId,
-                        positions: tmpPositions,
-                        normals: tmpNormals,
-                        indices: tmpIndices,
-                        edgeIndices: tmpEdgeIndices,
-                        primitive: "triangles",
-                        positionsDecodeMatrix: inflatedData.positionsDecodeMatrix,
-                    });
-
-                    alreadyCreatedGeometries [geometryId] = true;
-                }
-
-                performanceModel.createMesh(utils.apply(meshDefaults, {
-                    id: meshId,
-                    color: color,
-                    opacity: opacity,
-                    matrix: entityMatrix,
-                    geometryId: geometryId,
-                }));
-
-                meshIds.push(meshId);
-                
-            } else {
-
-                performanceModel.createMesh(utils.apply(meshDefaults, {
-                    id: meshId,
-                    primitive: "triangles",
-                    positions: tmpPositions,
-                    normals: tmpNormals,
-                    indices: tmpIndices,
-                    edgeIndices: tmpEdgeIndices,
-                    positionsDecodeMatrix: inflatedData.positionsDecodeMatrix,
-                    color: color,
-                    opacity: opacity
-                }));
-
-                meshIds.push(meshId);
-            }
-        }
-
-        if (meshIds.length) {
-            performanceModel.createEntity(utils.apply(entityDefaults, {
-                id: entityId,
-                isObject: (entityIsObjects [i] === 1),
-                meshIds: meshIds
-            }));
-        }
-    }
-}
-
-/** @private */
-const ParserV2 = {
-    version: 2,
-    parse: function (viewer, options, elements, performanceModel) {
-        const deflatedData = extract$1(elements);
-        const inflatedData = inflate$1(deflatedData);
-        load$1(viewer, options, inflatedData, performanceModel);
-    }
-};
-
-/*
-
-Parser for .XKT Format V3
-
-.XKT specifications: https://github.com/xeokit/xeokit-sdk/wiki/XKT-Format
-
- */
-
-let pako$2 = window.pako || p;
-if (!pako$2.inflate) {  // See https://github.com/nodeca/pako/issues/97
-    pako$2 = pako$2.default;
-}
-
-function extract$2(elements) {
-    return {
-        positions: elements[0],
-        normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-        meshPositions: elements[4],
-        meshIndices: elements[5],
-        meshEdgesIndices: elements[6],
-        meshColors: elements[7],
-        entityIDs: elements[8],
-        entityMeshes: elements[9],
-        entityIsObjects: elements[10],
-        instancedPositionsDecodeMatrix: elements[11],
-        batchedPositionsDecodeMatrix: elements[12],
-        entityMeshIds: elements[13],
-        entityMatrices: elements[14],
-        entityUsesInstancing: elements[15]
-    };
-}
-
-function inflate$2(deflatedData) {
-    return {
-        positions: new Uint16Array(pako$2.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$2.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako$2.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$2.inflate(deflatedData.edgeIndices).buffer),
-        meshPositions: new Uint32Array(pako$2.inflate(deflatedData.meshPositions).buffer),
-        meshIndices: new Uint32Array(pako$2.inflate(deflatedData.meshIndices).buffer),
-        meshEdgesIndices: new Uint32Array(pako$2.inflate(deflatedData.meshEdgesIndices).buffer),
-        meshColors: new Uint8Array(pako$2.inflate(deflatedData.meshColors).buffer),
-        entityIDs: pako$2.inflate(deflatedData.entityIDs, {to: 'string'}),
-        entityMeshes: new Uint32Array(pako$2.inflate(deflatedData.entityMeshes).buffer),
-        entityIsObjects: new Uint8Array(pako$2.inflate(deflatedData.entityIsObjects).buffer),
-        instancedPositionsDecodeMatrix: new Float32Array(pako$2.inflate(deflatedData.instancedPositionsDecodeMatrix).buffer),
-        batchedPositionsDecodeMatrix: new Float32Array(pako$2.inflate(deflatedData.batchedPositionsDecodeMatrix).buffer),
-        entityMeshIds: new Uint32Array(pako$2.inflate(deflatedData.entityMeshIds).buffer),
-        entityMatrices: new Float32Array(pako$2.inflate(deflatedData.entityMatrices).buffer),
-        entityUsesInstancing: new Uint8Array(pako$2.inflate(deflatedData.entityUsesInstancing).buffer)
-    };
-}
-
-const decompressColor$2 = (function () {
-    const color2 = new Float32Array(3);
-    return function (color) {
-        color2[0] = color[0] / 255.0;
-        color2[1] = color[1] / 255.0;
-        color2[2] = color[2] / 255.0;
-        return color2;
-    };
-})();
-
-function load$2(viewer, options, inflatedData, performanceModel) {
-
-    performanceModel.positionsCompression = "precompressed";
-    performanceModel.normalsCompression = "precompressed";
-
-    const positions = inflatedData.positions;
-    const normals = inflatedData.normals;
-    const indices = inflatedData.indices;
-    const edgeIndices = inflatedData.edgeIndices;
-    const meshPositions = inflatedData.meshPositions;
-    const meshIndices = inflatedData.meshIndices;
-    const meshEdgesIndices = inflatedData.meshEdgesIndices;
-    const meshColors = inflatedData.meshColors;
-    const entityIDs = JSON.parse(inflatedData.entityIDs);
-    const entityMeshes = inflatedData.entityMeshes;
-    const entityIsObjects = inflatedData.entityIsObjects;
-    const entityMeshIds = inflatedData.entityMeshIds;
-    const entityMatrices = inflatedData.entityMatrices;
-    const entityUsesInstancing = inflatedData.entityUsesInstancing;
-
-    const numMeshes = meshPositions.length;
-    const numEntities = entityMeshes.length;
-
-    const _alreadyCreatedGeometries = {};
-
-    for (let i = 0; i < numEntities; i++) {
-
-        const entityId = entityIDs [i];
-        const metaObject = viewer.metaScene.metaObjects[entityId];
-        const entityDefaults = {};
-        const meshDefaults = {};
-        const entityMatrix = entityMatrices.subarray((i * 16), (i * 16) + 16);
-
-        if (metaObject) {
-
-            if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
-                continue;
-            }
-
-            if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
-                continue;
-            }
-
-            const props = options.objectDefaults ? options.objectDefaults[metaObject.type] || options.objectDefaults["DEFAULT"] : null;
-
-            if (props) {
-                if (props.visible === false) {
-                    entityDefaults.visible = false;
-                }
-                if (props.pickable === false) {
-                    entityDefaults.pickable = false;
-                }
-                if (props.colorize) {
-                    meshDefaults.color = props.colorize;
-                }
-                if (props.opacity !== undefined && props.opacity !== null) {
-                    meshDefaults.opacity = props.opacity;
-                }
-            }
-        } else {
-            if (options.excludeUnclassifiedObjects) {
-                continue;
-            }
-        }
-
-        const lastEntity = (i === numEntities - 1);
-
-        const meshIds = [];
-
-        for (let j = entityMeshes [i], jlen = lastEntity ? entityMeshIds.length : entityMeshes [i + 1]; j < jlen; j++) {
-            var jj = entityMeshIds [j];
-
-            const lastMesh = (jj === (numMeshes - 1));
-            const meshId = entityId + ".mesh." + jj;
-
-            const color = decompressColor$2(meshColors.subarray((jj * 4), (jj * 4) + 3));
-            const opacity = meshColors[(jj * 4) + 3] / 255.0;
-
-            var tmpPositions = positions.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
-            var tmpNormals = normals.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
-            var tmpIndices = indices.subarray(meshIndices [jj], lastMesh ? indices.length : meshIndices [jj + 1]);
-            var tmpEdgeIndices = edgeIndices.subarray(meshEdgesIndices [jj], lastMesh ? edgeIndices.length : meshEdgesIndices [jj + 1]);
-
-            if (entityUsesInstancing [i] === 1) {
-                var geometryId = "geometry." + jj;
-
-                if (!(geometryId in _alreadyCreatedGeometries)) {
-
-                    performanceModel.createGeometry({
-                        id: geometryId,
-                        positions: tmpPositions,
-                        normals: tmpNormals,
-                        indices: tmpIndices,
-                        edgeIndices: tmpEdgeIndices,
-                        primitive: "triangles",
-                        positionsDecodeMatrix: inflatedData.instancedPositionsDecodeMatrix
-                    });
-
-                    _alreadyCreatedGeometries [geometryId] = true;
-                }
-
-                performanceModel.createMesh(utils.apply(meshDefaults, {
-                    id: meshId,
-                    color: color,
-                    opacity: opacity,
-                    matrix: entityMatrix,
-                    geometryId: geometryId,
-                }));
-
-                meshIds.push(meshId);
-
-            } else {
-
-                performanceModel.createMesh(utils.apply(meshDefaults, {
-                    id: meshId,
-                    primitive: "triangles",
-                    positions: tmpPositions,
-                    normals: tmpNormals,
-                    indices: tmpIndices,
-                    edgeIndices: tmpEdgeIndices,
-                    positionsDecodeMatrix: inflatedData.batchedPositionsDecodeMatrix,
-                    color: color,
-                    opacity: opacity
-                }));
-
-                meshIds.push(meshId);
-            }
-        }
-
-        if (meshIds.length) {
-            performanceModel.createEntity(utils.apply(entityDefaults, {
-                id: entityId,
-                isObject: (entityIsObjects [i] === 1),
-                meshIds: meshIds
-            }));
-        }
-    }
-}
-
-/** @private */
-const ParserV3 = {
-    version: 3,
-    parse: function (viewer, options, elements, performanceModel) {
-        const deflatedData = extract$2(elements);
-        const inflatedData = inflate$2(deflatedData);
-        load$2(viewer, options, inflatedData, performanceModel);
-    }
-};
-
-/*
-
-Parser for .XKT Format V4
-
-.XKT specifications: https://github.com/xeokit/xeokit-sdk/wiki/XKT-Format
-
- */
-
-let pako$3 = window.pako || p;
-if (!pako$3.inflate) {  // See https://github.com/nodeca/pako/issues/97
-    pako$3 = pako$3.default;
-}
-
-function extract$3(elements) {
-    return {
-        positions: elements[0],
-        normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-        decodeMatrices: elements[4],
-        matrices: elements[5],
-        eachPrimitivePositionsAndNormalsPortion: elements[6],
-        eachPrimitiveIndicesPortion: elements[7],
-        eachPrimitiveEdgeIndicesPortion: elements[8],
-        eachPrimitiveDecodeMatricesPortion: elements[9],
-        eachPrimitiveColor: elements[10],
-        primitiveInstances: elements[11],
-        eachEntityId: elements[12],
-        eachEntityPrimitiveInstancesPortion: elements[13],
-        eachEntityMatricesPortion: elements[14],
-        eachEntityMatrix: elements[15]
-    };
-}
-
-function inflate$3(deflatedData) {
-    return {
-        positions: new Uint16Array(pako$3.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$3.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako$3.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$3.inflate(deflatedData.edgeIndices).buffer),
-        decodeMatrices: new Float32Array(pako$3.inflate(deflatedData.decodeMatrices).buffer),
-        matrices: new Float32Array(pako$3.inflate(deflatedData.matrices).buffer),
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako$3.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
-        eachPrimitiveIndicesPortion: new Uint32Array(pako$3.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako$3.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
-        eachPrimitiveDecodeMatricesPortion: new Uint32Array(pako$3.inflate(deflatedData.eachPrimitiveDecodeMatricesPortion).buffer),
-        eachPrimitiveColor: new Uint8Array(pako$3.inflate(deflatedData.eachPrimitiveColor).buffer),
-        primitiveInstances: new Uint32Array(pako$3.inflate(deflatedData.primitiveInstances).buffer),
-        eachEntityId: pako$3.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$3.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
-        eachEntityMatricesPortion: new Uint32Array(pako$3.inflate(deflatedData.eachEntityMatricesPortion).buffer)
-    };
-}
-
-const decompressColor$3 = (function () {
-    const color2 = new Float32Array(3);
-    return function (color) {
-        color2[0] = color[0] / 255.0;
-        color2[1] = color[1] / 255.0;
-        color2[2] = color[2] / 255.0;
-        return color2;
-    };
-})();
-
-function load$3(viewer, options, inflatedData, performanceModel) {
-
-    performanceModel.positionsCompression = "precompressed";
-    performanceModel.normalsCompression = "precompressed";
-
-    const positions = inflatedData.positions;
-    const normals = inflatedData.normals;
-    const indices = inflatedData.indices;
-    const edgeIndices = inflatedData.edgeIndices;
-    const decodeMatrices = inflatedData.decodeMatrices;
-    const matrices = inflatedData.matrices;
-
-    const eachPrimitivePositionsAndNormalsPortion = inflatedData.eachPrimitivePositionsAndNormalsPortion;
-    const eachPrimitiveIndicesPortion = inflatedData.eachPrimitiveIndicesPortion;
-    const eachPrimitiveEdgeIndicesPortion = inflatedData.eachPrimitiveEdgeIndicesPortion;
-    const eachPrimitiveDecodeMatricesPortion = inflatedData.eachPrimitiveDecodeMatricesPortion;
-    const eachPrimitiveColor = inflatedData.eachPrimitiveColor;
-
-    const primitiveInstances = inflatedData.primitiveInstances;
-
-    const eachEntityId = JSON.parse(inflatedData.eachEntityId);
-    const eachEntityPrimitiveInstancesPortion = inflatedData.eachEntityPrimitiveInstancesPortion;
-    const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
-
-    const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
-    const numPrimitiveInstances = primitiveInstances.length;
-    const primitiveInstanceCounts = new Uint8Array(numPrimitives); // For each mesh, how many times it is instanced
-    const orderedPrimitiveIndexes = new Uint32Array(numPrimitives); // For each mesh, its index sorted into runs that share the same decode matrix
-
-    const numEntities = eachEntityId.length;
-
-    // Get lookup that orders primitives into runs that share the same decode matrices;
-    // this is used to create meshes in batches that use the same decode matrix
-
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
-        orderedPrimitiveIndexes[primitiveIndex] = primitiveIndex;
-    }
-
-    orderedPrimitiveIndexes.sort((i1, i2) => {
-        if (eachPrimitiveDecodeMatricesPortion[i1] < eachPrimitiveDecodeMatricesPortion[i2]) {
-            return -1;
-        }
-        if (eachPrimitiveDecodeMatricesPortion[i1] > eachPrimitiveDecodeMatricesPortion[i2]) {
-            return 1;
-        }
-        return 0;
-    });
-
-    // Count instances of each primitive
-
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
-        primitiveInstanceCounts[primitiveIndex]++;
-    }
-
-    // Map batched primitives to the entities that will use them
-
-    const batchedPrimitiveEntityIndexes = {};
-
-    for (let entityIndex = 0; entityIndex < numEntities; entityIndex++) {
-
-        const lastEntityIndex = (numEntities - 1);
-        const atLastEntity = (entityIndex === lastEntityIndex);
-        const firstEntityPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [entityIndex];
-        const lastEntityPrimitiveInstanceIndex = atLastEntity ? eachEntityPrimitiveInstancesPortion[lastEntityIndex] : eachEntityPrimitiveInstancesPortion[entityIndex + 1];
-
-        for (let primitiveInstancesIndex = firstEntityPrimitiveInstanceIndex; primitiveInstancesIndex < lastEntityPrimitiveInstanceIndex; primitiveInstancesIndex++) {
-
-            const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-            const primitiveInstanceCount = primitiveInstanceCounts[primitiveIndex];
-            const isInstancedPrimitive = (primitiveInstanceCount > 1);
-
-            if (!isInstancedPrimitive) {
-                batchedPrimitiveEntityIndexes[primitiveIndex] = entityIndex;
-            }
-        }
-    }
-
-    // Create 1) geometries for instanced primitives, and 2) meshes for batched primitives.  We create all the
-    // batched meshes now, before we create entities, because we're creating the batched meshes in runs that share
-    // the same decode matrices. Each run of meshes with the same decode matrix will end up in the same
-    // BatchingLayer; the PerformanceModel#createMesh() method starts a new BatchingLayer each time the decode
-    // matrix has changed since the last invocation of that method, hence why we need to order batched meshes
-    // in runs like this.
-
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
-
-        const orderedPrimitiveIndex = orderedPrimitiveIndexes[primitiveIndex];
-
-        const atLastPrimitive = (orderedPrimitiveIndex === (numPrimitives - 1));
-
-        const primitiveInstanceCount = primitiveInstanceCounts[orderedPrimitiveIndex];
-        const isInstancedPrimitive = (primitiveInstanceCount > 1);
-
-        const color = decompressColor$3(eachPrimitiveColor.subarray((orderedPrimitiveIndex * 4), (orderedPrimitiveIndex * 4) + 3));
-        const opacity = eachPrimitiveColor[(orderedPrimitiveIndex * 4) + 3] / 255.0;
-
-        const primitivePositions = positions.subarray(eachPrimitivePositionsAndNormalsPortion [orderedPrimitiveIndex], atLastPrimitive ? positions.length : eachPrimitivePositionsAndNormalsPortion [orderedPrimitiveIndex + 1]);
-        const primitiveNormals = normals.subarray(eachPrimitivePositionsAndNormalsPortion [orderedPrimitiveIndex], atLastPrimitive ? normals.length : eachPrimitivePositionsAndNormalsPortion [orderedPrimitiveIndex + 1]);
-        const primitiveIndices = indices.subarray(eachPrimitiveIndicesPortion [orderedPrimitiveIndex], atLastPrimitive ? indices.length : eachPrimitiveIndicesPortion [orderedPrimitiveIndex + 1]);
-        const primitiveEdgeIndices = edgeIndices.subarray(eachPrimitiveEdgeIndicesPortion [orderedPrimitiveIndex], atLastPrimitive ? edgeIndices.length : eachPrimitiveEdgeIndicesPortion [orderedPrimitiveIndex + 1]);
-        const primitiveDecodeMatrix = decodeMatrices.subarray(eachPrimitiveDecodeMatricesPortion [orderedPrimitiveIndex], eachPrimitiveDecodeMatricesPortion [orderedPrimitiveIndex] + 16);
-
-        if (isInstancedPrimitive) {
-
-            // Primitive instanced by more than one entity, and has positions in Model-space
-
-            var geometryId = "geometry" + orderedPrimitiveIndex; // These IDs are local to the PerformanceModel
-
-            performanceModel.createGeometry({
-                id: geometryId,
-                primitive: "triangles",
-                positions: primitivePositions,
-                normals: primitiveNormals,
-                indices: primitiveIndices,
-                edgeIndices: primitiveEdgeIndices,
-                positionsDecodeMatrix: primitiveDecodeMatrix
-            });
-
-        } else {
-
-            // Primitive is used only by one entity, and has positions pre-transformed into World-space
-
-            const meshId = orderedPrimitiveIndex; // These IDs are local to the PerformanceModel
-
-            const entityIndex = batchedPrimitiveEntityIndexes[orderedPrimitiveIndex];
-            const entityId = eachEntityId[entityIndex];
-
-            const meshDefaults = {}; // TODO: get from lookup from entity IDs
-
-            performanceModel.createMesh(utils.apply(meshDefaults, {
-                id: meshId,
-                primitive: "triangles",
-                positions: primitivePositions,
-                normals: primitiveNormals,
-                indices: primitiveIndices,
-                edgeIndices: primitiveEdgeIndices,
-                positionsDecodeMatrix: primitiveDecodeMatrix,
-                color: color,
-                opacity: opacity
-            }));
-        }
-    }
-
-    let countInstances = 0;
-
-    for (let entityIndex = 0; entityIndex < numEntities; entityIndex++) {
-
-        const lastEntityIndex = (numEntities - 1);
-        const atLastEntity = (entityIndex === lastEntityIndex);
-        const entityId = eachEntityId[entityIndex];
-        const firstEntityPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [entityIndex];
-        const lastEntityPrimitiveInstanceIndex = atLastEntity ? eachEntityPrimitiveInstancesPortion[lastEntityIndex] : eachEntityPrimitiveInstancesPortion[entityIndex + 1];
-
-        const meshIds = [];
-
-        for (let primitiveInstancesIndex = firstEntityPrimitiveInstanceIndex; primitiveInstancesIndex < lastEntityPrimitiveInstanceIndex; primitiveInstancesIndex++) {
-
-            const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-            const primitiveInstanceCount = primitiveInstanceCounts[primitiveIndex];
-            const isInstancedPrimitive = (primitiveInstanceCount > 1);
-
-            if (isInstancedPrimitive) {
-
-                const meshDefaults = {}; // TODO: get from lookup from entity IDs
-
-                const meshId = "instance." + countInstances++;
-                const geometryId = "geometry" + primitiveIndex;
-                const matricesIndex = (eachEntityMatricesPortion [entityIndex]) * 16;
-                const matrix = matrices.subarray(matricesIndex, matricesIndex + 16);
-
-                performanceModel.createMesh(utils.apply(meshDefaults, {
-                    id: meshId,
-                    geometryId: geometryId,
-                    matrix: matrix
-                }));
-
-                meshIds.push(meshId);
-
-            } else {
-                meshIds.push(primitiveIndex);
-            }
-        }
-
-        if (meshIds.length > 0) {
-
-            const entityDefaults = {}; // TODO: get from lookup from entity IDs
-
-            performanceModel.createEntity(utils.apply(entityDefaults, {
-                id: entityId,
-                isObject: true, ///////////////// TODO: If metaobject exists
-                meshIds: meshIds
-            }));
-        }
-    }
-}
-
-/** @private */
-const ParserV4 = {
-    version: 4,
-    parse: function (viewer, options, elements, performanceModel) {
-        const deflatedData = extract$3(elements);
-        const inflatedData = inflate$3(deflatedData);
-        load$3(viewer, options, inflatedData, performanceModel);
-    }
-};
-
-/*
-
- Parser for .XKT Format V5
-
-.XKT specifications: https://github.com/xeokit/xeokit-sdk/wiki/XKT-Format
-
- */
-
-let pako$4 = window.pako || p;
-if (!pako$4.inflate) {  // See https://github.com/nodeca/pako/issues/97
-    pako$4 = pako$4.default;
-}
-
-function extract$4(elements) {
-    return {
-        positions: elements[0],
-        normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-        matrices: elements[4],
-        eachPrimitivePositionsAndNormalsPortion: elements[5],
-        eachPrimitiveIndicesPortion: elements[6],
-        eachPrimitiveEdgeIndicesPortion: elements[7],
-        eachPrimitiveColor: elements[8],
-        primitiveInstances: elements[9],
-        eachEntityId: elements[10],
-        eachEntityPrimitiveInstancesPortion: elements[11],
-        eachEntityMatricesPortion: elements[12]
-    };
-}
-
-function inflate$4(deflatedData) {
-    return {
-        positions: new Float32Array(pako$4.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$4.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako$4.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$4.inflate(deflatedData.edgeIndices).buffer),
-        matrices: new Float32Array(pako$4.inflate(deflatedData.matrices).buffer),
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako$4.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
-        eachPrimitiveIndicesPortion: new Uint32Array(pako$4.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako$4.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
-        eachPrimitiveColor: new Uint8Array(pako$4.inflate(deflatedData.eachPrimitiveColor).buffer),
-        primitiveInstances: new Uint32Array(pako$4.inflate(deflatedData.primitiveInstances).buffer),
-        eachEntityId: pako$4.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$4.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
-        eachEntityMatricesPortion: new Uint32Array(pako$4.inflate(deflatedData.eachEntityMatricesPortion).buffer)
-    };
-}
-
-const decompressColor$4 = (function () {
-    const color2 = new Float32Array(3);
-    return function (color) {
-        color2[0] = color[0] / 255.0;
-        color2[1] = color[1] / 255.0;
-        color2[2] = color[2] / 255.0;
-        return color2;
-    };
-})();
-
-function load$4(viewer, options, inflatedData, performanceModel) {
-
-    performanceModel.positionsCompression = "disabled"; // Positions in XKT V4 are floats, which we never quantize, for precision with big models
-    performanceModel.normalsCompression = "precompressed"; // Normals are oct-encoded though
-
-    const positions = inflatedData.positions;
-    const normals = inflatedData.normals;
-    const indices = inflatedData.indices;
-    const edgeIndices = inflatedData.edgeIndices;
-    const matrices = inflatedData.matrices;
-
-    const eachPrimitivePositionsAndNormalsPortion = inflatedData.eachPrimitivePositionsAndNormalsPortion;
-    const eachPrimitiveIndicesPortion = inflatedData.eachPrimitiveIndicesPortion;
-    const eachPrimitiveEdgeIndicesPortion = inflatedData.eachPrimitiveEdgeIndicesPortion;
-    const eachPrimitiveColor = inflatedData.eachPrimitiveColor;
-
-    const primitiveInstances = inflatedData.primitiveInstances;
-
-    const eachEntityId = JSON.parse(inflatedData.eachEntityId);
-    const eachEntityPrimitiveInstancesPortion = inflatedData.eachEntityPrimitiveInstancesPortion;
-    const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
-
-    const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
-    const numPrimitiveInstances = primitiveInstances.length;
-    const primitiveInstanceCounts = new Uint8Array(numPrimitives); // For each mesh, how many times it is instanced
-
-    const numEntities = eachEntityId.length;
-
-    // Count instances of each primitive
-
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
-        primitiveInstanceCounts[primitiveIndex]++;
-    }
-
-    // Map batched primitives to the entities that will use them
-
-    const batchedPrimitiveEntityIndexes = {};
-
-    for (let entityIndex = 0; entityIndex < numEntities; entityIndex++) {
-
-        const lastEntityIndex = (numEntities - 1);
-        const atLastEntity = (entityIndex === lastEntityIndex);
-        const firstEntityPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [entityIndex];
-        const lastEntityPrimitiveInstanceIndex = atLastEntity ? eachEntityPrimitiveInstancesPortion[lastEntityIndex] : eachEntityPrimitiveInstancesPortion[entityIndex + 1];
-
-        for (let primitiveInstancesIndex = firstEntityPrimitiveInstanceIndex; primitiveInstancesIndex < lastEntityPrimitiveInstanceIndex; primitiveInstancesIndex++) {
-
-            const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-            const primitiveInstanceCount = primitiveInstanceCounts[primitiveIndex];
-            const isInstancedPrimitive = (primitiveInstanceCount > 1);
-
-            if (!isInstancedPrimitive) {
-                batchedPrimitiveEntityIndexes[primitiveIndex] = entityIndex;
-            }
-        }
-    }
-
-    // Create geometries for instanced primitives and meshes for batched primitives.
-
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
-
-        const atLastPrimitive = (primitiveIndex === (numPrimitives - 1));
-
-        const primitiveInstanceCount = primitiveInstanceCounts[primitiveIndex];
-        const isInstancedPrimitive = (primitiveInstanceCount > 1);
-
-        const color = decompressColor$4(eachPrimitiveColor.subarray((primitiveIndex * 4), (primitiveIndex * 4) + 3));
-        const opacity = eachPrimitiveColor[(primitiveIndex * 4) + 3] / 255.0;
-
-        const primitivePositions = positions.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? positions.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-        const primitiveNormals = normals.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? normals.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-        const primitiveIndices = indices.subarray(eachPrimitiveIndicesPortion [primitiveIndex], atLastPrimitive ? indices.length : eachPrimitiveIndicesPortion [primitiveIndex + 1]);
-        const primitiveEdgeIndices = edgeIndices.subarray(eachPrimitiveEdgeIndicesPortion [primitiveIndex], atLastPrimitive ? edgeIndices.length : eachPrimitiveEdgeIndicesPortion [primitiveIndex + 1]);
-
-        if (isInstancedPrimitive) {
-
-            // Primitive instanced by more than one entity, and has positions in Model-space
-
-            var geometryId = "geometry" + primitiveIndex; // These IDs are local to the PerformanceModel
-
-            performanceModel.createGeometry({
-                id: geometryId,
-                primitive: "triangles",
-                positions: primitivePositions,
-                normals: primitiveNormals,
-                indices: primitiveIndices,
-                edgeIndices: primitiveEdgeIndices
-            });
-
-        } else {
-
-            // Primitive is used only by one entity, and has positions pre-transformed into World-space
-
-            const meshId = primitiveIndex; // These IDs are local to the PerformanceModel
-
-            const entityIndex = batchedPrimitiveEntityIndexes[primitiveIndex];
-            const entityId = eachEntityId[entityIndex];
-
-            const meshDefaults = {}; // TODO: get from lookup from entity IDs
-
-            performanceModel.createMesh(utils.apply(meshDefaults, {
-                id: meshId,
-                primitive: "triangles",
-                positions: primitivePositions,
-                normals: primitiveNormals,
-                indices: primitiveIndices,
-                edgeIndices: primitiveEdgeIndices,
-                color: color,
-                opacity: opacity
-            }));
-        }
-    }
-
-    let countInstances = 0;
-
-    for (let entityIndex = 0; entityIndex < numEntities; entityIndex++) {
-
-        const lastEntityIndex = (numEntities - 1);
-        const atLastEntity = (entityIndex === lastEntityIndex);
-        const entityId = eachEntityId[entityIndex];
-        const firstEntityPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [entityIndex];
-        const lastEntityPrimitiveInstanceIndex = atLastEntity ? eachEntityPrimitiveInstancesPortion[lastEntityIndex] : eachEntityPrimitiveInstancesPortion[entityIndex + 1];
-
-        const meshIds = [];
-
-        for (let primitiveInstancesIndex = firstEntityPrimitiveInstanceIndex; primitiveInstancesIndex < lastEntityPrimitiveInstanceIndex; primitiveInstancesIndex++) {
-
-            const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-            const primitiveInstanceCount = primitiveInstanceCounts[primitiveIndex];
-            const isInstancedPrimitive = (primitiveInstanceCount > 1);
-
-            if (isInstancedPrimitive) {
-
-                const meshDefaults = {}; // TODO: get from lookup from entity IDs
-
-                const meshId = "instance." + countInstances++;
-                const geometryId = "geometry" + primitiveIndex;
-                const matricesIndex = (eachEntityMatricesPortion [entityIndex]) * 16;
-                const matrix = matrices.subarray(matricesIndex, matricesIndex + 16);
-
-                performanceModel.createMesh(utils.apply(meshDefaults, {
-                    id: meshId,
-                    geometryId: geometryId,
-                    matrix: matrix
-                }));
-
-                meshIds.push(meshId);
-
-            } else {
-                meshIds.push(primitiveIndex);
-            }
-        }
-
-        if (meshIds.length > 0) {
-
-            const entityDefaults = {}; // TODO: get from lookup from entity IDs
-
-            performanceModel.createEntity(utils.apply(entityDefaults, {
-                id: entityId,
-                isObject: true, ///////////////// TODO: If metaobject exists
-                meshIds: meshIds
-            }));
-        }
-    }
-}
-
-/** @private */
-const ParserV5 = {
-    version: 5,
-    parse: function (viewer, options, elements, performanceModel) {
-        const deflatedData = extract$4(elements);
-        const inflatedData = inflate$4(deflatedData);
-        load$4(viewer, options, inflatedData, performanceModel);
-    }
-};
-
-/*
-
- Parser for .XKT Format V6
-
- */
-
-let pako$5 = window.pako || p;
-if (!pako$5.inflate) {  // See https://github.com/nodeca/pako/issues/97
-    pako$5 = pako$5.default;
-}
-
-function extract$5(elements) {
-
-    return {
-        positions: elements[0],
-        normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-        matrices: elements[4],
-        reusedPrimitivesDecodeMatrix: elements[5],
-        eachPrimitivePositionsAndNormalsPortion: elements[6],
-        eachPrimitiveIndicesPortion: elements[7],
-        eachPrimitiveEdgeIndicesPortion: elements[8],
-        eachPrimitiveColorAndOpacity: elements[9],
-        primitiveInstances: elements[10],
-        eachEntityId: elements[11],
-        eachEntityPrimitiveInstancesPortion: elements[12],
-        eachEntityMatricesPortion: elements[13],
-        eachTileAABB: elements[14],
-        eachTileEntitiesPortion: elements[15]
-    };
-}
-
-function inflate$5(deflatedData) {
-
-    return {
-        positions: new Uint16Array(pako$5.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$5.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako$5.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$5.inflate(deflatedData.edgeIndices).buffer),
-        matrices: new Float32Array(pako$5.inflate(deflatedData.matrices).buffer),
-        reusedPrimitivesDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.reusedPrimitivesDecodeMatrix).buffer),
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
-        eachPrimitiveIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
-        eachPrimitiveColorAndOpacity: new Uint8Array(pako$5.inflate(deflatedData.eachPrimitiveColorAndOpacity).buffer),
-        primitiveInstances: new Uint32Array(pako$5.inflate(deflatedData.primitiveInstances).buffer),
-        eachEntityId: pako$5.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
-        eachEntityMatricesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityMatricesPortion).buffer),
-        eachTileAABB: new Float64Array(pako$5.inflate(deflatedData.eachTileAABB).buffer),
-        eachTileEntitiesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachTileEntitiesPortion).buffer),
-    };
-}
-
-const decompressColor$5 = (function () {
-    const floatColor = new Float32Array(3);
-    return function (intColor) {
-        floatColor[0] = intColor[0] / 255.0;
-        floatColor[1] = intColor[1] / 255.0;
-        floatColor[2] = intColor[2] / 255.0;
-        return floatColor;
-    };
-})();
-
-function load$5(viewer, options, inflatedData, performanceModel) {
-
-    const positions = inflatedData.positions;
-    const normals = inflatedData.normals;
-    const indices = inflatedData.indices;
-    const edgeIndices = inflatedData.edgeIndices;
-
-    const matrices = inflatedData.matrices;
-
-    const reusedPrimitivesDecodeMatrix = inflatedData.reusedPrimitivesDecodeMatrix;
-
-    const eachPrimitivePositionsAndNormalsPortion = inflatedData.eachPrimitivePositionsAndNormalsPortion;
-    const eachPrimitiveIndicesPortion = inflatedData.eachPrimitiveIndicesPortion;
-    const eachPrimitiveEdgeIndicesPortion = inflatedData.eachPrimitiveEdgeIndicesPortion;
-    const eachPrimitiveColorAndOpacity = inflatedData.eachPrimitiveColorAndOpacity;
-
-    const primitiveInstances = inflatedData.primitiveInstances;
-
-    const eachEntityId = JSON.parse(inflatedData.eachEntityId);
-    const eachEntityPrimitiveInstancesPortion = inflatedData.eachEntityPrimitiveInstancesPortion;
-    const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
-
-    const eachTileAABB = inflatedData.eachTileAABB;
-    const eachTileEntitiesPortion = inflatedData.eachTileEntitiesPortion;
-
-    const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
-    const numPrimitiveInstances = primitiveInstances.length;
-    const numEntities = eachEntityId.length;
-    const numTiles = eachTileEntitiesPortion.length;
-
-    let nextMeshId = 0;
-
-    // Count instances of each primitive
-
-    const primitiveReuseCounts = new Uint32Array(numPrimitives);
-
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
-        if (primitiveReuseCounts[primitiveIndex] !== undefined) {
-            primitiveReuseCounts[primitiveIndex]++;
-        } else {
-            primitiveReuseCounts[primitiveIndex] = 1;
-        }
-    }
-
-    // Iterate over tiles
-
-    const tileCenter = math.vec3();
-    const rtcAABB = math.AABB3();
-
-    for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
-
-        const lastTileIndex = (numTiles - 1);
-
-        const atLastTile = (tileIndex === lastTileIndex);
-
-        const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
-        const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
-
-        const tileAABBIndex = tileIndex * 6;
-        const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
-
-        math.getAABB3Center(tileAABB, tileCenter);
-
-        rtcAABB[0] = tileAABB[0] - tileCenter[0];
-        rtcAABB[1] = tileAABB[1] - tileCenter[1];
-        rtcAABB[2] = tileAABB[2] - tileCenter[2];
-        rtcAABB[3] = tileAABB[3] - tileCenter[0];
-        rtcAABB[4] = tileAABB[4] - tileCenter[1];
-        rtcAABB[5] = tileAABB[5] - tileCenter[2];
-
-        const tileDecodeMatrix = geometryCompressionUtils.createPositionsDecodeMatrix(rtcAABB);
-
-        const geometryCreated = {};
-
-        // Iterate over each tile's entities
-
-        for (let tileEntityIndex = firstTileEntityIndex; tileEntityIndex < lastTileEntityIndex; tileEntityIndex++) {
-
-            const entityId = eachEntityId[tileEntityIndex];
-
-            const entityMatrixIndex = eachEntityMatricesPortion[tileEntityIndex];
-            const entityMatrix = matrices.slice(entityMatrixIndex, entityMatrixIndex + 16);
-
-            const lastTileEntityIndex = (numEntities - 1);
-            const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
-            const firstPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
-            const lastPrimitiveInstanceIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
-
-            const meshIds = [];
-
-            const metaObject = viewer.metaScene.metaObjects[entityId];
-            const entityDefaults = {};
-            const meshDefaults = {};
-
-            if (metaObject) {
-
-                // Mask loading of object types
-
-                if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
-                    continue;
-                }
-
-                if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
-                    continue;
-                }
-
-                // Get initial property values for object types
-
-                const props = options.objectDefaults ? options.objectDefaults[metaObject.type] || options.objectDefaults["DEFAULT"] : null;
-
-                if (props) {
-                    if (props.visible === false) {
-                        entityDefaults.visible = false;
-                    }
-                    if (props.pickable === false) {
-                        entityDefaults.pickable = false;
-                    }
-                    if (props.colorize) {
-                        meshDefaults.color = props.colorize;
-                    }
-                    if (props.opacity !== undefined && props.opacity !== null) {
-                        meshDefaults.opacity = props.opacity;
-                    }
-                }
-
-            } else {
-                if (options.excludeUnclassifiedObjects) {
-                    continue;
-                }
-            }
-
-            // Iterate each entity's primitive instances
-
-            for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex < lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
-
-                const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-                const primitiveReuseCount = primitiveReuseCounts[primitiveIndex];
-                const isReusedPrimitive = (primitiveReuseCount > 1);
-
-                const atLastPrimitive = (primitiveIndex === (numPrimitives - 1));
-
-                const primitivePositions = positions.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? positions.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-                const primitiveNormals = normals.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? normals.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-                const primitiveIndices = indices.subarray(eachPrimitiveIndicesPortion [primitiveIndex], atLastPrimitive ? indices.length : eachPrimitiveIndicesPortion [primitiveIndex + 1]);
-                const primitiveEdgeIndices = edgeIndices.subarray(eachPrimitiveEdgeIndicesPortion [primitiveIndex], atLastPrimitive ? edgeIndices.length : eachPrimitiveEdgeIndicesPortion [primitiveIndex + 1]);
-
-                const color = decompressColor$5(eachPrimitiveColorAndOpacity.subarray((primitiveIndex * 4), (primitiveIndex * 4) + 3));
-                const opacity = eachPrimitiveColorAndOpacity[(primitiveIndex * 4) + 3] / 255.0;
-
-                const meshId = nextMeshId++;
-
-                if (isReusedPrimitive) {
-
-                    // Create mesh for multi-use primitive - create (or reuse) geometry, create mesh using that geometry
-
-                    const geometryId = "geometry." + tileIndex + "." + primitiveIndex; // These IDs are local to the PerformanceModel
-
-                    if (!geometryCreated[geometryId]) {
-
-                        performanceModel.createGeometry({
-                            id: geometryId,
-                            rtcCenter: tileCenter,
-                            primitive: "triangles",
-                            positions: primitivePositions,
-                            normals: primitiveNormals,
-                            indices: primitiveIndices,
-                            edgeIndices: primitiveEdgeIndices,
-                            positionsDecodeMatrix: reusedPrimitivesDecodeMatrix
-                        });
-
-                        geometryCreated[geometryId] = true;
-                    }
-
-                    performanceModel.createMesh(utils.apply(meshDefaults, {
-                        id: meshId,
-                        geometryId: geometryId,
-                        matrix: entityMatrix,
-                        color: color,
-                        opacity: opacity
-                    }));
-
-                    meshIds.push(meshId);
-
-                } else {
-
-                    performanceModel.createMesh(utils.apply(meshDefaults, {
-                        id: meshId,
-                        rtcCenter: tileCenter,
-                        primitive: "triangles",
-                        positions: primitivePositions,
-                        normals: primitiveNormals,
-                        indices: primitiveIndices,
-                        edgeIndices: primitiveEdgeIndices,
-                        positionsDecodeMatrix: tileDecodeMatrix,
-                        color: color,
-                        opacity: opacity
-                    }));
-
-                    meshIds.push(meshId);
-                }
-            }
-
-            if (meshIds.length > 0) {
-
-                performanceModel.createEntity(utils.apply(entityDefaults, {
-                    id: entityId,
-                    isObject: true,
-                    meshIds: meshIds
-                }));
-            }
-        }
-    }
-}
-
-/** @private */
-const ParserV6 = {
-    version: 6,
-    parse: function (viewer, options, elements, performanceModel) {
-        const deflatedData = extract$5(elements);
-        const inflatedData = inflate$5(deflatedData);
-        load$5(viewer, options, inflatedData, performanceModel);
-    }
-};
-
-const parsers = {};
-
-parsers[ParserV1.version] = ParserV1;
-parsers[ParserV2.version] = ParserV2;
-parsers[ParserV3.version] = ParserV3;
-parsers[ParserV4.version] = ParserV4;
-parsers[ParserV5.version] = ParserV5;
-parsers[ParserV6.version] = ParserV6;
 
 /**
  * {@link Viewer} plugin that loads models from xeokit's optimized *````.xkt````* format.
@@ -48369,12 +41452,11 @@ parsers[ParserV6.version] = ParserV6;
  * * XKTLoaderPlugin is the most efficient way to load high-detail models into xeokit.
  * * An *````.xkt````* file is a single BLOB containing a model, compressed using geometry quantization
  * and [pako](https://nodeca.github.io/pako/).
- * * Supports double-precision coordinates, via ````.xkt```` format version 6.
  * * Set the position, scale and rotation of each model as you load it.
  * * Filter which IFC types get loaded.
  * * Configure initial default appearances for IFC types.
  * * Set a custom data source for *````.xkt````* and IFC metadata files.
- * * Does not (yet) support textures or physically-based materials.
+ * * Does not support textures or physically-based materials.
  *
  * ## Credits
  *
@@ -48689,11 +41771,12 @@ class XKTLoaderPlugin extends Plugin {
     }
 
     /**
-     * Gets the ````.xkt```` format versions supported by this XKTLoaderPlugin/
-     * @returns {string[]}
+     * The *````.xkt````* format version supported by this XKTLoaderPlugin.
+     *
+     * @type {Number}
      */
-    get supportedVersions() {
-        return Object.keys(parsers);
+    static get XKTVersion() {
+        return XKT_VERSION;
     }
 
     /**
@@ -48826,7 +41909,7 @@ class XKTLoaderPlugin extends Plugin {
     }
 
     /**
-     * Loads an ````.xkt```` model into this XKTLoaderPlugin's {@link Viewer}.
+     * Loads a .xkt model into this XKTLoaderPlugin's {@link Viewer}.
      *
      * @param {*} params Loading parameters.
      * @param {String} [params.id] ID to assign to the root {@link Entity#id}, unique among all components in the Viewer's {@link Scene}, generated automatically by default.
@@ -48844,20 +41927,19 @@ class XKTLoaderPlugin extends Plugin {
      * @param {Number[]} [params.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]] The model's world transform matrix. Overrides the position, scale and rotation parameters.
      * @param {Boolean} [params.edges=false] Indicates if the model's edges are initially emphasized.
      * @param {Boolean} [params.saoEnabled=true] Indicates if Scalable Ambient Obscurance (SAO) will apply to the model. SAO is configured by the Scene's {@link SAO} component.
-     * @param {Boolean} [params.backfaces=false] Indicates if backfaces are visible on the model. Making this ````true```` will reduce rendering performance.
      * @param {Boolean} [params.excludeUnclassifiedObjects=false] When loading metadata and this is ````true````, will only load {@link Entity}s that have {@link MetaObject}s (that are not excluded). This is useful when we don't want Entitys in the Scene that are not represented within IFC navigation components, such as {@link StructureTreeViewPlugin}.
      * @returns {Entity} Entity representing the model, which will have {@link Entity#isModel} set ````true```` and will be registered by {@link Entity#id} in {@link Scene#models}.
      */
     load(params = {}) {
 
-        console.log("XKTLoaderPlugin NEW VERSION");
         if (params.id && this.viewer.scene.components[params.id]) {
             this.error("Component with this ID already exists in viewer: " + params.id + " - will autogenerate this ID");
             delete params.id;
         }
 
         const performanceModel = new PerformanceModel(this.viewer.scene, utils.apply(params, {
-            isModel: true
+            isModel: true,
+            preCompressed: true
         }));
 
         const modelId = performanceModel.id;  // In case ID was auto-generated
@@ -48906,13 +41988,10 @@ class XKTLoaderPlugin extends Plugin {
 
                 if (params.src) {
                     this._loadModel(params.src, params, options, performanceModel);
+
                 } else {
                     this._parseModel(params.xkt, params, options, performanceModel);
                 }
-
-                performanceModel.once("destroyed", () => {
-                    this.viewer.metaScene.destroyMetaModel(performanceModel.id);
-                });
             };
 
             if (params.metaModelSrc) {
@@ -48928,33 +42007,35 @@ class XKTLoaderPlugin extends Plugin {
                     processMetaModelData(metaModelData);
 
                 }, (errMsg) => {
-
                     this.error(`load(): Failed to load model metadata for model '${modelId} from  '${metaModelSrc}' - ${errMsg}`);
-
                     this.viewer.scene.canvas.spinner.processes--;
                 });
 
             } else if (params.metaModelData) {
+
                 processMetaModelData(params.metaModelData);
             }
 
         } else {
+
             if (params.src) {
                 this._loadModel(params.src, params, options, performanceModel);
+
             } else {
                 this._parseModel(params.xkt, params, options, performanceModel);
             }
         }
 
+        performanceModel.once("destroyed", () => {
+            this.viewer.metaScene.destroyMetaModel(modelId);
+        });
+
         return performanceModel;
     }
 
     _loadModel(src, params, options, performanceModel) {
-
         const spinner = this.viewer.scene.canvas.spinner;
-
         spinner.processes++;
-
         this._dataSource.getXKT(params.src, (arrayBuffer) => {
                 this._parseModel(arrayBuffer, params, options, performanceModel);
                 spinner.processes--;
@@ -48967,19 +42048,22 @@ class XKTLoaderPlugin extends Plugin {
     }
 
     _parseModel(arrayBuffer, params, options, performanceModel) {
+        const deflatedData = this._extractData(arrayBuffer);
+        if (!deflatedData) { // Error
+            return;
+        }
+        const inflatedData = this._inflateData(deflatedData);
+        this._loadDataIntoModel(inflatedData, options, performanceModel);
+    }
 
+    _extractData(arrayBuffer) {
         const dataView = new DataView(arrayBuffer);
         const dataArray = new Uint8Array(arrayBuffer);
         const xktVersion = dataView.getUint32(0, true);
-        const parser = parsers[xktVersion];
-
-        if (!parser) {
-            this.error("Unsupported .XKT file version: " + xktVersion + " - this XKTLoaderPlugin supports versions " + Object.keys(parsers));
+        if (xktVersion > XKT_VERSION) {
+            this.error("Incompatible .XKT file version; this XKTLoaderPlugin supports versions <= V" + XKT_VERSION);
             return;
         }
-
-        this.log("Loading .xkt V" + xktVersion);
-
         const numElements = dataView.getUint32(4, true);
         const elements = [];
         let byteOffset = (numElements + 2) * 4;
@@ -48988,14 +42072,485 @@ class XKTLoaderPlugin extends Plugin {
             elements.push(dataArray.subarray(byteOffset, byteOffset + elementSize));
             byteOffset += elementSize;
         }
+        if (xktVersion >= 3) {
+            return { // XKT version 3
+                xktVersion: xktVersion,
+                positions: elements[0],
+                normals: elements[1],
+                indices: elements[2],
+                edgeIndices: elements[3],
+                meshPositions: elements[4],
+                meshIndices: elements[5],
+                meshEdgesIndices: elements[6],
+                meshColors: elements[7],
+                entityIDs: elements[8],
+                entityMeshes: elements[9],
+                entityIsObjects: elements[10],
+                instancedPositionsDecodeMatrix: elements[11],
+                batchedPositionsDecodeMatrix: elements[12],
+                entityMeshIds: elements[13],
+                entityMatrices: elements[14],
+                entityUsesInstancing: elements[15]
+            };
+        }
+        if (xktVersion >= 2) {
+            return { // XKT version 2
+                xktVersion: xktVersion,
+                positions: elements[0],
+                normals: elements[1],
+                indices: elements[2],
+                edgeIndices: elements[3],
+                meshPositions: elements[4],
+                meshIndices: elements[5],
+                meshEdgesIndices: elements[6],
+                meshColors: elements[7],
+                entityIDs: elements[8],
+                entityMeshes: elements[9],
+                entityIsObjects: elements[10],
+                positionsDecodeMatrix: elements[11],
+                entityMeshIds: elements[12],
+                entityMatrices: elements[13],
+                entityUsesInstancing: elements[14]
+            };
+        }
+        return { // XKT version < 2
+            xktVersion: xktVersion,
+            positions: elements[0],
+            normals: elements[1],
+            indices: elements[2],
+            edgeIndices: elements[3],
+            meshPositions: elements[4],
+            meshIndices: elements[5],
+            meshEdgesIndices: elements[6],
+            meshColors: elements[7],
+            entityIDs: elements[8],
+            entityMeshes: elements[9],
+            entityIsObjects: elements[10],
+            positionsDecodeMatrix: elements[11]
+        };
+    }
 
-        parser.parse(this.viewer, options, elements, performanceModel);
+    _inflateData(deflatedData) {
+        if (deflatedData.xktVersion >= 3) {
+            return { // XKT version 3
+                xktVersion: deflatedData.xktVersion,
+                positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
+                normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
+                indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
+                edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
+                meshPositions: new Uint32Array(pako.inflate(deflatedData.meshPositions).buffer),
+                meshIndices: new Uint32Array(pako.inflate(deflatedData.meshIndices).buffer),
+                meshEdgesIndices: new Uint32Array(pako.inflate(deflatedData.meshEdgesIndices).buffer),
+                meshColors: new Uint8Array(pako.inflate(deflatedData.meshColors).buffer),
+                entityIDs: pako.inflate(deflatedData.entityIDs, {to: 'string'}),
+                entityMeshes: new Uint32Array(pako.inflate(deflatedData.entityMeshes).buffer),
+                entityIsObjects: new Uint8Array(pako.inflate(deflatedData.entityIsObjects).buffer),
+                instancedPositionsDecodeMatrix: new Float32Array(pako.inflate(deflatedData.instancedPositionsDecodeMatrix).buffer),
+                batchedPositionsDecodeMatrix: new Float32Array(pako.inflate(deflatedData.batchedPositionsDecodeMatrix).buffer),
+                entityMeshIds: new Uint32Array(pako.inflate(deflatedData.entityMeshIds).buffer),
+                entityMatrices: new Float32Array(pako.inflate(deflatedData.entityMatrices).buffer),
+                entityUsesInstancing: new Uint8Array(pako.inflate(deflatedData.entityUsesInstancing).buffer)
+            };
+        }
+        if (deflatedData.xktVersion >= 2) {
+            return { // XKT version 2
+                xktVersion: deflatedData.xktVersion,
+                positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
+                normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
+                indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
+                edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
+                meshPositions: new Uint32Array(pako.inflate(deflatedData.meshPositions).buffer),
+                meshIndices: new Uint32Array(pako.inflate(deflatedData.meshIndices).buffer),
+                meshEdgesIndices: new Uint32Array(pako.inflate(deflatedData.meshEdgesIndices).buffer),
+                meshColors: new Uint8Array(pako.inflate(deflatedData.meshColors).buffer),
+                entityIDs: pako.inflate(deflatedData.entityIDs, {to: 'string'}),
+                entityMeshes: new Uint32Array(pako.inflate(deflatedData.entityMeshes).buffer),
+                entityIsObjects: new Uint8Array(pako.inflate(deflatedData.entityIsObjects).buffer),
+                positionsDecodeMatrix: new Float32Array(pako.inflate(deflatedData.positionsDecodeMatrix).buffer),
+                entityMeshIds: new Uint32Array(pako.inflate(deflatedData.entityMeshIds).buffer),
+                entityMatrices: new Float32Array(pako.inflate(deflatedData.entityMatrices).buffer),
+                entityUsesInstancing: new Uint8Array(pako.inflate(deflatedData.entityUsesInstancing).buffer)
+            };
+        }
+        return { // XKT version < 2
+            xktVersion: deflatedData.xktVersion,
+            positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
+            normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
+            indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
+            edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
+            meshPositions: new Uint32Array(pako.inflate(deflatedData.meshPositions).buffer),
+            meshIndices: new Uint32Array(pako.inflate(deflatedData.meshIndices).buffer),
+            meshEdgesIndices: new Uint32Array(pako.inflate(deflatedData.meshEdgesIndices).buffer),
+            meshColors: new Uint8Array(pako.inflate(deflatedData.meshColors).buffer),
+            entityIDs: pako.inflate(deflatedData.entityIDs, {to: 'string'}),
+            entityMeshes: new Uint32Array(pako.inflate(deflatedData.entityMeshes).buffer),
+            entityIsObjects: new Uint8Array(pako.inflate(deflatedData.entityIsObjects).buffer),
+            positionsDecodeMatrix: new Float32Array(pako.inflate(deflatedData.positionsDecodeMatrix).buffer)
+        };
+    }
+
+    _loadDataIntoModel(inflatedData, options, performanceModel) {
+
+        if (inflatedData.xktVersion >= 3) {
+
+            const positions = inflatedData.positions;
+            const normals = inflatedData.normals;
+            const indices = inflatedData.indices;
+            const edgeIndices = inflatedData.edgeIndices;
+            const meshPositions = inflatedData.meshPositions;
+            const meshIndices = inflatedData.meshIndices;
+            const meshEdgesIndices = inflatedData.meshEdgesIndices;
+            const meshColors = inflatedData.meshColors;
+            const entityIDs = JSON.parse(inflatedData.entityIDs);
+            const entityMeshes = inflatedData.entityMeshes;
+            const entityIsObjects = inflatedData.entityIsObjects;
+            const entityMeshIds = inflatedData.entityMeshIds;
+            const entityMatrices = inflatedData.entityMatrices;
+            const entityUsesInstancing = inflatedData.entityUsesInstancing;
+
+            const numMeshes = meshPositions.length;
+            const numEntities = entityMeshes.length;
+
+            const _alreadyCreatedGeometries = {};
+
+            for (let i = 0; i < numEntities; i++) {
+
+                const entityId = entityIDs [i];
+                const metaObject = this.viewer.metaScene.metaObjects[entityId];
+                const entityDefaults = {};
+                const meshDefaults = {};
+                const entityMatrix = entityMatrices.subarray((i * 16), (i * 16) + 16);
+
+                if (metaObject) {
+
+                    if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
+                        continue;
+                    }
+
+                    if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
+                        continue;
+                    }
+
+                    const props = options.objectDefaults ? options.objectDefaults[metaObject.type || "DEFAULT"] : null;
+
+                    if (props) {
+                        if (props.visible === false) {
+                            entityDefaults.visible = false;
+                        }
+                        if (props.pickable === false) {
+                            entityDefaults.pickable = false;
+                        }
+                        if (props.colorize) {
+                            meshDefaults.color = props.colorize;
+                        }
+                        if (props.opacity !== undefined && props.opacity !== null) {
+                            meshDefaults.opacity = props.opacity;
+                        }
+                    }
+                } else {
+                    if (options.excludeUnclassifiedObjects) {
+                        continue;
+                    }
+                }
+
+                const lastEntity = (i === numEntities - 1);
+
+                const meshIds = [];
+
+                for (let j = entityMeshes [i], jlen = lastEntity ? entityMeshIds.length : entityMeshes [i + 1]; j < jlen; j++) {
+                    var jj = entityMeshIds [j];
+
+                    const lastMesh = (jj === (numMeshes - 1));
+                    const meshId = entityId + ".mesh." + jj;
+
+                    const color = decompressColor(meshColors.subarray((jj * 4), (jj * 4) + 3));
+                    const opacity = meshColors[(jj * 4) + 3] / 255.0;
+
+                    var tmpPositions = positions.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
+                    var tmpNormals = normals.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
+                    var tmpIndices = indices.subarray(meshIndices [jj], lastMesh ? indices.length : meshIndices [jj + 1]);
+                    var tmpEdgeIndices = edgeIndices.subarray(meshEdgesIndices [jj], lastMesh ? edgeIndices.length : meshEdgesIndices [jj + 1]);
+
+                    if (entityUsesInstancing [i] === 1) {
+                        var geometryId = "geometry." + jj;
+
+                        if (!(geometryId in _alreadyCreatedGeometries)) {
+
+                            performanceModel.createGeometry({
+                                id: geometryId,
+                                positions: tmpPositions,
+                                normals: tmpNormals,
+                                indices: tmpIndices,
+                                edgeIndices: tmpEdgeIndices,
+                                primitive: "triangles",
+                                positionsDecodeMatrix: inflatedData.instancedPositionsDecodeMatrix
+                            });
+
+                            _alreadyCreatedGeometries [geometryId] = true;
+                        }
+
+                        performanceModel.createMesh(utils.apply(meshDefaults, {
+                            id: meshId,
+                            color: color,
+                            opacity: opacity,
+                            matrix: entityMatrix,
+                            geometryId: geometryId,
+                        }));
+
+                        meshIds.push(meshId);
+                    } else {
+                        performanceModel.createMesh(utils.apply(meshDefaults, {
+                            id: meshId,
+                            primitive: "triangles",
+                            positions: tmpPositions,
+                            normals: tmpNormals,
+                            indices: tmpIndices,
+                            edgeIndices: tmpEdgeIndices,
+                            positionsDecodeMatrix: inflatedData.batchedPositionsDecodeMatrix,
+                            color: color,
+                            opacity: opacity
+                        }));
+
+                        meshIds.push(meshId);
+                    }
+                }
+
+                if (meshIds.length) {
+                    performanceModel.createEntity(utils.apply(entityDefaults, {
+                        id: entityId,
+                        isObject: (entityIsObjects [i] === 1),
+                        meshIds: meshIds
+                    }));
+                }
+            }
+
+        } else if (inflatedData.xktVersion >= 2) {
+
+            const positions = inflatedData.positions;
+            const normals = inflatedData.normals;
+            const indices = inflatedData.indices;
+            const edgeIndices = inflatedData.edgeIndices;
+            const meshPositions = inflatedData.meshPositions;
+            const meshIndices = inflatedData.meshIndices;
+            const meshEdgesIndices = inflatedData.meshEdgesIndices;
+            const meshColors = inflatedData.meshColors;
+            const entityIDs = JSON.parse(inflatedData.entityIDs);
+            const entityMeshes = inflatedData.entityMeshes;
+            const entityIsObjects = inflatedData.entityIsObjects;
+            const entityMeshIds = inflatedData.entityMeshIds;
+            const entityMatrices = inflatedData.entityMatrices;
+            const entityUsesInstancing = inflatedData.entityUsesInstancing;
+
+            const numMeshes = meshPositions.length;
+            const numEntities = entityMeshes.length;
+
+            const _alreadyCreatedGeometries = {};
+
+            for (let i = 0; i < numEntities; i++) {
+
+                const entityId = entityIDs [i];
+                const metaObject = this.viewer.metaScene.metaObjects[entityId];
+                const entityDefaults = {};
+                const meshDefaults = {};
+                const entityMatrix = entityMatrices.subarray((i * 16), (i * 16) + 16);
+
+                if (metaObject) {
+
+                    if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
+                        continue;
+                    }
+
+                    if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
+                        continue;
+                    }
+
+                    const props = options.objectDefaults ? options.objectDefaults[metaObject.type || "DEFAULT"] : null;
+
+                    if (props) {
+                        if (props.visible === false) {
+                            entityDefaults.visible = false;
+                        }
+                        if (props.pickable === false) {
+                            entityDefaults.pickable = false;
+                        }
+                        if (props.colorize) {
+                            meshDefaults.color = props.colorize;
+                        }
+                        if (props.opacity !== undefined && props.opacity !== null) {
+                            meshDefaults.opacity = props.opacity;
+                        }
+                    }
+                } else {
+                    if (options.excludeUnclassifiedObjects) {
+                        continue;
+                    }
+                }
+
+                const lastEntity = (i === numEntities - 1);
+
+                const meshIds = [];
+
+                for (let j = entityMeshes [i], jlen = lastEntity ? entityMeshIds.length : entityMeshes [i + 1]; j < jlen; j++) {
+                    var jj = entityMeshIds [j];
+
+                    const lastMesh = (jj === (numMeshes - 1));
+                    const meshId = entityId + ".mesh." + jj;
+
+                    const color = decompressColor(meshColors.subarray((jj * 4), (jj * 4) + 3));
+                    const opacity = meshColors[(jj * 4) + 3] / 255.0;
+
+                    var tmpPositions = positions.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
+                    var tmpNormals = normals.subarray(meshPositions [jj], lastMesh ? positions.length : meshPositions [jj + 1]);
+                    var tmpIndices = indices.subarray(meshIndices [jj], lastMesh ? indices.length : meshIndices [jj + 1]);
+                    var tmpEdgeIndices = edgeIndices.subarray(meshEdgesIndices [jj], lastMesh ? edgeIndices.length : meshEdgesIndices [jj + 1]);
+
+                    if (entityUsesInstancing [i] === 1) {
+                        var geometryId = "geometry." + jj;
+
+                        if (!(geometryId in _alreadyCreatedGeometries)) {
+
+                            performanceModel.createGeometry({
+                                id: geometryId,
+                                positions: tmpPositions,
+                                normals: tmpNormals,
+                                indices: tmpIndices,
+                                edgeIndices: tmpEdgeIndices,
+                                primitive: "triangles",
+                                positionsDecodeMatrix: inflatedData.positionsDecodeMatrix,
+                            });
+
+                            _alreadyCreatedGeometries [geometryId] = true;
+                        }
+
+                        performanceModel.createMesh(utils.apply(meshDefaults, {
+                            id: meshId,
+                            color: color,
+                            opacity: opacity,
+                            matrix: entityMatrix,
+                            geometryId: geometryId,
+                        }));
+
+                        meshIds.push(meshId);
+                    } else {
+                        performanceModel.createMesh(utils.apply(meshDefaults, {
+                            id: meshId,
+                            primitive: "triangles",
+                            positions: tmpPositions,
+                            normals: tmpNormals,
+                            indices: tmpIndices,
+                            edgeIndices: tmpEdgeIndices,
+                            positionsDecodeMatrix: inflatedData.positionsDecodeMatrix,
+                            color: color,
+                            opacity: opacity
+                        }));
+
+                        meshIds.push(meshId);
+                    }
+                }
+
+                if (meshIds.length) {
+                    performanceModel.createEntity(utils.apply(entityDefaults, {
+                        id: entityId,
+                        isObject: (entityIsObjects [i] === 1),
+                        meshIds: meshIds
+                    }));
+                }
+            }
+
+        } else { // XKT version <= 2
+
+            const positions = inflatedData.positions;
+            const normals = inflatedData.normals;
+            const indices = inflatedData.indices;
+            const edgeIndices = inflatedData.edgeIndices;
+            const meshPositions = inflatedData.meshPositions;
+            const meshIndices = inflatedData.meshIndices;
+            const meshEdgesIndices = inflatedData.meshEdgesIndices;
+            const meshColors = inflatedData.meshColors;
+            const entityIDs = JSON.parse(inflatedData.entityIDs);
+            const entityMeshes = inflatedData.entityMeshes;
+            const entityIsObjects = inflatedData.entityIsObjects;
+            const numMeshes = meshPositions.length;
+            const numEntities = entityMeshes.length;
+
+            for (let i = 0; i < numEntities; i++) {
+
+                const entityId = entityIDs [i];
+                const metaObject = this.viewer.metaScene.metaObjects[entityId];
+                const entityDefaults = {};
+                const meshDefaults = {};
+
+                if (metaObject) {
+
+                    if (options.excludeTypesMap && metaObject.type && options.excludeTypesMap[metaObject.type]) {
+                        continue;
+                    }
+
+                    if (options.includeTypesMap && metaObject.type && (!options.includeTypesMap[metaObject.type])) {
+                        continue;
+                    }
+
+                    const props = options.objectDefaults ? options.objectDefaults[metaObject.type || "DEFAULT"] : null;
+
+                    if (props) {
+                        if (props.visible === false) {
+                            entityDefaults.visible = false;
+                        }
+                        if (props.pickable === false) {
+                            entityDefaults.pickable = false;
+                        }
+                        if (props.colorize) {
+                            meshDefaults.color = props.colorize;
+                        }
+                        if (props.opacity !== undefined && props.opacity !== null) {
+                            meshDefaults.opacity = props.opacity;
+                        }
+                    }
+                } else {
+                    if (options.excludeUnclassifiedObjects) {
+                        continue;
+                    }
+                }
+
+                const lastEntity = (i === numEntities - 1);
+                const meshIds = [];
+
+                for (let j = entityMeshes [i], jlen = lastEntity ? entityMeshes.length : entityMeshes [i + 1]; j < jlen; j++) {
+
+                    const lastMesh = (j === (numMeshes - 1));
+                    const meshId = entityId + ".mesh." + j;
+
+                    const color = decompressColor(meshColors.subarray((j * 4), (j * 4) + 3));
+                    const opacity = meshColors[(j * 4) + 3] / 255.0;
+
+                    performanceModel.createMesh(utils.apply(meshDefaults, {
+                        id: meshId,
+                        primitive: "triangles",
+                        positions: positions.subarray(meshPositions [j], lastMesh ? positions.length : meshPositions [j + 1]),
+                        normals: normals.subarray(meshPositions [j], lastMesh ? positions.length : meshPositions [j + 1]),
+                        indices: indices.subarray(meshIndices [j], lastMesh ? indices.length : meshIndices [j + 1]),
+                        edgeIndices: edgeIndices.subarray(meshEdgesIndices [j], lastMesh ? edgeIndices.length : meshEdgesIndices [j + 1]),
+                        positionsDecodeMatrix: inflatedData.positionsDecodeMatrix,
+                        color: color,
+                        opacity: opacity
+                    }));
+
+                    meshIds.push(meshId);
+                }
+
+                performanceModel.createEntity(utils.apply(entityDefaults, {
+                    id: entityId,
+                    isObject: (entityIsObjects [i] === 1),
+                    meshIds: meshIds
+                }));
+            }
+        }
 
         performanceModel.finalize();
 
         performanceModel.scene.once("tick", () => {
             performanceModel.scene.fire("modelLoaded", performanceModel.id); // FIXME: Assumes listeners know order of these two events
-            performanceModel.fire("loaded", true, false); // Don't forget the event, for late subscribers
+            performanceModel.fire("loaded", true, true);
         });
     }
 }
@@ -49154,12 +42709,10 @@ class Node extends Component {
      * @param {Boolean} [cfg.isModel] Specify ````true```` if this Mesh represents a model, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#models} and may also have a corresponding {@link MetaModel} with matching {@link MetaModel#id}, registered by that ID in {@link MetaScene#metaModels}.
      * @param {Boolean} [cfg.isObject] Specify ````true```` if this Mesh represents an object, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#objects} and may also have a corresponding {@link MetaObject} with matching {@link MetaObject#id}, registered by that ID in {@link MetaScene#metaObjects}.
      * @param {Node} [cfg.parent] The parent Node.
-     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center for this Node.
      * @param {Number[]} [cfg.position=[0,0,0]] Local 3D position.
      * @param {Number[]} [cfg.scale=[1,1,1]] Local scale.
      * @param {Number[]} [cfg.rotation=[0,0,0]] Local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
      * @param {Number[]} [cfg.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] Local modelling transform matrix. Overrides the position, scale and rotation parameters.
-     * @param {Number[]} [cfg.offset=[0,0,0]] World-space 3D translation offset. Translates the Node in World space, after modelling transforms.
      * @param {Boolean} [cfg.visible=true] Indicates if the Node is initially visible.
      * @param {Boolean} [cfg.culled=false] Indicates if the Node is initially culled from view.
      * @param {Boolean} [cfg.pickable=true] Indicates if the Node is initially pickable.
@@ -49194,7 +42747,6 @@ class Node extends Component {
         this._quaternion = math.identityQuaternion();
         this._rotation = math.vec3();
         this._position = math.vec3();
-        this._offset = math.vec3();
 
         this._localMatrix = math.identityMat4();
         this._worldMatrix = math.identityMat4();
@@ -49222,7 +42774,6 @@ class Node extends Component {
             this.scene._registerObject(this);
         }
 
-        this.rtcCenter = cfg.rtcCenter;
         this.visible = cfg.visible;
         this.culled = cfg.culled;
         this.pickable = cfg.pickable;
@@ -49236,7 +42787,6 @@ class Node extends Component {
         this.edges = cfg.edges;
         this.colorize = cfg.colorize;
         this.opacity = cfg.opacity;
-        this.offset = cfg.offset;
 
         // Add children, which inherit state from this Node
 
@@ -49304,7 +42854,7 @@ class Node extends Component {
     /**
      * Gets the Node's World-space 3D axis-aligned bounding box.
      *
-     * Represented by a six-element Float64Array containing the min/max extents of the
+     * Represented by a six-element Float32Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
@@ -49314,36 +42864,6 @@ class Node extends Component {
             this._updateAABB();
         }
         return this._aabb;
-    }
-
-    /**
-     * Sets the center of the relative-to-center (RTC) coordinate system for this Node and all child Nodes and {@link Mesh}s.
-     *
-     * @type {Float64Array}
-     */
-    set rtcCenter(rtcCenter) {
-        if (rtcCenter) {
-            if (!this._rtcCenter) {
-                this._rtcCenter = math.vec3();
-            }
-            this._rtcCenter.set(rtcCenter);
-        } else {
-            if (this._rtcCenter) {
-                this._rtcCenter = null;
-            }
-        }
-        for (let i = 0, len = this._children.length; i < len; i++) {
-            this._children[i].rtcCenter = rtcCenter;
-        }
-    }
-
-    /**
-     *  Gets the center of the relative-to-center (RTC) coordinate system for this Node and all child Nodes and {@link Mesh}s.
-     *
-     * @type {Float64Array}
-     */
-    get rtcCenter() {
-        return this._rtcCenter;
     }
 
     /**
@@ -49680,10 +43200,6 @@ class Node extends Component {
         for (let i = 0, len = this._children.length; i < len; i++) {
             this._children[i].opacity = opacity;
         }
-        if (this._isObject) {
-            const opacityUpdated = (opacity !== null && opacity !== undefined);
-            this.scene._objectOpacityUpdated(this, opacityUpdated);
-        }
     }
 
     /**
@@ -49758,50 +43274,6 @@ class Node extends Component {
     get saoEnabled() {
         return false; // TODO: Support SAO on Nodes
     }
-
-
-    /**
-     * Sets the 3D World-space offset for this Node and all child Nodes and {@link Mesh}es}.
-     *
-     * The offset dynamically translates those components in World-space.
-     *
-     * Default value is ````[0, 0, 0]````.
-     *
-     * Note that child Nodes and {@link Mesh}es may subsequently be given different values for this property.
-     *
-     * @type {Number[]}
-     */
-    set offset(offset) {
-        if (offset) {
-            this._offset[0] = offset[0];
-            this._offset[1] = offset[1];
-            this._offset[2] = offset[2];
-        } else {
-            this._offset[0] = 0;
-            this._offset[1] = 0;
-            this._offset[2] = 0;
-        }
-        for (let i = 0, len = this._children.length; i < len; i++) {
-            this._children[i].offset = this._offset;
-        }
-        if (this._isObject) {
-            this.scene._objectOffsetUpdated(this, offset);
-        }
-    }
-
-    /**
-     * Gets the Node's 3D World-space offset.
-     *
-     * Default value is ````[0, 0, 0]````.
-     *
-     * Child Nodes and {@link Mesh}es may have different values for this property.
-     *
-     * @type {Number[]}
-     */
-    get offset() {
-        return this._offset;
-    }
-
 
     //------------------------------------------------------------------------------------------------------------------
     // Node members
@@ -49937,7 +43409,6 @@ class Node extends Component {
             child.receivesShadow = this.receivesShadow;
             child.colorize = this.colorize;
             child.opacity = this.opacity;
-            child.offset = this.offset;
         }
         child._setWorldMatrixDirty();
         child._setAABBDirty();
@@ -50330,9 +43801,10 @@ class Node extends Component {
             if (this._highlighted) {
                 this.scene._objectHighlightedUpdated(this, false);
             }
-            this.scene._objectColorizeUpdated(this, false);
-            this.scene._objectOpacityUpdated(this, false);
-            this.scene._objectOffsetUpdated(this, false);
+            if (this._isObject) {
+                const colorized = false;
+                this.scene._objectColorizeUpdated(this, colorized);
+            }
         }
         if (this._isModel) {
             this.scene._deregisterModel(this);
@@ -50448,7 +43920,6 @@ function buildVertexLambert(mesh) {
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("uniform vec4 colorize;");
-    src.push("uniform vec3 offset;");
     if (quantizedGeometry) {
         src.push("uniform mat4 positionsDecodeMatrix;");
     }
@@ -50540,11 +44011,9 @@ function buildVertexLambert(mesh) {
             src.push("billboard(modelViewNormalMatrix);");
         }
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition = modelViewMatrix * localPosition;");
     } else {
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition  = viewMatrix2 * worldPosition; ");
     }
     if (geometryState.normalsBuf) {
@@ -50693,7 +44162,6 @@ function buildVertexDraw(mesh) {
     src.push("uniform  mat4 viewMatrix;");
     src.push("uniform  mat4 projMatrix;");
     src.push("varying  vec3 vViewPosition;");
-    src.push("uniform  vec3 offset;");
     if (clipping) {
         src.push("varying vec4 vWorldPosition;");
     }
@@ -50805,11 +44273,9 @@ function buildVertexDraw(mesh) {
             src.push("billboard(modelViewNormalMatrix);");
         }
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition = modelViewMatrix * localPosition;");
     } else {
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition  = viewMatrix2 * worldPosition; ");
     }
     if (normals) {
@@ -51575,7 +45041,7 @@ function buildFragmentDraw(mesh) {
         }
         src.push("vec4 emissiveTexel = texture2D(emissiveMap, textureCoord);");
         src.push("emissiveTexel = " + TEXTURE_DECODE_FUNCS[material._emissiveMap._state.encoding] + "(emissiveTexel);");
-        src.push("emissiveColor = emissiveTexel.rgb;");
+        src.push("emissiveColor *= emissiveTexel.rgb;");
     }
 
     if (uvs && material._alphaMap) {
@@ -51871,8 +45337,6 @@ function buildFragmentDraw(mesh) {
  * @author xeolabs / https://github.com/xeolabs
  */
 
-const tempVec3a$p = math.vec3();
-
 const ids$2 = new Map({});
 
 /**
@@ -51929,12 +45393,10 @@ DrawRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
-
+DrawRenderer.prototype.drawMesh = function (frame, mesh) {
     if (!this._program) {
         this._allocate(mesh);
     }
-
     const maxTextureUnits = WEBGL_INFO.MAX_TEXTURE_UNITS;
     const scene = mesh.scene;
     const material = mesh._material;
@@ -51943,62 +45405,39 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     const meshState = mesh._state;
     const materialState = mesh._material._state;
     const geometryState = mesh._geometry._state;
-    const camera = scene.camera;
-    const rtcCenter = mesh.rtcCenter;
 
-    if (frameCtx.lastProgramId !== this._program.id) {
-        frameCtx.lastProgramId = this._program.id;
-        this._bindProgram(frameCtx);
-    }
-
-    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
-    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
-
-    if (meshState.clippable) {
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const renderFlags = mesh.renderFlags;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$p) : sectionPlane.pos);
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
+    if (frame.lastProgramId !== this._program.id) {
+        frame.lastProgramId = this._program.id;
+        this._bindProgram(frame);
     }
 
     if (materialState.id !== this._lastMaterialId) {
 
-        frameCtx.textureUnit = this._baseTextureUnit;
+        frame.textureUnit = this._baseTextureUnit;
 
         const backfaces = materialState.backfaces;
-        if (frameCtx.backfaces !== backfaces) {
+        if (frame.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frameCtx.backfaces = backfaces;
+            frame.backfaces = backfaces;
         }
 
         const frontface = materialState.frontface;
-        if (frameCtx.frontface !== frontface) {
+        if (frame.frontface !== frontface) {
             if (frontface) {
                 gl.frontFace(gl.CCW);
             } else {
                 gl.frontFace(gl.CW);
             }
-            frameCtx.frontface = frontface;
+            frame.frontface = frontface;
         }
 
-        if (frameCtx.lineWidth !== materialState.lineWidth) {
+        if (frame.lineWidth !== materialState.lineWidth) {
             gl.lineWidth(materialState.lineWidth);
-            frameCtx.lineWidth = materialState.lineWidth;
+            frame.lineWidth = materialState.lineWidth;
         }
 
         if (this._uPointSize) {
@@ -52043,64 +45482,64 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
                         0);
                 }
                 if (material._ambientMap && material._ambientMap._state.texture && this._uMaterialAmbientMap) {
-                    program.bindTexture(this._uMaterialAmbientMap, material._ambientMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uMaterialAmbientMap, material._ambientMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uMaterialAmbientMapMatrix) {
                         gl.uniformMatrix4fv(this._uMaterialAmbientMapMatrix, false, material._ambientMap._state.matrix);
                     }
                 }
                 if (material._diffuseMap && material._diffuseMap._state.texture && this._uDiffuseMap) {
-                    program.bindTexture(this._uDiffuseMap, material._diffuseMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uDiffuseMap, material._diffuseMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uDiffuseMapMatrix) {
                         gl.uniformMatrix4fv(this._uDiffuseMapMatrix, false, material._diffuseMap._state.matrix);
                     }
                 }
                 if (material._specularMap && material._specularMap._state.texture && this._uSpecularMap) {
-                    program.bindTexture(this._uSpecularMap, material._specularMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uSpecularMap, material._specularMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uSpecularMapMatrix) {
                         gl.uniformMatrix4fv(this._uSpecularMapMatrix, false, material._specularMap._state.matrix);
                     }
                 }
                 if (material._emissiveMap && material._emissiveMap._state.texture && this._uEmissiveMap) {
-                    program.bindTexture(this._uEmissiveMap, material._emissiveMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uEmissiveMap, material._emissiveMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uEmissiveMapMatrix) {
                         gl.uniformMatrix4fv(this._uEmissiveMapMatrix, false, material._emissiveMap._state.matrix);
                     }
                 }
                 if (material._alphaMap && material._alphaMap._state.texture && this._uAlphaMap) {
-                    program.bindTexture(this._uAlphaMap, material._alphaMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uAlphaMap, material._alphaMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uAlphaMapMatrix) {
                         gl.uniformMatrix4fv(this._uAlphaMapMatrix, false, material._alphaMap._state.matrix);
                     }
                 }
                 if (material._reflectivityMap && material._reflectivityMap._state.texture && this._uReflectivityMap) {
-                    program.bindTexture(this._uReflectivityMap, material._reflectivityMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
+                    program.bindTexture(this._uReflectivityMap, material._reflectivityMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
                     if (this._uReflectivityMapMatrix) {
                         gl.uniformMatrix4fv(this._uReflectivityMapMatrix, false, material._reflectivityMap._state.matrix);
                     }
                 }
                 if (material._normalMap && material._normalMap._state.texture && this._uNormalMap) {
-                    program.bindTexture(this._uNormalMap, material._normalMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uNormalMap, material._normalMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uNormalMapMatrix) {
                         gl.uniformMatrix4fv(this._uNormalMapMatrix, false, material._normalMap._state.matrix);
                     }
                 }
                 if (material._occlusionMap && material._occlusionMap._state.texture && this._uOcclusionMap) {
-                    program.bindTexture(this._uOcclusionMap, material._occlusionMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uOcclusionMap, material._occlusionMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uOcclusionMapMatrix) {
                         gl.uniformMatrix4fv(this._uOcclusionMapMatrix, false, material._occlusionMap._state.matrix);
                     }
@@ -52218,72 +45657,72 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
                 }
                 const baseColorMap = material._baseColorMap;
                 if (baseColorMap && baseColorMap._state.texture && this._uBaseColorMap) {
-                    program.bindTexture(this._uBaseColorMap, baseColorMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uBaseColorMap, baseColorMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uBaseColorMapMatrix) {
                         gl.uniformMatrix4fv(this._uBaseColorMapMatrix, false, baseColorMap._state.matrix);
                     }
                 }
                 const metallicMap = material._metallicMap;
                 if (metallicMap && metallicMap._state.texture && this._uMetallicMap) {
-                    program.bindTexture(this._uMetallicMap, metallicMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uMetallicMap, metallicMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uMetallicMapMatrix) {
                         gl.uniformMatrix4fv(this._uMetallicMapMatrix, false, metallicMap._state.matrix);
                     }
                 }
                 const roughnessMap = material._roughnessMap;
                 if (roughnessMap && roughnessMap._state.texture && this._uRoughnessMap) {
-                    program.bindTexture(this._uRoughnessMap, roughnessMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uRoughnessMap, roughnessMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uRoughnessMapMatrix) {
                         gl.uniformMatrix4fv(this._uRoughnessMapMatrix, false, roughnessMap._state.matrix);
                     }
                 }
                 const metallicRoughnessMap = material._metallicRoughnessMap;
                 if (metallicRoughnessMap && metallicRoughnessMap._state.texture && this._uMetallicRoughnessMap) {
-                    program.bindTexture(this._uMetallicRoughnessMap, metallicRoughnessMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uMetallicRoughnessMap, metallicRoughnessMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uMetallicRoughnessMapMatrix) {
                         gl.uniformMatrix4fv(this._uMetallicRoughnessMapMatrix, false, metallicRoughnessMap._state.matrix);
                     }
                 }
                 var emissiveMap = material._emissiveMap;
                 if (emissiveMap && emissiveMap._state.texture && this._uEmissiveMap) {
-                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uEmissiveMapMatrix) {
                         gl.uniformMatrix4fv(this._uEmissiveMapMatrix, false, emissiveMap._state.matrix);
                     }
                 }
                 var occlusionMap = material._occlusionMap;
                 if (occlusionMap && material._occlusionMap._state.texture && this._uOcclusionMap) {
-                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uOcclusionMapMatrix) {
                         gl.uniformMatrix4fv(this._uOcclusionMapMatrix, false, occlusionMap._state.matrix);
                     }
                 }
                 var alphaMap = material._alphaMap;
                 if (alphaMap && alphaMap._state.texture && this._uAlphaMap) {
-                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uAlphaMapMatrix) {
                         gl.uniformMatrix4fv(this._uAlphaMapMatrix, false, alphaMap._state.matrix);
                     }
                 }
                 var normalMap = material._normalMap;
                 if (normalMap && normalMap._state.texture && this._uNormalMap) {
-                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uNormalMapMatrix) {
                         gl.uniformMatrix4fv(this._uNormalMapMatrix, false, normalMap._state.matrix);
                     }
@@ -52316,72 +45755,72 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
                 }
                 const diffuseMap = material._diffuseMap;
                 if (diffuseMap && diffuseMap._state.texture && this._uDiffuseMap) {
-                    program.bindTexture(this._uDiffuseMap, diffuseMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uDiffuseMap, diffuseMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uDiffuseMapMatrix) {
                         gl.uniformMatrix4fv(this._uDiffuseMapMatrix, false, diffuseMap._state.matrix);
                     }
                 }
                 const specularMap = material._specularMap;
                 if (specularMap && specularMap._state.texture && this._uSpecularMap) {
-                    program.bindTexture(this._uSpecularMap, specularMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uSpecularMap, specularMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uSpecularMapMatrix) {
                         gl.uniformMatrix4fv(this._uSpecularMapMatrix, false, specularMap._state.matrix);
                     }
                 }
                 const glossinessMap = material._glossinessMap;
                 if (glossinessMap && glossinessMap._state.texture && this._uGlossinessMap) {
-                    program.bindTexture(this._uGlossinessMap, glossinessMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uGlossinessMap, glossinessMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uGlossinessMapMatrix) {
                         gl.uniformMatrix4fv(this._uGlossinessMapMatrix, false, glossinessMap._state.matrix);
                     }
                 }
                 const specularGlossinessMap = material._specularGlossinessMap;
                 if (specularGlossinessMap && specularGlossinessMap._state.texture && this._uSpecularGlossinessMap) {
-                    program.bindTexture(this._uSpecularGlossinessMap, specularGlossinessMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uSpecularGlossinessMap, specularGlossinessMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uSpecularGlossinessMapMatrix) {
                         gl.uniformMatrix4fv(this._uSpecularGlossinessMapMatrix, false, specularGlossinessMap._state.matrix);
                     }
                 }
                 var emissiveMap = material._emissiveMap;
                 if (emissiveMap && emissiveMap._state.texture && this._uEmissiveMap) {
-                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uEmissiveMap, emissiveMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uEmissiveMapMatrix) {
                         gl.uniformMatrix4fv(this._uEmissiveMapMatrix, false, emissiveMap._state.matrix);
                     }
                 }
                 var occlusionMap = material._occlusionMap;
                 if (occlusionMap && occlusionMap._state.texture && this._uOcclusionMap) {
-                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uOcclusionMap, occlusionMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uOcclusionMapMatrix) {
                         gl.uniformMatrix4fv(this._uOcclusionMapMatrix, false, occlusionMap._state.matrix);
                     }
                 }
                 var alphaMap = material._alphaMap;
                 if (alphaMap && alphaMap._state.texture && this._uAlphaMap) {
-                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uAlphaMap, alphaMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uAlphaMapMatrix) {
                         gl.uniformMatrix4fv(this._uAlphaMapMatrix, false, alphaMap._state.matrix);
                     }
                 }
                 var normalMap = material._normalMap;
                 if (normalMap && normalMap._state.texture && this._uNormalMap) {
-                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture(this._uNormalMap, normalMap._state.texture, frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                     if (this._uNormalMapMatrix) {
                         gl.uniformMatrix4fv(this._uNormalMapMatrix, false, normalMap._state.matrix);
                     }
@@ -52415,8 +45854,6 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
         }
     }
 
-    gl.uniform3fv(this._uOffset, meshState.offset);
-
     // Bind VBOs
 
     if (geometryState.id !== this._lastGeometryId) {
@@ -52428,28 +45865,30 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
         }
         if (this._aPosition) {
             this._aPosition.bindArrayBuffer(geometryState.positionsBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(geometryState.normalsBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (this._aUV) {
             this._aUV.bindArrayBuffer(geometryState.uvBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (this._aColor) {
             this._aColor.bindArrayBuffer(geometryState.colorsBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (this._aFlags) {
             this._aFlags.bindArrayBuffer(geometryState.flagsBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (geometryState.indicesBuf) {
             geometryState.indicesBuf.bind();
-            frameCtx.bindArray++;
-        }
+            frame.bindArray++;
+            // gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
+            // frame.drawElements++;
+        } else if (geometryState.positions) ;
         this._lastGeometryId = geometryState.id;
     }
 
@@ -52457,21 +45896,19 @@ DrawRenderer.prototype.drawMesh = function (frameCtx, mesh) {
 
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-        frameCtx.drawElements++;
+        frame.drawElements++;
     } else if (geometryState.positions) {
         gl.drawArrays(gl.TRIANGLES, 0, geometryState.positions.numItems);
-        frameCtx.drawArrays++;
+        frame.drawArrays++;
     }
 };
 
 DrawRenderer.prototype._allocate = function (mesh) {
-
     const gl = mesh.scene.canvas.gl;
     const material = mesh._material;
     const lightsState = mesh.scene._lightsState;
     const sectionPlanesState = mesh.scene._sectionPlanesState;
     const materialState = mesh._material._state;
-
     this._program = new Program(gl, this._shaderSource);
     if (this._program.errors) {
         this.errors = this._program.errors;
@@ -52726,7 +46163,6 @@ DrawRenderer.prototype._allocate = function (mesh) {
 
     this._uClippable = program.getLocation("clippable");
     this._uColorize = program.getLocation("colorize");
-    this._uOffset = program.getLocation("offset");
 
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
@@ -52738,20 +46174,22 @@ DrawRenderer.prototype._allocate = function (mesh) {
 
 };
 
-DrawRenderer.prototype._bindProgram = function (frameCtx) {
+DrawRenderer.prototype._bindProgram = function (frame) {
 
     const maxTextureUnits = WEBGL_INFO.MAX_TEXTURE_UNITS;
     const scene = this._scene;
     const gl = scene.canvas.gl;
     const lightsState = scene._lightsState;
+    const sectionPlanesState = scene._sectionPlanesState;
+    const lights = lightsState.lights;
     let light;
 
     const program = this._program;
 
     program.bind();
 
-    frameCtx.useProgram++;
-    frameCtx.textureUnit = 0;
+    frame.useProgram++;
+    frame.textureUnit = 0;
 
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
@@ -52763,7 +46201,10 @@ DrawRenderer.prototype._bindProgram = function (frameCtx) {
     this._lastColorize[3] = -1;
 
     const camera = scene.camera;
+    const cameraState = camera._state;
 
+    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
+    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, cameraState.normalMatrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
 
     for (var i = 0, len = lightsState.lights.length; i < len; i++) {
@@ -52799,31 +46240,56 @@ DrawRenderer.prototype._bindProgram = function (frameCtx) {
                 }
                 const shadowRenderBuf = light.getShadowRenderBuf();
                 if (shadowRenderBuf) {
-                    program.bindTexture("shadowMap" + i, shadowRenderBuf.getTexture(), frameCtx.textureUnit);
-                    frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-                    frameCtx.bindTexture++;
+                    program.bindTexture("shadowMap" + i, shadowRenderBuf.getTexture(), frame.textureUnit);
+                    frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+                    frame.bindTexture++;
                 }
             }
         }
     }
 
     if (lightsState.lightMaps.length > 0 && lightsState.lightMaps[0].texture && this._uLightMap) {
-        program.bindTexture(this._uLightMap, lightsState.lightMaps[0].texture, frameCtx.textureUnit);
-        frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-        frameCtx.bindTexture++;
+        program.bindTexture(this._uLightMap, lightsState.lightMaps[0].texture, frame.textureUnit);
+        frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+        frame.bindTexture++;
     }
 
     if (lightsState.reflectionMaps.length > 0 && lightsState.reflectionMaps[0].texture && this._uReflectionMap) {
-        program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frameCtx.textureUnit);
-        frameCtx.textureUnit = (frameCtx.textureUnit + 1) % maxTextureUnits;
-        frameCtx.bindTexture++;
+        program.bindTexture(this._uReflectionMap, lightsState.reflectionMaps[0].texture, frame.textureUnit);
+        frame.textureUnit = (frame.textureUnit + 1) % maxTextureUnits;
+        frame.bindTexture++;
+    }
+
+    if (sectionPlanesState.sectionPlanes.length > 0) {
+        const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
+        let sectionPlaneUniforms;
+        let uSectionPlaneActive;
+        let sectionPlane;
+        let uSectionPlanePos;
+        let uSectionPlaneDir;
+        for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+            sectionPlaneUniforms = this._uSectionPlanes[i];
+            uSectionPlaneActive = sectionPlaneUniforms.active;
+            sectionPlane = sectionPlanes[i];
+            if (uSectionPlaneActive) {
+                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+            }
+            uSectionPlanePos = sectionPlaneUniforms.pos;
+            if (uSectionPlanePos) {
+                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+            }
+            uSectionPlaneDir = sectionPlaneUniforms.dir;
+            if (uSectionPlaneDir) {
+                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+            }
+        }
     }
 
     if (this._uGammaFactor) {
         gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
     }
 
-    this._baseTextureUnit = frameCtx.textureUnit;
+    this._baseTextureUnit = frame.textureUnit;
 };
 
 /**
@@ -52835,12 +46301,12 @@ DrawRenderer.prototype._bindProgram = function (frameCtx) {
  */
 class EmphasisFillShaderSource {
     constructor(mesh) {
-        this.vertex = buildVertex$k(mesh);
-        this.fragment = buildFragment$k(mesh);
+        this.vertex = buildVertex$i(mesh);
+        this.fragment = buildFragment$i(mesh);
     }
 }
 
-function buildVertex$k(mesh) {
+function buildVertex$i(mesh) {
     const scene = mesh.scene;
     const lightsState = scene._lightsState;
     const normals = hasNormals$1(mesh);
@@ -52858,7 +46324,6 @@ function buildVertex$k(mesh) {
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("uniform vec4 colorize;");
-    src.push("uniform vec3 offset;");
     if (quantizedGeometry) {
         src.push("uniform mat4 positionsDecodeMatrix;");
     }
@@ -52948,7 +46413,6 @@ function buildVertex$k(mesh) {
         src.push("vec4 viewPosition = modelViewMatrix * localPosition;");
     } else {
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition  = viewMatrix2 * worldPosition; ");
     }
     if (normals) {
@@ -53005,7 +46469,7 @@ function hasNormals$1(mesh) {
     return false;
 }
 
-function buildFragment$k(mesh) {
+function buildFragment$i(mesh) {
     const sectionPlanesState = mesh.scene._sectionPlanesState;
     const gammaOutput = mesh.scene.gammaOutput;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -53073,8 +46537,6 @@ function buildFragment$k(mesh) {
 
 const ids$3 = new Map({});
 
-const tempVec3a$q = math.vec3();
-
 /**
  * @private
  */
@@ -53123,72 +46585,40 @@ EmphasisFillRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-EmphasisFillRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
-
+EmphasisFillRenderer.prototype.drawMesh = function (frame, mesh, mode) {
     if (!this._program) {
         this._allocate(mesh);
     }
-
     const scene = this._scene;
-    const camera = scene.camera;
     const gl = scene.canvas.gl;
     const materialState = mode === 0 ? mesh._xrayMaterial._state : (mode === 1 ? mesh._highlightMaterial._state : mesh._selectedMaterial._state);
     const meshState = mesh._state;
     const geometryState = mesh._geometry._state;
-    const rtcCenter = mesh.rtcCenter;
-
-    if (frameCtx.lastProgramId !== this._program.id) {
-        frameCtx.lastProgramId = this._program.id;
-        this._bindProgram(frameCtx);
+    if (frame.lastProgramId !== this._program.id) {
+        frame.lastProgramId = this._program.id;
+        this._bindProgram(frame);
     }
-
-    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
-    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
-
-    if (meshState.clippable) {
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const renderFlags = mesh.renderFlags;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$q) : sectionPlane.pos);
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
-    }
-
     if (materialState.id !== this._lastMaterialId) {
         const fillColor = materialState.fillColor;
         const backfaces = materialState.backfaces;
-        if (frameCtx.backfaces !== backfaces) {
+        if (frame.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frameCtx.backfaces = backfaces;
+            frame.backfaces = backfaces;
         }
         gl.uniform4f(this._uFillColor, fillColor[0], fillColor[1], fillColor[2], materialState.fillAlpha);
         this._lastMaterialId = materialState.id;
     }
-
     gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
     if (this._uModelNormalMatrix) {
         gl.uniformMatrix4fv(this._uModelNormalMatrix, gl.FALSE, mesh.worldNormalMatrix);
     }
-
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, meshState.clippable);
     }
-
-    gl.uniform3fv(this._uOffset, meshState.offset);
-
     // Bind VBOs
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
@@ -53199,27 +46629,26 @@ EmphasisFillRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
         }
         if (this._aPosition) {
             this._aPosition.bindArrayBuffer(geometryState.positionsBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (this._aNormal) {
             this._aNormal.bindArrayBuffer(geometryState.normalsBuf);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (geometryState.indicesBuf) {
             geometryState.indicesBuf.bind();
-            frameCtx.bindArray++;
+            frame.bindArray++;
             // gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-            // frameCtx.drawElements++;
+            // frame.drawElements++;
         } else if (geometryState.positionsBuf) ;
         this._lastGeometryId = geometryState.id;
     }
-
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-        frameCtx.drawElements++;
+        frame.drawElements++;
     } else if (geometryState.positionsBuf) {
         gl.drawArrays(gl.TRIANGLES, 0, geometryState.positionsBuf.numItems);
-        frameCtx.drawArrays++;
+        frame.drawArrays++;
     }
 };
 
@@ -53276,27 +46705,28 @@ EmphasisFillRenderer.prototype._allocate = function (mesh) {
     this._aNormal = program.getAttribute("normal");
     this._uClippable = program.getLocation("clippable");
     this._uGammaFactor = program.getLocation("gammaFactor");
-    this._uOffset = program.getLocation("offset");
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
 };
 
-EmphasisFillRenderer.prototype._bindProgram = function (frameCtx) {
+EmphasisFillRenderer.prototype._bindProgram = function (frame) {
     const scene = this._scene;
     const gl = scene.canvas.gl;
+    const sectionPlanesState = scene._sectionPlanesState;
     const lightsState = scene._lightsState;
     const camera = scene.camera;
     const cameraState = camera._state;
     let light;
     const program = this._program;
     program.bind();
-    frameCtx.useProgram++;
-    frameCtx.textureUnit = 0;
+    frame.useProgram++;
+    frame.textureUnit = 0;
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
     this._lastIndicesBufId = null;
+    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
     gl.uniformMatrix4fv(this._uViewNormalMatrix, false, cameraState.normalMatrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera.project._state.matrix);
     for (var i = 0, len = lightsState.lights.length; i < len; i++) {
@@ -53318,6 +46748,30 @@ EmphasisFillRenderer.prototype._bindProgram = function (frameCtx) {
             }
         }
     }
+    if (sectionPlanesState.sectionPlanes.length > 0) {
+        const clips = scene._sectionPlanesState.sectionPlanes;
+        let sectionPlaneUniforms;
+        let uSectionPlaneActive;
+        let sectionPlane;
+        let uSectionPlanePos;
+        let uSectionPlaneDir;
+        for (var i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+            sectionPlaneUniforms = this._uSectionPlanes[i];
+            uSectionPlaneActive = sectionPlaneUniforms.active;
+            sectionPlane = clips[i];
+            if (uSectionPlaneActive) {
+                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+            }
+            uSectionPlanePos = sectionPlaneUniforms.pos;
+            if (uSectionPlanePos) {
+                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+            }
+            uSectionPlaneDir = sectionPlaneUniforms.dir;
+            if (uSectionPlaneDir) {
+                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+            }
+        }
+    }
     if (this._uGammaFactor) {
         gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
     }
@@ -53332,12 +46786,12 @@ EmphasisFillRenderer.prototype._bindProgram = function (frameCtx) {
  */
 class EmphasisEdgesShaderSource {
     constructor(mesh) {
-        this.vertex = buildVertex$l(mesh);
-        this.fragment = buildFragment$l(mesh);
+        this.vertex = buildVertex$j(mesh);
+        this.fragment = buildFragment$j(mesh);
     }
 }
 
-function buildVertex$l(mesh) {
+function buildVertex$j(mesh) {
     const scene = mesh.scene;
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const quantizedGeometry = !!mesh._geometry._state.compressGeometry;
@@ -53350,7 +46804,6 @@ function buildVertex$l(mesh) {
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("uniform vec4 edgeColor;");
-    src.push("uniform vec3 offset;");
     if (quantizedGeometry) {
         src.push("uniform mat4 positionsDecodeMatrix;");
     }
@@ -53390,11 +46843,9 @@ function buildVertex$l(mesh) {
         src.push("billboard(viewMatrix2);");
         src.push("billboard(modelViewMatrix);");
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition = modelViewMatrix * localPosition;");
     } else {
         src.push("worldPosition = modelMatrix2 * localPosition;");
-        src.push("worldPosition.xyz = worldPosition.xyz + offset;");
         src.push("vec4 viewPosition  = viewMatrix2 * worldPosition; ");
     }
     src.push("vColor = edgeColor;");
@@ -53406,7 +46857,7 @@ function buildVertex$l(mesh) {
     return src;
 }
 
-function buildFragment$l(mesh) {
+function buildFragment$j(mesh) {
     const sectionPlanesState = mesh.scene._sectionPlanesState;
     const gammaOutput = mesh.scene.gammaOutput;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -53467,8 +46918,6 @@ function buildFragment$l(mesh) {
 
 const ids$4 = new Map({});
 
-const tempVec3a$r = math.vec3();
-
 /**
  * @private
  */
@@ -53516,47 +46965,20 @@ EmphasisEdgesRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
-
+EmphasisEdgesRenderer.prototype.drawMesh = function (frame, mesh, mode) {
     if (!this._program) {
         this._allocate(mesh);
     }
-
     const scene = this._scene;
-    const camera = scene.camera;
     const gl = scene.canvas.gl;
     let materialState;
     const meshState = mesh._state;
     const geometry = mesh._geometry;
     const geometryState = geometry._state;
-    const rtcCenter = mesh.rtcCenter;
-
-    if (frameCtx.lastProgramId !== this._program.id) {
-        frameCtx.lastProgramId = this._program.id;
-        this._bindProgram(frameCtx);
+    if (frame.lastProgramId !== this._program.id) {
+        frame.lastProgramId = this._program.id;
+        this._bindProgram(frame);
     }
-
-    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
-    gl.uniformMatrix4fv(this._uViewNormalMatrix, false, camera.viewNormalMatrix);
-
-    if (meshState.clippable) {
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const renderFlags = mesh.renderFlags;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$r) : sectionPlane.pos);
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
-    }
-
     switch (mode) {
         case 0:
             materialState = mesh._xrayMaterial._state;
@@ -53572,20 +46994,19 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
             materialState = mesh._edgeMaterial._state;
             break;
     }
-
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
-        if (frameCtx.backfaces !== backfaces) {
+        if (frame.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frameCtx.backfaces = backfaces;
+            frame.backfaces = backfaces;
         }
-        if (frameCtx.lineWidth !== materialState.edgeWidth) {
+        if (frame.lineWidth !== materialState.edgeWidth) {
             gl.lineWidth(materialState.edgeWidth);
-            frameCtx.lineWidth = materialState.edgeWidth;
+            frame.lineWidth = materialState.edgeWidth;
         }
         if (this._uEdgeColor) {
             const edgeColor = materialState.edgeColor;
@@ -53594,17 +47015,13 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
         }
         this._lastMaterialId = materialState.id;
     }
-
     gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
     if (this._uModelNormalMatrix) {
         gl.uniformMatrix4fv(this._uModelNormalMatrix, gl.FALSE, mesh.worldNormalMatrix);
     }
-
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, meshState.clippable);
     }
-
-    gl.uniform3fv(this._uOffset, meshState.offset);
 
     // Bind VBOs
     let indicesBuf;
@@ -53613,7 +47030,6 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
     } else if (geometryState.primitive === gl.LINES) {
         indicesBuf = geometryState.indicesBuf;
     }
-
     if (indicesBuf) {
         if (geometryState.id !== this._lastGeometryId) {
             if (this._uPositionsDecodeMatrix) {
@@ -53621,33 +47037,26 @@ EmphasisEdgesRenderer.prototype.drawMesh = function (frameCtx, mesh, mode) {
             }
             if (this._aPosition) {
                 this._aPosition.bindArrayBuffer(geometryState.positionsBuf, geometryState.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
-                frameCtx.bindArray++;
+                frame.bindArray++;
             }
             indicesBuf.bind();
-            frameCtx.bindArray++;
+            frame.bindArray++;
             this._lastGeometryId = geometryState.id;
         }
-
         gl.drawElements(gl.LINES, indicesBuf.numItems, indicesBuf.itemType, 0);
-
-        frameCtx.drawElements++;
+        frame.drawElements++;
     }
 };
 
 EmphasisEdgesRenderer.prototype._allocate = function (mesh) {
-
     const gl = mesh.scene.canvas.gl;
     const sectionPlanesState = mesh.scene._sectionPlanesState;
-
     this._program = new Program(gl, this._shaderSource);
-
     if (this._program.errors) {
         this.errors = this._program.errors;
         return;
     }
-
     const program = this._program;
-
     this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
     this._uModelMatrix = program.getLocation("modelMatrix");
     this._uViewMatrix = program.getLocation("viewMatrix");
@@ -53664,30 +47073,49 @@ EmphasisEdgesRenderer.prototype._allocate = function (mesh) {
     this._aPosition = program.getAttribute("position");
     this._uClippable = program.getLocation("clippable");
     this._uGammaFactor = program.getLocation("gammaFactor");
-    this._uOffset = program.getLocation("offset");
-
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
 };
 
-EmphasisEdgesRenderer.prototype._bindProgram = function (frameCtx) {
-
+EmphasisEdgesRenderer.prototype._bindProgram = function (frame) {
     const program = this._program;
     const scene = this._scene;
     const gl = scene.canvas.gl;
+    const sectionPlanesState = scene._sectionPlanesState;
     const camera = scene.camera;
-
+    const cameraState = camera._state;
     program.bind();
-
-    frameCtx.useProgram++;
-
+    frame.useProgram++;
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
-
+    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera.project._state.matrix);
-
+    if (sectionPlanesState.sectionPlanes.length > 0) {
+        const clips = sectionPlanesState.sectionPlanes;
+        let sectionPlaneUniforms;
+        let uSectionPlaneActive;
+        let sectionPlane;
+        let uSectionPlanePos;
+        let uSectionPlaneDir;
+        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+            sectionPlaneUniforms = this._uSectionPlanes[i];
+            uSectionPlaneActive = sectionPlaneUniforms.active;
+            sectionPlane = clips[i];
+            if (uSectionPlaneActive) {
+                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+            }
+            uSectionPlanePos = sectionPlaneUniforms.pos;
+            if (uSectionPlanePos) {
+                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+            }
+            uSectionPlaneDir = sectionPlaneUniforms.dir;
+            if (uSectionPlaneDir) {
+                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+            }
+        }
+    }
     if (this._uGammaFactor) {
         gl.uniform1f(this._uGammaFactor, scene.gammaFactor);
     }
@@ -53702,12 +47130,12 @@ EmphasisEdgesRenderer.prototype._bindProgram = function (frameCtx) {
  */
 class PickMeshShaderSource {
     constructor(mesh) {
-        this.vertex = buildVertex$m(mesh);
-        this.fragment = buildFragment$m(mesh);
+        this.vertex = buildVertex$k(mesh);
+        this.fragment = buildFragment$k(mesh);
     }
 }
 
-function buildVertex$m(mesh) {
+function buildVertex$k(mesh) {
     const scene = mesh.scene;
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const quantizedGeometry = !!mesh._geometry._state.compressGeometry;
@@ -53720,7 +47148,6 @@ function buildVertex$m(mesh) {
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
     src.push("varying vec4 vViewPosition;");
-    src.push("uniform vec3 offset;");
     if (quantizedGeometry) {
         src.push("uniform mat4 positionsDecodeMatrix;");
     }
@@ -53758,7 +47185,6 @@ function buildVertex$m(mesh) {
         src.push("billboard(viewMatrix2);");
     }
     src.push("   vec4 worldPosition = modelMatrix2 * localPosition;");
-    src.push("   worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("   vec4 viewPosition = viewMatrix2 * worldPosition;");
     if (clipping) {
         src.push("   vWorldPosition = worldPosition;");
@@ -53768,7 +47194,7 @@ function buildVertex$m(mesh) {
     return src;
 }
 
-function buildFragment$m(mesh) {
+function buildFragment$k(mesh) {
     const scene = mesh.scene;
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -53813,8 +47239,6 @@ function buildFragment$m(mesh) {
 /**
  * @author xeolabs / https://github.com/xeolabs
  */
-
-const tempVec3a$s = math.vec3();
 
 // No ID, because there is exactly one PickMeshRenderer per scene
 
@@ -53866,88 +47290,61 @@ PickMeshRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
-
+PickMeshRenderer.prototype.drawMesh = function (frame, mesh) {
     if (!this._program) {
         this._allocate(mesh);
     }
-
     const scene = this._scene;
     const gl = scene.canvas.gl;
-    const meshState = mesh._state;
     const materialState = mesh._material._state;
     const geometryState = mesh._geometry._state;
-    const rtcCenter = mesh.rtcCenter;
-
-    if (frameCtx.lastProgramId !== this._program.id) {
-        frameCtx.lastProgramId = this._program.id;
-        this._bindProgram(frameCtx);
+    if (frame.lastProgramId !== this._program.id) {
+        frame.lastProgramId = this._program.id;
+        this._bindProgram(frame);
     }
-
-    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCPickViewMatrix(meshState.rtcCenterHash, rtcCenter) : frameCtx.pickViewMatrix);
-
-    if (meshState.clippable) {
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const renderFlags = mesh.renderFlags;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$s) : sectionPlane.pos);
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
-    }
-
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
-        if (frameCtx.backfaces !== backfaces) {
+        if (frame.backfaces !== backfaces) {
             if (backfaces) {
                 gl.disable(gl.CULL_FACE);
             } else {
                 gl.enable(gl.CULL_FACE);
             }
-            frameCtx.backfaces = backfaces;
+            frame.backfaces = backfaces;
         }
         const frontface = materialState.frontface;
-        if (frameCtx.frontface !== frontface) {
+        if (frame.frontface !== frontface) {
             if (frontface) {
                 gl.frontFace(gl.CCW);
             } else {
                 gl.frontFace(gl.CW);
             }
-            frameCtx.frontface = frontface;
+            frame.frontface = frontface;
         }
         this._lastMaterialId = materialState.id;
     }
-
-    gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
+    gl.uniformMatrix4fv(this._uViewMatrix, false, frame.pickViewMatrix);
+    gl.uniformMatrix4fv(this._uProjMatrix, false, frame.pickProjMatrix);
     gl.uniformMatrix4fv(this._uModelMatrix, false, mesh.worldMatrix);
+    // Mesh state
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
     }
-    gl.uniform3fv(this._uOffset, mesh._state.offset);
-
+    // Bind VBOs
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
             gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
         }
         if (this._aPosition) {
             this._aPosition.bindArrayBuffer(geometryState.positionsBuf, geometryState.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         if (geometryState.indicesBuf) {
             geometryState.indicesBuf.bind();
-            frameCtx.bindArray++;
+            frame.bindArray++;
         }
         this._lastGeometryId = geometryState.id;
     }
-
     // Mesh-indexed color
     var pickID = mesh._state.pickID;
     const a = pickID >> 24 & 0xFF;
@@ -53955,10 +47352,9 @@ PickMeshRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     const g = pickID >> 8 & 0xFF;
     const r = pickID & 0xFF;
     gl.uniform4f(this._uPickColor, r / 255, g / 255, b / 255, a / 255);
-
     if (geometryState.indicesBuf) {
         gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-        frameCtx.drawElements++;
+        frame.drawElements++;
     } else if (geometryState.positions) {
         gl.drawArrays(gl.TRIANGLES, 0, geometryState.positions.numItems);
     }
@@ -53988,16 +47384,43 @@ PickMeshRenderer.prototype._allocate = function (mesh) {
     this._aPosition = program.getAttribute("position");
     this._uClippable = program.getLocation("clippable");
     this._uPickColor = program.getLocation("pickColor");
-    this._uOffset = program.getLocation("offset");
     this._lastMaterialId = null;
+    this._lastVertexBufsId = null;
     this._lastGeometryId = null;
 };
 
-PickMeshRenderer.prototype._bindProgram = function (frameCtx) {
+PickMeshRenderer.prototype._bindProgram = function (frame) {
+    const scene = this._scene;
+    const gl = scene.canvas.gl;
+    const sectionPlanesState = scene._sectionPlanesState;
     this._program.bind();
-    frameCtx.useProgram++;
+    frame.useProgram++;
     this._lastMaterialId = null;
+    this._lastVertexBufsId = null;
     this._lastGeometryId = null;
+    if (sectionPlanesState.sectionPlanes.length > 0) {
+        let sectionPlaneUniforms;
+        let uSectionPlaneActive;
+        let sectionPlane;
+        let uSectionPlanePos;
+        let uSectionPlaneDir;
+        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+            sectionPlaneUniforms = this._uSectionPlanes[i];
+            uSectionPlaneActive = sectionPlaneUniforms.active;
+            sectionPlane = sectionPlanesState.sectionPlanes[i];
+            if (uSectionPlaneActive) {
+                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+            }
+            uSectionPlanePos = sectionPlaneUniforms.pos;
+            if (uSectionPlanePos) {
+                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+            }
+            uSectionPlaneDir = sectionPlaneUniforms.dir;
+            if (uSectionPlaneDir) {
+                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
+            }
+        }
+    }
 };
 
 /**
@@ -54009,12 +47432,12 @@ PickMeshRenderer.prototype._bindProgram = function (frameCtx) {
  */
 class PickTriangleShaderSource {
     constructor(mesh) {
-        this.vertex = buildVertex$n(mesh);
-        this.fragment = buildFragment$n(mesh);
+        this.vertex = buildVertex$l(mesh);
+        this.fragment = buildFragment$l(mesh);
     }
 }
 
-function buildVertex$n(mesh) {
+function buildVertex$l(mesh) {
     const scene = mesh.scene;
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const quantizedGeometry = !!mesh._geometry._state.compressGeometry;
@@ -54027,7 +47450,6 @@ function buildVertex$n(mesh) {
     src.push("uniform mat4 modelMatrix;");
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
-    src.push("uniform vec3 offset;");
     if (clipping) {
         src.push("uniform bool clippable;");
         src.push("varying vec4 vWorldPosition;");
@@ -54042,7 +47464,6 @@ function buildVertex$n(mesh) {
         src.push("localPosition = positionsDecodeMatrix * localPosition;");
     }
     src.push("   vec4 worldPosition = modelMatrix * localPosition; ");
-    src.push("   worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("   vec4 viewPosition = viewMatrix * worldPosition;");
     if (clipping) {
         src.push("   vWorldPosition = worldPosition;");
@@ -54053,7 +47474,7 @@ function buildVertex$n(mesh) {
     return src;
 }
 
-function buildFragment$n(mesh) {
+function buildFragment$l(mesh) {
     const scene = mesh.scene;
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -54098,8 +47519,6 @@ function buildFragment$n(mesh) {
 /**
  * @author xeolabs / https://github.com/xeolabs
  */
-
-const tempVec3a$t = math.vec3();
 
 /**
  * @private
@@ -54149,72 +47568,72 @@ PickTriangleRenderer.prototype.webglContextRestored = function () {
     this._program = null;
 };
 
-PickTriangleRenderer.prototype.drawMesh = function (frameCtx, mesh) {
-
+PickTriangleRenderer.prototype.drawMesh = function (frame, mesh) {
     if (!this._program) {
         this._allocate(mesh);
     }
-
     const scene = this._scene;
     const gl = scene.canvas.gl;
-    const meshState = mesh._state;
+    const sectionPlanesState = scene._sectionPlanesState;
     const materialState = mesh._material._state;
+    const meshState = mesh._state;
     const geometry = mesh._geometry;
     const geometryState = mesh._geometry._state;
-    const rtcCenter = mesh.rtcCenter;
     const backfaces = materialState.backfaces;
     const frontface = materialState.frontface;
     const positionsBuf = geometry._getPickTrianglePositions();
     const pickColorsBuf = geometry._getPickTriangleColors();
-
+    const camera = scene.camera;
+    const cameraState = camera._state;
     this._program.bind();
-
-    frameCtx.useProgram++;
-
-    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCPickViewMatrix(meshState.rtcCenterHash, rtcCenter) : frameCtx.pickViewMatrix);
-
-    if (meshState.clippable) {
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const renderFlags = mesh.renderFlags;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$t) : sectionPlane.pos);
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
+    frame.useProgram++;
+    gl.uniformMatrix4fv(this._uViewMatrix, false, frame.pickViewMatrix);
+    gl.uniformMatrix4fv(this._uProjMatrix, false, frame.pickProjMatrix);
+    if (sectionPlanesState.sectionPlanes.length > 0) {
+        const sectionPlanes = sectionPlanesState.sectionPlanes;
+        let sectionPlaneUniforms;
+        let uSectionPlaneActive;
+        let sectionPlane;
+        let uSectionPlanePos;
+        let uSectionPlaneDir;
+        for (let i = 0, len = this._uSectionPlanes.length; i < len; i++) {
+            sectionPlaneUniforms = this._uSectionPlanes[i];
+            uSectionPlaneActive = sectionPlaneUniforms.active;
+            sectionPlane = sectionPlanes[i];
+            if (uSectionPlaneActive) {
+                gl.uniform1i(uSectionPlaneActive, sectionPlane.active);
+            }
+            uSectionPlanePos = sectionPlaneUniforms.pos;
+            if (uSectionPlanePos) {
+                gl.uniform3fv(sectionPlaneUniforms.pos, sectionPlane.pos);
+            }
+            uSectionPlaneDir = sectionPlaneUniforms.dir;
+            if (uSectionPlaneDir) {
+                gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
             }
         }
     }
-
-    gl.uniformMatrix4fv(this._uProjMatrix, false, frameCtx.pickProjMatrix);
-
-    if (frameCtx.backfaces !== backfaces) {
+    if (frame.backfaces !== backfaces) {
         if (backfaces) {
             gl.disable(gl.CULL_FACE);
         } else {
             gl.enable(gl.CULL_FACE);
         }
-        frameCtx.backfaces = backfaces;
+        frame.backfaces = backfaces;
     }
-    if (frameCtx.frontface !== frontface) {
+    if (frame.frontface !== frontface) {
         if (frontface) {
             gl.frontFace(gl.CCW);
         } else {
             gl.frontFace(gl.CW);
         }
-        frameCtx.frontface = frontface;
+        frame.frontface = frontface;
     }
-
+    this._lastMaterialId = materialState.id;
     gl.uniformMatrix4fv(this._uModelMatrix, false, mesh.worldMatrix);
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
     }
-    gl.uniform3fv(this._uOffset, mesh._state.offset);
     if (this._uPositionsDecodeMatrix) {
         gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
         this._aPosition.bindArrayBuffer(positionsBuf, geometryState.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
@@ -54252,7 +47671,6 @@ PickTriangleRenderer.prototype._allocate = function (mesh) {
     this._aPosition = program.getAttribute("position");
     this._aColor = program.getAttribute("color");
     this._uClippable = program.getLocation("clippable");
-    this._uOffset = program.getLocation("offset");
 };
 
 /**
@@ -54264,12 +47682,12 @@ PickTriangleRenderer.prototype._allocate = function (mesh) {
  */
 class OcclusionShaderSource {
     constructor(mesh) {
-        this.vertex = buildVertex$o(mesh);
-        this.fragment = buildFragment$o(mesh);
+        this.vertex = buildVertex$m(mesh);
+        this.fragment = buildFragment$m(mesh);
     }
 }
 
-function buildVertex$o(mesh) {
+function buildVertex$m(mesh) {
     const scene = mesh.scene;
     const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
     const quantizedGeometry = !!mesh._geometry._state.compressGeometry;
@@ -54281,7 +47699,6 @@ function buildVertex$o(mesh) {
     src.push("uniform mat4 modelMatrix;");
     src.push("uniform mat4 viewMatrix;");
     src.push("uniform mat4 projMatrix;");
-    src.push("uniform vec3 offset;");
     if (quantizedGeometry) {
         src.push("uniform mat4 positionsDecodeMatrix;");
     }
@@ -54319,7 +47736,6 @@ function buildVertex$o(mesh) {
         src.push("billboard(viewMatrix2);");
     }
     src.push("   vec4 worldPosition = modelMatrix2 * localPosition;");
-    src.push("   worldPosition.xyz = worldPosition.xyz + offset;");
     src.push("   vec4 viewPosition = viewMatrix2 * worldPosition;");
     if (clipping) {
         src.push("   vWorldPosition = worldPosition;");
@@ -54329,7 +47745,7 @@ function buildVertex$o(mesh) {
     return src;
 }
 
-function buildFragment$o(mesh) {
+function buildFragment$m(mesh) {
     const scene = mesh.scene;
     const sectionPlanesState = scene._sectionPlanesState;
     const clipping = sectionPlanesState.sectionPlanes.length > 0;
@@ -54373,8 +47789,6 @@ function buildFragment$o(mesh) {
 /**
  * @author xeolabs / https://github.com/xeolabs
  */
-
-const tempVec3a$u = math.vec3();
 
 // No ID, because there is exactly one PickMeshRenderer per scene
 
@@ -54427,23 +47841,17 @@ OcclusionRenderer.prototype.webglContextRestored = function () {
 };
 
 OcclusionRenderer.prototype.drawMesh = function (frameCtx, mesh) {
-
     if (!this._program) {
         this._allocate(mesh);
     }
-
     const scene = this._scene;
     const gl = scene.canvas.gl;
     const materialState = mesh._material._state;
-    const meshState = mesh._state;
     const geometryState = mesh._geometry._state;
-    const rtcCenter = mesh.rtcCenter;
-
     if (frameCtx.lastProgramId !== this._program.id) {
         frameCtx.lastProgramId = this._program.id;
         this._bindProgram(frameCtx);
     }
-
     if (materialState.id !== this._lastMaterialId) {
         const backfaces = materialState.backfaces;
         if (frameCtx.backfaces !== backfaces) {
@@ -54467,36 +47875,17 @@ OcclusionRenderer.prototype.drawMesh = function (frameCtx, mesh) {
     }
 
     const camera = scene.camera;
+    const cameraState = camera._state;
 
-    gl.uniformMatrix4fv(this._uViewMatrix, false, rtcCenter ? frameCtx.getRTCViewMatrix(meshState.rtcCenterHash, rtcCenter) : camera.viewMatrix);
-
-    if (meshState.clippable) {
-        const numSectionPlanes = scene._sectionPlanesState.sectionPlanes.length;
-        if (numSectionPlanes > 0) {
-            const sectionPlanes = scene._sectionPlanesState.sectionPlanes;
-            const renderFlags = mesh.renderFlags;
-            for (let sectionPlaneIndex = 0; sectionPlaneIndex < numSectionPlanes; sectionPlaneIndex++) {
-                const sectionPlaneUniforms = this._uSectionPlanes[sectionPlaneIndex];
-                const active = renderFlags.sectionPlanesActivePerLayer[sectionPlaneIndex];
-                gl.uniform1i(sectionPlaneUniforms.active, active ? 1 : 0);
-                if (active) {
-                    const sectionPlane = sectionPlanes[sectionPlaneIndex];
-                    gl.uniform3fv(sectionPlaneUniforms.pos, rtcCenter ? getPlaneRTCPos(sectionPlane.dist, sectionPlane.dir, rtcCenter, tempVec3a$u) : sectionPlane.pos);
-                    gl.uniform3fv(sectionPlaneUniforms.dir, sectionPlane.dir);
-                }
-            }
-        }
-    }
-
+    gl.uniformMatrix4fv(this._uViewMatrix, false, cameraState.matrix);
     gl.uniformMatrix4fv(this._uProjMatrix, false, camera._project._state.matrix);
     gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
 
+    // Mesh state
     if (this._uClippable) {
         gl.uniform1i(this._uClippable, mesh._state.clippable);
     }
-
-    gl.uniform3fv(this._uOffset, mesh._state.offset);
-
+    // Bind VBOs
     if (geometryState.id !== this._lastGeometryId) {
         if (this._uPositionsDecodeMatrix) {
             gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
@@ -54542,7 +47931,6 @@ OcclusionRenderer.prototype._allocate = function (mesh) {
     }
     this._aPosition = program.getAttribute("position");
     this._uClippable = program.getLocation("clippable");
-    this._uOffset = program.getLocation("offset");
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
@@ -54550,287 +47938,10 @@ OcclusionRenderer.prototype._allocate = function (mesh) {
 
 OcclusionRenderer.prototype._bindProgram = function (frameCtx) {
     const scene = this._scene;
+    const gl = scene.canvas.gl;
+    const sectionPlanesState = scene._sectionPlanesState;
     this._program.bind();
     frameCtx.useProgram++;
-    this._lastMaterialId = null;
-    this._lastVertexBufsId = null;
-    this._lastGeometryId = null;
-};
-
-/**
- * @private
- */
-class ShadowShaderSource {
-    constructor(mesh) {
-        this.vertex = buildVertex$p(mesh);
-        this.fragment = buildFragment$p(mesh);
-    }
-}
-
-function buildVertex$p(mesh) {
-    const scene = mesh.scene;
-    const clipping = scene._sectionPlanesState.sectionPlanes.length > 0;
-    const quantizedGeometry = !!mesh._geometry._state.compressGeometry;
-    const src = [];
-    src.push("// Mesh shadow vertex shader");
-    src.push("attribute vec3 position;");
-    src.push("uniform mat4 modelMatrix;");
-    src.push("uniform mat4 shadowViewMatrix;");
-    src.push("uniform mat4 shadowProjMatrix;");
-    src.push("uniform vec3 offset;");
-    if (quantizedGeometry) {
-        src.push("uniform mat4 positionsDecodeMatrix;");
-    }
-    if (clipping) {
-        src.push("varying vec4 vWorldPosition;");
-    }
-    src.push("void main(void) {");
-    src.push("vec4 localPosition = vec4(position, 1.0); ");
-    src.push("vec4 worldPosition;");
-    if (quantizedGeometry) {
-        src.push("localPosition = positionsDecodeMatrix * localPosition;");
-    }
-    src.push("worldPosition = modelMatrix * localPosition;");
-    src.push("worldPosition.xyz = worldPosition.xyz + offset;");
-    src.push("vec4 viewPosition  = shadowViewMatrix * worldPosition; ");
-    if (clipping) {
-        src.push("vWorldPosition = worldPosition;");
-    }
-    src.push("   gl_Position = shadowProjMatrix * viewPosition;");
-    src.push("}");
-    return src;
-}
-
-function buildFragment$p(mesh) {
-    const scene = mesh.scene;
-    const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
-    const clipping = sectionPlanesState.sectionPlanes.length > 0;
-    const src = [];
-    src.push("// Mesh shadow fragment shader");
-
-    src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
-    src.push("precision highp float;");
-    src.push("precision highp int;");
-    src.push("#else");
-    src.push("precision mediump float;");
-    src.push("precision mediump int;");
-    src.push("#endif");
-
-    if (clipping) {
-        src.push("uniform bool clippable;");
-        src.push("varying vec4 vWorldPosition;");
-        for (var i = 0; i < sectionPlanesState.sectionPlanes.length; i++) {
-            src.push("uniform bool sectionPlaneActive" + i + ";");
-            src.push("uniform vec3 sectionPlanePos" + i + ";");
-            src.push("uniform vec3 sectionPlaneDir" + i + ";");
-        }
-    }
-
-    src.push("vec4 encodeFloat( const in float depth ) {");
-    src.push("  const vec4 bitShift = vec4(256 * 256 * 256, 256 * 256, 256, 1.0);");
-    src.push("  const vec4 bitMask = vec4(0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);");
-    src.push("  vec4 comp = fract(depth * bitShift);");
-    src.push("  comp -= comp.xxyz * bitMask;");
-    src.push("  return comp;");
-    src.push("}");
-
-    src.push("void main(void) {");
-    if (clipping) {
-        src.push("if (clippable) {");
-        src.push("  float dist = 0.0;");
-        for (var i = 0; i < sectionPlanesState.sectionPlanes.length; i++) {
-            src.push("if (sectionPlaneActive" + i + ") {");
-            src.push("   dist += clamp(dot(-sectionPlaneDir" + i + ".xyz, vWorldPosition.xyz - sectionPlanePos" + i + ".xyz), 0.0, 1000.0);");
-            src.push("}");
-        }
-        src.push("  if (dist > 0.0) { discard; }");
-        src.push("}");
-    }
-    src.push("gl_FragColor = encodeFloat(gl_FragCoord.z);");
-    src.push("}");
-    return src;
-}
-
-/**
- * @private
- */
-const ShadowRenderer = function (hash, mesh) {
-    this._hash = hash;
-    this._shaderSource = new ShadowShaderSource(mesh);
-    this._scene = mesh.scene;
-    this._useCount = 0;
-    this._allocate(mesh);
-};
-
-const renderers$4 = {};
-
-ShadowRenderer.get = function (mesh) {
-    const scene = mesh.scene;
-    const hash = [scene.canvas.canvas.id, scene._sectionPlanesState.getHash(), mesh._geometry._state.hash, mesh._state.hash].join(";");
-    let renderer = renderers$4[hash];
-    if (!renderer) {
-        renderer = new ShadowRenderer(hash, mesh);
-        if (renderer.errors) {
-            console.log(renderer.errors.join("\n"));
-            return null;
-        }
-        renderers$4[hash] = renderer;
-        stats.memory.programs++;
-    }
-    renderer._useCount++;
-    return renderer;
-};
-
-ShadowRenderer.prototype.put = function () {
-    if (--this._useCount === 0) {
-        if (this._program) {
-            this._program.destroy();
-        }
-        delete renderers$4[this._hash];
-        stats.memory.programs--;
-    }
-};
-
-ShadowRenderer.prototype.webglContextRestored = function () {
-    this._program = null;
-};
-
-ShadowRenderer.prototype.drawMesh = function (frame, mesh) {
-    if (!this._program) {
-        this._allocate(mesh);
-    }
-    const scene = this._scene;
-    const gl = scene.canvas.gl;
-    const materialState = mesh._material._state;
-    const geometryState = mesh._geometry._state;
-    if (frame.lastProgramId !== this._program.id) {
-        frame.lastProgramId = this._program.id;
-        this._bindProgram(frame);
-    }
-    if (materialState.id !== this._lastMaterialId) {
-        const backfaces = materialState.backfaces;
-        if (frame.backfaces !== backfaces) {
-            if (backfaces) {
-                gl.disable(gl.CULL_FACE);
-            } else {
-                gl.enable(gl.CULL_FACE);
-            }
-            frame.backfaces = backfaces;
-        }
-        const frontface = materialState.frontface;
-        if (frame.frontface !== frontface) {
-            if (frontface) {
-                gl.frontFace(gl.CCW);
-            } else {
-                gl.frontFace(gl.CW);
-            }
-            frame.frontface = frontface;
-        }
-        if (frame.lineWidth !== materialState.lineWidth) {
-            gl.lineWidth(materialState.lineWidth);
-            frame.lineWidth = materialState.lineWidth;
-        }
-        if (this._uPointSize) {
-            gl.uniform1i(this._uPointSize, materialState.pointSize);
-        }
-        this._lastMaterialId = materialState.id;
-    }
-    gl.uniformMatrix4fv(this._uModelMatrix, gl.FALSE, mesh.worldMatrix);
-    if (geometryState.combineGeometry) {
-        const vertexBufs = mesh.vertexBufs;
-        if (vertexBufs.id !== this._lastVertexBufsId) {
-            if (vertexBufs.positionsBuf && this._aPosition) {
-                this._aPosition.bindArrayBuffer(vertexBufs.positionsBuf, vertexBufs.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
-                frame.bindArray++;
-            }
-            this._lastVertexBufsId = vertexBufs.id;
-        }
-    }
-    if (this._uClippable) {
-        gl.uniform1i(this._uClippable, mesh._state.clippable);
-    }
-    gl.uniform3fv(this._uOffset, mesh._state.offset);
-    if (geometryState.id !== this._lastGeometryId) {
-        if (this._uPositionsDecodeMatrix) {
-            gl.uniformMatrix4fv(this._uPositionsDecodeMatrix, false, geometryState.positionsDecodeMatrix);
-        }
-        if (geometryState.combineGeometry) { // VBOs were bound by the preceding VertexBufs chunk
-            if (geometryState.indicesBufCombined) {
-                geometryState.indicesBufCombined.bind();
-                frame.bindArray++;
-            }
-        } else {
-            if (this._aPosition) {
-                this._aPosition.bindArrayBuffer(geometryState.positionsBuf, geometryState.compressGeometry ? gl.UNSIGNED_SHORT : gl.FLOAT);
-                frame.bindArray++;
-            }
-            if (geometryState.indicesBuf) {
-                geometryState.indicesBuf.bind();
-                frame.bindArray++;
-            }
-        }
-        this._lastGeometryId = geometryState.id;
-    }
-    if (geometryState.combineGeometry) {
-        if (geometryState.indicesBufCombined) {
-            gl.drawElements(geometryState.primitive, geometryState.indicesBufCombined.numItems, geometryState.indicesBufCombined.itemType, 0);
-            frame.drawElements++;
-        }
-    } else {
-        if (geometryState.indicesBuf) {
-            gl.drawElements(geometryState.primitive, geometryState.indicesBuf.numItems, geometryState.indicesBuf.itemType, 0);
-            frame.drawElements++;
-        } else if (geometryState.positions) {
-            gl.drawArrays(gl.TRIANGLES, 0, geometryState.positions.numItems);
-            frame.drawArrays++;
-        }
-    }
-};
-
-ShadowRenderer.prototype._allocate = function (mesh) {
-    const scene = mesh.scene;
-    const gl = scene.canvas.gl;
-    this._program = new Program(gl, this._shaderSource);
-    this._scene = scene;
-    this._useCount = 0;
-    if (this._program.errors) {
-        this.errors = this._program.errors;
-        return;
-    }
-    const program = this._program;
-    this._uPositionsDecodeMatrix = program.getLocation("positionsDecodeMatrix");
-    this._uModelMatrix = program.getLocation("modelMatrix");
-    this._uShadowViewMatrix = program.getLocation("shadowViewMatrix");
-    this._uShadowProjMatrix = program.getLocation("shadowProjMatrix");
-    this._uSectionPlanes = {};
-    const clips = scene._sectionPlanesState.sectionPlanes;
-    for (let i = 0, len = clips.length; i < len; i++) {
-        this._uSectionPlanes.push({
-            active: program.getLocation("sectionPlaneActive" + i),
-            pos: program.getLocation("sectionPlanePos" + i),
-            dir: program.getLocation("sectionPlaneDir" + i)
-        });
-    }
-    this._aPosition = program.getAttribute("position");
-    this._uClippable = program.getLocation("clippable");
-    this._uOffset = program.getLocation("offset");
-    this._lastMaterialId = null;
-    this._lastVertexBufsId = null;
-    this._lastGeometryId = null;
-};
-
-ShadowRenderer.prototype._bindProgram = function (frame) {
-    if (!this._program) {
-        this._allocate(mesh);
-    }
-    const scene = this._scene;
-    const gl = scene.canvas.gl;
-    const sectionPlanesState = scene._sectionPlanesState;
-    this._program.bind();
-    frame.useProgram++;
-    gl.uniformMatrix4fv(this._uShadowViewMatrix, false, frame.shadowViewMatrix);
-    gl.uniformMatrix4fv(this._uShadowProjMatrix, false, frame.shadowProjMatrix);
     this._lastMaterialId = null;
     this._lastVertexBufsId = null;
     this._lastGeometryId = null;
@@ -54905,8 +48016,6 @@ const identityMat$1 = math.identityMat4();
  * import {Mesh} from "../src/scene/mesh/Mesh.js";
  * import {Node} from "../src/scene/nodes/Node.js";
  * import {PhongMaterial} from "../src/scene/materials/PhongMaterial.js";
- * import {buildBoxGeometry} from "../src/viewer/scene/geometry/builders/buildBoxGeometry.js";
- * import {ReadableGeometry} from "../src/viewer/scene/geometry/ReadableGeometry.js";
  *
  * const viewer = new Viewer({
  *     canvasId: "myCanvas"
@@ -54915,12 +48024,6 @@ const identityMat$1 = math.identityMat4();
  * viewer.scene.camera.eye = [-21.80, 4.01, 6.56];
  * viewer.scene.camera.look = [0, -5.75, 0];
  * viewer.scene.camera.up = [0.37, 0.91, -0.11];
- *
- * const boxGeometry = new ReadableGeometry(viewer.scene, buildBoxGeometry({
- *      xSize: 1,
- *      ySize: 1,
- *      zSize: 1
- * }));
  *
  * new Node(viewer.scene, {
  *      id: "table",
@@ -54939,8 +48042,7 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [1, 0.3, 0.3]
- *              }),
- *              geometry: boxGeometry
+ *              })
  *          }),
  *
  *          new Mesh(viewer.scene, { // Green table leg
@@ -54951,8 +48053,7 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [0.3, 1.0, 0.3]
- *              }),
- *              geometry: boxGeometry
+ *              })
  *          }),
  *
  *          new Mesh(viewer.scene, {// Blue table leg
@@ -54963,8 +48064,7 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [0.3, 0.3, 1.0]
- *              }),
- *              geometry: boxGeometry
+ *              })
  *          }),
  *
  *          new Mesh(viewer.scene, {  // Yellow table leg
@@ -54975,8 +48075,7 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                   diffuse: [1.0, 1.0, 0.0]
- *              }),
- *              geometry: boxGeometry
+ *              })
  *          }),
  *
  *          new Mesh(viewer.scene, { // Purple table top
@@ -54987,8 +48086,7 @@ const identityMat$1 = math.identityMat4();
  *              rotation: [0, 0, 0],
  *              material: new PhongMaterial(viewer.scene, {
  *                  diffuse: [1.0, 0.3, 1.0]
- *              }),
- *              geometry: boxGeometry
+ *              })
  *          })
  *      ]
  *  });
@@ -55045,12 +48143,10 @@ class Mesh extends Component {
      * @param {Boolean} [cfg.isModel] Specify ````true```` if this Mesh represents a model, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#models} and may also have a corresponding {@link MetaModel} with matching {@link MetaModel#id}, registered by that ID in {@link MetaScene#metaModels}.
      * @param {Boolean} [cfg.isObject] Specify ````true```` if this Mesh represents an object, in which case the Mesh will be registered by {@link Mesh#id} in {@link Scene#objects} and may also have a corresponding {@link MetaObject} with matching {@link MetaObject#id}, registered by that ID in {@link MetaScene#metaObjects}.
      * @param {Node} [cfg.parent] The parent Node.
-     * @param {Number[]} [cfg.rtcCenter] Relative-to-center (RTC) coordinate system center for this Mesh. When this is given, then ````matrix````, ````position```` and ````geometry```` are all assumed to be relative to this center.
      * @param {Number[]} [cfg.position=[0,0,0]] Local 3D position.
      * @param {Number[]} [cfg.scale=[1,1,1]] Local scale.
      * @param {Number[]} [cfg.rotation=[0,0,0]] Local rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
-     * @param {Number[]} [cfg.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]] Local modelling transform matrix. Overrides the position, scale and rotation parameters.
-     * @param {Number[]} [cfg.offset=[0,0,0]] World-space 3D translation offset. Translates the Mesh in World space, after modelling transforms.
+     * @param {Number[]} [cfg.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1] Local modelling transform matrix. Overrides the position, scale and rotation parameters.
      * @param {Boolean} [cfg.visible=true] Indicates if the Mesh is initially visible.
      * @param {Boolean} [cfg.culled=false] Indicates if the Mesh is initially culled from view.
      * @param {Boolean} [cfg.pickable=true] Indicates if the Mesh is initially pickable.
@@ -55076,9 +48172,6 @@ class Mesh extends Component {
 
         super(owner, cfg);
 
-        /** @private **/
-        this.renderFlags = new RenderFlags();
-
         this._state = new RenderState({ // NOTE: Renderer gets modeling and normal matrices from Mesh#matrix and Mesh.#normalWorldMatrix
             visible: true,
             culled: false,
@@ -55097,10 +48190,7 @@ class Mesh extends Component {
             colorize: null,
             pickID: this.scene._renderer.getPickID(this),
             drawHash: "",
-            pickHash: "",
-            offset: math.vec3(),
-            rtcCenter: null,
-            rtcCenterHash: null
+            pickHash: ""
         });
 
         this._drawRenderer = null;
@@ -55139,11 +48229,6 @@ class Mesh extends Component {
         this._worldMatrixDirty = true;
         this._worldNormalMatrixDirty = true;
 
-        if (cfg.rtcCenter) {
-            this._state.rtcCenter = math.vec3(cfg.rtcCenter);
-            this._state.rtcCenterHash = cfg.rtcCenter.join();
-        }
-
         if (cfg.matrix) {
             this.matrix = cfg.matrix;
         } else {
@@ -55178,7 +48263,6 @@ class Mesh extends Component {
         this.layer = cfg.layer;
         this.colorize = cfg.colorize;
         this.opacity = cfg.opacity;
-        this.offset = cfg.offset;
 
         if (cfg.parentId) {
             const parentNode = this.scene.components[cfg.parentId];
@@ -55407,29 +48491,9 @@ class Mesh extends Component {
         return hash.join("");
     }
 
-    _buildAABB(worldMatrix, aabb) {
-
+    _buildAABB(worldMatrix, boundary) {
         math.transformOBB3(worldMatrix, this._geometry.obb, obb);
-        math.OBB3ToAABB3(obb, aabb);
-
-        const offset = this._state.offset;
-
-        aabb[0] += offset[0];
-        aabb[1] += offset[1];
-        aabb[2] += offset[2];
-        aabb[3] += offset[0];
-        aabb[4] += offset[1];
-        aabb[5] += offset[2];
-
-        if (this._state.rtcCenter) {
-            const rtcCenter = this._state.rtcCenter;
-            aabb[0] += rtcCenter[0];
-            aabb[1] += rtcCenter[1];
-            aabb[2] += rtcCenter[2];
-            aabb[3] += rtcCenter[0];
-            aabb[4] += rtcCenter[1];
-            aabb[5] += rtcCenter[2];
-        }
+        math.OBB3ToAABB3(obb, boundary);
     }
 
     /**
@@ -55762,6 +48826,7 @@ class Mesh extends Component {
         }
     }
 
+
     //------------------------------------------------------------------------------------------------------------------
     // Entity members
     //------------------------------------------------------------------------------------------------------------------
@@ -55802,7 +48867,7 @@ class Mesh extends Component {
     /**
      * Gets the Mesh's World-space 3D axis-aligned bounding box.
      *
-     * Represented by a six-element Float64Array containing the min/max extents of the
+     * Represented by a six-element Float32Array containing the min/max extents of the
      * axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
@@ -55812,43 +48877,6 @@ class Mesh extends Component {
             this._updateAABB();
         }
         return this._aabb;
-    }
-
-    /**
-     * Center of the relative-to-center (RTC) coordinate system for this Mesh.
-     *
-     * When this is given, then {@link Mesh#matrix}, {@link Mesh#position} and {@link Mesh#geometry} are all assumed to be relative to this center position.
-     *
-     * @type {Float64Array}
-     */
-    set rtcCenter(rtcCenter) {
-        if (rtcCenter) {
-            if (!this._state.rtcCenter) {
-                this._state.rtcCenter = math.vec3();
-            }
-            this._state.rtcCenter.set(rtcCenter);
-            this._state.rtcCenterHash = rtcCenter.join();
-            this._setAABBDirty();
-            this.scene._aabbDirty = true;
-        } else {
-            if (this._state.rtcCenter) {
-                this._state.rtcCenter = null;
-                this._state.rtcCenterHash = null;
-                this._setAABBDirty();
-                this.scene._aabbDirty = true;
-            }
-        }
-    }
-
-    /**
-     * 3D origin of the Mesh's {@link Geometry}'s vertex positions.
-     *
-     * When this is defined, then the positions are RTC, which means that they are relative to this position.
-     *
-     * @type {Float64Array}
-     */
-    get rtcCenter() {
-        return this._state.rtcCenter;
     }
 
     /**
@@ -56160,13 +49188,14 @@ class Mesh extends Component {
      * @type {Boolean}
      */
     set receivesShadow(value) {
-        value = value !== false;
-        if (value === this._state.receivesShadow) {
-            return;
-        }
-        this._state.receivesShadow = value;
-        this._state.hash = value ? "/mod/rs;" : "/mod;";
-        this.fire("dirty", this); // Now need to (re)compile objectRenderers to include/exclude shadow mapping
+        this._state.receivesShadow = false; // Disables shadows for now
+        // value = value !== false;
+        // if (value === this._state.receivesShadow) {
+        //     return;
+        // }
+        // this._state.receivesShadow = value;
+        // this._state.hash = value ? "/mod/rs;" : "/mod;";
+        // this.fire("dirty", this); // Now need to (re)compile objectRenderers to include/exclude shadow mapping
     }
 
     /**
@@ -56247,9 +49276,7 @@ class Mesh extends Component {
             colorize[1] = 1;
             colorize[2] = 1;
         }
-        const opacityUpdated = (opacity !== null && opacity !== undefined);
-        colorize[3] = opacityUpdated ? opacity : 1.0;
-        this.scene._objectOpacityUpdated(this, opacityUpdated);
+        colorize[3] = opacity !== null && opacity !== undefined ? opacity : 1.0;
         this.glRedraw();
     }
 
@@ -56329,34 +49356,6 @@ class Mesh extends Component {
         return this._state.billboard;
     }
 
-    /**
-     * Sets the Mesh's 3D World-space offset.
-     *
-     * The offset dynamically translates the Mesh in World-space.
-     *
-     * Default value is ````[0, 0, 0]````.
-     *
-     * Provide a null or undefined value to reset to the default value.
-     *
-     * @type {Number[]}
-     */
-    set offset(value) {
-        this._state.offset.set(value || [0, 0, 0]);
-        this._setAABBDirty();
-        this.glRedraw();
-    }
-
-    /**
-     * Gets the Mesh's 3D World-space offset.
-     *
-     * Default value is ````[0,0,0]````.
-     *
-     * @type {Number[]}
-     */
-    get offset() {
-        return this._state.offset;
-    }
-
     //------------------------------------------------------------------------------------------------------------------
     // Drawable members
     //------------------------------------------------------------------------------------------------------------------
@@ -56401,25 +49400,15 @@ class Mesh extends Component {
             || (mesh1._geometry._state.id - mesh2._geometry._state.id); // Geometry state
     }
 
-    /** @private */
-    rebuildRenderFlags() {
-        this.renderFlags.reset();
-        if (!this._getActiveSectionPlanes()) {
-            this.renderFlags.culled = true;
-            return;
-        }
-        this.renderFlags.numLayers = 1;
-        this.renderFlags.numVisibleLayers = 1;
-        this.renderFlags.visibleLayers[0] = 0;
-        this._updateRenderFlags();
-    }
-
     /**
-     * @private
+     * Called by xeokit when about to render this Mesh, to get flags indicating what rendering effects to apply for it.
+     *
+     * @param {RenderFlags} renderFlags Returns the rendering flags.
      */
-    _updateRenderFlags() {
+    getRenderFlags(renderFlags) {
 
-        const renderFlags = this.renderFlags;
+        renderFlags.reset();
+
         const state = this._state;
 
         if (state.xrayed) {
@@ -56487,47 +49476,6 @@ class Mesh extends Component {
                 }
             }
         }
-    }
-
-    _getActiveSectionPlanes() {
-
-        if (this._state.clippable) {
-
-            const sectionPlanes = this.scene._sectionPlanesState.sectionPlanes;
-            const numSectionPlanes = sectionPlanes.length;
-
-            if (numSectionPlanes > 0) {
-                for (let i = 0; i < numSectionPlanes; i++) {
-
-                    const sectionPlane = sectionPlanes[i];
-                    const renderFlags = this.renderFlags;
-
-                    if (!sectionPlane.active) {
-                        renderFlags.sectionPlanesActivePerLayer[i] = false;
-
-                    } else {
-
-                        if (this._state.rtcCenter) {
-
-                            const intersect = math.planeAABB3Intersect(sectionPlane.dir, sectionPlane.dist, this.aabb);
-                            const outside = (intersect === -1);
-
-                            if (outside) {
-                                return false;
-                            }
-
-                            const intersecting = (intersect === 0);
-                            renderFlags.sectionPlanesActivePerLayer[i] = intersecting;
-
-                        } else {
-                            renderFlags.sectionPlanesActivePerLayer[i] = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -56708,13 +49656,6 @@ class Mesh extends Component {
         }
     }
 
-    /** @private  */
-    drawShadow(frameCtx) {
-        if (this._shadowRenderer || (this._shadowRenderer = ShadowRenderer.get(this))) {
-            this._shadowRenderer.drawMesh(frameCtx, this);
-        }
-    }
-
     /** @private
      */
     canPickTriangle() {
@@ -56773,9 +49714,8 @@ class Mesh extends Component {
             if (this._highlighted) {
                 this.scene._objectHighlightedUpdated(this, false);
             }
-            this.scene._objectColorizeUpdated(this, false);
-            this.scene._objectOpacityUpdated(this, false);
-            this.scene._objectOffsetUpdated(this, false);
+            const colorized = false;
+            this.scene._objectColorizeUpdated(this, colorized);
         }
         if (this._isModel) {
             this.scene._deregisterModel(this);
@@ -57284,7 +50224,7 @@ class VBOGeometry extends Geometry {
     /**
      * Gets the local-space axis-aligned 3D boundary (AABB).
      *
-     * The AABB is represented by a six-element Float64Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
+     * The AABB is represented by a six-element Float32Array containing the min/max extents of the axis-aligned volume, ie. ````[xmin, ymin,zmin,xmax,ymax, zmax]````.
      *
      * @type {Number[]}
      */
@@ -57295,7 +50235,7 @@ class VBOGeometry extends Geometry {
     /**
      * Gets the local-space oriented 3D boundary (OBB).
      *
-     * The OBB is represented by a 32-element Float64Array containing the eight vertices of the box, where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
+     * The OBB is represented by a 32-element Float32Array containing the eight vertices of the box, where each vertex is a homogeneous coordinate having [x,y,z,w] elements.
      *
      * @type {Number[]}
      */
@@ -59315,7 +52255,7 @@ class Texture extends Component {
 
         this._state = new RenderState({
             texture: new Texture2D(this.scene.canvas.gl),
-            matrix: math.identityMat4(),
+            matrix: math.identityMat4(),   // Float32Array
             hasMatrix: (cfg.translate && (cfg.translate[0] !== 0 || cfg.translate[1] !== 0)) || (!!cfg.rotate) || (cfg.scale && (cfg.scale[0] !== 0 || cfg.scale[1] !== 0)),
             minFilter: this._checkMinFilter(cfg.minFilter),
             magFilter: this._checkMagFilter(cfg.magFilter),
@@ -59740,7 +52680,7 @@ class GLTFQualityLoader {
                 spinner.processes--;
                 core.scheduleTask(function () {
                     modelNode.scene.fire("modelLoaded", modelNode.id); // FIXME: Assumes listeners know order of these two events
-                    modelNode.fire("loaded", true, false);
+                    modelNode.fire("loaded", true, true);
                 });
                 if (ok) {
                     ok();
@@ -59763,7 +52703,7 @@ class GLTFQualityLoader {
         parseGLTF(plugin, gltf, "", options, modelNode, function () {
                 spinner.processes--;
                 modelNode.scene.fire("modelLoaded", modelNode.id); // FIXME: Assumes listeners know order of these two events
-                modelNode.fire("loaded", true, false);
+                modelNode.fire("loaded", true, true);
                 if (ok) {
                     ok();
                 }
@@ -60572,7 +53512,7 @@ class GLTFPerformanceLoader {
         loadGLTF$1(plugin, performanceModel, src, options, function () {
                 core.scheduleTask(function () {
                     performanceModel.scene.fire("modelLoaded", performanceModel.id); // FIXME: Assumes listeners know order of these two events
-                    performanceModel.fire("loaded", true, false);
+                    performanceModel.fire("loaded", true, true);
                 });
                 if (ok) {
                     ok();
@@ -60591,7 +53531,7 @@ class GLTFPerformanceLoader {
         options = options || {};
         parseGLTF$1(plugin, gltf, "", options, performanceModel, function () {
                 performanceModel.scene.fire("modelLoaded", performanceModel.id); // FIXME: Assumes listeners know order of these two events
-                performanceModel.fire("loaded", true, false);
+                performanceModel.fire("loaded", true, true);
                 if (ok) {
                     ok();
                 }
@@ -61441,7 +54381,7 @@ class GLTFLoaderPlugin extends Plugin {
      * @param {Number[]} [params.rotation=[0,0,0]] The model's World-space rotation, as Euler angles given in degrees, for each of the X, Y and Z axis.
      * @param {Number[]} [params.matrix=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]] The model's world transform matrix. Overrides the position, scale and rotation parameters.
      * @param {Boolean} [params.backfaces=false] When true, allows visible backfaces, wherever specified in the glTF. When false, ignores backfaces.
-     * @param {Number} [params.edgeThreshold=10] When xraying, highlighting, selecting or edging, this is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
+     * @param {Number} [params.edgeThreshold=20] When xraying, highlighting, selecting or edging, this is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
      * @params {Boolean} [params.performance=true] Set ````false```` to load all the materials and textures provided by the glTF file, otherwise leave ````true```` to load the default high-performance representation optimized for low memory usage and efficient rendering.
      * @returns {Entity} Entity representing the model, which will have {@link Entity#isModel} set ````true```` and will be registered by {@link Entity#id} in {@link Scene#models}
      */
@@ -61781,4 +54721,317 @@ function buildSphereGeometry(cfg = {}) {
     });
 }
 
-export { GLTFLoaderPlugin, Mesh, PhongMaterial, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };
+function ensureImageSizePowerOfTwo$1(image) {
+    if (!isPowerOfTwo$1(image.width) || !isPowerOfTwo$1(image.height)) {
+        const canvas = document.createElement("canvas");
+        canvas.width = nextHighestPowerOfTwo$1(image.width);
+        canvas.height = nextHighestPowerOfTwo$1(image.height);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image,
+            0, 0, image.width, image.height,
+            0, 0, canvas.width, canvas.height);
+        image = canvas;
+    }
+    return image;
+}
+
+function isPowerOfTwo$1(x) {
+    return (x & (x - 1)) === 0;
+}
+
+function nextHighestPowerOfTwo$1(x) {
+    --x;
+    for (let i = 1; i < 32; i <<= 1) {
+        x = x | x >> i;
+    }
+    return x + 1;
+}
+
+/**
+ * @desc A cube texture map.
+ */
+class CubeTexture extends Component {
+
+    /**
+     @private
+     */
+    get type() {
+        return "CubeTexture";
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this CubeTexture, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String[]} [cfg.src=null]  Paths to six image files to load into this CubeTexture.
+     * @param {Boolean} [cfg.flipY=false] Flips this CubeTexture's source data along its vertical axis when true.
+     * @param {String} [cfg.encoding="linear"] Encoding format.  See the {@link CubeTexture/encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+
+        super(owner, cfg);
+
+        const gl = this.scene.canvas.gl;
+
+        this._state = new RenderState({
+            texture: new Texture2D(gl, gl.TEXTURE_CUBE_MAP),
+            flipY: this._checkFlipY(cfg.minFilter),
+            encoding: this._checkEncoding(cfg.encoding),
+            minFilter: "linearMipmapLinear",
+            magFilter: "linear",
+            wrapS: "clampToEdge",
+            wrapT: "clampToEdge",
+            mipmaps: true
+        });
+
+        this._src = cfg.src;
+        this._images = [];
+
+        this._loadSrc(cfg.src);
+
+        stats.memory.textures++;
+    }
+
+    _checkFlipY(value) {
+        return !!value;
+    }
+
+    _checkEncoding(value) {
+        value = value || "linear";
+        if (value !== "linear" && value !== "sRGB" && value !== "gamma") {
+            this.error("Unsupported value for 'encoding': '" + value + "' - supported values are 'linear', 'sRGB', 'gamma'. Defaulting to 'linear'.");
+            value = "linear";
+        }
+        return value;
+    }
+
+    _webglContextRestored() {
+        const gl = this.scene.canvas.gl;
+        this._state.texture = null;
+        // if (this._images.length > 0) {
+        //     this._state.texture = new xeokit.renderer.Texture2D(gl, gl.TEXTURE_CUBE_MAP);
+        //     this._state.texture.setImage(this._images, this._state);
+        //     this._state.texture.setProps(this._state);
+        // } else
+        if (this._src) {
+            this._loadSrc(this._src);
+        }
+    }
+
+    _loadSrc(src) {
+        const self = this;
+        const gl = this.scene.canvas.gl;
+        this._images = [];
+        let loadFailed = false;
+        let numLoaded = 0;
+        for (let i = 0; i < src.length; i++) {
+            const image = new Image();
+            image.onload = (function () {
+                let _image = image;
+                const index = i;
+                return function () {
+                    if (loadFailed) {
+                        return;
+                    }
+                    _image = ensureImageSizePowerOfTwo$1(_image);
+                    self._images[index] = _image;
+                    numLoaded++;
+                    if (numLoaded === 6) {
+                        let texture = self._state.texture;
+                        if (!texture) {
+                            texture = new Texture2D(gl, gl.TEXTURE_CUBE_MAP);
+                            self._state.texture = texture;
+                        }
+                        texture.setImage(self._images, self._state);
+                        texture.setProps(self._state);
+                        /**
+                         * Fired whenever this CubeTexture has loaded the
+                         * image files that its {@link CubeTexture/src} property currently points to.
+                         * @event loaded
+                         * @param value {HTML Image} The value of the {@link CubeTexture/src} property
+                         */
+                        self.fire("loaded", self._src);
+                    }
+                };
+            })();
+            image.onerror = function () {
+                loadFailed = true;
+            };
+            image.src = src[i];
+        }
+    }
+
+    /**
+     * Destroys this CubeTexture
+     *
+     */
+    destroy() {
+        super.destroy();
+        if (this._state.texture) {
+            this._state.texture.destroy();
+        }
+        stats.memory.textures--;
+        this._state.destroy();
+    }
+}
+
+/**
+ * @desc A **LightMap** specifies a cube texture light map.
+ *
+ * ## Usage
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
+ * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
+ * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
+ * import {LightMap} from "../src/scene/lights/LightMap.js";
+ *
+ * // Create a Viewer and arrange the camera
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas"
+ * });
+ *
+ * viewer.scene.camera.eye = [0, 0, 5];
+ * viewer.scene.camera.look = [0, 0, 0];
+ * viewer.scene.camera.up = [0, 1, 0];
+ *
+ * new LightMap(viewer.scene, {
+ *     src: [
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PX.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NX.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PY.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NY.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_PZ.png",
+ *         "textures/light/Uffizi_Gallery/Uffizi_Gallery_Irradiance_NZ.png"
+ *     ]
+ * });
+ *
+ * // Create a sphere and ground plane
+ *
+ * new Mesh(viewer.scene, {
+ *      geometry: new ReadableGeometry(viewer.scene, buildSphereGeometry({
+ *          radius: 2.0
+ *      }),
+ *      new MetallicMaterial(viewer.scene, {
+ *          baseColor: [1, 1, 1],
+ *          metallic: 1.0,
+ *          roughness: 1.0
+ *      })
+ * });
+ * ````
+ */
+class LightMap extends CubeTexture {
+
+    /**
+     @private
+     */
+    get type() {
+        return "LightMap";
+    }
+
+    /**
+     * @constructor
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this LightMap, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String:Object} [cfg.meta] Optional map of user-defined metadata to attach to this LightMap.
+     * @param {String[]} [cfg.src=null] Paths to six image files to load into this LightMap.
+     * @param {Boolean} [cfg.flipY=false] Flips this LightMap's source data along its vertical axis when true.
+     * @param {String} [cfg.encoding="linear"] Encoding format.  See the {@link LightMap#encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+        super(owner, cfg);
+        this.scene._lightMapCreated(this);
+    }
+
+    destroy() {
+        super.destroy();
+        this.scene._lightMapDestroyed(this);
+    }
+}
+
+/**
+ * @desc A reflection cube map.
+ *
+ * ## Usage
+ *
+ * ````javascript
+ * import {Viewer} from "../src/viewer/Viewer.js";
+ * import {Mesh} from "../src/scene/mesh/Mesh.js";
+ * import {buildSphereGeometry} from "../src/scene/geometry/builders/buildSphereGeometry.js";
+ * import {ReadableGeometry} from "../src/scene/geometry/ReadableGeometry.js";
+ * import {MetallicMaterial} from "../src/scene/materials/MetallicMaterial.js";
+ * import {ReflectionMap} from "../src/scene/lights/ReflectionMap.js";
+ *
+ * // Create a Viewer and arrange the camera
+ *
+ * const viewer = new Viewer({
+ *      canvasId: "myCanvas"
+ * });
+ *
+ * viewer.scene.camera.eye = [0, 0, 5];
+ * viewer.scene.camera.look = [0, 0, 0];
+ * viewer.scene.camera.up = [0, 1, 0];
+ *
+ * new ReflectionMap(viewer.scene, {
+ *     src: [
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_PX.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_NX.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_PY.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_NY.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_PZ.png",
+ *         "textures/reflect/Uffizi_Gallery/Uffizi_Gallery_Radiance_NZ.png"
+ *     ]
+ * });
+ *
+ * // Create a sphere and ground plane
+ *
+ * new Mesh(viewer.scene, {
+ *      geometry: new ReadableGeometry(viewer.scene, buildSphereGeometry({
+ *          radius: 2.0
+ *      }),
+ *      new MetallicMaterial(viewer.scene, {
+ *          baseColor: [1, 1, 1],
+ *          metallic: 1.0,
+ *          roughness: 1.0
+ *      })
+ * });
+ * ````
+ */
+class ReflectionMap extends CubeTexture {
+
+    /**
+     @private
+     */
+    get type() {
+        return "ReflectionMap";
+    }
+
+    /**
+     * @param {Component} owner Owner component. When destroyed, the owner will destroy this component as well.
+     * @param {*} [cfg] Configs
+     * @param {String} [cfg.id] Optional ID for this ReflectionMap, unique among all components in the parent scene, generated automatically when omitted.
+     * @param {String[]} [cfg.src=null]  Paths to six image files to load into this ReflectionMap.
+     * @param {Boolean} [cfg.flipY=false] Flips this ReflectionMap's source data along its vertical axis when true.
+     * @param {String} [cfg.encoding="linear"]  Encoding format.  See the {@link ReflectionMap/encoding} property for more info.
+     */
+    constructor(owner, cfg = {}) {
+        super(owner, cfg);
+        this.scene._lightsState.addReflectionMap(this._state);
+        this.scene._reflectionMapCreated(this);
+    }
+
+    /**
+     * Destroys this ReflectionMap.
+     */
+    destroy() {
+        super.destroy();
+        this.scene._reflectionMapDestroyed(this);
+    }
+}
+
+export { DirLight, GLTFLoaderPlugin, LightMap, Mesh, PhongMaterial, ReflectionMap, VBOGeometry, Viewer, XKTLoaderPlugin, buildSphereGeometry, utils };

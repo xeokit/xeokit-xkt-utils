@@ -30,19 +30,27 @@
   <ul>
     
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxLinesGeometry">buildBoxLinesGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildCylinderGeometry">buildCylinderGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildGridGeometry">buildGridGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildPlaneGeometry">buildPlaneGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildSphereGeometry">buildSphereGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildTorusGeometry">buildTorusGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 </ul>
 </div>
 </nav>
 
 <div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/MockXKTModel.js</h1>
-<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {math} from &quot;./lib/math.js&quot;;
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {math} from &quot;../lib/math.js&quot;;
 import {geometryCompression} from &quot;./lib/geometryCompression.js&quot;;
 import {buildEdgeIndices} from &quot;./lib/buildEdgeIndices.js&quot;;
 
@@ -52,7 +60,7 @@ const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
 /**
- * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.
+ * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link parseGLTFIntoXKTModel}.
  *
  * @private
  */
@@ -75,12 +83,12 @@ class MockXKTModel {
         this._handlePrimitive = cfg.handlePrimitive;
         this._handleEntity = cfg.handleEntity;
 
-        this.primitives = {};
+        this.geometries = {};
     }
 
-    createPrimitive(params) {
+    createGeometry(params) {
 
-        const primitiveId = params.primitiveId;
+        const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
         const reused = params.reused;
         const primitiveModelingMatrix = params.primitiveModelingMatrix ? params.primitiveModelingMatrix.slice : math.identityMat4();
@@ -96,7 +104,7 @@ class MockXKTModel {
 
         if (!reused) {
 
-            // Bake single-use primitive&apos;s positions into World-space
+            // Bake single-use geometry&apos;s positions into World-space
 
             for (let i = 0, len = positions.length; i &lt; len; i += 3) {
 
@@ -118,7 +126,7 @@ class MockXKTModel {
         geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, normalsOctEncoded, 0);
 
         const primitive = new VBOGeometry(this.scene, {
-            id: primitiveId,
+            id: geometryId,
             primitive: &quot;triangles&quot;,
             positions: positions2,
             normals: normals,
@@ -126,7 +134,7 @@ class MockXKTModel {
             edgeIndices: edgeIndices
         });
 
-        this.primitives[primitiveId] = primitive;
+        this.geometries[geometryId] = primitive;
     }
 
     createEntity(params) {
@@ -137,11 +145,11 @@ class MockXKTModel {
 
         for (let primitiveIdIdx = 0, primitiveIdLen = primitiveIds.length; primitiveIdIdx &lt; primitiveIdLen; primitiveIdIdx++) {
 
-            const primitiveId = primitiveIds[primitiveIdIdx];
-            const primitive = this.primitives[primitiveId];
+            const geometryId = primitiveIds[primitiveIdIdx];
+            const primitive = this.geometries[geometryId];
 
             if (!primitive) {
-                console.error(&quot;primitive not found: &quot; + primitiveId);
+                console.error(&quot;primitive not found: &quot; + geometryId);
                 continue;
             }
 

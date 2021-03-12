@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>XKTModel - Loading line primitives from glTF</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"/>
+
+    <style>
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+            background: lightBlue;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas id="myCanvas"></canvas>
+<div id="info">
+    <h1><a target="_other" href="./../docs/class/src/XKTModel.js~XKTModel.html">XKTModel</a> - Loading line primitives
+        from glTF</h1><br>
+
+    <div id="log">Loading JavaScript modules...</div>
+
+</div>
+</body>
+<script type="module">
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Import the modules we need for this example
+    //------------------------------------------------------------------------------------------------------------------
+
+    import {
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        parseGLTFIntoXKTModel,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "../dist/xeokit-xkt-utils.es.js";
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Create a Viewer, arrange the camera
+    //------------------------------------------------------------------------------------------------------------------
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.scene.camera.eye = [-12.540927979237452, 15.988486241570747, 28.859347224794597];
+    viewer.scene.camera.look = [16.556260061405922, 0.1250000074505806, -8.144299463011757];
+    viewer.scene.camera.up = [0.19739609782146572, 0.9476375098947823, -0.2510337236414158];
+
+    viewer.cameraControl.navMode = "orbit";
+    viewer.cameraControl.followPointer = true;
+
+    //----------------------------------------------------------------------------------------------------------------------
+    // Create a xeokit loader plugin, load a model, fit to view
+    //----------------------------------------------------------------------------------------------------------------------
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    function log(msg) {
+        document.getElementById("log").innerHTML += "<br>" + msg;
+    }
+
+    log("Loading glTF file..");
+
+    utils.loadJSON("./models/gltf/grid/grid.gltf", async (json) => {
+
+            log("Parsing glTF into XKTModel..");
+
+            const xktModel = new XKTModel();
+
+            await parseGLTFIntoXKTModel(json, xktModel);
+            xktModel.finalize();
+            log("Writing XKTModel to array buffer..");
+
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+            log("Validating array buffer..");
+
+            const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+
+            log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
+
+            log("Loading array buffer into Viewer..");
+
+            const xktLoader = new XKTLoaderPlugin(viewer);
+
+            const model = xktLoader.load({
+                id: "myModel",
+                xkt: xktArrayBuffer
+            });
+
+            model.on("loaded", () => {
+                viewer.cameraFlight.flyTo(viewer.scene);
+            });
+        },
+        function (errMsg) {
+            log("ERROR: " + errMsg);
+        });
+
+</script>
+</html>

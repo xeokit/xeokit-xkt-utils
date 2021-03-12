@@ -948,7 +948,7 @@
         "trailingComments": [
           {
             "type": "CommentBlock",
-            "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.\n *\n * @private\n ",
+            "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link parseGLTFIntoXKTModel}.\n *\n * @private\n ",
             "start": 311,
             "end": 467,
             "loc": {
@@ -14389,7 +14389,7 @@
           "leadingComments": [
             {
               "type": "CommentBlock",
-              "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.\n *\n * @private\n ",
+              "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link parseGLTFIntoXKTModel}.\n *\n * @private\n ",
               "start": 311,
               "end": 467,
               "loc": {
@@ -14417,7 +14417,7 @@
   "comments": [
     {
       "type": "CommentBlock",
-      "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.\n *\n * @private\n ",
+      "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link parseGLTFIntoXKTModel}.\n *\n * @private\n ",
       "start": 311,
       "end": 467,
       "loc": {
@@ -16432,7 +16432,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.\n *\n * @private\n ",
+      "value": "*\n * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link parseGLTFIntoXKTModel}.\n *\n * @private\n ",
       "start": 311,
       "end": 467,
       "loc": {

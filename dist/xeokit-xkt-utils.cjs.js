@@ -3753,8 +3753,8 @@ function transformAndOctEncodeNormals(modelNormalMatrix, normals, lenNormals, co
     // http://jcgt.org/published/0003/02/01/
     let oct, dec, best, currentCos, bestCos;
     let i;
-    let localNormal = new Float32Array([0, 0, 0, 0]);
-    let worldNormal = new Float32Array([0, 0, 0, 0]);
+    let localNormal = math.vec3();
+    let worldNormal =  math.vec3();
     for (i = 0; i < lenNormals; i += 3) {
         localNormal[0] = normals[i];
         localNormal[1] = normals[i + 1];
@@ -4051,38 +4051,103 @@ const buildEdgeIndices = (function () {
 })();
 
 /**
- * A usage of a {@link XKTPrimitive} by an {@link XKTEntity}.
+ * Uses edge adjacency counts to identify if the given triangle mesh can be rendered with backface culling enabled.
+ *
+ * If all edges are connected to exactly two triangles, then the mesh will likely be a closed solid, and we can safely
+ * render it with backface culling enabled.
+ *
+ * Otherwise, the mesh is a surface, and we must render it with backface culling disabled.
+ *
+ * @private
+ */
+const isTriangleMeshSolid = (indices, positions) => {
+
+    return true;
+};
+
+/**
+ * Represents the usage of a {@link XKTGeometry} by an {@link XKTEntity}.
  *
  * * Created by {@link XKTModel#createEntity}
- * * Stored in {@link XKTEntity#primitiveInstances} and {@link XKTModel#primitiveInstancesList}
+ * * Stored in {@link XKTEntity#meshes} and {@link XKTModel#meshesList}
+ * * Specifies color and opacity
  *
- * @class XKTPrimitiveInstance
+ * @class XKTMesh
  */
-class XKTPrimitiveInstance {
+class XKTMesh {
 
     /**
      * @private
-     * @param primitiveInstanceIndex
-     * @param primitive
      */
-    constructor(primitiveInstanceIndex, primitive) {
+    constructor(cfg) {
 
         /**
-         * Index of this PrimitiveInstance in {@link XKTModel#primitiveInstancesList};
+         * Unique ID of this XKTMesh in {@link XKTModel#meshes}.
          *
          * @type {Number}
          */
-        this.primitiveInstanceIndex = primitiveInstanceIndex;
+        this.meshId = cfg.meshId;
 
         /**
-         * The instanced {@link XKTPrimitive}.
+         * Index of this XKTMesh in {@link XKTModel#meshesList};
          *
-         * @type {XKTPrimitive}
+         * @type {Number}
          */
-        this.primitive = primitive;
+        this.meshIndex = cfg.meshIndex;
+
+        /**
+         * The 4x4 modeling transform matrix.
+         *
+         * Transform is relative to the center of the {@link XKTTile} that contains this XKTMesh's {@link XKTEntity},
+         * which is given in {@link XKTMesh#entity}.
+         *
+         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used
+         * to transform this XKTMesh's XKTGeometry into World-space. When this XKTMesh does not share its ````XKTGeometry````,
+         * then this matrix is ignored.
+         *
+         * @type {Number[]}
+         */
+        this.matrix = cfg.matrix;
+
+        /**
+         * The instanced {@link XKTGeometry}.
+         *
+         * @type {XKTGeometry}
+         */
+        this.geometry = cfg.geometry;
+
+        /**
+         * RGB color of this XKTMesh.
+         *
+         * @type {Uint8Array}
+         */
+        this.color = cfg.color || new Uint8Array(3);
+
+        /**
+         * PBR metallness of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.metallic = (cfg.metallic !== null && cfg.metallic !== undefined) ? cfg.metallic : 0;
+
+        /**
+         * PBR roughness of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.roughness = (cfg.roughness !== null && cfg.roughness !== undefined) ? cfg.roughness : 1;
+
+        /**
+         * Opacity of this XKTMesh.
+         *
+         * @type {Number}
+         */
+        this.opacity = (cfg.opacity !== undefined && cfg.opacity !== null) ? cfg.opacity : 1.0;
 
         /**
          * The owner {@link XKTEntity}.
+         *
+         * Set by {@link XKTModel#createEntity}.
          *
          * @type {XKTEntity}
          */
@@ -4093,65 +4158,51 @@ class XKTPrimitiveInstance {
 /**
  * An element of reusable geometry within an {@link XKTModel}.
  *
- * * Created by {@link XKTModel#createPrimitive}
- * * Stored in {@link XKTModel#primitives} and {@link XKTModel#primitivesList}
- * * Referenced by {@link XKTPrimitiveInstance}s, which belong to {@link XKTEntity}s
+ * * Created by {@link XKTModel#createGeometry}
+ * * Stored in {@link XKTModel#geometries} and {@link XKTModel#geometriesList}
+ * * Referenced by {@link XKTMesh}s, which belong to {@link XKTEntity}s
  *
- * @class XKTPrimitive
+ * @class XKTGeometry
  */
-class XKTPrimitive {
+class XKTGeometry {
 
     /**
      * @private
-     * @param {Number} primitiveId Unique ID of the primitive in {@link XKTModel#primitives}.
-     * @param {String} primitiveType Type of this primitive - "triangles" so far.
-     * @param {Number} primitiveIndex Index of this XKTPrimitive in {@link XKTModel#primitivesList}.
-     * @param {Uint8Array} color RGB color of this XKTPrimitive.
-     * @param {Number} opacity Opacity of this XKTPrimitive.
-     * @param {Float64Array} positions Non-quantized 3D vertex positions.
-     * @param {Int8Array} normalsOctEncoded Oct-encoded vertex normals.
-     * @param {Uint32Array} indices Indices to organize the vertex positions and normals into triangles.
-     * @param {Uint32Array} edgeIndices Indices to organize the vertex positions into edges.
+     * @param {*} cfg Configuration for the XKTGeometry.
+     * @param {Number} cfg.geometryId Unique ID of the geometry in {@link XKTModel#geometries}.
+     * @param {String} cfg.primitiveType Type of this geometry - "triangles", "points" or "lines" so far.
+     * @param {Number} cfg.geometryIndex Index of this XKTGeometry in {@link XKTModel#geometriesList}.
+     * @param {Float64Array} cfg.positions Non-quantized 3D vertex positions.
+     * @param {Float32Array} cfg.normals Non-compressed vertex normals.
+     * @param {Uint8Array} cfg.colorsCompressed Integer RGB vertex colors.
+     * @param {Uint32Array} cfg.indices Indices to organize the vertex positions and normals into triangles.
+     * @param {Uint32Array} cfg.edgeIndices Indices to organize the vertex positions into edges.
      */
-    constructor(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices) {
+    constructor(cfg) {
 
         /**
-         * Unique ID of this XKTPrimitive in {@link XKTModel#primitives}.
+         * Unique ID of this XKTGeometry in {@link XKTModel#geometries}.
          *
          * @type {Number}
          */
-        this.primitiveId = primitiveId;
+        this.geometryId = cfg.geometryId;
 
         /**
          * The type of primitive - "triangles" | "points" | "lines".
          *
          * @type {String}
          */
-        this.primitiveType = primitiveType;
+        this.primitiveType = cfg.primitiveType;
 
         /**
-         * Index of this XKTPrimitive in {@link XKTModel#primitivesList}.
+         * Index of this XKTGeometry in {@link XKTModel#geometriesList}.
          *
          * @type {Number}
          */
-        this.primitiveIndex = primitiveIndex;
+        this.geometryIndex = cfg.geometryIndex;
 
         /**
-         * RGB color of this XKTPrimitive.
-         *
-         * @type {Uint8Array}
-         */
-        this.color = color;
-
-        /**
-         * Opacity of this XKTPrimitive.
-         *
-         * @type {Number}
-         */
-        this.opacity = opacity;
-
-        /**
-         * The number of {@link XKTPrimitiveInstance}s that reference this XKTPrimitive.
+         * The number of {@link XKTMesh}s that reference this XKTGeometry.
          *
          * @type {Number}
          */
@@ -4160,43 +4211,84 @@ class XKTPrimitive {
         /**
          * Non-quantized 3D vertex positions.
          *
+         * Defined for all primitive types.
+         *
          * @type {Float64Array}
          */
-        this.positions = positions;
+        this.positions = cfg.positions;
 
         /**
          * Quantized vertex positions.
          *
-         * This array is later created from {@link XKTPrimitive#positions} by {@link XKTModel#finalize}.
+         * Defined for all primitive types.
+         *
+         * This array is later created from {@link XKTGeometry#positions} by {@link XKTModel#finalize}.
          *
          * @type {Uint16Array}
          */
-        this.positionsQuantized = new Uint16Array(positions.length);
+        this.positionsQuantized = new Uint16Array(cfg.positions.length);
 
         /**
-         * Oct-encoded vertex normals.
+         * Non-compressed 3D vertex normals.
+         *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
+         * @type {Float32Array}
+         */
+        this.normals = cfg.normals;
+
+        /**
+         * Compressed vertex normals.
+         *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
+         * This array is later created from {@link XKTGeometry#normals} by {@link XKTModel#finalize}.
          *
          * @type {Int8Array}
          */
-        this.normalsOctEncoded = normalsOctEncoded;
+        this.normalsOctEncoded = null;
+
+        /**
+         * Compressed RGB vertex colors.
+         *
+         * Defined only for point primitives. Ignored for triangles and lines.
+         *
+         * @type {Float32Array}
+         */
+        this.colorsCompressed = cfg.colorsCompressed;
 
         /**
          * Indices that organize the vertex positions and normals as triangles.
          *
+         * Defined only for triangle and lines primitives. Ignored for points.
+         *
          * @type {Uint32Array}
          */
-        this.indices = indices;
+        this.indices = cfg.indices;
 
         /**
          * Indices that organize the vertex positions as edges.
          *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
          * @type {Uint32Array}
          */
-        this.edgeIndices = edgeIndices;
+        this.edgeIndices = cfg.edgeIndices;
+
+        /**
+         * When {@link XKTGeometry#primitiveType} is "triangles", this is ````true```` when this geometry is a watertight mesh.
+         *
+         * Defined only for triangle primitives. Ignored for points and lines.
+         *
+         * Set by {@link XKTModel#finalize}.
+         *
+         * @type {boolean}
+         */
+        this.solid = false;
     }
 
     /**
-     * Convenience property that is ````true```` when {@link XKTPrimitive#numInstances} is greater that one.
+     * Convenience property that is ````true```` when {@link XKTGeometry#numInstances} is greater that one.
      * @returns {boolean}
      */
     get reused() {
@@ -4209,8 +4301,7 @@ class XKTPrimitive {
  *
  * * Created by {@link XKTModel#createEntity}
  * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}
- * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}
- * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s
+ * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}
  *
  * @class XKTEntity
  */
@@ -4219,10 +4310,9 @@ class XKTEntity {
     /**
      * @private
      * @param entityId
-     * @param matrix
-     * @param primitiveInstances
+     * @param meshes
      */
-    constructor(entityId, matrix, primitiveInstances) {
+    constructor(entityId,  meshes) {
 
         /**
          * Unique ID of this ````XKTEntity```` in {@link XKTModel#entities}.
@@ -4243,28 +4333,15 @@ class XKTEntity {
         this.entityIndex = 0;
 
         /**
-         * The 4x4 modeling transform matrix.
+         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.
          *
-         * Transform is relative to the center of the {@link XKTTile} that contains this Entity.
-         *
-         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the
-         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,
-         * then this matrix is ignored.
-         *
-         * @type {Number[]}
+         * @type {XKTMesh[]}
          */
-        this.matrix = matrix;
+        this.meshes = meshes;
 
         /**
-         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.
-         *
-         * @type {XKTPrimitiveInstance[]}
-         */
-        this.primitiveInstances = primitiveInstances;
-
-        /**
-         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of
-         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.
+         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of
+         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.
          *
          * Set by {@link XKTModel#finalize}.
          *
@@ -4273,16 +4350,16 @@ class XKTEntity {
         this.aabb = math.AABB3();
 
         /**
-         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.
+         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.
          *
          * Set by {@link XKTModel#finalize}.
          *
-         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````
-         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.
+         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````
+         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.
          *
          * @type {Boolean}
          */
-        this.hasReusedPrimitives = false;
+        this.hasReusedGeometries = false;
     }
 }
 
@@ -4359,22 +4436,24 @@ class KDNode {
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
+
 const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
 const MIN_TILE_DIAG = 10000;
 
-const kdTreeDimLength = new Float32Array(3);
+const kdTreeDimLength = new Float64Array(3);
 
 /**
- * A document model that represents the contents of an .XKT V6 file.
+ * A document model that represents the contents of an .XKT file.
  *
  * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
- * * Each {@link XKTEntity} has {@link XKTPrimitiveInstance}s, which indicate the {@link XKTPrimitive}s that comprise the {@link XKTEntity}.
- * * Import glTF into an XKTModel using {@link loadGLTFIntoXKTModel}
- * * Build an XKTModel programmatically using {@link XKTModel#createPrimitive} and {@link XKTModel#createEntity}
- * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}
+ * * Each {@link XKTEntity} has {@link XKTMesh}s, which each have a {@link XKTGeometry}. Each {@link XKTGeometry} can be shared by multiple {@link XKTMesh}s.
+ * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
+ * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
+ * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
+ * * Validate an ArrayBuffer against an XKTModel using {@link validateXKTArrayBuffer}.
  *
  * ## Usage
  *
@@ -4387,50 +4466,70 @@ class XKTModel {
     /**
      * Constructs a new XKTModel.
      *
-     * @param {*} cfg Configuration
+     * @param {*} [cfg] Configuration
+     * @param {Number} [cfg.edgeThreshold=10]
      */
     constructor(cfg = {}) {
 
         /**
-         * The positions of all shared {@link XKTPrimitive}s are de-quantized using this singular
+         *
+         * @type {Number|number}
+         */
+        this.edgeThreshold = cfg.edgeThreshold || 10;
+
+        /**
+         * The positions of all shared {@link XKTGeometry}s are de-quantized using this singular
          * de-quantization matrix.
          *
-         * This de-quantization matrix is which is generated from the collective boundary of the
-         * positions of all shared {@link XKTPrimitive}s.
+         * This de-quantization matrix is generated from the collective Local-space boundary of the
+         * positions of all shared {@link XKTGeometry}s.
          *
          * @type {Float32Array}
          */
-        this.reusedPrimitivesDecodeMatrix = new Float32Array(16);
+        this.reusedGeometriesDecodeMatrix = new Float32Array(16);
 
         /**
-         * {@link XKTPrimitive}s within this XKTModel, each mapped to {@link XKTPrimitive#primitiveId}.
+         * Map of {@link XKTGeometry}s within this XKTModel, each mapped to {@link XKTGeometry#geometryId}.
          *
-         * Created by {@link XKTModel#createPrimitive}.
+         * Created by {@link XKTModel#createGeometry}.
          *
-         * @type {{Number:XKTPrimitive}}
+         * @type {{Number:XKTGeometry}}
          */
-        this.primitives = {};
+        this.geometries = {};
 
         /**
-         * {@link XKTPrimitive}s within this XKTModel, in the order they were created.
+         * List of {@link XKTGeometry}s within this XKTModel, in the order they were created.
          *
-         * Created by {@link XKTModel#createPrimitive}.
+         * Each XKTGeometry holds its position in this list in {@link XKTGeometry#geometryIndex}.
          *
-         * @type {XKTPrimitive[]}
+         * Created by {@link XKTModel#createGeometry}.
+         *
+         * @type {XKTGeometry[]}
          */
-        this.primitivesList = [];
+        this.geometriesList = [];
 
         /**
-         * {@link XKTPrimitiveInstance}s within this XKTModel, in the order they were created.
+         * Map of {@link XKTMesh}s within this XKTModel, each mapped to {@link XKTMesh#meshId}.
          *
-         * Created by {@link XKTModel#createEntity}.
+         * Created by {@link XKTModel#createMesh}.
          *
-         * @type {XKTPrimitiveInstance[]}
+         * @type {{Number:XKTMesh}}
          */
-        this.primitiveInstancesList = [];
+        this.meshes = {};
 
         /**
-         * {@link XKTEntity}s within this XKTModel, each mapped to {@link XKTEntity#entityId}.
+         * List of {@link XKTMesh}s within this XKTModel, in the order they were created.
+         *
+         * Each XKTMesh holds its position in this list in {@link XKTMesh#meshIndex}.
+         *
+         * Created by {@link XKTModel#createMesh}.
+         *
+         * @type {XKTMesh[]}
+         */
+        this.meshesList = [];
+
+        /**
+         * Map of {@link XKTEntity}s within this XKTModel, each mapped to {@link XKTEntity#entityId}.
          *
          * Created by {@link XKTModel#createEntity}.
          *
@@ -4440,6 +4539,8 @@ class XKTModel {
 
         /**
          * {@link XKTEntity}s within this XKTModel.
+         *
+         * Each XKTEntity holds its position in this list in {@link XKTMesh#entityIndex}.
          *
          * Created by {@link XKTModel#finalize}.
          *
@@ -4467,113 +4568,209 @@ class XKTModel {
     }
 
     /**
-     * Creates an {@link XKTPrimitive} within this XKTModel.
+     * Creates an {@link XKTGeometry} within this XKTModel.
      *
-     * Logs error and does nothing if this XKTModel has been (see {@link XKTModel#finalized}).
+     * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
      *
      * @param {*} params Method parameters.
-     * @param {Number} params.primitiveId Unique ID for the {@link XKTPrimitive}.
-     * @param {String} params.primitiveType The type of {@link XKTPrimitive}: "triangles", "lines" or "points"
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTPrimitive}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
-     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTPrimitive}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTPrimitive}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTPrimitive} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
-     * @param {Uint8Array} params.color RGB color for the {@link XKTPrimitive}, with each color component in range [0..1].
-     * @param {Number} params.opacity Opacity factor for the {@link XKTPrimitive}, in range [0..1].
-     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTPrimitive}.
-     * @param {Number[]} params.normals Floating-point vertex normals for the {@link XKTPrimitive}.
-     * @param {Uint32Array} params.indices Triangle mesh indices for the {@link XKTPrimitive}.
-     * @returns {XKTPrimitive} The new {@link XKTPrimitive}.
+     * @param {Number} params.geometryId Unique ID for the {@link XKTGeometry}.
+     * @param {String} params.primitiveType The type of {@link XKTGeometry}: "triangles", "lines" or "points".
+     * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}. Required for all primitive types.
+     * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Required for triangles primitives. Ignored for points and lines.
+     * @param {Number[]} [params.colors] Floating-point RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
+     * @param {Number[]} [params.colorsCompressed] Integer RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
+     * @param {Uint32Array} [params.indices] Indices for the {@link XKTGeometry}. Required for triangles and lines primitives. Ignored for points.
+     * @param {Number} [params.edgeThreshold=10]
+     * @returns {XKTGeometry} The new {@link XKTGeometry}.
      */
-    createPrimitive(params) {
+    createGeometry(params) {
 
         if (!params) {
-            throw "Parameters missing: params";
+            throw "Parameters expected: params";
         }
 
-        if (params.primitiveId === null || params.primitiveId === undefined) {
-            throw "Parameter missing: params.primitiveId";
+        if (params.geometryId === null || params.geometryId === undefined) {
+            throw "Parameter expected: params.geometryId";
         }
 
         if (!params.primitiveType) {
-            throw "Parameter missing: params.primitiveType";
-        }
-
-        if (!params.color) {
-            throw "Parameter missing: params.color";
-        }
-
-        if (params.opacity === null || params.opacity === undefined) {
-            throw "Parameter missing: params.opacity";
+            throw "Parameter expected: params.primitiveType";
         }
 
         if (!params.positions) {
-            throw "Parameter missing: params.positions";
+            throw "Parameter expected: params.positions";
         }
 
-        if (!params.normals) {
-            throw "Parameter missing: params.normals";
+        const triangles = params.primitiveType === "triangles";
+        const points = params.primitiveType === "points";
+        const lines = params.primitiveType === "lines";
+
+        if (!triangles && !points && !lines) {
+            throw "Unsupported value for params.primitiveType: " + params.primitiveType + "' - supported values are 'triangles', 'points' and 'lines'";
         }
 
-        if (!params.indices) {
-            throw "Parameter missing: params.indices";
+        if (triangles) {
+            if (!params.normals) {
+                throw "Parameter expected for 'triangles' primitive: params.normals";
+            }
+            if (!params.indices) {
+                throw "Parameter expected for 'triangles' primitive: params.indices";
+            }
+        }
+
+        if (points) {
+            if (!params.colors && !params.colorsCompressed) {
+                throw "Parameter expected for 'points' primitive: params.colors or params.colorsCompressed";
+            }
+        }
+
+        if (lines) {
+            if (!params.indices) {
+                throw "Parameter expected for 'lines' primitive: params.indices";
+            }
         }
 
         if (this.finalized) {
-            console.error("XKTModel has been finalized, can't add more primitives");
+            console.error("XKTModel has been finalized, can't add more geometries");
             return;
         }
 
-        const primitiveId = params.primitiveId;
+        if (this.geometries[params.geometryId]) {
+            console.error("XKTGeometry already exists with this ID: " + params.geometryId);
+            return;
+        }
+
+        const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
+        const positions = new Float64Array(params.positions); // May modify in #finalize
+
+        const xktGeometryCfg = {
+            geometryId: geometryId,
+            geometryIndex: this.geometriesList.length,
+            primitiveType: primitiveType,
+            positions: positions
+        };
+
+        if (triangles) {
+            xktGeometryCfg.normals = new Float64Array(params.normals); // May modify in #finalize
+            xktGeometryCfg.indices = params.indices;
+            xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
+        }
+
+        if (points) {
+            if (params.colorsCompressed) {
+                xktGeometryCfg.colorsCompressed = new Uint8Array(params.colorsCompressed);
+            } else {
+                const colors = params.colors;
+                const colorsCompressed = new Uint8Array(colors.length);
+                for (let i = 0, len = colors.length; i < len; i++) {
+                    colorsCompressed[i] = Math.floor(colors[i] * 255);
+                }
+                xktGeometryCfg.colorsCompressed = colorsCompressed;
+            }
+        }
+
+        if (lines) {
+            xktGeometryCfg.indices = params.indices;
+        }
+
+        const geometry = new XKTGeometry(xktGeometryCfg);
+
+        this.geometries[geometryId] = geometry;
+        this.geometriesList.push(geometry);
+
+        return geometry;
+    }
+
+    /**
+     * Creates an {@link XKTMesh} within this XKTModel.
+     *
+     * An {@link XKTMesh} can be owned by one {@link XKTEntity}, which can own multiple {@link XKTMesh}es.
+     *
+     * @param {*} params Method parameters.
+     * @param {Number} params.meshId Unique ID for the {@link XKTMesh}.
+     * @param {Number} params.geometryId ID of an existing {@link XKTGeometry} in {@link XKTModel#geometries}.
+     * @param {Uint8Array} params.color RGB color for the {@link XKTMesh}, with each color component in range [0..1].
+     * @param {Number} [params.metallic=0] How metallic the {@link XKTMesh} is, in range [0..1]. A value of ````0```` indicates fully dielectric material, while ````1```` indicates fully metallic.
+     * @param {Number} [params.roughness=1] How rough the {@link XKTMesh} is, in range [0..1]. A value of ````0```` indicates fully smooth, while ````1```` indicates fully rough.
+     * @param {Number} params.opacity Opacity factor for the {@link XKTMesh}, in range [0..1].
+     * @param {Float64Array} [params.matrix] Modeling matrix for the {@link XKTMesh}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
+     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTMesh}. Overridden by the ````matrix```` parameter.
+     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTMesh} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
+     * @returns {XKTMesh} The new {@link XKTMesh}.
+     */
+    createMesh(params) {
+
+        if (params.meshId === null || params.meshId === undefined) {
+            throw "Parameter expected: params.meshId";
+        }
+
+        if (params.geometryId === null || params.geometryId === undefined) {
+            throw "Parameter expected: params.geometryId";
+        }
+
+        // if (!params.color) {
+        //     throw "Parameter expected: params.color";
+        // }
+        //
+        // if (params.opacity === null || params.opacity === undefined) {
+        //     throw "Parameter expected: params.opacity";
+        // }
+
+        if (this.finalized) {
+            throw "XKTModel has been finalized, can't add more meshes";
+        }
+
+        if (this.meshes[params.meshId]) {
+            console.error("XKTMesh already exists with this ID: " + params.meshId);
+            return;
+        }
+
+        const geometry = this.geometries[params.geometryId];
+
+        if (!geometry) {
+            console.error("XKTGeometry not found: " + params.geometryId);
+            return;
+        }
+
+        geometry.numInstances++;
+
         let matrix = params.matrix;
-        const position = params.position;
-        const scale = params.scale;
-        const rotation = params.rotation;
-        const color = params.color;
-        const opacity = params.opacity;
-        const positions = params.positions.slice(); // May modify in #finalize
-        const normals = params.normals.slice(); // Will modify
-        const indices = params.indices;
-        const edgeIndices = buildEdgeIndices(positions, indices, null, 10);
 
         if (!matrix) {
+
+            const position = params.position;
+            const scale = params.scale;
+            const rotation = params.rotation;
+
             if (position || scale || rotation) {
                 matrix = math.identityMat4();
                 const quaternion = math.eulerToQuaternion(rotation || [0, 0, 0], "XYZ", math.identityQuaternion());
                 math.composeMat4(position || [0, 0, 0], quaternion, scale || [1, 1, 1], matrix);
+
+            } else {
+                matrix = math.identityMat4();
             }
         }
 
-        matrix = matrix || math.identityMat4();
+        const meshIndex = this.meshesList.length;
 
-        if (matrix && (!math.isIdentityMat4(matrix))) { // Bake positions into World-space
-            for (let i = 0, len = positions.length; i < len; i += 3) {
-                tempVec4a[0] = positions[i + 0];
-                tempVec4a[1] = positions[i + 1];
-                tempVec4a[2] = positions[i + 2];
-                math.transformPoint4(matrix, tempVec4a, tempVec4b);
-                positions[i + 0] = tempVec4b[0];
-                positions[i + 1] = tempVec4b[1];
-                positions[i + 2] = tempVec4b[2];
-            }
-        }
+        const mesh = new XKTMesh({
+            meshId: params.meshId,
+            meshIndex: meshIndex,
+            matrix: matrix,
+            geometry: geometry,
+            color: params.color,
+            metallic: params.metallic,
+            roughness: params.roughness,
+            opacity: params.opacity
+        });
 
-        // TODO: Oct-encode normals, in World-space if not reused, otherwise in Model-space?
+        this.meshes[mesh.meshId] = mesh;
+        this.meshesList.push(mesh);
 
-        const modelNormalMatrix = math.inverseMat4(math.transposeMat4(matrix, tempMat4b), tempMat4);
-        const normalsOctEncoded = new Int8Array(normals.length);
-
-        geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, normalsOctEncoded, 0);
-
-        const primitiveIndex = this.primitivesList.length;
-
-        const primitive = new XKTPrimitive(primitiveId, primitiveType, primitiveIndex, color, opacity, positions, normalsOctEncoded, indices, edgeIndices);
-
-        this.primitives[primitiveId] = primitive;
-        this.primitivesList.push(primitive);
-
-        return primitive;
+        return mesh;
     }
 
     /**
@@ -4583,26 +4780,21 @@ class XKTModel {
      *
      * @param {*} params Method parameters.
      * @param {String} params.entityId Unique ID for the {@link XKTEntity}.
-     * @param {Float32Array} [params.matrix] Modeling matrix for the {@link XKTEntity}. Overrides ````position````, ````scale```` and ````rotation```` parameters.
-     * @param {Number[]} [params.position=[0,0,0]] Position of the {@link XKTEntity}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.scale=[1,1,1]] Scale of the {@link XKTEntity}. Overridden by the ````matrix```` parameter.
-     * @param {Number[]} [params.rotation=[0,0,0]] Rotation of the {@link XKTEntity} as Euler angles given in degrees, for each of the X, Y and Z axis. Overridden by the ````matrix```` parameter.
-
-     * @param {String[]} params.primitiveIds IDs of {@link XKTPrimitive}s used by the {@link XKTEntity}.
+     * @param {String[]} params.meshIds IDs of {@link XKTMesh}es used by the {@link XKTEntity}. Note that each {@link XKTMesh} can only be used by one {@link XKTEntity}.
      * @returns {XKTEntity} The new {@link XKTEntity}.
      */
     createEntity(params) {
 
         if (!params) {
-            throw "Parameters missing: params";
+            throw "Parameters expected: params";
         }
 
         if (params.entityId === null || params.entityId === undefined) {
-            throw "Parameter missing: params.entityId";
+            throw "Parameter expected: params.entityId";
         }
 
-        if (!params.primitiveIds) {
-            throw "Parameter missing: params.primitiveIds";
+        if (!params.meshIds) {
+            throw "Parameter expected: params.meshIds";
         }
 
         if (this.finalized) {
@@ -4610,52 +4802,42 @@ class XKTModel {
             return;
         }
 
-        const entityId = params.entityId;
-        let matrix = params.matrix;
-        const position = params.position;
-        const scale = params.scale;
-        const rotation = params.rotation;
-        const primitiveIds = params.primitiveIds;
-        const primitiveInstances = [];
-
-        if (!matrix) {
-            if (position || scale || rotation) {
-                matrix = math.identityMat4();
-                const quaternion = math.eulerToQuaternion(rotation || [0, 0, 0], "XYZ", math.identityQuaternion());
-                math.composeMat4(position || [0, 0, 0], quaternion, scale || [1, 1, 1], matrix);
-            } else {
-                matrix = math.identityMat4();
-            }
+        if (this.entities[params.entityId]) {
+            console.error("XKTEntity already exists with this ID: " + params.entityId);
+            return;
         }
 
-        for (let primitiveIdIdx = 0, primitiveIdLen = primitiveIds.length; primitiveIdIdx < primitiveIdLen; primitiveIdIdx++) {
+        const entityId = params.entityId;
+        const meshIds = params.meshIds;
+        const meshes = [];
 
-            const primitiveId = primitiveIds[primitiveIdIdx];
-            const primitive = this.primitives[primitiveId];
+        for (let meshIdIdx = 0, meshIdLen = meshIds.length; meshIdIdx < meshIdLen; meshIdIdx++) {
 
-            if (!primitive) {
-                console.error("Primitive not found: " + primitiveId);
+            const meshId = meshIds[meshIdIdx];
+            const mesh = this.meshes[meshId];
+
+            if (!mesh) {
+                console.error("XKTMesh found: " + meshId);
                 continue;
             }
 
-            primitive.numInstances++;
+            if (mesh.entity) {
+                console.error("XKTMesh " + meshId + " already used by XKTEntity " + mesh.entity.entityId);
+                continue;
+            }
 
-            const primitiveInstanceIndex = this.primitiveInstancesList.length;
-            const primitiveInstance = new XKTPrimitiveInstance(primitiveInstanceIndex, primitive);
-
-            primitiveInstances.push(primitiveInstance);
-
-            this.primitiveInstancesList.push(primitiveInstance);
+            meshes.push(mesh);
         }
 
-        const entity = new XKTEntity(entityId, matrix, primitiveInstances);
+        const entity = new XKTEntity(entityId, meshes);
 
-        for (let i = 0, len = primitiveInstances.length; i < len; i++) {
-            const primitiveInstance = primitiveInstances[i];
-            primitiveInstance.entity = entity;
+        for (let i = 0, len = meshes.length; i < len; i++) {
+            const mesh = meshes[i];
+            mesh.entity = entity;
         }
 
         this.entities[entityId] = entity;
+        this.entitiesList.push(entity);
 
         return entity;
     }
@@ -4669,7 +4851,7 @@ class XKTModel {
      *
      * Internally, this method:
      *
-     * * sets each {@link XKTEntity}'s {@link XKTEntity#hasReusedPrimitives} true if it shares its {@link XKTPrimitive}s with other {@link XKTEntity}s,
+     * * sets each {@link XKTEntity}'s {@link XKTEntity#hasReusedGeometries} true if it shares its {@link XKTGeometry}s with other {@link XKTEntity}s,
      * * creates each {@link XKTEntity}'s {@link XKTEntity#aabb},
      * * creates {@link XKTTile}s in {@link XKTModel#tilesList}, and
      * * sets {@link XKTModel#finalized} ````true````.
@@ -4681,7 +4863,9 @@ class XKTModel {
             return;
         }
 
-        this._flagEntitiesThatReusePrimitives();
+        this._bakeSingleUseGeometryPositions();
+
+        this._bakeAndOctEncodeNormals();
 
         this._createEntityAABBs();
 
@@ -4689,27 +4873,64 @@ class XKTModel {
 
         this._createTilesFromKDTree(rootKDNode);
 
-        this._createReusedPrimitivesDecodeMatrix();
+        this._createReusedGeometriesDecodeMatrix();
+
+        this._flagSolidGeometries();
 
         this.finalized = true;
     }
 
-    _flagEntitiesThatReusePrimitives() {
+    _bakeSingleUseGeometryPositions() {
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
+        for (let j = 0, lenj = this.meshesList.length; j < lenj; j++) {
 
-                const entity = this.entities[entityId];
-                const primitiveInstances = entity.primitiveInstances;
+            const mesh = this.meshesList[j];
 
-                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+            const geometry = mesh.geometry;
 
-                    const primitiveInstance = primitiveInstances[j];
-                    const primitive = primitiveInstance.primitive;
+            if (geometry.numInstances === 1) {
 
-                    if (primitive.numInstances > 1) {
-                        entity.hasReusedPrimitives = true;
+                const matrix = mesh.matrix;
+
+                if (matrix && (!math.isIdentityMat4(matrix))) {
+
+                    const positions = geometry.positions;
+
+                    for (let i = 0, len = positions.length; i < len; i += 3) {
+
+                        tempVec4a[0] = positions[i + 0];
+                        tempVec4a[1] = positions[i + 1];
+                        tempVec4a[2] = positions[i + 2];
+                        tempVec4a[3] = 1;
+
+                        math.transformPoint4(matrix, tempVec4a, tempVec4b);
+
+                        positions[i + 0] = tempVec4b[0];
+                        positions[i + 1] = tempVec4b[1];
+                        positions[i + 2] = tempVec4b[2];
                     }
+                }
+            }
+        }
+    }
+
+    _bakeAndOctEncodeNormals() {
+
+        for (let i = 0, len = this.meshesList.length; i < len; i++) {
+
+            const mesh = this.meshesList[i];
+            const geometry = mesh.geometry;
+
+            if (geometry.normals && !geometry.normalsOctEncoded) {
+
+                geometry.normalsOctEncoded = new Int8Array(geometry.normals.length);
+
+                if (geometry.numInstances > 1) {
+                    geometryCompression.octEncodeNormals(geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
+
+                } else {
+                    const modelNormalMatrix =  math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
+                    geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
                 }
             }
         }
@@ -4717,39 +4938,40 @@ class XKTModel {
 
     _createEntityAABBs() {
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
 
-                const entity = this.entities[entityId];
-                const primitiveInstances = entity.primitiveInstances;
+            const entity = this.entitiesList[i];
+            const entityAABB = entity.aabb;
+            const meshes = entity.meshes;
 
-                math.collapseAABB3(entity.aabb);
+            math.collapseAABB3(entityAABB);
 
-                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
 
-                    const primitiveInstance = primitiveInstances[j];
-                    const primitive = primitiveInstance.primitive;
+                const mesh = meshes[j];
+                const geometry = mesh.geometry;
+                const matrix = mesh.matrix;
 
-                    if (primitive.numInstances > 1) {
+                if (geometry.numInstances > 1) {
 
-                        const positions = primitive.positions;
-                        for (let i = 0, len = positions.length; i < len; i += 3) {
-                            tempVec4a[0] = positions[i + 0];
-                            tempVec4a[1] = positions[i + 1];
-                            tempVec4a[2] = positions[i + 2];
-                            math.transformPoint4(entity.matrix, tempVec4a, tempVec4b);
-                            math.expandAABB3Point3(entity.aabb, tempVec4b);
-                        }
+                    const positions = geometry.positions;
+                    for (let i = 0, len = positions.length; i < len; i += 3) {
+                        tempVec4a[0] = positions[i + 0];
+                        tempVec4a[1] = positions[i + 1];
+                        tempVec4a[2] = positions[i + 2];
+                        tempVec4a[3] = 1;
+                        math.transformPoint4(matrix, tempVec4a, tempVec4b);
+                        math.expandAABB3Point3(entityAABB, tempVec4b);
+                    }
 
-                    } else {
+                } else {
 
-                        const positions = primitive.positions;
-                        for (let i = 0, len = positions.length; i < len; i += 3) {
-                            tempVec4a[0] = positions[i + 0];
-                            tempVec4a[1] = positions[i + 1];
-                            tempVec4a[2] = positions[i + 2];
-                            math.expandAABB3Point3(entity.aabb, tempVec4a);
-                        }
+                    const positions = geometry.positions;
+                    for (let i = 0, len = positions.length; i < len; i += 3) {
+                        tempVec4a[0] = positions[i + 0];
+                        tempVec4a[1] = positions[i + 1];
+                        tempVec4a[2] = positions[i + 2];
+                        math.expandAABB3Point3(entityAABB, tempVec4a);
                     }
                 }
             }
@@ -4760,20 +4982,16 @@ class XKTModel {
 
         const aabb = math.collapseAABB3();
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
-                const entity = this.entities[entityId];
-                math.expandAABB3(aabb, entity.aabb);
-            }
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+            const entity = this.entitiesList[i];
+            math.expandAABB3(aabb, entity.aabb);
         }
 
         const rootKDNode = new KDNode(aabb);
 
-        for (let entityId in this.entities) {
-            if (this.entities.hasOwnProperty(entityId)) {
-                const entity = this.entities[entityId];
-                this._insertEntityIntoKDTree(rootKDNode, entity);
-            }
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+            const entity = this.entitiesList[i];
+            this._insertEntityIntoKDTree(rootKDNode, entity);
         }
 
         return rootKDNode;
@@ -4866,7 +5084,7 @@ class XKTModel {
     /**
      * Creates a tile from the given entities.
      *
-     * For each single-use {@link XKTPrimitive}, this method centers {@link XKTPrimitive#positions} to make them relative to the
+     * For each single-use {@link XKTGeometry}, this method centers {@link XKTGeometry#positions} to make them relative to the
      * tile's center, then quantizes the positions to unsigned 16-bit integers, relative to the tile's boundary.
      *
      * @param entities
@@ -4897,40 +5115,36 @@ class XKTModel {
 
             const entity = entities [i];
 
-            const primitiveInstances = entity.primitiveInstances;
+            const meshes = entity.meshes;
 
-            if (entity.hasReusedPrimitives) {
+            for (let j = 0, lenj = meshes.length; j < lenj; j++) {
 
-                // Post-multiply a translation to the entity's modeling matrix
-                // to center the entity's primitive instances to the tile RTC center
+                const mesh = meshes[j];
+                const geometry = mesh.geometry;
 
-                math.translateMat4v(tileCenterNeg, entity.matrix);
+                if (!geometry.reused) {
 
-            } else {
+                    const positions = geometry.positions;
 
-                for (let j = 0, lenj = primitiveInstances.length; j < lenj; j++) {
+                    // Center positions relative to their tile's World-space center
 
-                    const primitiveInstance = primitiveInstances[j];
-                    const primitive = primitiveInstance.primitive;
+                    for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
 
-                    if (!primitive.reused) {
-
-                        const positions = primitive.positions;
-
-                        // Center positions relative to their tile's World-space center
-
-                        for (let k = 0, lenk = positions.length; k < lenk; k += 3) {
-
-                            positions[k + 0] -= tileCenter[0];
-                            positions[k + 1] -= tileCenter[1];
-                            positions[k + 2] -= tileCenter[2];
-                        }
-
-                        // Quantize positions relative to tile's RTC-space boundary
-
-                        geometryCompression.quantizePositions(positions, positions.length, rtcAABB, primitive.positionsQuantized);
-
+                        positions[k + 0] -= tileCenter[0];
+                        positions[k + 1] -= tileCenter[1];
+                        positions[k + 2] -= tileCenter[2];
                     }
+
+                    // Quantize positions relative to tile's RTC-space boundary
+
+                    geometryCompression.quantizePositions(positions, positions.length, rtcAABB, geometry.positionsQuantized);
+
+                } else {
+
+                    // Post-multiply a translation to the mesh's modeling matrix
+                    // to center the entity's geometry instances to the tile RTC center
+
+                    math.translateMat4v(tileCenterNeg, mesh.matrix);
                 }
             }
 
@@ -4944,19 +5158,19 @@ class XKTModel {
         this.tilesList.push(tile);
     }
 
-    _createReusedPrimitivesDecodeMatrix() {
+    _createReusedGeometriesDecodeMatrix() {
 
         const tempVec3a = math.vec3();
-        const reusedPrimitivesAABB = math.collapseAABB3(math.AABB3());
-        let countReusedPrimitives = 0;
+        const reusedGeometriesAABB = math.collapseAABB3(math.AABB3());
+        let countReusedGeometries = 0;
 
-        for (let primitiveIndex = 0, numPrimitives = this.primitivesList.length; primitiveIndex < numPrimitives; primitiveIndex++) {
+        for (let geometryIndex = 0, numGeometries = this.geometriesList.length; geometryIndex < numGeometries; geometryIndex++) {
 
-            const primitive = this.primitivesList [primitiveIndex];
+            const geometry = this.geometriesList [geometryIndex];
 
-            if (primitive.reused) {
+            if (geometry.reused) {
 
-                const positions = primitive.positions;
+                const positions = geometry.positions;
 
                 for (let i = 0, len = positions.length; i < len; i += 3) {
 
@@ -4964,469 +5178,38 @@ class XKTModel {
                     tempVec3a[1] = positions[i + 1];
                     tempVec3a[2] = positions[i + 2];
 
-                    math.expandAABB3Point3(reusedPrimitivesAABB, tempVec3a);
+                    math.expandAABB3Point3(reusedGeometriesAABB, tempVec3a);
                 }
 
-                countReusedPrimitives++;
+                countReusedGeometries++;
             }
         }
 
-        if (countReusedPrimitives > 0) {
+        if (countReusedGeometries > 0) {
 
-            geometryCompression.createPositionsDecodeMatrix(reusedPrimitivesAABB, this.reusedPrimitivesDecodeMatrix);
+            geometryCompression.createPositionsDecodeMatrix(reusedGeometriesAABB, this.reusedGeometriesDecodeMatrix);
 
-            for (let primitiveIndex = 0, numPrimitives = this.primitivesList.length; primitiveIndex < numPrimitives; primitiveIndex++) {
+            for (let geometryIndex = 0, numGeometries = this.geometriesList.length; geometryIndex < numGeometries; geometryIndex++) {
 
-                const primitive = this.primitivesList [primitiveIndex];
+                const geometry = this.geometriesList [geometryIndex];
 
-                if (primitive.reused) {
-                    geometryCompression.quantizePositions(primitive.positions, primitive.positions.length, reusedPrimitivesAABB, primitive.positionsQuantized);
+                if (geometry.reused) {
+                    geometryCompression.quantizePositions(geometry.positions, geometry.positions.length, reusedGeometriesAABB, geometry.positionsQuantized);
                 }
             }
 
         } else {
-            math.identityMat4(this.reusedPrimitivesDecodeMatrix); // No need for this matrix, but we'll be tidy and set it to identity
+            math.identityMat4(this.reusedGeometriesDecodeMatrix); // No need for this matrix, but we'll be tidy and set it to identity
         }
     }
-}
 
-function isString(value) {
-    return (typeof value === 'string' || value instanceof String);
-}
-
-/**
- * @private
- */
-const utils = {
-    isString: isString,
-};
-
-// HACK: Allows node.js to find atob()
-let atob2;
-if (typeof atob === 'undefined') {
-    const atob = require('atob');
-    atob2 = atob;
-} else {
-    atob2 = atob;
-}
-
-const WEBGL_COMPONENT_TYPES = {
-    5120: Int8Array,
-    5121: Uint8Array,
-    5122: Int16Array,
-    5123: Uint16Array,
-    5125: Uint32Array,
-    5126: Float32Array
-};
-
-const WEBGL_TYPE_SIZES = {
-    'SCALAR': 1,
-    'VEC2': 2,
-    'VEC3': 3,
-    'VEC4': 4,
-    'MAT2': 4,
-    'MAT3': 9,
-    'MAT4': 16
-};
-
-/**
- * Parses glTF JSON into an {@link XKTModel}.
- *
- * Expects the XKTModel to be freshly instantiated, and calls {@link XKTModel#finalize} on the XKTModel before returning.
- *
- * @param {Object} gltf The glTF JSON.
- * @param {XKTModel} model XKTModel to parse into
- * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
- */
-async function loadGLTFIntoXKTModel(gltf, model, getAttachment) {
-    const parsingCtx = {
-        gltf: gltf,
-        getAttachment: getAttachment || (() => {throw new Error('You must define getAttachment() method to convert glTF with external resources')}),
-        model: model,
-        numPrimitivesCreated: 0,
-        numEntitiesCreated: 0,
-        nodes: [],
-        meshInstanceCounts: {},
-        _meshPrimitiveIds: {}
-    };
-    await parseBuffers(parsingCtx);
-    parseBufferViews(parsingCtx);
-    freeBuffers(parsingCtx);
-    parseMaterials(parsingCtx);
-    parseDefaultScene(parsingCtx);
-}
-async function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
-    const buffers = parsingCtx.gltf.buffers;
-    if (buffers) {
-        await Promise.all(buffers.map(buffer => parseBuffer(parsingCtx, buffer)));
-    }
-}
-
-async function parseBuffer(parsingCtx, bufferInfo) {
-    const uri = bufferInfo.uri;
-    if (!uri) {
-        throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
-    }
-    bufferInfo._buffer = await parseArrayBuffer(parsingCtx, uri);
-}
-
-async function parseArrayBuffer(parsingCtx, uri) {
-    // Check for data: URI
-    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
-    const dataUriRegexResult = uri.match(dataUriRegex);
-    if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
-        const isBase64 = !!dataUriRegexResult[2];
-        let data = dataUriRegexResult[3];
-        data = decodeURIComponent(data);
-        if (isBase64) {
-            data = atob2(data);
-        }
-        const buffer = new ArrayBuffer(data.length);
-        const view = new Uint8Array(buffer);
-        for (let i = 0; i < data.length; i++) {
-            view[i] = data.charCodeAt(i);
-        }
-        return buffer;
-
-    } else {
-        // Uri is a path to a file
-        const contents = await parsingCtx.getAttachment(uri);
-        return toArrayBuffer(contents);
-    }
-}
-
-function toArrayBuffer(buf) {
-    var ab = new ArrayBuffer(buf.length);
-    var view = new Uint8Array(ab);
-    for (let i = 0; i < buf.length; ++i) {
-        view[i] = buf[i];
-    }
-    return ab;
-}
-
-function parseBufferViews(parsingCtx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
-    const bufferViewsInfo = parsingCtx.gltf.bufferViews;
-    if (bufferViewsInfo) {
-        for (var i = 0, len = bufferViewsInfo.length; i < len; i++) {
-            parseBufferView(parsingCtx, bufferViewsInfo[i]);
-        }
-    }
-}
-
-function parseBufferView(parsingCtx, bufferViewInfo) {
-    const buffer = parsingCtx.gltf.buffers[bufferViewInfo.buffer];
-    bufferViewInfo._typedArray = null;
-    const byteLength = bufferViewInfo.byteLength || 0;
-    const byteOffset = bufferViewInfo.byteOffset || 0;
-    bufferViewInfo._buffer = buffer._buffer.slice(byteOffset, byteOffset + byteLength);
-}
-
-function freeBuffers(parsingCtx) { // Deletes the "_buffer" properties from the glTF "buffer" elements, to save memory
-    const buffers = parsingCtx.gltf.buffers;
-    if (buffers) {
-        for (var i = 0, len = buffers.length; i < len; i++) {
-            buffers[i]._buffer = null;
-        }
-    }
-}
-
-function parseMaterials(parsingCtx) {
-    const materialsInfo = parsingCtx.gltf.materials;
-    if (materialsInfo) {
-        var materialInfo;
-        var material;
-        for (var i = 0, len = materialsInfo.length; i < len; i++) {
-            materialInfo = materialsInfo[i];
-            material = parseMaterialColor(parsingCtx, materialInfo);
-            materialInfo._rgbaColor = material;
-        }
-    }
-}
-
-function parseMaterialColor(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
-    const color = new Float32Array([1, 1, 1, 1]);
-    const extensions = materialInfo.extensions;
-    if (extensions) {
-        const specularPBR = extensions["KHR_materials_pbrSpecularGlossiness"];
-        if (specularPBR) {
-            const diffuseFactor = specularPBR.diffuseFactor;
-            if (diffuseFactor !== null && diffuseFactor !== undefined) {
-                color.set(diffuseFactor);
+    _flagSolidGeometries() {
+        for (let i = 0, len = this.geometriesList.length; i < len; i++) {
+            const geometry = this.geometriesList[i];
+            if (geometry.primitiveType === "triangles") {
+                geometry.solid = isTriangleMeshSolid(geometry.indices, geometry.positionsQuantized); // Better memory/cpu performance with quantized values
             }
         }
-        const common = extensions["KHR_materials_common"];
-        if (common) {
-            const technique = common.technique;
-            const values = common.values || {};
-            const blinn = technique === "BLINN";
-            const phong = technique === "PHONG";
-            const lambert = technique === "LAMBERT";
-            const diffuse = values.diffuse;
-            if (diffuse && (blinn || phong || lambert)) {
-                if (!utils.isString(diffuse)) {
-                    color.set(diffuse);
-                }
-            }
-            const transparency = values.transparency;
-            if (transparency !== null && transparency !== undefined) {
-                color[3] = transparency;
-            }
-            const transparent = values.transparent;
-            if (transparent !== null && transparent !== undefined) {
-                color[3] = transparent;
-            }
-        }
-    }
-    const metallicPBR = materialInfo.pbrMetallicRoughness;
-    if (metallicPBR) {
-        const baseColorFactor = metallicPBR.baseColorFactor;
-        if (baseColorFactor) {
-            color.set(baseColorFactor);
-        }
-    }
-    return color;
-}
-
-function parseDefaultScene(parsingCtx) {
-    const scene = parsingCtx.gltf.scene || 0;
-    const defaultSceneInfo = parsingCtx.gltf.scenes[scene];
-    if (!defaultSceneInfo) {
-        throw new Error("glTF has no default scene");
-    }
-    prepareSceneCountMeshes(parsingCtx, defaultSceneInfo);
-    parseScene(parsingCtx, defaultSceneInfo);
-}
-
-function prepareSceneCountMeshes(parsingCtx, sceneInfo) {
-    const nodes = sceneInfo.nodes;
-    if (!nodes) {
-        return;
-    }
-    for (var i = 0, len = nodes.length; i < len; i++) {
-        const glTFNode = parsingCtx.gltf.nodes[nodes[i]];
-        if (glTFNode) {
-            prepareNodeCountMeshes(parsingCtx, glTFNode);
-        }
-    }
-}
-
-function prepareNodeCountMeshes(parsingCtx, glTFNode) {
-
-    const gltf = parsingCtx.gltf;
-
-    const meshId = glTFNode.mesh;
-
-    if (meshId !== undefined) {
-        if (parsingCtx.meshInstanceCounts[meshId] !== undefined) {
-            parsingCtx.meshInstanceCounts [meshId]++;
-        } else {
-            parsingCtx.meshInstanceCounts [meshId] = 1;
-        }
-    }
-
-    if (glTFNode.children) {
-        const children = glTFNode.children;
-        for (let i = 0, len = children.length; i < len; i++) {
-            const childNodeIdx = children[i];
-            const childGLTFNode = gltf.nodes[childNodeIdx];
-            if (!childGLTFNode) {
-                continue;
-            }
-            prepareNodeCountMeshes(parsingCtx, childGLTFNode);
-        }
-    }
-}
-
-function parseScene(parsingCtx, sceneInfo) {
-    const nodes = sceneInfo.nodes;
-    if (!nodes) {
-        return;
-    }
-    for (var i = 0, len = nodes.length; i < len; i++) {
-        const glTFNode = parsingCtx.gltf.nodes[nodes[i]];
-        if (glTFNode) {
-            parseNode(parsingCtx, glTFNode, null);
-        }
-    }
-}
-
-function parseNode(parsingCtx, glTFNode, matrix) {
-
-    const gltf = parsingCtx.gltf;
-    const model = parsingCtx.model;
-
-    let localMatrix;
-
-    if (glTFNode.matrix) {
-        localMatrix = glTFNode.matrix;
-        if (matrix) {
-            matrix = math.mulMat4(matrix, localMatrix, math.mat4());
-        } else {
-            matrix = localMatrix;
-        }
-    }
-
-    if (glTFNode.translation) {
-        localMatrix = math.translationMat4v(glTFNode.translation);
-        if (matrix) {
-            matrix = math.mulMat4(matrix, localMatrix, localMatrix);
-        } else {
-            matrix = localMatrix;
-        }
-    }
-
-    if (glTFNode.rotation) {
-        localMatrix = math.quaternionToMat4(glTFNode.rotation);
-        if (matrix) {
-            matrix = math.mulMat4(matrix, localMatrix, localMatrix);
-        } else {
-            matrix = localMatrix;
-        }
-    }
-
-    if (glTFNode.scale) {
-        localMatrix = math.scalingMat4v(glTFNode.scale);
-        if (matrix) {
-            matrix = math.mulMat4(matrix, localMatrix, localMatrix);
-        } else {
-            matrix = localMatrix;
-        }
-    }
-
-    const meshId = glTFNode.mesh;
-
-    if (meshId !== undefined) {
-
-        const meshInfo = gltf.meshes[meshId];
-
-        if (meshInfo) {
-
-            let primitivesReused = (parsingCtx.meshInstanceCounts [meshId] > 1);
-
-            let primitiveModelingMatrix;
-            let entityModelingMatrix;
-
-            if (primitivesReused) {
-
-                // Primitives in a mesh that is shared are left in Model-space
-                // Entities that instance those primitives will use their matrix to transform the primitives into World-space
-
-                primitiveModelingMatrix = math.identityMat4();
-                entityModelingMatrix = matrix ? matrix.slice() : math.identityMat4();
-
-            } else {
-
-                // glTF meshes do not share primitives - each primitive belongs to one mesh
-                // Primitives in a mesh that's not shared get baked into World-space
-
-                primitiveModelingMatrix = matrix ? matrix.slice() : math.identityMat4();
-                entityModelingMatrix = math.identityMat4();
-            }
-
-            const numPrimitivesInMesh = meshInfo.primitives.length;
-
-            if (numPrimitivesInMesh > 0) {
-
-                let primitiveIds = parsingCtx._meshPrimitiveIds[meshId];
-
-                if (!primitiveIds) {
-
-                    primitiveIds = [];
-
-                    for (let i = 0; i < numPrimitivesInMesh; i++) {
-
-                        const primitiveInfo = meshInfo.primitives[i];
-                        const materialIndex = primitiveInfo.material;
-                        const materialInfo = (materialIndex !== null && materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
-                        const color = materialInfo ? materialInfo._rgbaColor : new Float32Array([1.0, 1.0, 1.0, 1.0]);
-                        const opacity = materialInfo ? materialInfo._rgbaColor[3] : 1.0;
-
-                        const geometryArrays = {};
-
-                        parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
-
-                        const primitiveId = parsingCtx.numPrimitivesCreated;
-
-                        model.createPrimitive({
-                            primitiveId: primitiveId,
-                            primitiveType: "triangles",
-                            matrix: primitiveModelingMatrix,
-                            color: color,
-                            opacity: opacity,
-                            positions: new Float64Array(geometryArrays.positions), // Double precision required for baking non-reused primitive positions
-                            normals: geometryArrays.normals,
-                            indices: geometryArrays.indices
-                        });
-
-                        primitiveIds.push(primitiveId);
-
-                        parsingCtx.numPrimitivesCreated++;
-                    }
-
-                    parsingCtx._meshPrimitiveIds [meshId] = primitiveIds;
-                }
-
-                const entityId = glTFNode.name || "entity" + parsingCtx.numEntitiesCreated;
-
-                model.createEntity({
-                    entityId: entityId,
-                    matrix: entityModelingMatrix,
-                    primitiveIds: primitiveIds
-                });
-
-                parsingCtx.numEntitiesCreated++;
-            }
-        }
-    }
-
-    if (glTFNode.children) {
-        const children = glTFNode.children;
-        for (let i = 0, len = children.length; i < len; i++) {
-            const childNodeIdx = children[i];
-            const childGLTFNode = gltf.nodes[childNodeIdx];
-            if (!childGLTFNode) {
-                console.warn('Node not found: ' + i);
-                continue;
-            }
-            parseNode(parsingCtx, childGLTFNode, matrix);
-        }
-    }
-}
-
-function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
-    const attributes = primitiveInfo.attributes;
-    if (!attributes) {
-        return;
-    }
-    geometryArrays.primitive = "triangles";
-    const accessors = parsingCtx.gltf.accessors;
-    const indicesIndex = primitiveInfo.indices;
-    if (indicesIndex !== null && indicesIndex !== undefined) {
-        const accessorInfo = accessors[indicesIndex];
-        geometryArrays.indices = parseAccessorTypedArray(parsingCtx, accessorInfo);
-    }
-    const positionsIndex = attributes.POSITION;
-    if (positionsIndex !== null && positionsIndex !== undefined) {
-        const accessorInfo = accessors[positionsIndex];
-        geometryArrays.positions = parseAccessorTypedArray(parsingCtx, accessorInfo);
-    }
-    const normalsIndex = attributes.NORMAL;
-    if (normalsIndex !== null && normalsIndex !== undefined) {
-        const accessorInfo = accessors[normalsIndex];
-        geometryArrays.normals = parseAccessorTypedArray(parsingCtx, accessorInfo);
-    }
-}
-
-function parseAccessorTypedArray(parsingCtx, accessorInfo) {
-    const bufferViewInfo = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
-    const itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
-    const TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
-    const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
-    const itemBytes = elementBytes * itemSize;
-    if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
-        throw new Error("interleaved buffer!"); // TODO
-    } else {
-        return new TypedArray(bufferViewInfo._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
     }
 }
 
@@ -5461,42 +5244,80 @@ function validateXKTArrayBuffer(arrayBuffer, xktModel) {
 }
 
 function extract(elements) {
+
     return {
+
+        // vertex attributes
+
         positions: elements[0],
         normals: elements[1],
-        indices: elements[2],
-        edgeIndices: elements[3],
-        matrices: elements[4],
-        reusedPrimitivesDecodeMatrix: elements[5],
-        eachPrimitivePositionsAndNormalsPortion: elements[6],
-        eachPrimitiveIndicesPortion: elements[7],
-        eachPrimitiveEdgeIndicesPortion: elements[8],
-        eachPrimitiveColorAndOpacity: elements[9],
-        primitiveInstances: elements[10],
-        eachEntityId: elements[11],
-        eachEntityPrimitiveInstancesPortion: elements[12],
-        eachEntityMatricesPortion: elements[13],
-        eachTileAABB: elements[14],
-        eachTileEntitiesPortion: elements[15]
+        colors: elements[2],
+
+        // Indices
+
+        indices: elements[3],
+        edgeIndices: elements[4],
+
+        // Transform matrices
+
+        matrices: elements[5],
+
+        reusedGeometriesDecodeMatrix: elements[6],
+
+        // Geometries
+
+        eachGeometryPrimitiveType: elements[7],
+        eachGeometryPositionsPortion: elements[8],
+        eachGeometryNormalsPortion: elements[9],
+        eachGeometryColorsPortion: elements[10],
+
+        eachGeometryIndicesPortion: elements[11],
+        eachGeometryEdgeIndicesPortion: elements[12],
+
+        // Meshes are grouped in runs that are shared by the same entities
+
+        eachMeshGeometriesPortion: elements[13],
+        eachMeshMatricesPortion: elements[14],
+        eachMeshColorAndOpacity: elements[15],
+
+        // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
+
+        eachEntityId: elements[16],
+        eachEntityMeshesPortion: elements[17],
+
+        eachTileAABB: elements[18],
+        eachTileEntitiesPortion: elements[19]
     };
 }
 
 function inflate(deflatedData) {
+
     return {
+
         positions: new Uint16Array(pako.inflate(deflatedData.positions).buffer),
         normals: new Int8Array(pako.inflate(deflatedData.normals).buffer),
+        colors: new Uint8Array(pako.inflate(deflatedData.colors).buffer),
+
         indices: new Uint32Array(pako.inflate(deflatedData.indices).buffer),
         edgeIndices: new Uint32Array(pako.inflate(deflatedData.edgeIndices).buffer),
+
         matrices: new Float32Array(pako.inflate(deflatedData.matrices).buffer),
-        reusedPrimitivesDecodeMatrix: new Float32Array(pako.inflate(deflatedData.reusedPrimitivesDecodeMatrix).buffer),
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
-        eachPrimitiveIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
-        eachPrimitiveColorAndOpacity: new Uint8Array(pako.inflate(deflatedData.eachPrimitiveColorAndOpacity).buffer),
-        primitiveInstances: new Uint32Array(pako.inflate(deflatedData.primitiveInstances).buffer),
+        reusedGeometriesDecodeMatrix: new Float32Array(pako.inflate(deflatedData.reusedGeometriesDecodeMatrix).buffer),
+
+        eachGeometryPrimitiveType: new Uint8Array(pako.inflate(deflatedData.eachGeometryPrimitiveType).buffer),
+        eachGeometryPositionsPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryPositionsPortion).buffer),
+        eachGeometryNormalsPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryNormalsPortion).buffer),
+        eachGeometryColorsPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryColorsPortion).buffer),
+        eachGeometryIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryIndicesPortion).buffer),
+        eachGeometryEdgeIndicesPortion: new Uint32Array(pako.inflate(deflatedData.eachGeometryEdgeIndicesPortion).buffer),
+
+        eachMeshGeometriesPortion: new Uint32Array(pako.inflate(deflatedData.eachMeshGeometriesPortion).buffer),
+        eachMeshMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachMeshMatricesPortion).buffer),
+        eachMeshColorAndOpacity: new Uint8Array(pako.inflate(deflatedData.eachMeshColorAndOpacity).buffer),
+
         eachEntityId: pako.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
-        eachEntityMatricesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMatricesPortion).buffer),
+        eachEntityMeshesPortion: new Uint32Array(pako.inflate(deflatedData.eachEntityMeshesPortion).buffer),
+
         eachTileAABB: new Float64Array(pako.inflate(deflatedData.eachTileAABB).buffer),
         eachTileEntitiesPortion: new Uint32Array(pako.inflate(deflatedData.eachTileEntitiesPortion).buffer),
     };
@@ -5516,30 +5337,33 @@ function validateData(inflatedData, xktModel) {
 
     const positions = inflatedData.positions;
     const normals = inflatedData.normals;
+    const colors = inflatedData.colors;
+
     const indices = inflatedData.indices;
     const edgeIndices = inflatedData.edgeIndices;
 
     const matrices = inflatedData.matrices;
+    const reusedGeometriesDecodeMatrix = inflatedData.reusedGeometriesDecodeMatrix;
 
-    const reusedPrimitivesDecodeMatrix = inflatedData.reusedPrimitivesDecodeMatrix;
+    const eachGeometryPrimitiveType = inflatedData.eachGeometryPrimitiveType;
+    const eachGeometryPositionsPortion = inflatedData.eachGeometryPositionsPortion;
+    const eachGeometryNormalsPortion = inflatedData.eachGeometryNormalsPortion;
+    const eachGeometryColorsPortion = inflatedData.eachGeometryColorsPortion;
+    const eachGeometryIndicesPortion = inflatedData.eachGeometryIndicesPortion;
+    const eachGeometryEdgeIndicesPortion = inflatedData.eachGeometryEdgeIndicesPortion;
 
-    const eachPrimitivePositionsAndNormalsPortion = inflatedData.eachPrimitivePositionsAndNormalsPortion;
-    const eachPrimitiveIndicesPortion = inflatedData.eachPrimitiveIndicesPortion;
-    const eachPrimitiveEdgeIndicesPortion = inflatedData.eachPrimitiveEdgeIndicesPortion;
-    const eachPrimitiveColorAndOpacity = inflatedData.eachPrimitiveColorAndOpacity;
-
-    const primitiveInstances = inflatedData.primitiveInstances;
+    const eachMeshGeometriesPortion = inflatedData.eachMeshGeometriesPortion;
+    const eachMeshColorAndOpacity = inflatedData.eachMeshColorAndOpacity;
+    const eachMeshMatricesPortion = inflatedData.eachMeshMatricesPortion;
 
     const eachEntityId = JSON.parse(inflatedData.eachEntityId);
-    const eachEntityPrimitiveInstancesPortion = inflatedData.eachEntityPrimitiveInstancesPortion;
-    const eachEntityMatricesPortion = inflatedData.eachEntityMatricesPortion;
+    const eachEntityMeshesPortion = inflatedData.eachEntityMeshesPortion;
 
     const eachTileAABB = inflatedData.eachTileAABB;
-    const eachTileDecodeMatrix = inflatedData.eachTileDecodeMatrix;
     const eachTileEntitiesPortion = inflatedData.eachTileEntitiesPortion;
 
-    const numPrimitives = eachPrimitivePositionsAndNormalsPortion.length;
-    const numPrimitiveInstances = primitiveInstances.length;
+    const numGeometries = eachGeometryPositionsPortion.length;
+    const numMeshes = eachMeshGeometriesPortion.length;
     const numEntities = eachEntityId.length;
     const numTiles = eachTileEntitiesPortion.length;
 
@@ -5550,16 +5374,73 @@ function validateData(inflatedData, xktModel) {
         return false;
     }
 
-    // Count instances of each primitive
+    // Count instances of each geometry
 
-    const primitiveReuseCounts = new Uint32Array(numPrimitives);
+    const geometryReuseCounts = new Uint32Array(numGeometries);
 
-    for (let primitiveInstanceIndex = 0; primitiveInstanceIndex < numPrimitiveInstances; primitiveInstanceIndex++) {
-        const primitiveIndex = primitiveInstances[primitiveInstanceIndex];
-        if (primitiveReuseCounts[primitiveIndex] !== undefined) {
-            primitiveReuseCounts[primitiveIndex]++;
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+        const geometryIndex = eachMeshGeometriesPortion[meshIndex];
+        if (geometryReuseCounts[geometryIndex] !== undefined) {
+            geometryReuseCounts[geometryIndex]++;
         } else {
-            primitiveReuseCounts[primitiveIndex] = 1;
+            geometryReuseCounts[geometryIndex] = 1;
+        }
+    }
+
+    // ASSERTIONS
+    // Check mesh --> geometry reuse counts
+
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+        const geometryIndex = eachMeshGeometriesPortion[meshIndex];
+        const xktGeometry = xktModel.geometriesList[geometryIndex];
+        if (!xktGeometry) {
+            console.error("xktModel.geometriesList[geometryIndex] not found");
+            return false;
+        }
+        if (xktGeometry.numInstances !== geometryReuseCounts[geometryIndex]) {
+            console.error("xktGeometry.numInstances !== geometryReuseCounts[geometryIndex]");
+            return false;
+        }
+    }
+
+    // ASSERTIONS
+    // Check geometry primitive types
+
+    for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
+        const xktGeometry = xktModel.geometriesList[geometryIndex];
+        if (!xktGeometry) {
+            console.error("xktModel.geometriesList[geometryIndex] not found");
+            return false;
+        }
+        const geometryPrimitiveType = eachGeometryPrimitiveType[geometryIndex];
+        switch (geometryPrimitiveType) {
+            case 0:
+                if (xktGeometry.primitiveType !== "triangles") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
+                break;
+            case 1:
+                if (xktGeometry.primitiveType !== "triangles") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
+                break;
+            case 2:
+                if (xktGeometry.primitiveType !== "points") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
+                break;
+            case 3:
+                if (xktGeometry.primitiveType !== "lines") {
+                    console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                    return false;
+                }
+                break;
+            default:
+                console.error("eachGeometryPrimitiveType[geometryIndex] unexpected value");
+                return false;
         }
     }
 
@@ -5572,6 +5453,7 @@ function validateData(inflatedData, xktModel) {
 
         const firstTileEntityIndex = eachTileEntitiesPortion [tileIndex];
         const lastTileEntityIndex = atLastTile ? numEntities : eachTileEntitiesPortion[tileIndex + 1];
+
         const tileAABBIndex = tileIndex * 6;
 
         const tileAABB = eachTileAABB.subarray(tileAABBIndex, tileAABBIndex + 6);
@@ -5601,14 +5483,10 @@ function validateData(inflatedData, xktModel) {
         for (let tileEntityIndex = firstTileEntityIndex; tileEntityIndex < lastTileEntityIndex; tileEntityIndex++) {
 
             const entityId = eachEntityId[tileEntityIndex];
-
-            const entityMatrixIndex = eachEntityMatricesPortion[tileEntityIndex];
-            const entityMatrix = matrices.slice(entityMatrixIndex, entityMatrixIndex + 16);
-
             const lastTileEntityIndex = (numEntities - 1);
             const atLastTileEntity = (tileEntityIndex === lastTileEntityIndex);
-            const firstPrimitiveInstanceIndex = eachEntityPrimitiveInstancesPortion [tileEntityIndex];
-            const lastPrimitiveInstanceIndex = atLastTileEntity ? primitiveInstances.length : eachEntityPrimitiveInstancesPortion[tileEntityIndex + 1];
+            const firstMeshIndex = eachEntityMeshesPortion [tileEntityIndex];
+            const lastMeshIndex = atLastTileEntity ? eachMeshGeometriesPortion.length : eachEntityMeshesPortion[tileEntityIndex + 1];
 
             // ASSERTIONS
 
@@ -5624,80 +5502,116 @@ function validateData(inflatedData, xktModel) {
                 return false;
             }
 
-            if (!compareArrays(entityMatrix, xktEntity.matrix)) {
-                console.error("compareArrays(entityMatrix, xktEntity.matrix) === false");
-                return false;
-            }
+            // Iterate each entity's meshes
 
-            // Iterate each entity's primitive instances
+            for (let meshIndex = firstMeshIndex; meshIndex < lastMeshIndex; meshIndex++) {
 
-            for (let primitiveInstancesIndex = firstPrimitiveInstanceIndex; primitiveInstancesIndex < lastPrimitiveInstanceIndex; primitiveInstancesIndex++) {
+                const meshMatrixIndex = eachMeshMatricesPortion[meshIndex];
+                const meshMatrix = matrices.slice(meshMatrixIndex, meshMatrixIndex + 16);
 
-                const primitiveIndex = primitiveInstances[primitiveInstancesIndex];
-                const primitiveReuseCount = primitiveReuseCounts[primitiveIndex];
+                const color = decompressColor(eachMeshColorAndOpacity.subarray((meshIndex * 4), (meshIndex * 4) + 3));
+                const opacity = eachMeshColorAndOpacity[(meshIndex * 4) + 3] / 255.0;
 
-                const atLastPrimitive = (primitiveIndex === (numPrimitives - 1));
+                const geometryIndex = eachMeshGeometriesPortion[meshIndex];
+                const geometryReuseCount = geometryReuseCounts[geometryIndex];
+                const isReusedGeometry = (geometryReuseCount > 1);
 
-                const primitivePositions = positions.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? positions.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-                const primitiveNormals = normals.subarray(eachPrimitivePositionsAndNormalsPortion [primitiveIndex], atLastPrimitive ? normals.length : eachPrimitivePositionsAndNormalsPortion [primitiveIndex + 1]);
-                const primitiveIndices = indices.subarray(eachPrimitiveIndicesPortion [primitiveIndex], atLastPrimitive ? indices.length : eachPrimitiveIndicesPortion [primitiveIndex + 1]);
-                const primitiveEdgeIndices = edgeIndices.subarray(eachPrimitiveEdgeIndicesPortion [primitiveIndex], atLastPrimitive ? edgeIndices.length : eachPrimitiveEdgeIndicesPortion [primitiveIndex + 1]);
+                const atLastGeometry = (geometryIndex === (numGeometries - 1));
 
-                const color = decompressColor(eachPrimitiveColorAndOpacity.subarray((primitiveIndex * 4), (primitiveIndex * 4) + 3));
-                const opacity = eachPrimitiveColorAndOpacity[(primitiveIndex * 4) + 3] / 255.0;
+                const primitiveType = eachGeometryPrimitiveType[geometryIndex];
 
                 // ASSERTIONS
 
-                const xktPrimitiveInstance = xktModel.primitiveInstancesList[primitiveInstancesIndex];
-                const xktPrimitive = xktModel.primitivesList[primitiveIndex];
+                const xktMesh = xktModel.meshesList[meshIndex];
+                const xktGeometry = xktModel.geometriesList[geometryIndex];
 
-                if (!xktPrimitiveInstance) {
-                    console.error("xktModel.primitiveInstancesList[primitiveInstancesIndex] not found");
+                if (!xktMesh) {
+                    console.error("xktModel.meshesList[meshIndex] not found");
                     return false;
                 }
 
-                if (!xktPrimitive) {
-                    console.error("xktModel.primitivesList[primitiveIndex] not found");
+                if (!xktGeometry) {
+                    console.error("xktModel.geometriesList[geometryIndex] not found");
                     return false;
                 }
 
-                if (xktPrimitiveInstance.primitive !== xktPrimitive) {
-                    console.error("xktPrimitiveInstance.primitive !== xktPrimitive");
+                if (isReusedGeometry && !compareArrays(meshMatrix, xktMesh.matrix)) {
+                    console.error("compareArrays(meshMatrix, xktMesh.matrix) === false");
                     return false;
                 }
 
-                if (!compareArrays(primitivePositions, xktPrimitive.positions)) {
-                    console.error("compareArrays(primitivePositions, xktPrimitive.positions) === false");
+                if (xktMesh.color && !compareArrays(color, xktMesh.color)) {
+                    console.error("compareArrays(color, xktMesh.color) === false");
                     return false;
                 }
 
-                if (!compareArrays(primitiveNormals, xktPrimitive.normalsOctEncoded)) {
-                    console.error("compareArrays(primitiveNormals, xktPrimitive.normals) === false");
+                if (opacity !== xktMesh.opacity) {
+                    console.error("opacity !== xktMesh.opacity");
                     return false;
                 }
 
-                if (!compareArrays(primitiveIndices, xktPrimitive.indices)) {
-                    console.error("compareArrays(primitiveIndices, xktPrimitive.indices) === false");
+                if (xktMesh.geometry !== xktGeometry) {
+                    console.error("xktMesh.geometry !== xktGeometry");
+                    return false;
+                }
+                let geometryPositions;
+                let geometryNormals;
+                let geometryColors;
+                let geometryIndices;
+                let geometryEdgeIndices;
+
+                switch (primitiveType) {
+                    case 0: // Solid
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryNormals = normals.subarray(eachGeometryNormalsPortion [geometryIndex], atLastGeometry ? normals.length : eachGeometryNormalsPortion [geometryIndex + 1]);
+                        geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                        geometryEdgeIndices = edgeIndices.subarray(eachGeometryEdgeIndicesPortion [geometryIndex], atLastGeometry ? edgeIndices.length : eachGeometryEdgeIndicesPortion [geometryIndex + 1]);
+                        break;
+                    case 1: // Surface
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryNormals = normals.subarray(eachGeometryNormalsPortion [geometryIndex], atLastGeometry ? normals.length : eachGeometryNormalsPortion [geometryIndex + 1]);
+                        geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                        geometryEdgeIndices = edgeIndices.subarray(eachGeometryEdgeIndicesPortion [geometryIndex], atLastGeometry ? edgeIndices.length : eachGeometryEdgeIndicesPortion [geometryIndex + 1]);
+                        break;
+                    case 2:
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryColors = colors.subarray(eachGeometryColorsPortion [geometryIndex], atLastGeometry ? colors.length : eachGeometryColorsPortion [geometryIndex + 1]);
+                        break;
+                    case 3:
+                        geometryPositions = positions.subarray(eachGeometryPositionsPortion [geometryIndex], atLastGeometry ? positions.length : eachGeometryPositionsPortion [geometryIndex + 1]);
+                        geometryIndices = indices.subarray(eachGeometryIndicesPortion [geometryIndex], atLastGeometry ? indices.length : eachGeometryIndicesPortion [geometryIndex + 1]);
+                        break;
+                    default:
+                        continue;
+                }
+
+                if (geometryPositions && !compareArrays(geometryPositions, xktGeometry.positionsQuantized)) {
+                    console.error("compareArrays(geometryPositions, xktGeometry.positionsQuantized) === false");
                     return false;
                 }
 
-                if (!compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices)) {
-                    console.error("compareArrays(primitiveEdgeIndices, xktPrimitive.edgeIndices) === false");
+                if (geometryNormals && !compareArrays(geometryNormals, xktGeometry.normalsOctEncoded)) {
+                    console.error("compareArrays(geometryNormals, xktGeometry.normalsOctEncoded) === false");
                     return false;
                 }
 
-                if (!compareArrays(color, xktPrimitive.color)) {
-                    console.error("compareArrays(color, xktPrimitive.color) === false");
+                if (geometryColors && !compareArrays(geometryColors, xktGeometry.colorsCompressed)) {
+                    console.error("compareArrays(geometryColors, xktGeometry.colorsCompressed) === false");
                     return false;
                 }
 
-                if (opacity !== xktPrimitive.opacity) {
-                    console.error("opacity !== xktPrimitive.opacity");
+                if (geometryIndices && !compareArrays(geometryIndices, xktGeometry.indices)) {
+                    console.error("compareArrays(geometryIndices, xktGeometry.indices) === false");
                     return false;
                 }
 
-                if (primitiveReuseCount !== xktPrimitive.numInstances) {
-                    console.error("primitiveReuseCount !== xktPrimitive.numInstances");
+                if (geometryEdgeIndices && !compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices)) {
+                    console.error("compareArrays(geometryEdgeIndices, xktGeometry.edgeIndices) === false");
+                    return false;
+                }
+
+                if (geometryReuseCount !== xktGeometry.numInstances) {
+                    console.error("geometryReuseCount !== xktGeometry.numInstances");
                     return false;
                 }
             }
@@ -12797,7 +12711,7 @@ if (!pako$2.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako$2 = pako$2.default;
 }
 
-const XKT_VERSION = 6; // XKT format version
+const XKT_VERSION = 7; // XKT format version
 
 /**
  * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
@@ -12822,67 +12736,93 @@ function getModelData(xktModel) {
     // Allocate data
     //------------------------------------------------------------------------------------------------------------------
 
-    const primitivesList = xktModel.primitivesList;
-    const primitiveInstancesList = xktModel.primitiveInstancesList;
+    const geometriesList = xktModel.geometriesList;
+    const meshesList = xktModel.meshesList;
     const entitiesList = xktModel.entitiesList;
     const tilesList = xktModel.tilesList;
 
-    const numPrimitives = primitivesList.length;
-    const numPrimitiveInstances = primitiveInstancesList.length;
+    const numGeometries = geometriesList.length;
+    const numMeshes = meshesList.length;
     const numEntities = entitiesList.length;
     const numTiles = tilesList.length;
 
     let lenPositions = 0;
     let lenNormals = 0;
+    let lenColors = 0;
     let lenIndices = 0;
     let lenEdgeIndices = 0;
-    let lenColors = 0;
     let lenMatrices = 0;
 
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
-        const primitive = primitivesList [primitiveIndex];
-        lenPositions += primitive.positionsQuantized.length;
-        lenNormals += primitive.normalsOctEncoded.length;
-        lenIndices += primitive.indices.length;
-        lenEdgeIndices += primitive.edgeIndices.length;
-        lenColors += 4;
+    for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
+        const geometry = geometriesList [geometryIndex];
+        if (geometry.positionsQuantized) {
+            lenPositions += geometry.positionsQuantized.length;
+        }
+        if (geometry.normalsOctEncoded) {
+            lenNormals += geometry.normalsOctEncoded.length;
+        }
+        if (geometry.colorsCompressed) {
+            lenColors += geometry.colorsCompressed.length;
+        }
+        if (geometry.indices) {
+            lenIndices += geometry.indices.length;
+        }
+        if (geometry.edgeIndices) {
+            lenEdgeIndices += geometry.edgeIndices.length;
+        }
     }
 
-    for (let entityIndex = 0; entityIndex < numEntities; entityIndex++) {
-        const entity = entitiesList[entityIndex];
-        if (entity.hasReusedPrimitives) {
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+        const mesh = meshesList[meshIndex];
+        if (mesh.geometry.numInstances > 1) {
             lenMatrices += 16;
         }
     }
 
     const data = {
 
+        // Vertex attributes
+
         positions: new Uint16Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
+        colors: new Uint8Array(lenColors),
+
+        // Indices
+
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
 
-        matrices: new Float32Array(lenMatrices), // Modeling matrices for entities that share primitives. Each entity either shares all it's primitives, or owns all its primitives exclusively. Exclusively-owned primitives are pre-transformed into World-space, and so their entities don't have modeling matrices in this array.
+        // Transform matrices
 
-        reusedPrimitivesDecodeMatrix: new Float32Array(xktModel.reusedPrimitivesDecodeMatrix), // A single, global vertex position de-quantization matrix for all reused primitives. Reused primitives are quantized to their collective Local-space AABB, and this matrix is derived from that AABB.
+        matrices: new Float32Array(lenMatrices), // Modeling matrices for entities that share geometries. Each entity either shares all it's geometries, or owns all its geometries exclusively. Exclusively-owned geometries are pre-transformed into World-space, and so their entities don't have modeling matrices in this array.
 
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.positions and data.normals
-        eachPrimitiveIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.indices
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(numPrimitives), // For each primitive, an index to its first element in data.edgeIndices
-        eachPrimitiveColorAndOpacity: new Uint8Array(lenColors), // For each primitive, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255]
+        reusedGeometriesDecodeMatrix: new Float32Array(xktModel.reusedGeometriesDecodeMatrix), // A single, global vertex position de-quantization matrix for all reused geometries. Reused geometries are quantized to their collective Local-space AABB, and this matrix is derived from that AABB.
 
-        // Primitive instances are grouped in runs that are shared by the same entities
+        // Geometries
 
-        primitiveInstances: new Uint32Array(numPrimitiveInstances), // For each primitive instance, an index into the eachPrimitive* arrays
+        eachGeometryPrimitiveType: new Uint8Array(numGeometries), // Primitive type for each geometry (0=solid triangles, 1=surface triangles, 2=lines, 3=points)
+        eachGeometryPositionsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.positions. Every primitive type has positions.
+        eachGeometryNormalsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.normals. If the next geometry has the same index, then this geometry has no normals.
+        eachGeometryColorsPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.colors. If the next geometry has the same index, then this geometry has no colors.
+        eachGeometryIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.indices. If the next geometry has the same index, then this geometry has no indices.
+        eachGeometryEdgeIndicesPortion: new Uint32Array(numGeometries), // For each geometry, an index to its first element in data.edgeIndices. If the next geometry has the same index, then this geometry has no edge indices.
+
+        // Meshes are grouped in runs that are shared by the same entities.
+
+        // We duplicate materials for meshes, rather than reusing them, because each material is only 6 bytes and an index
+        // into a common materials array would be 4 bytes, so it's hardly worth reusing materials, as long as they are that compact.
+
+        eachMeshGeometriesPortion: new Uint32Array(numMeshes), // For each mesh, an index into the eachGeometry* arrays
+        eachMeshMatricesPortion: new Uint32Array(numMeshes), // For each mesh that shares its geometry, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared geometry Local-space vertex positions. This is ignored for meshes that don't share geometries, because the vertex positions of non-shared geometries are pre-transformed into World-space.
+        eachMeshMaterial: new Uint8Array(numMeshes * 6), // For each mesh, an RGBA integer color of format [0..255, 0..255, 0..255, 0..255], and PBR metallic and roughness factors, of format [0..255, 0..255]
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
         eachEntityId: [], // For each entity, an ID string
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(numEntities), // For each entity, the index of the the first element of primitiveInstances used by the entity
-        eachEntityMatricesPortion: new Uint32Array(numEntities), // For each entity that shares primitives, an index to its first element in data.matrices, to indicate the modeling matrix that transforms the shared primitives' Local-space vertex positions. Thios is ignored for entities that don't share primitives, because the vertex positions of non-shared primitives are pre-transformed into World-space.
+        eachEntityMeshesPortion: new Uint32Array(numEntities), // For each entity, the index of the the first element of meshes used by the entity
 
         eachTileAABB: new Float64Array(numTiles * 6), // For each tile, an axis-aligned bounding box
-        eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityPrimitiveInstancesPortion and eachEntityMatricesPortion used by the tile
+        eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityMeshesPortion and eachEntityMatricesPortion used by the tile
     };
 
     //------------------------------------------------------------------------------------------------------------------
@@ -12891,41 +12831,81 @@ function getModelData(xktModel) {
 
     let countPositions = 0;
     let countNormals = 0;
+    let countColors = 0;
     let countIndices = 0;
     let countEdgeIndices = 0;
-    let countColors = 0;
+    let countMeshColors = 0;
 
-    // Primitives
+    // Geometries
 
-    for (let primitiveIndex = 0; primitiveIndex < numPrimitives; primitiveIndex++) {
+    let matricesIndex = 0;
 
-        const primitive = primitivesList [primitiveIndex];
+    for (let geometryIndex = 0; geometryIndex < numGeometries; geometryIndex++) {
 
-        data.positions.set(primitive.positionsQuantized, countPositions);
-        data.normals.set(primitive.normalsOctEncoded, countNormals);
-        data.indices.set(primitive.indices, countIndices);
-        data.edgeIndices.set(primitive.edgeIndices, countEdgeIndices);
+        const geometry = geometriesList [geometryIndex];
 
-        data.eachPrimitivePositionsAndNormalsPortion [primitiveIndex] = countPositions;
-        data.eachPrimitiveIndicesPortion [primitiveIndex] = countIndices;
-        data.eachPrimitiveEdgeIndicesPortion [primitiveIndex] = countEdgeIndices;
-        data.eachPrimitiveColorAndOpacity[countColors + 0] = Math.floor(primitive.color[0] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 1] = Math.floor(primitive.color[1] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 2] = Math.floor(primitive.color[2] * 255);
-        data.eachPrimitiveColorAndOpacity[countColors + 3] = Math.floor(primitive.opacity * 255);
+        const primitiveType
+            = (geometry.primitiveType === "triangles")
+            ? (geometry.solid ? 0 : 1)
+            : (geometry.primitiveType === "points" ? 2 : 3);
 
-        countPositions += primitive.positions.length;
-        countNormals += primitive.normalsOctEncoded.length;
-        countIndices += primitive.indices.length;
-        countEdgeIndices += primitive.edgeIndices.length;
-        countColors += 4;
+        data.eachGeometryPrimitiveType [geometryIndex] = primitiveType;
+        data.eachGeometryPositionsPortion [geometryIndex] = countPositions;
+        data.eachGeometryNormalsPortion [geometryIndex] = countNormals;
+        data.eachGeometryColorsPortion [geometryIndex] = countColors;
+        data.eachGeometryIndicesPortion [geometryIndex] = countIndices;
+        data.eachGeometryEdgeIndicesPortion [geometryIndex] = countEdgeIndices;
+
+        if (geometry.positionsQuantized) {
+            data.positions.set(geometry.positionsQuantized, countPositions);
+            countPositions += geometry.positionsQuantized.length;
+        }
+        if (geometry.normalsOctEncoded) {
+            data.normals.set(geometry.normalsOctEncoded, countNormals);
+            countNormals += geometry.normalsOctEncoded.length;
+        }
+        if (geometry.colorsCompressed) {
+            data.colors.set(geometry.colorsCompressed, countColors);
+            countColors += geometry.colorsCompressed.length;
+        }
+        if (geometry.indices) {
+            data.indices.set(geometry.indices, countIndices);
+            countIndices += geometry.indices.length;
+        }
+        if (geometry.edgeIndices) {
+            data.edgeIndices.set(geometry.edgeIndices, countEdgeIndices);
+            countEdgeIndices += geometry.edgeIndices.length;
+        }
     }
 
-    // Entities, primitive instances, and tiles
+    // Meshes
+
+    for (let meshIndex = 0; meshIndex < numMeshes; meshIndex++) {
+
+        const mesh = meshesList [meshIndex];
+
+        if (mesh.geometry.numInstances > 1) {
+
+            data.matrices.set(mesh.matrix, matricesIndex);
+            data.eachMeshMatricesPortion [meshIndex] = matricesIndex;
+
+            matricesIndex += 16;
+        }
+
+        data.eachMeshMaterial[countMeshColors + 0] = Math.floor(mesh.color[0] * 255);
+        data.eachMeshMaterial[countMeshColors + 1] = Math.floor(mesh.color[1] * 255);
+        data.eachMeshMaterial[countMeshColors + 2] = Math.floor(mesh.color[2] * 255);
+        data.eachMeshMaterial[countMeshColors + 3] = Math.floor(mesh.opacity * 255);
+        data.eachMeshMaterial[countMeshColors + 4] = Math.floor(mesh.metallic * 255);
+        data.eachMeshMaterial[countMeshColors + 5] = Math.floor(mesh.roughness * 255);
+
+        countMeshColors += 6;
+    }
+
+    // Entities, geometry instances, and tiles
 
     let entityIndex = 0;
-    let countEntityPrimitiveInstancesPortion = 0;
-    let matricesIndex = 0;
+    let countEntityGeometryInstancesPortion = 0;
 
     for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
 
@@ -12944,35 +12924,27 @@ function getModelData(xktModel) {
         for (let j = 0; j < numTileEntities; j++) {
 
             const entity = tileEntities[j];
-            const entityPrimitiveInstances = entity.primitiveInstances;
-            const numEntityPrimitiveInstances = entityPrimitiveInstances.length;
+            const entityGeometryInstances = entity.meshes;
+            const numEntityGeometryInstances = entityGeometryInstances.length;
 
-            if (numEntityPrimitiveInstances === 0) {
+            if (numEntityGeometryInstances === 0) {
                 continue;
             }
 
-            for (let k = 0; k < numEntityPrimitiveInstances; k++) {
+            for (let k = 0; k < numEntityGeometryInstances; k++) {
 
-                const primitiveInstance = entityPrimitiveInstances[k];
-                const primitive = primitiveInstance.primitive;
-                const primitiveIndex = primitive.primitiveIndex;
+                const geometryInstance = entityGeometryInstances[k];
+                const geometry = geometryInstance.geometry;
+                const geometryIndex = geometry.geometryIndex;
 
-                data.primitiveInstances [countEntityPrimitiveInstancesPortion + k] = primitiveIndex;
-            }
-
-            if (entity.hasReusedPrimitives) {
-
-                data.matrices.set(entity.matrix, matricesIndex);
-                data.eachEntityMatricesPortion [entityIndex] = matricesIndex;
-
-                matricesIndex += 16;
+                data.eachMeshGeometriesPortion [countEntityGeometryInstancesPortion + k] = geometryIndex;
             }
 
             data.eachEntityId [entityIndex] = entity.entityId;
-            data.eachEntityPrimitiveInstancesPortion[entityIndex] = countEntityPrimitiveInstancesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityPrimitiveInstancesPortion correct?
+            data.eachEntityMeshesPortion[entityIndex] = countEntityGeometryInstancesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityGeometryInstancesPortion correct?
 
             entityIndex++;
-            countEntityPrimitiveInstancesPortion += numEntityPrimitiveInstances;
+            countEntityGeometryInstancesPortion += numEntityGeometryInstances;
         }
 
         const tileAABBIndex = tileIndex * 6;
@@ -12989,26 +12961,29 @@ function deflateData(data) {
 
         positions: pako$2.deflate(data.positions.buffer),
         normals: pako$2.deflate(data.normals.buffer),
+        colors: pako$2.deflate(data.colors.buffer),
         indices: pako$2.deflate(data.indices.buffer),
         edgeIndices: pako$2.deflate(data.edgeIndices.buffer),
 
         matrices: pako$2.deflate(data.matrices.buffer),
+        reusedGeometriesDecodeMatrix: pako$2.deflate(data.reusedGeometriesDecodeMatrix.buffer),
 
-        reusedPrimitivesDecodeMatrix: pako$2.deflate(data.reusedPrimitivesDecodeMatrix.buffer),
+        eachGeometryPrimitiveType: pako$2.deflate(data.eachGeometryPrimitiveType.buffer),
+        eachGeometryPositionsPortion: pako$2.deflate(data.eachGeometryPositionsPortion.buffer),
+        eachGeometryNormalsPortion: pako$2.deflate(data.eachGeometryNormalsPortion.buffer),
+        eachGeometryColorsPortion: pako$2.deflate(data.eachGeometryColorsPortion.buffer),
+        eachGeometryIndicesPortion: pako$2.deflate(data.eachGeometryIndicesPortion.buffer),
+        eachGeometryEdgeIndicesPortion: pako$2.deflate(data.eachGeometryEdgeIndicesPortion.buffer),
 
-        eachPrimitivePositionsAndNormalsPortion: pako$2.deflate(data.eachPrimitivePositionsAndNormalsPortion.buffer),
-        eachPrimitiveIndicesPortion: pako$2.deflate(data.eachPrimitiveIndicesPortion.buffer),
-        eachPrimitiveEdgeIndicesPortion: pako$2.deflate(data.eachPrimitiveEdgeIndicesPortion.buffer),
-        eachPrimitiveColorAndOpacity: pako$2.deflate(data.eachPrimitiveColorAndOpacity.buffer),
-
-        primitiveInstances: pako$2.deflate(data.primitiveInstances.buffer),
+        eachMeshGeometriesPortion: pako$2.deflate(data.eachMeshGeometriesPortion.buffer),
+        eachMeshMatricesPortion: pako$2.deflate(data.eachMeshMatricesPortion.buffer),
+        eachMeshMaterial: pako$2.deflate(data.eachMeshMaterial.buffer),
 
         eachEntityId: pako$2.deflate(JSON.stringify(data.eachEntityId)
             .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
                 return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
             })),
-        eachEntityPrimitiveInstancesPortion: pako$2.deflate(data.eachEntityPrimitiveInstancesPortion.buffer),
-        eachEntityMatricesPortion: pako$2.deflate(data.eachEntityMatricesPortion.buffer),
+        eachEntityMeshesPortion: pako$2.deflate(data.eachEntityMeshesPortion.buffer),
 
         eachTileAABB: pako$2.deflate(data.eachTileAABB.buffer),
         eachTileEntitiesPortion: pako$2.deflate(data.eachTileEntitiesPortion.buffer)
@@ -13017,34 +12992,38 @@ function deflateData(data) {
 
 function createArrayBuffer(deflatedData) {
 
-    return toArrayBuffer$1([
+    return toArrayBuffer([
 
         deflatedData.positions,
         deflatedData.normals,
+        deflatedData.colors,
+
         deflatedData.indices,
         deflatedData.edgeIndices,
 
         deflatedData.matrices,
+        deflatedData.reusedGeometriesDecodeMatrix,
 
-        deflatedData.reusedPrimitivesDecodeMatrix,
+        deflatedData.eachGeometryPrimitiveType,
+        deflatedData.eachGeometryPositionsPortion,
+        deflatedData.eachGeometryNormalsPortion,
+        deflatedData.eachGeometryColorsPortion,
+        deflatedData.eachGeometryIndicesPortion,
+        deflatedData.eachGeometryEdgeIndicesPortion,
 
-        deflatedData.eachPrimitivePositionsAndNormalsPortion,
-        deflatedData.eachPrimitiveIndicesPortion,
-        deflatedData.eachPrimitiveEdgeIndicesPortion,
-        deflatedData.eachPrimitiveColorAndOpacity,
-
-        deflatedData.primitiveInstances,
+        deflatedData.eachMeshGeometriesPortion,
+        deflatedData.eachMeshMatricesPortion,
+        deflatedData.eachMeshMaterial,
 
         deflatedData.eachEntityId,
-        deflatedData.eachEntityPrimitiveInstancesPortion,
-        deflatedData.eachEntityMatricesPortion,
+        deflatedData.eachEntityMeshesPortion,
 
         deflatedData.eachTileAABB,
         deflatedData.eachTileEntitiesPortion
     ]);
 }
 
-function toArrayBuffer$1(elements) {
+function toArrayBuffer(elements) {
     const indexData = new Uint32Array(elements.length + 2);
     indexData[0] = XKT_VERSION;
     indexData [1] = elements.length;  // Stored Data 1.1: number of stored elements
@@ -13058,7 +13037,7 @@ function toArrayBuffer$1(elements) {
     const indexBuf = new Uint8Array(indexData.buffer);
     const dataArray = new Uint8Array(indexBuf.length + dataLen);
     dataArray.set(indexBuf);
-    var offset = indexBuf.length;
+    let offset = indexBuf.length;
     for (let i = 0, len = elements.length; i < len; i++) {     // Stored Data 2: the elements themselves
         const element = elements[i];
         dataArray.set(element, offset);
@@ -13068,7 +13047,3457 @@ function toArrayBuffer$1(elements) {
     return dataArray.buffer;
 }
 
+function isString(value) {
+    return (typeof value === 'string' || value instanceof String);
+}
+
+/**
+ * @private
+ */
+const utils = {
+    isString: isString,
+};
+
+// HACK: Allows node.js to find atob()
+let atob2;
+if (typeof atob === 'undefined') {
+    const atob = require('atob');
+    atob2 = atob;
+} else {
+    atob2 = atob;
+}
+
+const WEBGL_COMPONENT_TYPES = {
+    5120: Int8Array,
+    5121: Uint8Array,
+    5122: Int16Array,
+    5123: Uint16Array,
+    5125: Uint32Array,
+    5126: Float32Array
+};
+
+const WEBGL_TYPE_SIZES = {
+    'SCALAR': 1,
+    'VEC2': 2,
+    'VEC3': 3,
+    'VEC4': 4,
+    'MAT2': 4,
+    'MAT3': 9,
+    'MAT4': 16
+};
+
+/**
+ * @desc Parses glTF JSON into an {@link XKTModel}.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then load a glTF model into it.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_glTF_Duplex)]
+ *
+ * ````javascript
+ * utils.loadJSON("./models/gltf/duplex/scene.gltf", async (json) => {
+ *
+ *     const xktModel = new XKTModel();
+ *
+ *     parseGLTFIntoXKTModel(json, xktModel);
+ *
+ *     xktModel.finalize();
+ * });
+ * ````
+ *
+ * @param {Object} gltf The glTF JSON.
+ * @param {XKTModel} xktModel XKTModel to parse into
+ * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
+ */
+async function parseGLTFIntoXKTModel(gltf, xktModel, getAttachment) {
+    const parsingCtx = {
+        gltf: gltf,
+        getAttachment: getAttachment || (() => {
+            throw new Error('You must define getAttachment() method to convert glTF with external resources')
+        }),
+        xktModel: xktModel,
+        geometryCreated: {},
+        nextGeometryId: 0,
+        nextMeshId: 0,
+        nextDefaultEntityId: 0
+    };
+    await parseBuffers(parsingCtx);
+    parseBufferViews(parsingCtx);
+    freeBuffers(parsingCtx);
+    parseMaterials(parsingCtx);
+    parseDefaultScene(parsingCtx);
+}
+
+async function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+    const buffers = parsingCtx.gltf.buffers;
+    if (buffers) {
+        await Promise.all(buffers.map(buffer => parseBuffer(parsingCtx, buffer)));
+    }
+}
+
+async function parseBuffer(parsingCtx, bufferInfo) {
+    const uri = bufferInfo.uri;
+    if (!uri) {
+        throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+    }
+    bufferInfo._buffer = await parseArrayBuffer(parsingCtx, uri);
+}
+
+async function parseArrayBuffer(parsingCtx, uri) {
+    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
+    const dataUriRegexResult = uri.match(dataUriRegex);
+    if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
+        const isBase64 = !!dataUriRegexResult[2];
+        let data = dataUriRegexResult[3];
+        data = decodeURIComponent(data);
+        if (isBase64) {
+            data = atob2(data);
+        }
+        const buffer = new ArrayBuffer(data.length);
+        const view = new Uint8Array(buffer);
+        for (let i = 0; i < data.length; i++) {
+            view[i] = data.charCodeAt(i);
+        }
+        return buffer;
+    } else { // Uri is a path to a file
+        const arraybuffer = await parsingCtx.getAttachment(uri);
+        return arraybuffer;
+    }
+}
+
+function parseBufferViews(parsingCtx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
+    const bufferViewsInfo = parsingCtx.gltf.bufferViews;
+    if (bufferViewsInfo) {
+        for (let i = 0, len = bufferViewsInfo.length; i < len; i++) {
+            parseBufferView(parsingCtx, bufferViewsInfo[i]);
+        }
+    }
+}
+
+function parseBufferView(parsingCtx, bufferViewInfo) {
+    const buffer = parsingCtx.gltf.buffers[bufferViewInfo.buffer];
+    bufferViewInfo._typedArray = null;
+    const byteLength = bufferViewInfo.byteLength || 0;
+    const byteOffset = bufferViewInfo.byteOffset || 0;
+    bufferViewInfo._buffer = buffer._buffer.slice(byteOffset, byteOffset + byteLength);
+}
+
+function freeBuffers(parsingCtx) { // Deletes the "_buffer" properties from the glTF "buffer" elements, to save memory
+    const buffers = parsingCtx.gltf.buffers;
+    if (buffers) {
+        for (let i = 0, len = buffers.length; i < len; i++) {
+            buffers[i]._buffer = null;
+        }
+    }
+}
+
+function parseMaterials(parsingCtx) {
+    const materialsInfo = parsingCtx.gltf.materials;
+    if (materialsInfo) {
+        for (let i = 0, len = materialsInfo.length; i < len; i++) {
+            const materialInfo = materialsInfo[i];
+            const material = parseMaterial(parsingCtx, materialInfo);
+            materialInfo._materialData = material;
+        }
+    }
+}
+
+function parseMaterial(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
+    const material = {
+        color: new Float32Array([1, 1, 1]),
+        opacity: 1.0,
+        metallic: 0,
+        roughness: 1
+    };
+    const extensions = materialInfo.extensions;
+    if (extensions) {
+        const specularPBR = extensions["KHR_materials_pbrSpecularGlossiness"];
+        if (specularPBR) {
+            const diffuseFactor = specularPBR.diffuseFactor;
+            if (diffuseFactor !== null && diffuseFactor !== undefined) {
+                material.color[0] = diffuseFactor[0];
+                material.color[1] = diffuseFactor[1];
+                material.color[2] = diffuseFactor[2];
+            }
+        }
+        const common = extensions["KHR_materials_common"];
+        if (common) {
+            const technique = common.technique;
+            const values = common.values || {};
+            const blinn = technique === "BLINN";
+            const phong = technique === "PHONG";
+            const lambert = technique === "LAMBERT";
+            const diffuse = values.diffuse;
+            if (diffuse && (blinn || phong || lambert)) {
+                if (!utils.isString(diffuse)) {
+                    material.color[0] = diffuse[0];
+                    material.color[1] = diffuse[1];
+                    material.color[2] = diffuse[2];
+                }
+            }
+            const transparency = values.transparency;
+            if (transparency !== null && transparency !== undefined) {
+                material.opacity = transparency;
+            }
+            const transparent = values.transparent;
+            if (transparent !== null && transparent !== undefined) {
+                material.opacity = transparent;
+            }
+        }
+    }
+    const metallicPBR = materialInfo.pbrMetallicRoughness;
+    if (metallicPBR) {
+        const baseColorFactor = metallicPBR.baseColorFactor;
+        if (baseColorFactor) {
+            material.color[0] = baseColorFactor[0];
+            material.color[1] = baseColorFactor[1];
+            material.color[2] = baseColorFactor[2];
+            material.opacity = baseColorFactor[3];
+        }
+        const metallicFactor = metallicPBR.metallicFactor;
+        if (metallicFactor !== null && metallicFactor !== undefined) {
+            material.metallic = metallicFactor;
+        }
+        const roughnessFactor = metallicPBR.roughnessFactor;
+        if (roughnessFactor !== null && roughnessFactor !== undefined) {
+            material.roughness = roughnessFactor;
+        }
+    }
+    return material;
+}
+
+function parseDefaultScene(parsingCtx) {
+    const scene = parsingCtx.gltf.scene || 0;
+    const defaultSceneInfo = parsingCtx.gltf.scenes[scene];
+    if (!defaultSceneInfo) {
+        throw new Error("glTF has no default scene");
+    }
+    parseScene(parsingCtx, defaultSceneInfo);
+}
+
+
+function parseScene(parsingCtx, sceneInfo) {
+    const nodes = sceneInfo.nodes;
+    if (!nodes) {
+        return;
+    }
+    for (let i = 0, len = nodes.length; i < len; i++) {
+        const glTFNode = parsingCtx.gltf.nodes[nodes[i]];
+        if (glTFNode) {
+            parseNode(parsingCtx, glTFNode, null);
+        }
+    }
+}
+
+function parseNode(parsingCtx, glTFNode, matrix) {
+
+    const gltf = parsingCtx.gltf;
+    const xktModel = parsingCtx.xktModel;
+
+    let localMatrix;
+
+    if (glTFNode.matrix) {
+        localMatrix = glTFNode.matrix;
+        if (matrix) {
+            matrix = math.mulMat4(matrix, localMatrix, math.mat4());
+        } else {
+            matrix = localMatrix;
+        }
+    }
+
+    if (glTFNode.translation) {
+        localMatrix = math.translationMat4v(glTFNode.translation);
+        if (matrix) {
+            matrix = math.mulMat4(matrix, localMatrix, localMatrix);
+        } else {
+            matrix = localMatrix;
+        }
+    }
+
+    if (glTFNode.rotation) {
+        localMatrix = math.quaternionToMat4(glTFNode.rotation);
+        if (matrix) {
+            matrix = math.mulMat4(matrix, localMatrix, localMatrix);
+        } else {
+            matrix = localMatrix;
+        }
+    }
+
+    if (glTFNode.scale) {
+        localMatrix = math.scalingMat4v(glTFNode.scale);
+        if (matrix) {
+            matrix = math.mulMat4(matrix, localMatrix, localMatrix);
+        } else {
+            matrix = localMatrix;
+        }
+    }
+
+    const gltfMeshId = glTFNode.mesh;
+
+    if (gltfMeshId !== undefined) {
+
+        const meshInfo = gltf.meshes[gltfMeshId];
+
+        if (meshInfo) {
+
+            const numPrimitivesInMesh = meshInfo.primitives.length;
+
+            if (numPrimitivesInMesh > 0) {
+
+                const xktMeshIds = [];
+
+                for (let i = 0; i < numPrimitivesInMesh; i++) {
+
+                    const primitiveInfo = meshInfo.primitives[i];
+                    const materialIndex = primitiveInfo.material;
+                    const materialInfo = (materialIndex !== null && materialIndex !== undefined) ? gltf.materials[materialIndex] : null;
+                    const color = materialInfo ? materialInfo._materialData.color : new Float32Array([1.0, 1.0, 1.0, 1.0]);
+                    const opacity = materialInfo ? materialInfo._materialData.opacity : 1.0;
+                    const metallic = materialInfo ? materialInfo._materialData.metallic : 0.0;
+                    const roughness = materialInfo ? materialInfo._materialData.roughness : 1.0;
+
+                    const xktGeometryId = createPrimitiveGeometryHash(primitiveInfo);
+
+                    if (!parsingCtx.geometryCreated[xktGeometryId]) {
+
+                        const geometryArrays = {};
+
+                        parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
+
+                        const colors = geometryArrays.colors;
+
+                        let colorsCompressed;
+
+                        if (geometryArrays.colors) {
+                            colorsCompressed = [];
+                            for (let j = 0, lenj = colors.length; j < lenj; j += 4) {
+                                colorsCompressed.push(Math.floor(colors[j + 0] * 255));
+                                colorsCompressed.push(Math.floor(colors[j + 1] * 255));
+                                colorsCompressed.push(Math.floor(colors[j + 2] * 255));
+                            }
+                        }
+
+                        xktModel.createGeometry({
+                            geometryId: xktGeometryId,
+                            primitiveType: geometryArrays.primitive,
+                            positions: geometryArrays.positions,
+                            normals: geometryArrays.normals,
+                            colorsCompressed: colorsCompressed,
+                            indices: geometryArrays.indices
+                        });
+
+                        parsingCtx.geometryCreated[xktGeometryId] = true;
+                    }
+
+                    const xktMeshId = parsingCtx.nextMeshId++;
+
+                    xktModel.createMesh({
+                        meshId: xktMeshId,
+                        geometryId: xktGeometryId,
+                        matrix: matrix ? matrix.slice() : math.identityMat4(),
+                        color: color,
+                        opacity: opacity,
+                        metallic: metallic,
+                        roughness: roughness
+                    });
+
+                    xktMeshIds.push(xktMeshId);
+                }
+
+                const xktEntityId = glTFNode.name || ("entity" + parsingCtx.nextDefaultEntityId++);
+
+                xktModel.createEntity({
+                    entityId: xktEntityId,
+                    meshIds: xktMeshIds
+                });
+            }
+        }
+    }
+
+    if (glTFNode.children) {
+        const children = glTFNode.children;
+        for (let i = 0, len = children.length; i < len; i++) {
+            const childNodeIdx = children[i];
+            const childGLTFNode = gltf.nodes[childNodeIdx];
+            if (!childGLTFNode) {
+                console.warn('Node not found: ' + i);
+                continue;
+            }
+            parseNode(parsingCtx, childGLTFNode, matrix);
+        }
+    }
+}
+
+function createPrimitiveGeometryHash(primitiveInfo) {
+    const attributes = primitiveInfo.attributes;
+    if (!attributes) {
+        return "empty";
+    }
+    return [
+        primitiveInfo.mode,
+        (primitiveInfo.indices !== null && primitiveInfo.indices !== undefined) ? primitiveInfo.indices : "-",
+        (primitiveInfo.positions !== null && primitiveInfo.positions !== undefined) ? primitiveInfo.positions : "-",
+        (primitiveInfo.normals !== null && primitiveInfo.normals !== undefined) ? primitiveInfo.normals : "-",
+        (primitiveInfo.colors !== null && primitiveInfo.colors !== undefined) ? primitiveInfo.colors : "-"
+    ].join(";");
+}
+
+function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
+    const attributes = primitiveInfo.attributes;
+    if (!attributes) {
+        return;
+    }
+    switch (primitiveInfo.mode) {
+        case 0: // POINTS
+            geometryArrays.primitive = "points";
+            break;
+        case 1: // LINES
+            geometryArrays.primitive = "lines";
+            break;
+        case 2: // LINE_LOOP
+            // TODO: convert
+            geometryArrays.primitive = "lines";
+            break;
+        case 3: // LINE_STRIP
+            // TODO: convert
+            geometryArrays.primitive = "lines";
+            break;
+        case 4: // TRIANGLES
+            geometryArrays.primitive = "triangles";
+            break;
+        case 5: // TRIANGLE_STRIP
+            // TODO: convert
+            geometryArrays.primitive = "triangles";
+            break;
+        case 6: // TRIANGLE_FAN
+            // TODO: convert
+            geometryArrays.primitive = "triangles";
+            break;
+    }
+    const accessors = parsingCtx.gltf.accessors;
+    const indicesIndex = primitiveInfo.indices;
+    if (indicesIndex !== null && indicesIndex !== undefined) {
+        const accessorInfo = accessors[indicesIndex];
+        geometryArrays.indices = parseAccessorTypedArray(parsingCtx, accessorInfo);
+    }
+    const positionsIndex = attributes.POSITION;
+    if (positionsIndex !== null && positionsIndex !== undefined) {
+        const accessorInfo = accessors[positionsIndex];
+        geometryArrays.positions = parseAccessorTypedArray(parsingCtx, accessorInfo);
+    }
+    const normalsIndex = attributes.NORMAL;
+    if (normalsIndex !== null && normalsIndex !== undefined) {
+        const accessorInfo = accessors[normalsIndex];
+        geometryArrays.normals = parseAccessorTypedArray(parsingCtx, accessorInfo);
+    }
+    const colorsIndex = attributes.COLOR_0;
+    if (colorsIndex !== null && colorsIndex !== undefined) {
+        const accessorInfo = accessors[colorsIndex];
+        geometryArrays.colors = parseAccessorTypedArray(parsingCtx, accessorInfo);
+    }
+}
+
+function parseAccessorTypedArray(parsingCtx, accessorInfo) {
+    const bufferView = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
+    const itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
+    const TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
+    const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
+    const itemBytes = elementBytes * itemSize;
+    if (accessorInfo.byteStride && accessorInfo.byteStride !== itemBytes) { // The buffer is not interleaved if the stride is the item size in bytes.
+        throw new Error("interleaved buffer!"); // TODO
+    } else {
+        return new TypedArray(bufferView._buffer, accessorInfo.byteOffset || 0, accessorInfo.count * itemSize);
+    }
+}
+
+/**
+ * @desc Creates box-shaped triangle mesh geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a box-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildBoxGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const box = buildBoxGeometry({
+ *     primitiveType: "triangles" // or "lines"
+ *     center: [0,0,0],
+ *     xSize: 1,  // Half-size on each axis
+ *     ySize: 1,
+ *     zSize: 1
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "boxGeometry",
+ *      primitiveType: box.primitiveType,
+ *      positions: box.positions,
+ *      normals: box.normals,
+ *      indices: box.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redBoxMesh",
+ *      geometryId: "boxGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redBox",
+ *      meshIds: ["redBoxMesh"]
+ *  });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildBoxGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center]  3D point indicating the center position.
+ * @param {Number} [cfg.xSize=1.0]  Half-size on the X-axis.
+ * @param {Number} [cfg.ySize=1.0]  Half-size on the Y-axis.
+ * @param {Number} [cfg.zSize=1.0]  Half-size on the Z-axis.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildBoxGeometry(cfg = {}) {
+
+    let xSize = cfg.xSize || 1;
+    if (xSize < 0) {
+        console.error("negative xSize not allowed - will invert");
+        xSize *= -1;
+    }
+
+    let ySize = cfg.ySize || 1;
+    if (ySize < 0) {
+        console.error("negative ySize not allowed - will invert");
+        ySize *= -1;
+    }
+
+    let zSize = cfg.zSize || 1;
+    if (zSize < 0) {
+        console.error("negative zSize not allowed - will invert");
+        zSize *= -1;
+    }
+
+    const center = cfg.center;
+    const centerX = center ? center[0] : 0;
+    const centerY = center ? center[1] : 0;
+    const centerZ = center ? center[2] : 0;
+
+    const xmin = -xSize + centerX;
+    const ymin = -ySize + centerY;
+    const zmin = -zSize + centerZ;
+    const xmax = xSize + centerX;
+    const ymax = ySize + centerY;
+    const zmax = zSize + centerZ;
+
+    return {
+
+        primitiveType: "triangles",
+
+        // The vertices - eight for our cube, each
+        // one spanning three array elements for X,Y and Z
+
+        positions: [
+
+            // v0-v1-v2-v3 front
+            xmax, ymax, zmax,
+            xmin, ymax, zmax,
+            xmin, ymin, zmax,
+            xmax, ymin, zmax,
+
+            // v0-v3-v4-v1 right
+            xmax, ymax, zmax,
+            xmax, ymin, zmax,
+            xmax, ymin, zmin,
+            xmax, ymax, zmin,
+
+            // v0-v1-v6-v1 top
+            xmax, ymax, zmax,
+            xmax, ymax, zmin,
+            xmin, ymax, zmin,
+            xmin, ymax, zmax,
+
+            // v1-v6-v7-v2 left
+            xmin, ymax, zmax,
+            xmin, ymax, zmin,
+            xmin, ymin, zmin,
+            xmin, ymin, zmax,
+
+            // v7-v4-v3-v2 bottom
+            xmin, ymin, zmin,
+            xmax, ymin, zmin,
+            xmax, ymin, zmax,
+            xmin, ymin, zmax,
+
+            // v4-v7-v6-v1 back
+            xmax, ymin, zmin,
+            xmin, ymin, zmin,
+            xmin, ymax, zmin,
+            xmax, ymax, zmin
+        ],
+
+        // Normal vectors, one for each vertex
+        normals: [
+
+            // v0-v1-v2-v3 front
+            0, 0, 1,
+            0, 0, 1,
+            0, 0, 1,
+            0, 0, 1,
+
+            // v0-v3-v4-v5 right
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+
+            // v0-v5-v6-v1 top
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+            0, 1, 0,
+
+            // v1-v6-v7-v2 left
+            -1, 0, 0,
+            -1, 0, 0,
+            -1, 0, 0,
+            -1, 0, 0,
+
+            // v7-v4-v3-v2 bottom
+            0, -1, 0,
+            0, -1, 0,
+            0, -1, 0,
+            0, -1, 0,
+
+            // v4-v7-v6-v5 back
+            0, 0, -1,
+            0, 0, -1,
+            0, 0, -1,
+            0, 0, -1
+        ],
+
+        // UV coords
+        uv: [
+
+            // v0-v1-v2-v3 front
+            1, 0,
+            0, 0,
+            0, 1,
+            1, 1,
+
+            // v0-v3-v4-v1 right
+            0, 0,
+            0, 1,
+            1, 1,
+            1, 0,
+
+            // v0-v1-v6-v1 top
+            1, 1,
+            1, 0,
+            0, 0,
+            0, 1,
+
+            // v1-v6-v7-v2 left
+            1, 0,
+            0, 0,
+            0, 1,
+            1, 1,
+
+            // v7-v4-v3-v2 bottom
+            0, 1,
+            1, 1,
+            1, 0,
+            0, 0,
+
+            // v4-v7-v6-v1 back
+            0, 1,
+            1, 1,
+            1, 0,
+            0, 0
+        ],
+
+        // Indices - these organise the
+        // positions and uv texture coordinates
+        // into geometric primitives in accordance
+        // with the "primitive" parameter,
+        // in this case a set of three indices
+        // for each triangle.
+        //
+        // Note that each triangle is specified
+        // in counter-clockwise winding order.
+        //
+        // You can specify them in clockwise
+        // order if you configure the Modes
+        // node's frontFace flag as "cw", instead of
+        // the default "ccw".
+        indices: [
+            0, 1, 2,
+            0, 2, 3,
+            // front
+            4, 5, 6,
+            4, 6, 7,
+            // right
+            8, 9, 10,
+            8, 10, 11,
+            // top
+            12, 13, 14,
+            12, 14, 15,
+            // left
+            16, 17, 18,
+            16, 18, 19,
+            // bottom
+            20, 21, 22,
+            20, 22, 23
+        ]
+    };
+}
+
+/**
+ * @desc Creates box-shaped line segment geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a box-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildBoxLinesGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const box = buildBoxLinesGeometry({
+ *     center: [0,0,0],
+ *     xSize: 1,  // Half-size on each axis
+ *     ySize: 1,
+ *     zSize: 1
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "boxGeometry",
+ *      primitiveType: box.primitiveType, // "lines"
+ *      positions: box.positions,
+ *      normals: box.normals,
+ *      indices: box.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redBoxMesh",
+ *      geometryId: "boxGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redBox",
+ *      meshIds: ["redBoxMesh"]
+ *  });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildBoxLinesGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center]  3D point indicating the center position.
+ * @param {Number} [cfg.xSize=1.0]  Half-size on the X-axis.
+ * @param {Number} [cfg.ySize=1.0]  Half-size on the Y-axis.
+ * @param {Number} [cfg.zSize=1.0]  Half-size on the Z-axis.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildBoxLinesGeometry(cfg = {}) {
+
+    let xSize = cfg.xSize || 1;
+    if (xSize < 0) {
+        console.error("negative xSize not allowed - will invert");
+        xSize *= -1;
+    }
+
+    let ySize = cfg.ySize || 1;
+    if (ySize < 0) {
+        console.error("negative ySize not allowed - will invert");
+        ySize *= -1;
+    }
+
+    let zSize = cfg.zSize || 1;
+    if (zSize < 0) {
+        console.error("negative zSize not allowed - will invert");
+        zSize *= -1;
+    }
+
+    const center = cfg.center;
+    const centerX = center ? center[0] : 0;
+    const centerY = center ? center[1] : 0;
+    const centerZ = center ? center[2] : 0;
+
+    const xmin = -xSize + centerX;
+    const ymin = -ySize + centerY;
+    const zmin = -zSize + centerZ;
+    const xmax = xSize + centerX;
+    const ymax = ySize + centerY;
+    const zmax = zSize + centerZ;
+
+    return {
+        primitiveType: "lines",
+        positions: [
+            xmin, ymin, zmin,
+            xmin, ymin, zmax,
+            xmin, ymax, zmin,
+            xmin, ymax, zmax,
+            xmax, ymin, zmin,
+            xmax, ymin, zmax,
+            xmax, ymax, zmin,
+            xmax, ymax, zmax
+        ],
+        indices: [
+            0, 1,
+            1, 3,
+            3, 2,
+            2, 0,
+            4, 5,
+            5, 7,
+            7, 6,
+            6, 4,
+            0, 4,
+            1, 5,
+            2, 6,
+            3, 7
+        ]
+    }
+}
+
+/**
+ * @desc Creates cylinder-shaped geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a cylinder-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildCylinderGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const cylinder = buildCylinderGeometry({
+ *      center: [0,0,0],
+ *      radiusTop: 2.0,
+ *      radiusBottom: 2.0,
+ *      height: 5.0,
+ *      radialSegments: 20,
+ *      heightSegments: 1,
+ *      openEnded: false
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "cylinderGeometry",
+ *      primitiveType: cylinder.primitiveType,
+ *      positions: cylinder.positions,
+ *      normals: cylinder.normals,
+ *      indices: cylinder.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redCylinderMesh",
+ *      geometryId: "cylinderGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redCylinder",
+ *      meshIds: ["redCylinderMesh"]
+ *  });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildCylinderGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center] 3D point indicating the center position.
+ * @param {Number} [cfg.radiusTop=1]  Radius of top.
+ * @param {Number} [cfg.radiusBottom=1]  Radius of bottom.
+ * @param {Number} [cfg.height=1] Height.
+ * @param {Number} [cfg.radialSegments=60]  Number of horizontal segments.
+ * @param {Number} [cfg.heightSegments=1]  Number of vertical segments.
+ * @param {Boolean} [cfg.openEnded=false]  Whether or not the cylinder has solid caps on the ends.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildCylinderGeometry(cfg = {}) {
+
+    let radiusTop = cfg.radiusTop || 1;
+    if (radiusTop < 0) {
+        console.error("negative radiusTop not allowed - will invert");
+        radiusTop *= -1;
+    }
+
+    let radiusBottom = cfg.radiusBottom || 1;
+    if (radiusBottom < 0) {
+        console.error("negative radiusBottom not allowed - will invert");
+        radiusBottom *= -1;
+    }
+
+    let height = cfg.height || 1;
+    if (height < 0) {
+        console.error("negative height not allowed - will invert");
+        height *= -1;
+    }
+
+    let radialSegments = cfg.radialSegments || 32;
+    if (radialSegments < 0) {
+        console.error("negative radialSegments not allowed - will invert");
+        radialSegments *= -1;
+    }
+    if (radialSegments < 3) {
+        radialSegments = 3;
+    }
+
+    let heightSegments = cfg.heightSegments || 1;
+    if (heightSegments < 0) {
+        console.error("negative heightSegments not allowed - will invert");
+        heightSegments *= -1;
+    }
+    if (heightSegments < 1) {
+        heightSegments = 1;
+    }
+
+    const openEnded = !!cfg.openEnded;
+
+    let center = cfg.center;
+    const centerX = center ? center[0] : 0;
+    const centerY = center ? center[1] : 0;
+    const centerZ = center ? center[2] : 0;
+
+    const heightHalf = height / 2;
+    const heightLength = height / heightSegments;
+    const radialAngle = (2.0 * Math.PI / radialSegments);
+    const radialLength = 1.0 / radialSegments;
+    //var nextRadius = this._radiusBottom;
+    const radiusChange = (radiusTop - radiusBottom) / heightSegments;
+
+    const positions = [];
+    const normals = [];
+    const uvs = [];
+    const indices = [];
+
+    let h;
+    let i;
+
+    let x;
+    let z;
+
+    let currentRadius;
+    let currentHeight;
+
+    let first;
+    let second;
+
+    let startIndex;
+    let tu;
+    let tv;
+
+    // create vertices
+    const normalY = (90.0 - (Math.atan(height / (radiusBottom - radiusTop))) * 180 / Math.PI) / 90.0;
+
+    for (h = 0; h <= heightSegments; h++) {
+        currentRadius = radiusTop - h * radiusChange;
+        currentHeight = heightHalf - h * heightLength;
+
+        for (i = 0; i <= radialSegments; i++) {
+            x = Math.sin(i * radialAngle);
+            z = Math.cos(i * radialAngle);
+
+            normals.push(currentRadius * x);
+            normals.push(normalY); //todo
+            normals.push(currentRadius * z);
+
+            uvs.push((i * radialLength));
+            uvs.push(h * 1 / heightSegments);
+
+            positions.push((currentRadius * x) + centerX);
+            positions.push((currentHeight) + centerY);
+            positions.push((currentRadius * z) + centerZ);
+        }
+    }
+
+    // create faces
+    for (h = 0; h < heightSegments; h++) {
+        for (i = 0; i <= radialSegments; i++) {
+
+            first = h * (radialSegments + 1) + i;
+            second = first + radialSegments;
+
+            indices.push(first);
+            indices.push(second);
+            indices.push(second + 1);
+
+            indices.push(first);
+            indices.push(second + 1);
+            indices.push(first + 1);
+        }
+    }
+
+    // create top cap
+    if (!openEnded && radiusTop > 0) {
+        startIndex = (positions.length / 3);
+
+        // top center
+        normals.push(0.0);
+        normals.push(1.0);
+        normals.push(0.0);
+
+        uvs.push(0.5);
+        uvs.push(0.5);
+
+        positions.push(0 + centerX);
+        positions.push(heightHalf + centerY);
+        positions.push(0 + centerZ);
+
+        // top triangle fan
+        for (i = 0; i <= radialSegments; i++) {
+            x = Math.sin(i * radialAngle);
+            z = Math.cos(i * radialAngle);
+            tu = (0.5 * Math.sin(i * radialAngle)) + 0.5;
+            tv = (0.5 * Math.cos(i * radialAngle)) + 0.5;
+
+            normals.push(radiusTop * x);
+            normals.push(1.0);
+            normals.push(radiusTop * z);
+
+            uvs.push(tu);
+            uvs.push(tv);
+
+            positions.push((radiusTop * x) + centerX);
+            positions.push((heightHalf) + centerY);
+            positions.push((radiusTop * z) + centerZ);
+        }
+
+        for (i = 0; i < radialSegments; i++) {
+            center = startIndex;
+            first = startIndex + 1 + i;
+
+            indices.push(first);
+            indices.push(first + 1);
+            indices.push(center);
+        }
+    }
+
+    // create bottom cap
+    if (!openEnded && radiusBottom > 0) {
+
+        startIndex = (positions.length / 3);
+
+        // top center
+        normals.push(0.0);
+        normals.push(-1.0);
+        normals.push(0.0);
+
+        uvs.push(0.5);
+        uvs.push(0.5);
+
+        positions.push(0 + centerX);
+        positions.push(0 - heightHalf + centerY);
+        positions.push(0 + centerZ);
+
+        // top triangle fan
+        for (i = 0; i <= radialSegments; i++) {
+
+            x = Math.sin(i * radialAngle);
+            z = Math.cos(i * radialAngle);
+
+            tu = (0.5 * Math.sin(i * radialAngle)) + 0.5;
+            tv = (0.5 * Math.cos(i * radialAngle)) + 0.5;
+
+            normals.push(radiusBottom * x);
+            normals.push(-1.0);
+            normals.push(radiusBottom * z);
+
+            uvs.push(tu);
+            uvs.push(tv);
+
+            positions.push((radiusBottom * x) + centerX);
+            positions.push((0 - heightHalf) + centerY);
+            positions.push((radiusBottom * z) + centerZ);
+        }
+
+        for (i = 0; i < radialSegments; i++) {
+
+            center = startIndex;
+            first = startIndex + 1 + i;
+
+            indices.push(center);
+            indices.push(first + 1);
+            indices.push(first);
+        }
+    }
+
+    return  {
+        primitiveType: "triangles",
+        positions: positions,
+        normals: normals,
+        uv: uvs,
+        indices: indices
+    };
+}
+
+/**
+ * @desc Creates grid-shaped geometry arrays..
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a grid-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildGridGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const grid = buildGridGeometry({
+ *      size: 1000,
+ *      divisions: 500
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "gridGeometry",
+ *      primitiveType: grid.primitiveType, // Will be "lines"
+ *      positions: grid.positions,
+ *      indices: grid.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redGridMesh",
+ *      geometryId: "gridGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redGrid",
+ *      meshIds: ["redGridMesh"]
+ * });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildGridGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number} [cfg.size=1] Dimension on the X and Z-axis.
+ * @param {Number} [cfg.divisions=1] Number of divisions on X and Z axis..
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildGridGeometry(cfg = {}) {
+
+    let size = cfg.size || 1;
+    if (size < 0) {
+        console.error("negative size not allowed - will invert");
+        size *= -1;
+    }
+
+    let divisions = cfg.divisions || 1;
+    if (divisions < 0) {
+        console.error("negative divisions not allowed - will invert");
+        divisions *= -1;
+    }
+    if (divisions < 1) {
+        divisions = 1;
+    }
+
+    size = size || 10;
+    divisions = divisions || 10;
+
+    const step = size / divisions;
+    const halfSize = size / 2;
+
+    const positions = [];
+    const indices = [];
+    let l = 0;
+
+    for (let i = 0, k = -halfSize; i <= divisions; i++, k += step) {
+
+        positions.push(-halfSize);
+        positions.push(0);
+        positions.push(k);
+
+        positions.push(halfSize);
+        positions.push(0);
+        positions.push(k);
+
+        positions.push(k);
+        positions.push(0);
+        positions.push(-halfSize);
+
+        positions.push(k);
+        positions.push(0);
+        positions.push(halfSize);
+
+        indices.push(l++);
+        indices.push(l++);
+        indices.push(l++);
+        indices.push(l++);
+    }
+
+    return {
+        primitiveType: "lines",
+        positions: positions,
+        indices: indices
+    };
+}
+
+/**
+ * @desc Creates plane-shaped geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a plane-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildPlaneGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const plane = buildPlaneGeometry({
+ *      center: [0,0,0],
+ *      xSize: 2,
+ *      zSize: 2,
+ *      xSegments: 10,
+ *      zSegments: 10
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "planeGeometry",
+ *      primitiveType: plane.primitiveType, // Will be "triangles"
+ *      positions: plane.positions,
+ *      normals: plane.normals,
+ *      indices: plane.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redPlaneMesh",
+ *      geometryId: "planeGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redPlane",
+ *      meshIds: ["redPlaneMesh"]
+ *  });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildPlaneGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center]  3D point indicating the center position.
+ * @param {Number} [cfg.xSize=1] Dimension on the X-axis.
+ * @param {Number} [cfg.zSize=1] Dimension on the Z-axis.
+ * @param {Number} [cfg.xSegments=1] Number of segments on the X-axis.
+ * @param {Number} [cfg.zSegments=1] Number of segments on the Z-axis.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildPlaneGeometry(cfg = {}) {
+
+    let xSize = cfg.xSize || 1;
+    if (xSize < 0) {
+        console.error("negative xSize not allowed - will invert");
+        xSize *= -1;
+    }
+
+    let zSize = cfg.zSize || 1;
+    if (zSize < 0) {
+        console.error("negative zSize not allowed - will invert");
+        zSize *= -1;
+    }
+
+    let xSegments = cfg.xSegments || 1;
+    if (xSegments < 0) {
+        console.error("negative xSegments not allowed - will invert");
+        xSegments *= -1;
+    }
+    if (xSegments < 1) {
+        xSegments = 1;
+    }
+
+    let zSegments = cfg.xSegments || 1;
+    if (zSegments < 0) {
+        console.error("negative zSegments not allowed - will invert");
+        zSegments *= -1;
+    }
+    if (zSegments < 1) {
+        zSegments = 1;
+    }
+
+    const center = cfg.center;
+    const centerX = center ? center[0] : 0;
+    const centerY = center ? center[1] : 0;
+    const centerZ = center ? center[2] : 0;
+
+    const halfWidth = xSize / 2;
+    const halfHeight = zSize / 2;
+
+    const planeX = Math.floor(xSegments) || 1;
+    const planeZ = Math.floor(zSegments) || 1;
+
+    const planeX1 = planeX + 1;
+    const planeZ1 = planeZ + 1;
+
+    const segmentWidth = xSize / planeX;
+    const segmentHeight = zSize / planeZ;
+
+    const positions = new Float32Array(planeX1 * planeZ1 * 3);
+    const normals = new Float32Array(planeX1 * planeZ1 * 3);
+    const uvs = new Float32Array(planeX1 * planeZ1 * 2);
+
+    let offset = 0;
+    let offset2 = 0;
+
+    let iz;
+    let ix;
+    let x;
+    let a;
+    let b;
+    let c;
+    let d;
+
+    for (iz = 0; iz < planeZ1; iz++) {
+
+        const z = iz * segmentHeight - halfHeight;
+
+        for (ix = 0; ix < planeX1; ix++) {
+
+            x = ix * segmentWidth - halfWidth;
+
+            positions[offset] = x + centerX;
+            positions[offset + 1] = centerY;
+            positions[offset + 2] = -z + centerZ;
+
+            normals[offset + 2] = -1;
+
+            uvs[offset2] = (ix) / planeX;
+            uvs[offset2 + 1] = ((planeZ - iz) / planeZ);
+
+            offset += 3;
+            offset2 += 2;
+        }
+    }
+
+    offset = 0;
+
+    const indices = new ((positions.length / 3) > 65535 ? Uint32Array : Uint16Array)(planeX * planeZ * 6);
+
+    for (iz = 0; iz < planeZ; iz++) {
+
+        for (ix = 0; ix < planeX; ix++) {
+
+            a = ix + planeX1 * iz;
+            b = ix + planeX1 * (iz + 1);
+            c = (ix + 1) + planeX1 * (iz + 1);
+            d = (ix + 1) + planeX1 * iz;
+
+            indices[offset] = d;
+            indices[offset + 1] = b;
+            indices[offset + 2] = a;
+
+            indices[offset + 3] = d;
+            indices[offset + 4] = c;
+            indices[offset + 5] = b;
+
+            offset += 6;
+        }
+    }
+
+    return {
+        primitiveType: "triangles",
+        positions: positions,
+        normals: normals,
+        uv: uvs,
+        indices: indices
+    };
+}
+
+/**
+ * @desc Creates sphere-shaped geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a sphere-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildSphereGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const sphere = buildSphereGeometry({
+ *      center: [0,0,0],
+ *      radius: 1.5,
+ *      heightSegments: 60,
+ *      widthSegments: 60
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "sphereGeometry",
+ *      primitiveType: sphere.primitiveType, // Will be "triangles"
+ *      positions: sphere.positions,
+ *      normals: sphere.normals,
+ *      indices: sphere.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redSphereMesh",
+ *      geometryId: "sphereGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ *const xktEntity = xktModel.createEntity({
+ *      entityId: "redSphere",
+ *      meshIds: ["redSphereMesh"]
+ *  });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildSphereGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center]  3D point indicating the center position.
+ * @param {Number} [cfg.radius=1]  Radius.
+ * @param {Number} [cfg.heightSegments=24] Number of latitudinal bands.
+ * @param  {Number} [cfg.widthSegments=18] Number of longitudinal bands.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildSphereGeometry(cfg = {}) {
+
+    const lod = cfg.lod || 1;
+
+    const centerX = cfg.center ? cfg.center[0] : 0;
+    const centerY = cfg.center ? cfg.center[1] : 0;
+    const centerZ = cfg.center ? cfg.center[2] : 0;
+
+    let radius = cfg.radius || 1;
+    if (radius < 0) {
+        console.error("negative radius not allowed - will invert");
+        radius *= -1;
+    }
+
+    let heightSegments = cfg.heightSegments || 18;
+    if (heightSegments < 0) {
+        console.error("negative heightSegments not allowed - will invert");
+        heightSegments *= -1;
+    }
+    heightSegments = Math.floor(lod * heightSegments);
+    if (heightSegments < 18) {
+        heightSegments = 18;
+    }
+
+    let widthSegments = cfg.widthSegments || 18;
+    if (widthSegments < 0) {
+        console.error("negative widthSegments not allowed - will invert");
+        widthSegments *= -1;
+    }
+    widthSegments = Math.floor(lod * widthSegments);
+    if (widthSegments < 18) {
+        widthSegments = 18;
+    }
+
+    const positions = [];
+    const normals = [];
+    const uvs = [];
+    const indices = [];
+
+    let i;
+    let j;
+
+    let theta;
+    let sinTheta;
+    let cosTheta;
+
+    let phi;
+    let sinPhi;
+    let cosPhi;
+
+    let x;
+    let y;
+    let z;
+
+    let u;
+    let v;
+
+    let first;
+    let second;
+
+    for (i = 0; i <= heightSegments; i++) {
+
+        theta = i * Math.PI / heightSegments;
+        sinTheta = Math.sin(theta);
+        cosTheta = Math.cos(theta);
+
+        for (j = 0; j <= widthSegments; j++) {
+
+            phi = j * 2 * Math.PI / widthSegments;
+            sinPhi = Math.sin(phi);
+            cosPhi = Math.cos(phi);
+
+            x = cosPhi * sinTheta;
+            y = cosTheta;
+            z = sinPhi * sinTheta;
+            u = 1.0 - j / widthSegments;
+            v = i / heightSegments;
+
+            normals.push(x);
+            normals.push(y);
+            normals.push(z);
+
+            uvs.push(u);
+            uvs.push(v);
+
+            positions.push(centerX + radius * x);
+            positions.push(centerY + radius * y);
+            positions.push(centerZ + radius * z);
+        }
+    }
+
+    for (i = 0; i < heightSegments; i++) {
+        for (j = 0; j < widthSegments; j++) {
+
+            first = (i * (widthSegments + 1)) + j;
+            second = first + widthSegments + 1;
+
+            indices.push(first + 1);
+            indices.push(second + 1);
+            indices.push(second);
+            indices.push(first + 1);
+            indices.push(second);
+            indices.push(first);
+        }
+    }
+
+    return {
+        primitiveType: "triangles",
+        positions: positions,
+        normals: normals,
+        uv: uvs,
+        indices: indices
+    };
+}
+
+/**
+ * @desc Creates torus-shaped geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a torus-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildTorusGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const torus = buildTorusGeometry({
+ *      center: [0,0,0],
+ *      radius: 1.0,
+ *      tube: 0.5,
+ *      radialSegments: 32,
+ *      tubeSegments: 24,
+ *      arc: Math.PI * 2.0
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "torusGeometry",
+ *      primitiveType: torus.primitiveType, // Will be "triangles"
+ *      positions: torus.positions,
+ *      normals: torus.normals,
+ *      indices: torus.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redTorusMesh",
+ *      geometryId: "torusGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redTorus",
+ *      meshIds: ["redTorusMesh"]
+ * });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildTorusGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center] 3D point indicating the center position.
+ * @param {Number} [cfg.radius=1] The overall radius.
+ * @param {Number} [cfg.tube=0.3] The tube radius.
+ * @param {Number} [cfg.radialSegments=32] The number of radial segments.
+ * @param {Number} [cfg.tubeSegments=24] The number of tubular segments.
+ * @param {Number} [cfg.arc=Math.PI*0.5] The length of the arc in radians, where Math.PI*2 is a closed torus.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildTorusGeometry(cfg = {}) {
+
+    let radius = cfg.radius || 1;
+    if (radius < 0) {
+        console.error("negative radius not allowed - will invert");
+        radius *= -1;
+    }
+    radius *= 0.5;
+
+    let tube = cfg.tube || 0.3;
+    if (tube < 0) {
+        console.error("negative tube not allowed - will invert");
+        tube *= -1;
+    }
+
+    let radialSegments = cfg.radialSegments || 32;
+    if (radialSegments < 0) {
+        console.error("negative radialSegments not allowed - will invert");
+        radialSegments *= -1;
+    }
+    if (radialSegments < 4) {
+        radialSegments = 4;
+    }
+
+    let tubeSegments = cfg.tubeSegments || 24;
+    if (tubeSegments < 0) {
+        console.error("negative tubeSegments not allowed - will invert");
+        tubeSegments *= -1;
+    }
+    if (tubeSegments < 4) {
+        tubeSegments = 4;
+    }
+
+    let arc = cfg.arc || Math.PI * 2;
+    if (arc < 0) {
+        console.warn("negative arc not allowed - will invert");
+        arc *= -1;
+    }
+    if (arc > 360) {
+        arc = 360;
+    }
+
+    const center = cfg.center;
+    let centerX = center ? center[0] : 0;
+    let centerY = center ? center[1] : 0;
+    const centerZ = center ? center[2] : 0;
+
+    const positions = [];
+    const normals = [];
+    const uvs = [];
+    const indices = [];
+
+    let u;
+    let v;
+    let x;
+    let y;
+    let z;
+    let vec;
+
+    let i;
+    let j;
+
+    for (j = 0; j <= tubeSegments; j++) {
+        for (i = 0; i <= radialSegments; i++) {
+
+            u = i / radialSegments * arc;
+            v = 0.785398 + (j / tubeSegments * Math.PI * 2);
+
+            centerX = radius * Math.cos(u);
+            centerY = radius * Math.sin(u);
+
+            x = (radius + tube * Math.cos(v)) * Math.cos(u);
+            y = (radius + tube * Math.cos(v)) * Math.sin(u);
+            z = tube * Math.sin(v);
+
+            positions.push(x + centerX);
+            positions.push(y + centerY);
+            positions.push(z + centerZ);
+
+            uvs.push(1 - (i / radialSegments));
+            uvs.push((j / tubeSegments));
+
+            vec = math.normalizeVec3(math.subVec3([x, y, z], [centerX, centerY, centerZ], []), []);
+
+            normals.push(vec[0]);
+            normals.push(vec[1]);
+            normals.push(vec[2]);
+        }
+    }
+
+    let a;
+    let b;
+    let c;
+    let d;
+
+    for (j = 1; j <= tubeSegments; j++) {
+        for (i = 1; i <= radialSegments; i++) {
+
+            a = (radialSegments + 1) * j + i - 1;
+            b = (radialSegments + 1) * (j - 1) + i - 1;
+            c = (radialSegments + 1) * (j - 1) + i;
+            d = (radialSegments + 1) * j + i;
+
+            indices.push(a);
+            indices.push(b);
+            indices.push(c);
+
+            indices.push(c);
+            indices.push(d);
+            indices.push(a);
+        }
+    }
+
+    return {
+        primitiveType: "triangles",
+        positions: positions,
+        normals: normals,
+        uv: uvs,
+        indices: indices
+    };
+}
+
+const letters = {
+    ' ': {width: 16, points: []},
+    '!': {
+        width: 10, points: [
+            [5, 21],
+            [5, 7],
+            [-1, -1],
+            [5, 2],
+            [4, 1],
+            [5, 0],
+            [6, 1],
+            [5, 2]
+        ]
+    },
+    '"': {
+        width: 16, points: [
+            [4, 21],
+            [4, 14],
+            [-1, -1],
+            [12, 21],
+            [12, 14]
+        ]
+    },
+    '#': {
+        width: 21, points: [
+            [11, 25],
+            [4, -7],
+            [-1, -1],
+            [17, 25],
+            [10, -7],
+            [-1, -1],
+            [4, 12],
+            [18, 12],
+            [-1, -1],
+            [3, 6],
+            [17, 6]
+        ]
+    },
+    '$': {
+        width: 20, points: [
+            [8, 25],
+            [8, -4],
+            [-1, -1],
+            [12, 25],
+            [12, -4],
+            [-1, -1],
+            [17, 18],
+            [15, 20],
+            [12, 21],
+            [8, 21],
+            [5, 20],
+            [3, 18],
+            [3, 16],
+            [4, 14],
+            [5, 13],
+            [7, 12],
+            [13, 10],
+            [15, 9],
+            [16, 8],
+            [17, 6],
+            [17, 3],
+            [15, 1],
+            [12, 0],
+            [8, 0],
+            [5, 1],
+            [3, 3]
+        ]
+    },
+    '%': {
+        width: 24, points: [
+            [21, 21],
+            [3, 0],
+            [-1, -1],
+            [8, 21],
+            [10, 19],
+            [10, 17],
+            [9, 15],
+            [7, 14],
+            [5, 14],
+            [3, 16],
+            [3, 18],
+            [4, 20],
+            [6, 21],
+            [8, 21],
+            [10, 20],
+            [13, 19],
+            [16, 19],
+            [19, 20],
+            [21, 21],
+            [-1, -1],
+            [17, 7],
+            [15, 6],
+            [14, 4],
+            [14, 2],
+            [16, 0],
+            [18, 0],
+            [20, 1],
+            [21, 3],
+            [21, 5],
+            [19, 7],
+            [17, 7]
+        ]
+    },
+    '&': {
+        width: 26, points: [
+            [23, 12],
+            [23, 13],
+            [22, 14],
+            [21, 14],
+            [20, 13],
+            [19, 11],
+            [17, 6],
+            [15, 3],
+            [13, 1],
+            [11, 0],
+            [7, 0],
+            [5, 1],
+            [4, 2],
+            [3, 4],
+            [3, 6],
+            [4, 8],
+            [5, 9],
+            [12, 13],
+            [13, 14],
+            [14, 16],
+            [14, 18],
+            [13, 20],
+            [11, 21],
+            [9, 20],
+            [8, 18],
+            [8, 16],
+            [9, 13],
+            [11, 10],
+            [16, 3],
+            [18, 1],
+            [20, 0],
+            [22, 0],
+            [23, 1],
+            [23, 2]
+        ]
+    },
+    '\'': {
+        width: 10, points: [
+            [5, 19],
+            [4, 20],
+            [5, 21],
+            [6, 20],
+            [6, 18],
+            [5, 16],
+            [4, 15]
+        ]
+    },
+    '(': {
+        width: 14, points: [
+            [11, 25],
+            [9, 23],
+            [7, 20],
+            [5, 16],
+            [4, 11],
+            [4, 7],
+            [5, 2],
+            [7, -2],
+            [9, -5],
+            [11, -7]
+        ]
+    },
+    ')': {
+        width: 14, points: [
+            [3, 25],
+            [5, 23],
+            [7, 20],
+            [9, 16],
+            [10, 11],
+            [10, 7],
+            [9, 2],
+            [7, -2],
+            [5, -5],
+            [3, -7]
+        ]
+    },
+    '*': {
+        width: 16, points: [
+            [8, 21],
+            [8, 9],
+            [-1, -1],
+            [3, 18],
+            [13, 12],
+            [-1, -1],
+            [13, 18],
+            [3, 12]
+        ]
+    },
+    '+': {
+        width: 26, points: [
+            [13, 18],
+            [13, 0],
+            [-1, -1],
+            [4, 9],
+            [22, 9]
+        ]
+    },
+    ',': {
+        width: 10, points: [
+            [6, 1],
+            [5, 0],
+            [4, 1],
+            [5, 2],
+            [6, 1],
+            [6, -1],
+            [5, -3],
+            [4, -4]
+        ]
+    },
+    '-': {
+        width: 26, points: [
+            [4, 9],
+            [22, 9]
+        ]
+    },
+    '.': {
+        width: 10, points: [
+            [5, 2],
+            [4, 1],
+            [5, 0],
+            [6, 1],
+            [5, 2]
+        ]
+    },
+    '/': {
+        width: 22, points: [
+            [20, 25],
+            [2, -7]
+        ]
+    },
+    '0': {
+        width: 20, points: [
+            [9, 21],
+            [6, 20],
+            [4, 17],
+            [3, 12],
+            [3, 9],
+            [4, 4],
+            [6, 1],
+            [9, 0],
+            [11, 0],
+            [14, 1],
+            [16, 4],
+            [17, 9],
+            [17, 12],
+            [16, 17],
+            [14, 20],
+            [11, 21],
+            [9, 21]
+        ]
+    },
+    '1': {
+        width: 20, points: [
+            [6, 17],
+            [8, 18],
+            [11, 21],
+            [11, 0]
+        ]
+    },
+    '2': {
+        width: 20, points: [
+            [4, 16],
+            [4, 17],
+            [5, 19],
+            [6, 20],
+            [8, 21],
+            [12, 21],
+            [14, 20],
+            [15, 19],
+            [16, 17],
+            [16, 15],
+            [15, 13],
+            [13, 10],
+            [3, 0],
+            [17, 0]
+        ]
+    },
+    '3': {
+        width: 20, points: [
+            [5, 21],
+            [16, 21],
+            [10, 13],
+            [13, 13],
+            [15, 12],
+            [16, 11],
+            [17, 8],
+            [17, 6],
+            [16, 3],
+            [14, 1],
+            [11, 0],
+            [8, 0],
+            [5, 1],
+            [4, 2],
+            [3, 4]
+        ]
+    },
+    '4': {
+        width: 20, points: [
+            [13, 21],
+            [3, 7],
+            [18, 7],
+            [-1, -1],
+            [13, 21],
+            [13, 0]
+        ]
+    },
+    '5': {
+        width: 20, points: [
+            [15, 21],
+            [5, 21],
+            [4, 12],
+            [5, 13],
+            [8, 14],
+            [11, 14],
+            [14, 13],
+            [16, 11],
+            [17, 8],
+            [17, 6],
+            [16, 3],
+            [14, 1],
+            [11, 0],
+            [8, 0],
+            [5, 1],
+            [4, 2],
+            [3, 4]
+        ]
+    },
+    '6': {
+        width: 20, points: [
+            [16, 18],
+            [15, 20],
+            [12, 21],
+            [10, 21],
+            [7, 20],
+            [5, 17],
+            [4, 12],
+            [4, 7],
+            [5, 3],
+            [7, 1],
+            [10, 0],
+            [11, 0],
+            [14, 1],
+            [16, 3],
+            [17, 6],
+            [17, 7],
+            [16, 10],
+            [14, 12],
+            [11, 13],
+            [10, 13],
+            [7, 12],
+            [5, 10],
+            [4, 7]
+        ]
+    },
+    '7': {
+        width: 20, points: [
+            [17, 21],
+            [7, 0],
+            [-1, -1],
+            [3, 21],
+            [17, 21]
+        ]
+    },
+    '8': {
+        width: 20, points: [
+            [8, 21],
+            [5, 20],
+            [4, 18],
+            [4, 16],
+            [5, 14],
+            [7, 13],
+            [11, 12],
+            [14, 11],
+            [16, 9],
+            [17, 7],
+            [17, 4],
+            [16, 2],
+            [15, 1],
+            [12, 0],
+            [8, 0],
+            [5, 1],
+            [4, 2],
+            [3, 4],
+            [3, 7],
+            [4, 9],
+            [6, 11],
+            [9, 12],
+            [13, 13],
+            [15, 14],
+            [16, 16],
+            [16, 18],
+            [15, 20],
+            [12, 21],
+            [8, 21]
+        ]
+    },
+    '9': {
+        width: 20, points: [
+            [16, 14],
+            [15, 11],
+            [13, 9],
+            [10, 8],
+            [9, 8],
+            [6, 9],
+            [4, 11],
+            [3, 14],
+            [3, 15],
+            [4, 18],
+            [6, 20],
+            [9, 21],
+            [10, 21],
+            [13, 20],
+            [15, 18],
+            [16, 14],
+            [16, 9],
+            [15, 4],
+            [13, 1],
+            [10, 0],
+            [8, 0],
+            [5, 1],
+            [4, 3]
+        ]
+    },
+    ':': {
+        width: 10, points: [
+            [5, 14],
+            [4, 13],
+            [5, 12],
+            [6, 13],
+            [5, 14],
+            [-1, -1],
+            [5, 2],
+            [4, 1],
+            [5, 0],
+            [6, 1],
+            [5, 2]
+        ]
+    },
+    ';': {
+        width: 10, points: [
+            [5, 14],
+            [4, 13],
+            [5, 12],
+            [6, 13],
+            [5, 14],
+            [-1, -1],
+            [6, 1],
+            [5, 0],
+            [4, 1],
+            [5, 2],
+            [6, 1],
+            [6, -1],
+            [5, -3],
+            [4, -4]
+        ]
+    },
+    '<': {
+        width: 24, points: [
+            [20, 18],
+            [4, 9],
+            [20, 0]
+        ]
+    },
+    '=': {
+        width: 26, points: [
+            [4, 12],
+            [22, 12],
+            [-1, -1],
+            [4, 6],
+            [22, 6]
+        ]
+    },
+    '>': {
+        width: 24, points: [
+            [4, 18],
+            [20, 9],
+            [4, 0]
+        ]
+    },
+    '?': {
+        width: 18, points: [
+            [3, 16],
+            [3, 17],
+            [4, 19],
+            [5, 20],
+            [7, 21],
+            [11, 21],
+            [13, 20],
+            [14, 19],
+            [15, 17],
+            [15, 15],
+            [14, 13],
+            [13, 12],
+            [9, 10],
+            [9, 7],
+            [-1, -1],
+            [9, 2],
+            [8, 1],
+            [9, 0],
+            [10, 1],
+            [9, 2]
+        ]
+    },
+    '@': {
+        width: 27, points: [
+            [18, 13],
+            [17, 15],
+            [15, 16],
+            [12, 16],
+            [10, 15],
+            [9, 14],
+            [8, 11],
+            [8, 8],
+            [9, 6],
+            [11, 5],
+            [14, 5],
+            [16, 6],
+            [17, 8],
+            [-1, -1],
+            [12, 16],
+            [10, 14],
+            [9, 11],
+            [9, 8],
+            [10, 6],
+            [11, 5],
+            [-1, -1],
+            [18, 16],
+            [17, 8],
+            [17, 6],
+            [19, 5],
+            [21, 5],
+            [23, 7],
+            [24, 10],
+            [24, 12],
+            [23, 15],
+            [22, 17],
+            [20, 19],
+            [18, 20],
+            [15, 21],
+            [12, 21],
+            [9, 20],
+            [7, 19],
+            [5, 17],
+            [4, 15],
+            [3, 12],
+            [3, 9],
+            [4, 6],
+            [5, 4],
+            [7, 2],
+            [9, 1],
+            [12, 0],
+            [15, 0],
+            [18, 1],
+            [20, 2],
+            [21, 3],
+            [-1, -1],
+            [19, 16],
+            [18, 8],
+            [18, 6],
+            [19, 5]
+        ]
+    },
+    'A': {
+        width: 18, points: [
+            [9, 21],
+            [1, 0],
+            [-1, -1],
+            [9, 21],
+            [17, 0],
+            [-1, -1],
+            [4, 7],
+            [14, 7]
+        ]
+    },
+    'B': {
+        width: 21, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [13, 21],
+            [16, 20],
+            [17, 19],
+            [18, 17],
+            [18, 15],
+            [17, 13],
+            [16, 12],
+            [13, 11],
+            [-1, -1],
+            [4, 11],
+            [13, 11],
+            [16, 10],
+            [17, 9],
+            [18, 7],
+            [18, 4],
+            [17, 2],
+            [16, 1],
+            [13, 0],
+            [4, 0]
+        ]
+    },
+    'C': {
+        width: 21, points: [
+            [18, 16],
+            [17, 18],
+            [15, 20],
+            [13, 21],
+            [9, 21],
+            [7, 20],
+            [5, 18],
+            [4, 16],
+            [3, 13],
+            [3, 8],
+            [4, 5],
+            [5, 3],
+            [7, 1],
+            [9, 0],
+            [13, 0],
+            [15, 1],
+            [17, 3],
+            [18, 5]
+        ]
+    },
+    'D': {
+        width: 21, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [11, 21],
+            [14, 20],
+            [16, 18],
+            [17, 16],
+            [18, 13],
+            [18, 8],
+            [17, 5],
+            [16, 3],
+            [14, 1],
+            [11, 0],
+            [4, 0]
+        ]
+    },
+    'E': {
+        width: 19, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [17, 21],
+            [-1, -1],
+            [4, 11],
+            [12, 11],
+            [-1, -1],
+            [4, 0],
+            [17, 0]
+        ]
+    },
+    'F': {
+        width: 18, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [17, 21],
+            [-1, -1],
+            [4, 11],
+            [12, 11]
+        ]
+    },
+    'G': {
+        width: 21, points: [
+            [18, 16],
+            [17, 18],
+            [15, 20],
+            [13, 21],
+            [9, 21],
+            [7, 20],
+            [5, 18],
+            [4, 16],
+            [3, 13],
+            [3, 8],
+            [4, 5],
+            [5, 3],
+            [7, 1],
+            [9, 0],
+            [13, 0],
+            [15, 1],
+            [17, 3],
+            [18, 5],
+            [18, 8],
+            [-1, -1],
+            [13, 8],
+            [18, 8]
+        ]
+    },
+    'H': {
+        width: 22, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [18, 21],
+            [18, 0],
+            [-1, -1],
+            [4, 11],
+            [18, 11]
+        ]
+    },
+    'I': {
+        width: 8, points: [
+            [4, 21],
+            [4, 0]
+        ]
+    },
+    'J': {
+        width: 16, points: [
+            [12, 21],
+            [12, 5],
+            [11, 2],
+            [10, 1],
+            [8, 0],
+            [6, 0],
+            [4, 1],
+            [3, 2],
+            [2, 5],
+            [2, 7]
+        ]
+    },
+    'K': {
+        width: 21, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [18, 21],
+            [4, 7],
+            [-1, -1],
+            [9, 12],
+            [18, 0]
+        ]
+    },
+    'L': {
+        width: 17, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 0],
+            [16, 0]
+        ]
+    },
+    'M': {
+        width: 24, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [12, 0],
+            [-1, -1],
+            [20, 21],
+            [12, 0],
+            [-1, -1],
+            [20, 21],
+            [20, 0]
+        ]
+    },
+    'N': {
+        width: 22, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [18, 0],
+            [-1, -1],
+            [18, 21],
+            [18, 0]
+        ]
+    },
+    'O': {
+        width: 22, points: [
+            [9, 21],
+            [7, 20],
+            [5, 18],
+            [4, 16],
+            [3, 13],
+            [3, 8],
+            [4, 5],
+            [5, 3],
+            [7, 1],
+            [9, 0],
+            [13, 0],
+            [15, 1],
+            [17, 3],
+            [18, 5],
+            [19, 8],
+            [19, 13],
+            [18, 16],
+            [17, 18],
+            [15, 20],
+            [13, 21],
+            [9, 21]
+        ]
+    },
+    'P': {
+        width: 21, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [13, 21],
+            [16, 20],
+            [17, 19],
+            [18, 17],
+            [18, 14],
+            [17, 12],
+            [16, 11],
+            [13, 10],
+            [4, 10]
+        ]
+    },
+    'Q': {
+        width: 22, points: [
+            [9, 21],
+            [7, 20],
+            [5, 18],
+            [4, 16],
+            [3, 13],
+            [3, 8],
+            [4, 5],
+            [5, 3],
+            [7, 1],
+            [9, 0],
+            [13, 0],
+            [15, 1],
+            [17, 3],
+            [18, 5],
+            [19, 8],
+            [19, 13],
+            [18, 16],
+            [17, 18],
+            [15, 20],
+            [13, 21],
+            [9, 21],
+            [-1, -1],
+            [12, 4],
+            [18, -2]
+        ]
+    },
+    'R': {
+        width: 21, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 21],
+            [13, 21],
+            [16, 20],
+            [17, 19],
+            [18, 17],
+            [18, 15],
+            [17, 13],
+            [16, 12],
+            [13, 11],
+            [4, 11],
+            [-1, -1],
+            [11, 11],
+            [18, 0]
+        ]
+    },
+    'S': {
+        width: 20, points: [
+            [17, 18],
+            [15, 20],
+            [12, 21],
+            [8, 21],
+            [5, 20],
+            [3, 18],
+            [3, 16],
+            [4, 14],
+            [5, 13],
+            [7, 12],
+            [13, 10],
+            [15, 9],
+            [16, 8],
+            [17, 6],
+            [17, 3],
+            [15, 1],
+            [12, 0],
+            [8, 0],
+            [5, 1],
+            [3, 3]
+        ]
+    },
+    'T': {
+        width: 16, points: [
+            [8, 21],
+            [8, 0],
+            [-1, -1],
+            [1, 21],
+            [15, 21]
+        ]
+    },
+    'U': {
+        width: 22, points: [
+            [4, 21],
+            [4, 6],
+            [5, 3],
+            [7, 1],
+            [10, 0],
+            [12, 0],
+            [15, 1],
+            [17, 3],
+            [18, 6],
+            [18, 21]
+        ]
+    },
+    'V': {
+        width: 18, points: [
+            [1, 21],
+            [9, 0],
+            [-1, -1],
+            [17, 21],
+            [9, 0]
+        ]
+    },
+    'W': {
+        width: 24, points: [
+            [2, 21],
+            [7, 0],
+            [-1, -1],
+            [12, 21],
+            [7, 0],
+            [-1, -1],
+            [12, 21],
+            [17, 0],
+            [-1, -1],
+            [22, 21],
+            [17, 0]
+        ]
+    },
+    'X': {
+        width: 20, points: [
+            [3, 21],
+            [17, 0],
+            [-1, -1],
+            [17, 21],
+            [3, 0]
+        ]
+    },
+    'Y': {
+        width: 18, points: [
+            [1, 21],
+            [9, 11],
+            [9, 0],
+            [-1, -1],
+            [17, 21],
+            [9, 11]
+        ]
+    },
+    'Z': {
+        width: 20, points: [
+            [17, 21],
+            [3, 0],
+            [-1, -1],
+            [3, 21],
+            [17, 21],
+            [-1, -1],
+            [3, 0],
+            [17, 0]
+        ]
+    },
+    '[': {
+        width: 14, points: [
+            [4, 25],
+            [4, -7],
+            [-1, -1],
+            [5, 25],
+            [5, -7],
+            [-1, -1],
+            [4, 25],
+            [11, 25],
+            [-1, -1],
+            [4, -7],
+            [11, -7]
+        ]
+    },
+    '\\': {
+        width: 14, points: [
+            [0, 21],
+            [14, -3]
+        ]
+    },
+    ']': {
+        width: 14, points: [
+            [9, 25],
+            [9, -7],
+            [-1, -1],
+            [10, 25],
+            [10, -7],
+            [-1, -1],
+            [3, 25],
+            [10, 25],
+            [-1, -1],
+            [3, -7],
+            [10, -7]
+        ]
+    },
+    '^': {
+        width: 16, points: [
+            [6, 15],
+            [8, 18],
+            [10, 15],
+            [-1, -1],
+            [3, 12],
+            [8, 17],
+            [13, 12],
+            [-1, -1],
+            [8, 17],
+            [8, 0]
+        ]
+    },
+    '_': {
+        width: 16, points: [
+            [0, -2],
+            [16, -2]
+        ]
+    },
+    '`': {
+        width: 10, points: [
+            [6, 21],
+            [5, 20],
+            [4, 18],
+            [4, 16],
+            [5, 15],
+            [6, 16],
+            [5, 17]
+        ]
+    },
+    'a': {
+        width: 19, points: [
+            [15, 14],
+            [15, 0],
+            [-1, -1],
+            [15, 11],
+            [13, 13],
+            [11, 14],
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3]
+        ]
+    },
+    'b': {
+        width: 19, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 11],
+            [6, 13],
+            [8, 14],
+            [11, 14],
+            [13, 13],
+            [15, 11],
+            [16, 8],
+            [16, 6],
+            [15, 3],
+            [13, 1],
+            [11, 0],
+            [8, 0],
+            [6, 1],
+            [4, 3]
+        ]
+    },
+    'c': {
+        width: 18, points: [
+            [15, 11],
+            [13, 13],
+            [11, 14],
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3]
+        ]
+    },
+    'd': {
+        width: 19, points: [
+            [15, 21],
+            [15, 0],
+            [-1, -1],
+            [15, 11],
+            [13, 13],
+            [11, 14],
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3]
+        ]
+    },
+    'e': {
+        width: 18, points: [
+            [3, 8],
+            [15, 8],
+            [15, 10],
+            [14, 12],
+            [13, 13],
+            [11, 14],
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3]
+        ]
+    },
+    'f': {
+        width: 12, points: [
+            [10, 21],
+            [8, 21],
+            [6, 20],
+            [5, 17],
+            [5, 0],
+            [-1, -1],
+            [2, 14],
+            [9, 14]
+        ]
+    },
+    'g': {
+        width: 19, points: [
+            [15, 14],
+            [15, -2],
+            [14, -5],
+            [13, -6],
+            [11, -7],
+            [8, -7],
+            [6, -6],
+            [-1, -1],
+            [15, 11],
+            [13, 13],
+            [11, 14],
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3]
+        ]
+    },
+    'h': {
+        width: 19, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [4, 10],
+            [7, 13],
+            [9, 14],
+            [12, 14],
+            [14, 13],
+            [15, 10],
+            [15, 0]
+        ]
+    },
+    'i': {
+        width: 8, points: [
+            [3, 21],
+            [4, 20],
+            [5, 21],
+            [4, 22],
+            [3, 21],
+            [-1, -1],
+            [4, 14],
+            [4, 0]
+        ]
+    },
+    'j': {
+        width: 10, points: [
+            [5, 21],
+            [6, 20],
+            [7, 21],
+            [6, 22],
+            [5, 21],
+            [-1, -1],
+            [6, 14],
+            [6, -3],
+            [5, -6],
+            [3, -7],
+            [1, -7]
+        ]
+    },
+    'k': {
+        width: 17, points: [
+            [4, 21],
+            [4, 0],
+            [-1, -1],
+            [14, 14],
+            [4, 4],
+            [-1, -1],
+            [8, 8],
+            [15, 0]
+        ]
+    },
+    'l': {
+        width: 8, points: [
+            [4, 21],
+            [4, 0]
+        ]
+    },
+    'm': {
+        width: 30, points: [
+            [4, 14],
+            [4, 0],
+            [-1, -1],
+            [4, 10],
+            [7, 13],
+            [9, 14],
+            [12, 14],
+            [14, 13],
+            [15, 10],
+            [15, 0],
+            [-1, -1],
+            [15, 10],
+            [18, 13],
+            [20, 14],
+            [23, 14],
+            [25, 13],
+            [26, 10],
+            [26, 0]
+        ]
+    },
+    'n': {
+        width: 19, points: [
+            [4, 14],
+            [4, 0],
+            [-1, -1],
+            [4, 10],
+            [7, 13],
+            [9, 14],
+            [12, 14],
+            [14, 13],
+            [15, 10],
+            [15, 0]
+        ]
+    },
+    'o': {
+        width: 19, points: [
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3],
+            [16, 6],
+            [16, 8],
+            [15, 11],
+            [13, 13],
+            [11, 14],
+            [8, 14]
+        ]
+    },
+    'p': {
+        width: 19, points: [
+            [4, 14],
+            [4, -7],
+            [-1, -1],
+            [4, 11],
+            [6, 13],
+            [8, 14],
+            [11, 14],
+            [13, 13],
+            [15, 11],
+            [16, 8],
+            [16, 6],
+            [15, 3],
+            [13, 1],
+            [11, 0],
+            [8, 0],
+            [6, 1],
+            [4, 3]
+        ]
+    },
+    'q': {
+        width: 19, points: [
+            [15, 14],
+            [15, -7],
+            [-1, -1],
+            [15, 11],
+            [13, 13],
+            [11, 14],
+            [8, 14],
+            [6, 13],
+            [4, 11],
+            [3, 8],
+            [3, 6],
+            [4, 3],
+            [6, 1],
+            [8, 0],
+            [11, 0],
+            [13, 1],
+            [15, 3]
+        ]
+    },
+    'r': {
+        width: 13, points: [
+            [4, 14],
+            [4, 0],
+            [-1, -1],
+            [4, 8],
+            [5, 11],
+            [7, 13],
+            [9, 14],
+            [12, 14]
+        ]
+    },
+    's': {
+        width: 17, points: [
+            [14, 11],
+            [13, 13],
+            [10, 14],
+            [7, 14],
+            [4, 13],
+            [3, 11],
+            [4, 9],
+            [6, 8],
+            [11, 7],
+            [13, 6],
+            [14, 4],
+            [14, 3],
+            [13, 1],
+            [10, 0],
+            [7, 0],
+            [4, 1],
+            [3, 3]
+        ]
+    },
+    't': {
+        width: 12, points: [
+            [5, 21],
+            [5, 4],
+            [6, 1],
+            [8, 0],
+            [10, 0],
+            [-1, -1],
+            [2, 14],
+            [9, 14]
+        ]
+    },
+    'u': {
+        width: 19, points: [
+            [4, 14],
+            [4, 4],
+            [5, 1],
+            [7, 0],
+            [10, 0],
+            [12, 1],
+            [15, 4],
+            [-1, -1],
+            [15, 14],
+            [15, 0]
+        ]
+    },
+    'v': {
+        width: 16, points: [
+            [2, 14],
+            [8, 0],
+            [-1, -1],
+            [14, 14],
+            [8, 0]
+        ]
+    },
+    'w': {
+        width: 22, points: [
+            [3, 14],
+            [7, 0],
+            [-1, -1],
+            [11, 14],
+            [7, 0],
+            [-1, -1],
+            [11, 14],
+            [15, 0],
+            [-1, -1],
+            [19, 14],
+            [15, 0]
+        ]
+    },
+    'x': {
+        width: 17, points: [
+            [3, 14],
+            [14, 0],
+            [-1, -1],
+            [14, 14],
+            [3, 0]
+        ]
+    },
+    'y': {
+        width: 16, points: [
+            [2, 14],
+            [8, 0],
+            [-1, -1],
+            [14, 14],
+            [8, 0],
+            [6, -4],
+            [4, -6],
+            [2, -7],
+            [1, -7]
+        ]
+    },
+    'z': {
+        width: 17, points: [
+            [14, 14],
+            [3, 0],
+            [-1, -1],
+            [3, 14],
+            [14, 14],
+            [-1, -1],
+            [3, 0],
+            [14, 0]
+        ]
+    },
+    '{': {
+        width: 14, points: [
+            [9, 25],
+            [7, 24],
+            [6, 23],
+            [5, 21],
+            [5, 19],
+            [6, 17],
+            [7, 16],
+            [8, 14],
+            [8, 12],
+            [6, 10],
+            [-1, -1],
+            [7, 24],
+            [6, 22],
+            [6, 20],
+            [7, 18],
+            [8, 17],
+            [9, 15],
+            [9, 13],
+            [8, 11],
+            [4, 9],
+            [8, 7],
+            [9, 5],
+            [9, 3],
+            [8, 1],
+            [7, 0],
+            [6, -2],
+            [6, -4],
+            [7, -6],
+            [-1, -1],
+            [6, 8],
+            [8, 6],
+            [8, 4],
+            [7, 2],
+            [6, 1],
+            [5, -1],
+            [5, -3],
+            [6, -5],
+            [7, -6],
+            [9, -7]
+        ]
+    },
+    '|': {
+        width: 8, points: [
+            [4, 25],
+            [4, -7]
+        ]
+    },
+    '}': {
+        width: 14, points: [
+            [5, 25],
+            [7, 24],
+            [8, 23],
+            [9, 21],
+            [9, 19],
+            [8, 17],
+            [7, 16],
+            [6, 14],
+            [6, 12],
+            [8, 10],
+            [-1, -1],
+            [7, 24],
+            [8, 22],
+            [8, 20],
+            [7, 18],
+            [6, 17],
+            [5, 15],
+            [5, 13],
+            [6, 11],
+            [10, 9],
+            [6, 7],
+            [5, 5],
+            [5, 3],
+            [6, 1],
+            [7, 0],
+            [8, -2],
+            [8, -4],
+            [7, -6],
+            [-1, -1],
+            [8, 8],
+            [6, 6],
+            [6, 4],
+            [7, 2],
+            [8, 1],
+            [9, -1],
+            [9, -3],
+            [8, -5],
+            [7, -6],
+            [5, -7]
+        ]
+    },
+    '~': {
+        width: 24, points: [
+            [3, 6],
+            [3, 8],
+            [4, 11],
+            [6, 12],
+            [8, 12],
+            [10, 11],
+            [14, 8],
+            [16, 7],
+            [18, 7],
+            [20, 8],
+            [21, 10],
+            [-1, -1],
+            [3, 8],
+            [4, 10],
+            [6, 11],
+            [8, 11],
+            [10, 10],
+            [14, 7],
+            [16, 6],
+            [18, 6],
+            [20, 7],
+            [21, 10],
+            [21, 12]
+        ]
+    }
+};
+
+/**
+ * @desc Creates wireframe text-shaped geometry arrays.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then create an {@link XKTMesh} with a text-shaped {@link XKTGeometry}.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#geometry_builders_buildVectorTextGeometry)]
+ *
+ * ````javascript
+ * const xktModel = new XKTModel();
+ *
+ * const text = buildVectorTextGeometry({
+ *      origin: [0,0,0],
+ *      text: "On the other side of the screen, it all looked so easy"
+ * });
+ *
+ * const xktGeometry = xktModel.createGeometry({
+ *      geometryId: "textGeometry",
+ *      primitiveType: text.primitiveType, // Will be "lines"
+ *      positions: text.positions,
+ *      indices: text.indices
+ * });
+ *
+ * const xktMesh = xktModel.createMesh({
+ *      meshId: "redTextMesh",
+ *      geometryId: "textGeometry",
+ *      position: [-4, -6, -4],
+ *      scale: [1, 3, 1],
+ *      rotation: [0, 0, 0],
+ *      color: [1, 0, 0],
+ *      opacity: 1
+ * });
+ *
+ * const xktEntity = xktModel.createEntity({
+ *      entityId: "redText",
+ *      meshIds: ["redTextMesh"]
+ *  });
+ *
+ * xktModel.finalize();
+ * ````
+ *
+ * @function buildVectorTextGeometry
+ * @param {*} [cfg] Configs
+ * @param {Number[]} [cfg.center]  3D point indicating the center position.
+ * @param {Number[]} [cfg.origin] 3D point indicating the top left corner.
+ * @param {Number} [cfg.size=1] Size of each character.
+ * @param {String} [cfg.text=""] The text.
+ * @returns {Object} Geometry arrays for {@link XKTModel#createGeometry} or {@link XKTModel#createMesh}.
+ */
+function buildVectorTextGeometry(cfg = {}) {
+
+    var origin = cfg.origin || [0, 0, 0];
+    var xOrigin = origin[0];
+    var yOrigin = origin[1];
+    var zOrigin = origin[2];
+    var size = cfg.size || 1;
+
+    var positions = [];
+    var indices = [];
+    var text = ("" + cfg.text).trim();
+    var lines = (text || "").split("\n");
+    var countVerts = 0;
+    var y = 0;
+    var x;
+    var str;
+    var len;
+    var c;
+    var mag = 1.0 / 25.0;
+    var penUp;
+    var p1;
+    var p2;
+    var pointsLen;
+    var a;
+
+    for (var iLine = 0; iLine < lines.length; iLine++) {
+
+        x = 0;
+        str = lines[iLine];
+        len = str.length;
+
+        for (var i = 0; i < len; i++) {
+
+            c = letters[str.charAt(i)];
+
+            if (!c) {
+                continue;
+            }
+
+            penUp = 1;
+            p1 = -1;
+            p2 = -1;
+
+            pointsLen = c.points.length;
+
+            for (var j = 0; j < pointsLen; j++) {
+                a = c.points[j];
+
+                if (a[0] === -1 && a[1] === -1) {
+                    penUp = 1;
+                    continue;
+                }
+
+                positions.push((x + (a[0] * size) * mag) + xOrigin);
+                positions.push((y + (a[1] * size) * mag) + yOrigin);
+                positions.push(0 + zOrigin);
+
+                if (p1 === -1) {
+                    p1 = countVerts;
+                } else if (p2 === -1) {
+                    p2 = countVerts;
+                } else {
+                    p1 = p2;
+                    p2 = countVerts;
+                }
+                countVerts++;
+
+                if (penUp) {
+                    penUp = false;
+
+                } else {
+                    indices.push(p1);
+                    indices.push(p2);
+                }
+            }
+            x += c.width * mag * size;
+
+        }
+        y -= 35 * mag * size;
+    }
+
+    return {
+        primitiveType: "lines",
+        positions: positions,
+        indices: indices
+    };
+}
+
 exports.XKTModel = XKTModel;
-exports.loadGLTFIntoXKTModel = loadGLTFIntoXKTModel;
+exports.buildBoxGeometry = buildBoxGeometry;
+exports.buildBoxLinesGeometry = buildBoxLinesGeometry;
+exports.buildCylinderGeometry = buildCylinderGeometry;
+exports.buildGridGeometry = buildGridGeometry;
+exports.buildPlaneGeometry = buildPlaneGeometry;
+exports.buildSphereGeometry = buildSphereGeometry;
+exports.buildTorusGeometry = buildTorusGeometry;
+exports.buildVectorTextGeometry = buildVectorTextGeometry;
+exports.parseGLTFIntoXKTModel = parseGLTFIntoXKTModel;
 exports.validateXKTArrayBuffer = validateXKTArrayBuffer;
 exports.writeXKTModelToArrayBuffer = writeXKTModelToArrayBuffer;

@@ -1,4 +1,4 @@
-import {math} from "./math.js";
+import {math} from "../../lib/math.js";
 
 var quantizePositions = function (positions, lenPositions, aabb, quantizedPositions) {
     const xmin = aabb[0];
@@ -44,8 +44,8 @@ function transformAndOctEncodeNormals(modelNormalMatrix, normals, lenNormals, co
     // http://jcgt.org/published/0003/02/01/
     let oct, dec, best, currentCos, bestCos;
     let i, ei;
-    let localNormal = new Float32Array([0, 0, 0, 0]);
-    let worldNormal = new Float32Array([0, 0, 0, 0]);
+    let localNormal = math.vec3();
+    let worldNormal =  math.vec3();
     for (i = 0; i < lenNormals; i += 3) {
         localNormal[0] = normals[i];
         localNormal[1] = normals[i + 1];

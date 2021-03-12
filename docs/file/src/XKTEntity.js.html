@@ -31,11 +31,11 @@
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitive.js~XKTPrimitive.html">XKTPrimitive</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html">XKTPrimitiveInstance</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-createMeshesFromXKTModel">createMeshesFromXKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-loadGLTFIntoXKTModel">loadGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 </ul>
@@ -50,8 +50,8 @@
  *
  * * Created by {@link XKTModel#createEntity}
  * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}
- * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}
- * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s
+ * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}
+ * * May either share all of its ````XKTGeometrys````s with other ````XKTEntity````s, or exclusively own all of its ````XKTGeometry````s
  *
  * @class XKTEntity
  */
@@ -85,8 +85,8 @@ class XKTEntity {
         /**
          * The 4x4 modeling transform matrix.
          *
-         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the
-         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,
+         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the
+         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,
          * then this matrix is ignored.
          *
          * @type {Number[]}
@@ -94,15 +94,15 @@ class XKTEntity {
         this.matrix = matrix;
 
         /**
-         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.
+         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.
          *
-         * @type {XKTPrimitiveInstance[]}
+         * @type {XKTMesh[]}
          */
         this.primitiveInstances = primitiveInstances;
 
         /**
-         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of
-         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.
+         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of
+         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.
          *
          * Set by {@link XKTModel#finalize}.
          *
@@ -111,12 +111,12 @@ class XKTEntity {
         this.aabb = math.AABB3();
 
         /**
-         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}&apos;s.
+         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}&apos;s.
          *
          * Set by {@link XKTModel#finalize}.
          *
-         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````
-         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.
+         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````
+         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.
          *
          * @type {Boolean}
          */

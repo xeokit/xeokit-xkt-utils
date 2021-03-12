@@ -1,7 +1,7 @@
 {
-  "coverage": "50.4%",
-  "expectCount": 125,
-  "actualCount": 63,
+  "coverage": "53.24%",
+  "expectCount": 154,
+  "actualCount": 82,
   "files": {
     "src/XKTModel/KDNode.js": {
       "expectCount": 6,
@@ -25,38 +25,40 @@
       ]
     },
     "src/XKTModel/XKTEntity.js": {
-      "expectCount": 8,
-      "actualCount": 8,
+      "expectCount": 7,
+      "actualCount": 7,
+      "undocumentLines": []
+    },
+    "src/XKTModel/XKTGeometry.js": {
+      "expectCount": 15,
+      "actualCount": 15,
+      "undocumentLines": []
+    },
+    "src/XKTModel/XKTMesh.js": {
+      "expectCount": 11,
+      "actualCount": 11,
       "undocumentLines": []
     },
     "src/XKTModel/XKTModel.js": {
-      "expectCount": 27,
-      "actualCount": 14,
+      "expectCount": 32,
+      "actualCount": 17,
       "undocumentLines": [
-        10,
-        11,
         12,
         13,
         15,
-        17,
-        347,
-        368,
-        409,
-        432,
-        500,
-        504,
-        604
+        16,
+        18,
+        20,
+        458,
+        492,
+        514,
+        556,
+        575,
+        643,
+        647,
+        736,
+        781
       ]
-    },
-    "src/XKTModel/XKTPrimitive.js": {
-      "expectCount": 14,
-      "actualCount": 14,
-      "undocumentLines": []
-    },
-    "src/XKTModel/XKTPrimitiveInstance.js": {
-      "expectCount": 5,
-      "actualCount": 5,
-      "undocumentLines": []
     },
     "src/XKTModel/XKTTile.js": {
       "expectCount": 4,
@@ -78,7 +80,84 @@
         90
       ]
     },
-    "src/XKTModel/lib/math.js": {
+    "src/XKTModel/lib/isTriangleMeshSolid.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/XKTModel/lib/utils.js": {
+      "expectCount": 2,
+      "actualCount": 1,
+      "undocumentLines": [
+        1
+      ]
+    },
+    "src/XKTModel/validateXKTArrayBuffer.js": {
+      "expectCount": 6,
+      "actualCount": 1,
+      "undocumentLines": [
+        31,
+        78,
+        111,
+        121,
+        415
+      ]
+    },
+    "src/XKTModel/writeXKTModelToArrayBuffer.js": {
+      "expectCount": 7,
+      "actualCount": 1,
+      "undocumentLines": [
+        3,
+        8,
+        27,
+        252,
+        287,
+        320
+      ]
+    },
+    "src/geometryBuilders/buildBoxGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildBoxLinesGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildCylinderGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildGridGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildPlaneGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildSphereGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildTorusGeometry.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/geometryBuilders/buildVectorTextGeometry.js": {
+      "expectCount": 2,
+      "actualCount": 1,
+      "undocumentLines": [
+        1
+      ]
+    },
+    "src/lib/math.js": {
       "expectCount": 6,
       "actualCount": 1,
       "undocumentLines": [
@@ -89,58 +168,41 @@
         8
       ]
     },
-    "src/XKTModel/lib/utils.js": {
-      "expectCount": 2,
-      "actualCount": 1,
-      "undocumentLines": [
-        1
-      ]
-    },
-    "src/XKTModel/loadGLTFIntoXKTModel.js": {
-      "expectCount": 19,
+    "src/parsers/parseGLTFIntoXKTModel.js": {
+      "expectCount": 18,
       "actualCount": 1,
       "undocumentLines": [
         13,
         22,
-        58,
-        65,
-        73,
-        98,
-        107,
-        116,
-        124,
-        133,
-        146,
-        190,
-        200,
+        75,
+        82,
+        90,
+        112,
+        121,
+        129,
+        138,
+        149,
         213,
-        240,
-        253,
-        396,
-        420
+        223,
+        236,
+        238,
+        377,
+        391,
+        446
       ]
     },
-    "src/XKTModel/validateXKTArrayBuffer.js": {
-      "expectCount": 6,
+    "src/parsers/parseSTLIntoXKTModel.js": {
+      "expectCount": 9,
       "actualCount": 1,
       "undocumentLines": [
-        31,
-        52,
-        73,
-        83,
-        281
-      ]
-    },
-    "src/XKTModel/writeXKTModelToArrayBuffer.js": {
-      "expectCount": 7,
-      "actualCount": 1,
-      "undocumentLines": [
-        3,
-        8,
-        27,
-        195,
-        227,
-        256
+        20,
+        37,
+        118,
+        162,
+        164,
+        202,
+        209,
+        221
       ]
     }
   }

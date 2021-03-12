@@ -6,21 +6,21 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "@xeokit/xeokit-xkt-utils/src/xktmodel/xktgeometry.js~xktgeometry",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html",
+    "<span>XKTGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTGeometry.js</span>",
+    "class"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/xktmodel/xktmesh.js~xktmesh",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html",
+    "<span>XKTMesh</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTMesh.js</span>",
+    "class"
+  ],
+  [
     "@xeokit/xeokit-xkt-utils/src/xktmodel/xktmodel.js~xktmodel",
     "class/src/XKTModel/XKTModel.js~XKTModel.html",
     "<span>XKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTModel.js</span>",
-    "class"
-  ],
-  [
-    "@xeokit/xeokit-xkt-utils/src/xktmodel/xktprimitive.js~xktprimitive",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html",
-    "<span>XKTPrimitive</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTPrimitive.js</span>",
-    "class"
-  ],
-  [
-    "@xeokit/xeokit-xkt-utils/src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance",
-    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html",
-    "<span>XKTPrimitiveInstance</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTPrimitiveInstance.js</span>",
     "class"
   ],
   [
@@ -30,9 +30,57 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
-    "@xeokit/xeokit-xkt-utils/src/xktmodel/loadgltfintoxktmodel.js~loadgltfintoxktmodel",
-    "function/index.html#static-function-loadGLTFIntoXKTModel",
-    "<span>loadGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/loadGLTFIntoXKTModel.js</span>",
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildboxgeometry.js~buildboxgeometry",
+    "function/index.html#static-function-buildBoxGeometry",
+    "<span>buildBoxGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildBoxGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildboxlinesgeometry.js~buildboxlinesgeometry",
+    "function/index.html#static-function-buildBoxLinesGeometry",
+    "<span>buildBoxLinesGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildBoxLinesGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildcylindergeometry.js~buildcylindergeometry",
+    "function/index.html#static-function-buildCylinderGeometry",
+    "<span>buildCylinderGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildCylinderGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildgridgeometry.js~buildgridgeometry",
+    "function/index.html#static-function-buildGridGeometry",
+    "<span>buildGridGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildGridGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildplanegeometry.js~buildplanegeometry",
+    "function/index.html#static-function-buildPlaneGeometry",
+    "<span>buildPlaneGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildPlaneGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildspheregeometry.js~buildspheregeometry",
+    "function/index.html#static-function-buildSphereGeometry",
+    "<span>buildSphereGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildSphereGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildtorusgeometry.js~buildtorusgeometry",
+    "function/index.html#static-function-buildTorusGeometry",
+    "<span>buildTorusGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildTorusGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/geometrybuilders/buildvectortextgeometry.js~buildvectortextgeometry",
+    "function/index.html#static-function-buildVectorTextGeometry",
+    "<span>buildVectorTextGeometry</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/geometryBuilders/buildVectorTextGeometry.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsegltfintoxktmodel.js~parsegltfintoxktmodel",
+    "function/index.html#static-function-parseGLTFIntoXKTModel",
+    "<span>parseGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseGLTFIntoXKTModel.js</span>",
     "function"
   ],
   [
@@ -366,21 +414,159 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "src/xktmodel/xktentity.js~xktentity#hasreusedprimitives",
-    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-hasReusedPrimitives",
-    "src/XKTModel/XKTEntity.js~XKTEntity#hasReusedPrimitives",
+    "src/xktmodel/xktentity.js~xktentity#hasreusedgeometries",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-hasReusedGeometries",
+    "src/XKTModel/XKTEntity.js~XKTEntity#hasReusedGeometries",
     "member"
   ],
   [
-    "src/xktmodel/xktentity.js~xktentity#matrix",
-    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-matrix",
-    "src/XKTModel/XKTEntity.js~XKTEntity#matrix",
+    "src/xktmodel/xktentity.js~xktentity#meshes",
+    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-meshes",
+    "src/XKTModel/XKTEntity.js~XKTEntity#meshes",
     "member"
   ],
   [
-    "src/xktmodel/xktentity.js~xktentity#primitiveinstances",
-    "class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-primitiveInstances",
-    "src/XKTModel/XKTEntity.js~XKTEntity#primitiveInstances",
+    "src/xktmodel/xktgeometry.js",
+    "file/src/XKTModel/XKTGeometry.js.html",
+    "src/XKTModel/XKTGeometry.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#colorscompressed",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-colorsCompressed",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#colorsCompressed",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#edgeindices",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-edgeIndices",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#edgeIndices",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#geometryid",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-geometryId",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#geometryId",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#geometryindex",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-geometryIndex",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#geometryIndex",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#indices",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-indices",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#indices",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#normals",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-normals",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#normals",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#normalsoctencoded",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-normalsOctEncoded",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#normalsOctEncoded",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#numinstances",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-numInstances",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#numInstances",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#positions",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positions",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#positions",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#positionsquantized",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positionsQuantized",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#positionsQuantized",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#primitivetype",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-primitiveType",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#primitiveType",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#reused",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-get-reused",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#reused",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktgeometry.js~xktgeometry#solid",
+    "class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-solid",
+    "src/XKTModel/XKTGeometry.js~XKTGeometry#solid",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js",
+    "file/src/XKTModel/XKTMesh.js.html",
+    "src/XKTModel/XKTMesh.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#color",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-color",
+    "src/XKTModel/XKTMesh.js~XKTMesh#color",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#entity",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-entity",
+    "src/XKTModel/XKTMesh.js~XKTMesh#entity",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#geometry",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-geometry",
+    "src/XKTModel/XKTMesh.js~XKTMesh#geometry",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#matrix",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-matrix",
+    "src/XKTModel/XKTMesh.js~XKTMesh#matrix",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#meshid",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-meshId",
+    "src/XKTModel/XKTMesh.js~XKTMesh#meshId",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#meshindex",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-meshIndex",
+    "src/XKTModel/XKTMesh.js~XKTMesh#meshIndex",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#metallic",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-metallic",
+    "src/XKTModel/XKTMesh.js~XKTMesh#metallic",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#opacity",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-opacity",
+    "src/XKTModel/XKTMesh.js~XKTMesh#opacity",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmesh.js~xktmesh#roughness",
+    "class/src/XKTModel/XKTMesh.js~XKTMesh.html#instance-member-roughness",
+    "src/XKTModel/XKTMesh.js~XKTMesh#roughness",
     "member"
   ],
   [
@@ -402,10 +588,22 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "src/xktmodel/xktmodel.js~xktmodel#createprimitive",
-    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createPrimitive",
-    "src/XKTModel/XKTModel.js~XKTModel#createPrimitive",
+    "src/xktmodel/xktmodel.js~xktmodel#creategeometry",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createGeometry",
+    "src/XKTModel/XKTModel.js~XKTModel#createGeometry",
     "method"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#createmesh",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMesh",
+    "src/XKTModel/XKTModel.js~XKTModel#createMesh",
+    "method"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#edgethreshold",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-edgeThreshold",
+    "src/XKTModel/XKTModel.js~XKTModel#edgeThreshold",
+    "member"
   ],
   [
     "src/xktmodel/xktmodel.js~xktmodel#entities",
@@ -432,135 +630,39 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "src/xktmodel/xktmodel.js~xktmodel#primitiveinstanceslist",
-    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitiveInstancesList",
-    "src/XKTModel/XKTModel.js~XKTModel#primitiveInstancesList",
+    "src/xktmodel/xktmodel.js~xktmodel#geometries",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-geometries",
+    "src/XKTModel/XKTModel.js~XKTModel#geometries",
     "member"
   ],
   [
-    "src/xktmodel/xktmodel.js~xktmodel#primitives",
-    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitives",
-    "src/XKTModel/XKTModel.js~XKTModel#primitives",
+    "src/xktmodel/xktmodel.js~xktmodel#geometrieslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-geometriesList",
+    "src/XKTModel/XKTModel.js~XKTModel#geometriesList",
     "member"
   ],
   [
-    "src/xktmodel/xktmodel.js~xktmodel#primitiveslist",
-    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-primitivesList",
-    "src/XKTModel/XKTModel.js~XKTModel#primitivesList",
+    "src/xktmodel/xktmodel.js~xktmodel#meshes",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-meshes",
+    "src/XKTModel/XKTModel.js~XKTModel#meshes",
     "member"
   ],
   [
-    "src/xktmodel/xktmodel.js~xktmodel#reusedprimitivesdecodematrix",
-    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-reusedPrimitivesDecodeMatrix",
-    "src/XKTModel/XKTModel.js~XKTModel#reusedPrimitivesDecodeMatrix",
+    "src/xktmodel/xktmodel.js~xktmodel#mesheslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-meshesList",
+    "src/XKTModel/XKTModel.js~XKTModel#meshesList",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#reusedgeometriesdecodematrix",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-reusedGeometriesDecodeMatrix",
+    "src/XKTModel/XKTModel.js~XKTModel#reusedGeometriesDecodeMatrix",
     "member"
   ],
   [
     "src/xktmodel/xktmodel.js~xktmodel#tileslist",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-tilesList",
     "src/XKTModel/XKTModel.js~XKTModel#tilesList",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js",
-    "file/src/XKTModel/XKTPrimitive.js.html",
-    "src/XKTModel/XKTPrimitive.js",
-    "file"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#color",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-color",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#color",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#edgeindices",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-edgeIndices",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#edgeIndices",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#indices",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-indices",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#indices",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#normalsoctencoded",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-normalsOctEncoded",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#normalsOctEncoded",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#numinstances",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-numInstances",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#numInstances",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#opacity",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-opacity",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#opacity",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#positions",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positions",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#positions",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#positionsquantized",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-positionsQuantized",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#positionsQuantized",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#primitiveid",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveId",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#primitiveId",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#primitiveindex",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveIndex",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#primitiveIndex",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#primitivetype",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-member-primitiveType",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#primitiveType",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitive.js~xktprimitive#reused",
-    "class/src/XKTModel/XKTPrimitive.js~XKTPrimitive.html#instance-get-reused",
-    "src/XKTModel/XKTPrimitive.js~XKTPrimitive#reused",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitiveinstance.js",
-    "file/src/XKTModel/XKTPrimitiveInstance.js.html",
-    "src/XKTModel/XKTPrimitiveInstance.js",
-    "file"
-  ],
-  [
-    "src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance#entity",
-    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-entity",
-    "src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance#entity",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance#primitive",
-    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-primitive",
-    "src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance#primitive",
-    "member"
-  ],
-  [
-    "src/xktmodel/xktprimitiveinstance.js~xktprimitiveinstance#primitiveinstanceindex",
-    "class/src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance.html#instance-member-primitiveInstanceIndex",
-    "src/XKTModel/XKTPrimitiveInstance.js~XKTPrimitiveInstance#primitiveInstanceIndex",
     "member"
   ],
   [
@@ -594,21 +696,15 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "src/xktmodel/lib/math.js",
-    "file/src/XKTModel/lib/math.js.html",
-    "src/XKTModel/lib/math.js",
+    "src/xktmodel/lib/istrianglemeshsolid.js",
+    "file/src/XKTModel/lib/isTriangleMeshSolid.js.html",
+    "src/XKTModel/lib/isTriangleMeshSolid.js",
     "file"
   ],
   [
     "src/xktmodel/lib/utils.js",
     "file/src/XKTModel/lib/utils.js.html",
     "src/XKTModel/lib/utils.js",
-    "file"
-  ],
-  [
-    "src/xktmodel/loadgltfintoxktmodel.js",
-    "file/src/XKTModel/loadGLTFIntoXKTModel.js.html",
-    "src/XKTModel/loadGLTFIntoXKTModel.js",
     "file"
   ],
   [
@@ -621,6 +717,72 @@ window.esdocSearchIndex = [
     "src/xktmodel/writexktmodeltoarraybuffer.js",
     "file/src/XKTModel/writeXKTModelToArrayBuffer.js.html",
     "src/XKTModel/writeXKTModelToArrayBuffer.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildboxgeometry.js",
+    "file/src/geometryBuilders/buildBoxGeometry.js.html",
+    "src/geometryBuilders/buildBoxGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildboxlinesgeometry.js",
+    "file/src/geometryBuilders/buildBoxLinesGeometry.js.html",
+    "src/geometryBuilders/buildBoxLinesGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildcylindergeometry.js",
+    "file/src/geometryBuilders/buildCylinderGeometry.js.html",
+    "src/geometryBuilders/buildCylinderGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildgridgeometry.js",
+    "file/src/geometryBuilders/buildGridGeometry.js.html",
+    "src/geometryBuilders/buildGridGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildplanegeometry.js",
+    "file/src/geometryBuilders/buildPlaneGeometry.js.html",
+    "src/geometryBuilders/buildPlaneGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildspheregeometry.js",
+    "file/src/geometryBuilders/buildSphereGeometry.js.html",
+    "src/geometryBuilders/buildSphereGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildtorusgeometry.js",
+    "file/src/geometryBuilders/buildTorusGeometry.js.html",
+    "src/geometryBuilders/buildTorusGeometry.js",
+    "file"
+  ],
+  [
+    "src/geometrybuilders/buildvectortextgeometry.js",
+    "file/src/geometryBuilders/buildVectorTextGeometry.js.html",
+    "src/geometryBuilders/buildVectorTextGeometry.js",
+    "file"
+  ],
+  [
+    "src/lib/math.js",
+    "file/src/lib/math.js.html",
+    "src/lib/math.js",
+    "file"
+  ],
+  [
+    "src/parsers/parsegltfintoxktmodel.js",
+    "file/src/parsers/parseGLTFIntoXKTModel.js.html",
+    "src/parsers/parseGLTFIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parsestlintoxktmodel.js",
+    "file/src/parsers/parseSTLIntoXKTModel.js.html",
+    "src/parsers/parseSTLIntoXKTModel.js",
     "file"
   ]
 ]

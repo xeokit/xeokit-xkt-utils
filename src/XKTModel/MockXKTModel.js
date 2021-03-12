@@ -1,4 +1,4 @@
-import {math} from "./lib/math.js";
+import {math} from "../lib/math.js";
 import {geometryCompression} from "./lib/geometryCompression.js";
 import {buildEdgeIndices} from "./lib/buildEdgeIndices.js";
 
@@ -8,7 +8,7 @@ const tempMat4 = math.mat4();
 const tempMat4b = math.mat4();
 
 /**
- * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link loadGLTFIntoXKTModel}.
+ * A mock {@link XKTModel} that creates {@link Mesh}es and {@link Geometry}s to visualize the output of {@link parseGLTFIntoXKTModel}.
  *
  * @private
  */
@@ -31,12 +31,12 @@ class MockXKTModel {
         this._handlePrimitive = cfg.handlePrimitive;
         this._handleEntity = cfg.handleEntity;
 
-        this.primitives = {};
+        this.geometries = {};
     }
 
-    createPrimitive(params) {
+    createGeometry(params) {
 
-        const primitiveId = params.primitiveId;
+        const geometryId = params.geometryId;
         const primitiveType = params.primitiveType;
         const reused = params.reused;
         const primitiveModelingMatrix = params.primitiveModelingMatrix ? params.primitiveModelingMatrix.slice : math.identityMat4();
@@ -52,7 +52,7 @@ class MockXKTModel {
 
         if (!reused) {
 
-            // Bake single-use primitive's positions into World-space
+            // Bake single-use geometry's positions into World-space
 
             for (let i = 0, len = positions.length; i < len; i += 3) {
 
@@ -74,7 +74,7 @@ class MockXKTModel {
         geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, normals, normals.length, normalsOctEncoded, 0);
 
         const primitive = new VBOGeometry(this.scene, {
-            id: primitiveId,
+            id: geometryId,
             primitive: "triangles",
             positions: positions2,
             normals: normals,
@@ -82,7 +82,7 @@ class MockXKTModel {
             edgeIndices: edgeIndices
         });
 
-        this.primitives[primitiveId] = primitive;
+        this.geometries[geometryId] = primitive;
     }
 
     createEntity(params) {
@@ -93,11 +93,11 @@ class MockXKTModel {
 
         for (let primitiveIdIdx = 0, primitiveIdLen = primitiveIds.length; primitiveIdIdx < primitiveIdLen; primitiveIdIdx++) {
 
-            const primitiveId = primitiveIds[primitiveIdIdx];
-            const primitive = this.primitives[primitiveId];
+            const geometryId = primitiveIds[primitiveIdIdx];
+            const primitive = this.geometries[geometryId];
 
             if (!primitive) {
-                console.error("primitive not found: " + primitiveId);
+                console.error("primitive not found: " + geometryId);
                 continue;
             }
 

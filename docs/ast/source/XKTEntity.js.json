@@ -116,7 +116,7 @@
         "trailingComments": [
           {
             "type": "CommentBlock",
-            "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
+            "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n * * May either share all of its ````XKTGeometrys````s with other ````XKTEntity````s, or exclusively own all of its ````XKTGeometry````s\n *\n * @class XKTEntity\n ",
             "start": 37,
             "end": 459,
             "loc": {
@@ -558,7 +558,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
+                        "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
                         "start": 1115,
                         "end": 1527,
                         "loc": {
@@ -675,7 +675,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
+                        "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
                         "start": 1115,
                         "end": 1527,
                         "loc": {
@@ -693,7 +693,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
+                        "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
                         "start": 1567,
                         "end": 1753,
                         "loc": {
@@ -810,7 +810,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
+                        "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
                         "start": 1567,
                         "end": 1753,
                         "loc": {
@@ -828,7 +828,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
                         "start": 1817,
                         "end": 2117,
                         "loc": {
@@ -994,7 +994,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                        "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
                         "start": 1817,
                         "end": 2117,
                         "loc": {
@@ -1012,7 +1012,7 @@
                     "trailingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
                         "start": 2161,
                         "end": 2654,
                         "loc": {
@@ -1128,7 +1128,7 @@
                     "leadingComments": [
                       {
                         "type": "CommentBlock",
-                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                        "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
                         "start": 2161,
                         "end": 2654,
                         "loc": {
@@ -1680,7 +1680,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
+                          "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
                           "start": 1115,
                           "end": 1527,
                           "loc": {
@@ -1797,7 +1797,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
+                          "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
                           "start": 1115,
                           "end": 1527,
                           "loc": {
@@ -1815,7 +1815,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
+                          "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
                           "start": 1567,
                           "end": 1753,
                           "loc": {
@@ -1932,7 +1932,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
+                          "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
                           "start": 1567,
                           "end": 1753,
                           "loc": {
@@ -1950,7 +1950,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
                           "start": 1817,
                           "end": 2117,
                           "loc": {
@@ -2116,7 +2116,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+                          "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
                           "start": 1817,
                           "end": 2117,
                           "loc": {
@@ -2134,7 +2134,7 @@
                       "trailingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
                           "start": 2161,
                           "end": 2654,
                           "loc": {
@@ -2250,7 +2250,7 @@
                       "leadingComments": [
                         {
                           "type": "CommentBlock",
-                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+                          "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
                           "start": 2161,
                           "end": 2654,
                           "loc": {
@@ -2293,7 +2293,7 @@
           "leadingComments": [
             {
               "type": "CommentBlock",
-              "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
+              "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n * * May either share all of its ````XKTGeometrys````s with other ````XKTEntity````s, or exclusively own all of its ````XKTGeometry````s\n *\n * @class XKTEntity\n ",
               "start": 37,
               "end": 459,
               "loc": {
@@ -2321,7 +2321,7 @@
   "comments": [
     {
       "type": "CommentBlock",
-      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
+      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n * * May either share all of its ````XKTGeometrys````s with other ````XKTEntity````s, or exclusively own all of its ````XKTGeometry````s\n *\n * @class XKTEntity\n ",
       "start": 37,
       "end": 459,
       "loc": {
@@ -2385,7 +2385,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
+      "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
       "start": 1115,
       "end": 1527,
       "loc": {
@@ -2401,7 +2401,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
+      "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
       "start": 1567,
       "end": 1753,
       "loc": {
@@ -2417,7 +2417,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
       "start": 1817,
       "end": 2117,
       "loc": {
@@ -2433,7 +2433,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
       "start": 2161,
       "end": 2654,
       "loc": {
@@ -2634,7 +2634,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTPrimitiveInstance}s, each having an {@link XKTPrimitive}\n * * May either share all of its ````XKTPrimitives````s with other ````XKTEntity````s, or exclusively own all of its ````XKTPrimitive````s\n *\n * @class XKTEntity\n ",
+      "value": "*\n * An object within an {@link XKTModel}.\n *\n * * Created by {@link XKTModel#createEntity}\n * * Stored in {@link XKTModel#entities} and {@link XKTModel#entitiesList}\n * * Has one or more {@link XKTMesh}s, each having an {@link XKTGeometry}\n * * May either share all of its ````XKTGeometrys````s with other ````XKTEntity````s, or exclusively own all of its ````XKTGeometry````s\n *\n * @class XKTEntity\n ",
       "start": 37,
       "end": 459,
       "loc": {
@@ -3378,7 +3378,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTPrimitive}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTPrimitive````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
+      "value": "*\n         * The 4x4 modeling transform matrix.\n         *\n         * When the ````XKTEntity```` shares its {@link XKTGeometry}s with other ````XKTEntity````s, this matrix is used to transform the\n         * shared Primitives into World-space for this Entity. When this Entity does not share its ````XKTGeometry````s,\n         * then this matrix is ignored.\n         *\n         * @type {Number[]}\n         ",
       "start": 1115,
       "end": 1527,
       "loc": {
@@ -3553,7 +3553,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * A list of {@link XKTPrimitiveInstance}s that indicate which {@link XKTPrimitive}s are used by this Entity.\n         *\n         * @type {XKTPrimitiveInstance[]}\n         ",
+      "value": "*\n         * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.\n         *\n         * @type {XKTMesh[]}\n         ",
       "start": 1567,
       "end": 1753,
       "loc": {
@@ -3728,7 +3728,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTPrimitive#positions} of\n         * the {@link XKTPrimitive}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
+      "value": "*\n         * World-space axis-aligned bounding box (AABB) that encloses the {@link XKTGeometry#positions} of\n         * the {@link XKTGeometry}s that are used by this ````XKTEntity````.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * @type {Float32Array}\n         ",
       "start": 1817,
       "end": 2117,
       "loc": {
@@ -4005,7 +4005,7 @@
     },
     {
       "type": "CommentBlock",
-      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTPrimitive}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTPrimitives````, it shares **all** of its ````XKTPrimitives````. An ````XKTEntity````\n         * never shares only some of its ````XKTPrimitives```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
+      "value": "*\n         * Indicates if this ````XKTEntity```` shares {@link XKTGeometry}s with other {@link XKTEntity}'s.\n         *\n         * Set by {@link XKTModel#finalize}.\n         *\n         * Note that when an ````XKTEntity```` shares ````XKTGeometrys````, it shares **all** of its ````XKTGeometrys````. An ````XKTEntity````\n         * never shares only some of its ````XKTGeometrys```` - it always shares either the whole set or none at all.\n         *\n         * @type {Boolean}\n         ",
       "start": 2161,
       "end": 2654,
       "loc": {
