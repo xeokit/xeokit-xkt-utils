@@ -17200,7 +17200,7 @@ class ReadableGeometry extends Geometry {
 }
 
 /**
- * @desc Creates a box-shaped {@link Geometry}.
+ * @desc Creates box-shaped {@link Geometry}.
  *
  * ## Usage
  *
@@ -21332,7 +21332,7 @@ class Scene extends Component {
         });
 
         new DirLight(this, {
-            dir: [0.8, -1.0, -0.8],
+            dir: [0.5, -1.0, -1.0],
             color: [1.0, 1.0, 1.0],
             intensity: 1.0,
             space: "view"
@@ -22068,12 +22068,12 @@ class Scene extends Component {
     /**
      * Sets whether or not to render pixels with pre-multiplied gama.
      *
-     * Default value is ````true````.
+     * Default value is ````false````.
      *
      * @type {Boolean}
      */
     set gammaOutput(value) {
-        value = value !== false;
+        value = !!value;
         if (value === this._renderer.gammaOutput) {
             return;
         }
@@ -25502,6 +25502,26 @@ function getCanvasPosFromEvent$1(event, canvas, canvasPos) {
     return canvasPos;
 }
 
+const getCanvasPosFromEvent$2 = function (event, canvasPos) {
+    if (!event) {
+        event = window.event;
+        canvasPos[0] = event.x;
+        canvasPos[1] = event.y;
+    } else {
+        let element = event.target;
+        let totalOffsetLeft = 0;
+        let totalOffsetTop = 0;
+        while (element.offsetParent) {
+            totalOffsetLeft += element.offsetLeft;
+            totalOffsetTop += element.offsetTop;
+            element = element.offsetParent;
+        }
+        canvasPos[0] = event.pageX - totalOffsetLeft;
+        canvasPos[1] = event.pageY - totalOffsetTop;
+    }
+    return canvasPos;
+};
+
 /**
  * @private
  */
@@ -25514,23 +25534,21 @@ class TouchPanRotateAndDollyHandler {
         const pickController = controllers.pickController;
         const pivotController = controllers.pivotController;
 
-        const tapStartPos = math.vec2();
-        let tapStartTime = -1;
-
-        const lastTouches = [];
-        let numTouches = 0;
-
+        const tapStartCanvasPos = math.vec2();
+        const tapCanvasPos0 = math.vec2();
+        const tapCanvasPos1 = math.vec2();
         const touch0Vec = math.vec2();
-        const touch1Vec = math.vec2();
 
+        const lastCanvasTouchPosList = [];
         const canvas = this._scene.canvas.canvas;
 
+        let numTouches = 0;
+        let tapStartTime = -1;
         let waitForTick = false;
 
         this._onTick = scene.on("tick", () => {
             waitForTick = false;
         });
-
 
         canvas.addEventListener("touchstart", this._canvasTouchStartHandler = (event) => {
 
@@ -25547,17 +25565,18 @@ class TouchPanRotateAndDollyHandler {
             states.touchStartTime = Date.now();
 
             if (touches.length === 1 && changedTouches.length === 1) {
+
                 tapStartTime = states.touchStartTime;
-                tapStartPos[0] = touches[0].pageX;
-                tapStartPos[1] = touches[0].pageY;
+
+                getCanvasPosFromEvent$2(touches[0], tapStartCanvasPos);
 
                 if (configs.followPointer) {
 
-                    pickController.pickCursorPos = tapStartPos;
+                    pickController.pickCursorPos = tapStartCanvasPos;
                     pickController.schedulePickSurface = true;
                     pickController.update();
 
-                    if (!configs.planView ) {
+                    if (!configs.planView) {
 
                         if (pickController.picked && pickController.pickedSurface && pickController.pickResult && pickController.pickResult.worldPos) {
 
@@ -25586,13 +25605,12 @@ class TouchPanRotateAndDollyHandler {
                 tapStartTime = -1;
             }
 
-            while (lastTouches.length < touches.length) {
-                lastTouches.push(math.vec2());
+            while (lastCanvasTouchPosList.length < touches.length) {
+                lastCanvasTouchPosList.push(math.vec2());
             }
 
             for (let i = 0, len = touches.length; i < len; ++i) {
-                lastTouches[i][0] = touches[i].pageX;
-                lastTouches[i][1] = touches[i].pageY;
+                getCanvasPosFromEvent$2(touches[i], lastCanvasTouchPosList[i]);
             }
 
             numTouches = touches.length;
@@ -25611,7 +25629,9 @@ class TouchPanRotateAndDollyHandler {
                 // Limit changes detection to one per frame
                 return;
             }
+
             waitForTick = true;
+
             // Scaling drag-rotate to canvas boundary
 
             const canvasBoundary = scene.canvas.boundary;
@@ -25627,7 +25647,8 @@ class TouchPanRotateAndDollyHandler {
             }
 
             if (numTouches === 1) {
-                const touch0 = touches[0];
+
+                getCanvasPosFromEvent$2(touches[0], tapCanvasPos0);
 
                 //-----------------------------------------------------------------------------------------------
                 // Drag rotation
@@ -25635,7 +25656,7 @@ class TouchPanRotateAndDollyHandler {
 
                 if (configs.planView) { // No rotating in plan-view mode
 
-                    math.subVec2([touch0.pageX, touch0.pageY], lastTouches[0], touch0Vec);
+                    math.subVec2(tapCanvasPos0, lastCanvasTouchPosList[0], touch0Vec);
 
                     const xPanDelta = touch0Vec[0];
                     const yPanDelta = touch0Vec[1];
@@ -25659,8 +25680,8 @@ class TouchPanRotateAndDollyHandler {
                     }
 
                 } else {
-                    updates.rotateDeltaY -= ((touch0.pageX - lastTouches[0][0]) / canvasWidth) * configs.dragRotationRate / 2; // Full horizontal rotation
-                    updates.rotateDeltaX += ((touch0.pageY - lastTouches[0][1]) / canvasHeight) * (configs.dragRotationRate / 4); // Half vertical rotation
+                    updates.rotateDeltaY -= ((tapCanvasPos0[0] - lastCanvasTouchPosList[0][0]) / canvasWidth) * configs.dragRotationRate / 2; // Full horizontal rotation
+                    updates.rotateDeltaX += ((tapCanvasPos0[1] - lastCanvasTouchPosList[0][1]) / canvasHeight) * (configs.dragRotationRate / 4); // Half vertical rotation
                 }
 
             } else if (numTouches === 2) {
@@ -25668,8 +25689,11 @@ class TouchPanRotateAndDollyHandler {
                 const touch0 = touches[0];
                 const touch1 = touches[1];
 
-                const lastMiddleTouch = math.geometricMeanVec2(lastTouches[0], lastTouches[1]);
-                const currentMiddleTouch = math.geometricMeanVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
+                getCanvasPosFromEvent$2(touch0, tapCanvasPos0);
+                getCanvasPosFromEvent$2(touch1, tapCanvasPos1);
+
+                const lastMiddleTouch = math.geometricMeanVec2(lastCanvasTouchPosList[0], lastCanvasTouchPosList[1]);
+                const currentMiddleTouch = math.geometricMeanVec2(tapCanvasPos0, tapCanvasPos1);
 
                 const touchDelta = math.vec2();
 
@@ -25680,36 +25704,41 @@ class TouchPanRotateAndDollyHandler {
 
                 const camera = scene.camera;
 
-                // We use only canvasHeight here so that aspect ratio does not distort speed
-
-                if (camera.projection === "perspective") {
-                    const pickedWorldPos = pickController.pickResult ? pickController.pickResult.worldPos : scene.center;
-
-                    const depth = Math.abs(math.lenVec3(math.subVec3(pickedWorldPos, scene.camera.eye, [])));
-                    const targetDistance = depth * Math.tan((camera.perspective.fov / 2) * Math.PI / 180.0);
-
-                    updates.panDeltaX -= (xPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
-                    updates.panDeltaY -= (yPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
-
-                } else {
-
-                    updates.panDeltaX -= 0.5 * camera.ortho.scale * (xPanDelta / canvasHeight) * configs.touchPanRate;
-                    updates.panDeltaY -= 0.5 * camera.ortho.scale * (yPanDelta / canvasHeight) * configs.touchPanRate;
-                }
-
                 // Dollying
 
                 const d1 = math.distVec2([touch0.pageX, touch0.pageY], [touch1.pageX, touch1.pageY]);
-                const d2 = math.distVec2(lastTouches[0], lastTouches[1]);
+                const d2 = math.distVec2(lastCanvasTouchPosList[0], lastCanvasTouchPosList[1]);
 
-                updates.dollyDelta = (d2 - d1) * configs.touchDollyRate;
+                const dollyDelta = (d2 - d1) * configs.touchDollyRate;
+
+                updates.dollyDelta = dollyDelta;
+
+                if (Math.abs(dollyDelta) < 1.0) {
+
+                    // We use only canvasHeight here so that aspect ratio does not distort speed
+
+                    if (camera.projection === "perspective") {
+                        const pickedWorldPos = pickController.pickResult ? pickController.pickResult.worldPos : scene.center;
+
+                        const depth = Math.abs(math.lenVec3(math.subVec3(pickedWorldPos, scene.camera.eye, [])));
+                        const targetDistance = depth * Math.tan((camera.perspective.fov / 2) * Math.PI / 180.0);
+
+                        updates.panDeltaX -= (xPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
+                        updates.panDeltaY -= (yPanDelta * targetDistance / canvasHeight) * configs.touchPanRate;
+
+                    } else {
+
+                        updates.panDeltaX -= 0.5 * camera.ortho.scale * (xPanDelta / canvasHeight) * configs.touchPanRate;
+                        updates.panDeltaY -= 0.5 * camera.ortho.scale * (yPanDelta / canvasHeight) * configs.touchPanRate;
+                    }
+                }
+
 
                 states.pointerCanvasPos = currentMiddleTouch;
             }
 
             for (let i = 0; i < numTouches; ++i) {
-                lastTouches[i][0] = touches[i].pageX;
-                lastTouches[i][1] = touches[i].pageY;
+                getCanvasPosFromEvent$2(touches[i], lastCanvasTouchPosList[i]);
             }
         });
     }
@@ -25986,7 +26015,7 @@ class TouchPanRotateAndDollyHandler {
  *
  * ````javascript
  * cameraControl.navMode = "planView";
- * cameraControl.followPointer = true;
+ * cameraControl.followPointer = true; // Default
  * ````
  *
  * When the pointer is over empty space, the target will remain the last object that the pointer was over.
@@ -26343,7 +26372,7 @@ class CameraControl extends Component {
             navMode: "orbit",
             planView: false,
             firstPerson: false,
-            followPointer: false,
+            followPointer: true,
             doublePickFlyTo: true,
             panRightClick: true,
             showPivot: false,
@@ -26367,7 +26396,7 @@ class CameraControl extends Component {
 
             keyboardDollyRate: 10,
             mouseWheelDollyRate: 100,
-            touchDollyRate: 0.05,
+            touchDollyRate: 0.2,
             dollyInertia: 0,
             dollyProximityThreshold: 30.0,
             dollyMinSpeed: 0.04
@@ -26682,7 +26711,7 @@ class CameraControl extends Component {
     }
 
     /**
-     * Sets whether the {@link Camera} follows the mouse or touch pointer.
+     * Sets whether the {@link Camera} follows the mouse/touch pointer.
      *
      * In orbiting mode, the Camera will orbit about the pointer, and will dolly to and from the pointer.
      *
@@ -26690,18 +26719,18 @@ class CameraControl extends Component {
      *
      * In plan-view mode, the Camera will dolly to and from the pointer, however the Camera will not rotate.
      *
-     * Default is ````false````.
+     * Default is ````true````.
      *
      * See class comments for more info.
      *
      * @param {Boolean} value Set ````true```` to enable the Camera to follow the pointer.
      */
     set followPointer(value) {
-        this._configs.followPointer = !!value;
+        this._configs.followPointer = (value !== false);
     }
 
     /**
-     * Sets whether the {@link Camera} follows the mouse or touch pointer.
+     * Sets whether the {@link Camera} follows the mouse/touch pointer.
      *
      * In orbiting mode, the Camera will orbit about the pointer, and will dolly to and from the pointer.
      *
@@ -26709,7 +26738,7 @@ class CameraControl extends Component {
      *
      * In plan-view mode, the Camera will dolly to and from the pointer, however the Camera will not rotate.
      *
-     * Default is ````false````.
+     * Default is ````true````.
      *
      * See class comments for more info.
      *
@@ -26756,7 +26785,7 @@ class CameraControl extends Component {
      */
     get dollyToPointer() {
         this.warn("dollyToPointer property is deprecated - replaced with followPointer");
-        return this.followPointer = value;
+        return this.followPointer;
     }
 
     /**
@@ -27093,18 +27122,18 @@ class CameraControl extends Component {
     /**
      * Sets how much the {@link Camera} dollys with touch input.
      *
-     * Default is ````0.05````
+     * Default is ````0.2````
      *
      * @param {Number} touchDollyRate The new touch dolly rate.
      */
     set touchDollyRate(touchDollyRate) {
-        this._configs.touchDollyRate = (touchDollyRate !== null && touchDollyRate !== undefined) ? touchDollyRate : 0.05;
+        this._configs.touchDollyRate = (touchDollyRate !== null && touchDollyRate !== undefined) ? touchDollyRate : 0.2;
     }
 
     /**
      * Gets how much the {@link Camera} dollys each second with touch input.
      *
-     * Default is ````0.05````.
+     * Default is ````0.2````.
      *
      * @returns {Number} The current touch dolly rate.
      */
@@ -43723,11 +43752,6 @@ class PointsBatchingSilhouetteRenderer {
                 src.push("uniform vec3 sectionPlaneDir" + i + ";");
             }
         }
-        src.push("vec2 cxy = 2.0 * gl_PointCoord - 1.0;");
-        src.push("float r = dot(cxy, cxy);");
-        src.push("if (r > 1.0) {");
-        src.push("   discard;");
-        src.push("}");
         src.push("uniform vec4 color;");
         src.push("void main(void) {");
         if (scene.pointsMaterial.roundPoints) {
@@ -45580,6 +45604,9 @@ class PointsBatchingLayer {
         if (this._pointsBatchingRenderers.pickDepthRenderer) {
             this._pointsBatchingRenderers.pickDepthRenderer.drawLayer(frameCtx, this, RENDER_PASSES.PICK);
         }
+    }
+
+    drawPickNormals(frameCtx) {
     }
 
     //---- OCCLUSION TESTING -------------------------------------------------------------------------------------------
@@ -48931,6 +48958,9 @@ class PointsInstancingLayer {
         if (this._pointsInstancingRenderers.pickDepthRenderer) {
             this._pointsInstancingRenderers.pickDepthRenderer.drawLayer(frameCtx, this, RENDER_PASSES.PICK);
         }
+    }
+
+    drawPickNormals(frameCtx) {
     }
 
     destroy() {
@@ -60075,23 +60105,27 @@ function extract$5(elements) {
 
 function inflate$5(deflatedData) {
 
+    function inflate(array, options) {
+        return (array.length === 0) ? [] : pako$5.inflate(array, options).buffer;
+    }
+
     return {
-        positions: new Uint16Array(pako$5.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$5.inflate(deflatedData.normals).buffer),
-        indices: new Uint32Array(pako$5.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$5.inflate(deflatedData.edgeIndices).buffer),
-        matrices: new Float32Array(pako$5.inflate(deflatedData.matrices).buffer),
-        reusedPrimitivesDecodeMatrix: new Float32Array(pako$5.inflate(deflatedData.reusedPrimitivesDecodeMatrix).buffer),
-        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion).buffer),
-        eachPrimitiveIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveIndicesPortion).buffer),
-        eachPrimitiveEdgeIndicesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachPrimitiveEdgeIndicesPortion).buffer),
-        eachPrimitiveColorAndOpacity: new Uint8Array(pako$5.inflate(deflatedData.eachPrimitiveColorAndOpacity).buffer),
-        primitiveInstances: new Uint32Array(pako$5.inflate(deflatedData.primitiveInstances).buffer),
+        positions: new Uint16Array(inflate(deflatedData.positions)),
+        normals: new Int8Array(inflate(deflatedData.normals)),
+        indices: new Uint32Array(inflate(deflatedData.indices)),
+        edgeIndices: new Uint32Array(inflate(deflatedData.edgeIndices)),
+        matrices: new Float32Array(inflate(deflatedData.matrices)),
+        reusedPrimitivesDecodeMatrix: new Float32Array(inflate(deflatedData.reusedPrimitivesDecodeMatrix)),
+        eachPrimitivePositionsAndNormalsPortion: new Uint32Array(inflate(deflatedData.eachPrimitivePositionsAndNormalsPortion)),
+        eachPrimitiveIndicesPortion: new Uint32Array(inflate(deflatedData.eachPrimitiveIndicesPortion)),
+        eachPrimitiveEdgeIndicesPortion: new Uint32Array(inflate(deflatedData.eachPrimitiveEdgeIndicesPortion)),
+        eachPrimitiveColorAndOpacity: new Uint8Array(inflate(deflatedData.eachPrimitiveColorAndOpacity)),
+        primitiveInstances: new Uint32Array(inflate(deflatedData.primitiveInstances)),
         eachEntityId: pako$5.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityPrimitiveInstancesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityPrimitiveInstancesPortion).buffer),
-        eachEntityMatricesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachEntityMatricesPortion).buffer),
-        eachTileAABB: new Float64Array(pako$5.inflate(deflatedData.eachTileAABB).buffer),
-        eachTileEntitiesPortion: new Uint32Array(pako$5.inflate(deflatedData.eachTileEntitiesPortion).buffer),
+        eachEntityPrimitiveInstancesPortion: new Uint32Array(inflate(deflatedData.eachEntityPrimitiveInstancesPortion)),
+        eachEntityMatricesPortion: new Uint32Array(inflate(deflatedData.eachEntityMatricesPortion)),
+        eachTileAABB: new Float64Array(inflate(deflatedData.eachTileAABB)),
+        eachTileEntitiesPortion: new Uint32Array(inflate(deflatedData.eachTileEntitiesPortion))
     };
 }
 
@@ -60390,34 +60424,38 @@ function extract$6(elements) {
 
 function inflate$6(deflatedData) {
 
+    function inflate(array, options) {
+        return (array.length === 0) ? [] : pako$6.inflate(array, options).buffer;
+    }
+
     return {
-        positions: new Uint16Array(pako$6.inflate(deflatedData.positions).buffer),
-        normals: new Int8Array(pako$6.inflate(deflatedData.normals).buffer),
-        colors: new Uint8Array(pako$6.inflate(deflatedData.colors).buffer),
+        positions: new Uint16Array(inflate(deflatedData.positions)),
+        normals: new Int8Array(inflate(deflatedData.normals)),
+        colors: new Uint8Array(inflate(deflatedData.colors)),
 
-        indices: new Uint32Array(pako$6.inflate(deflatedData.indices).buffer),
-        edgeIndices: new Uint32Array(pako$6.inflate(deflatedData.edgeIndices).buffer),
+        indices: new Uint32Array(inflate(deflatedData.indices)),
+        edgeIndices: new Uint32Array(inflate(deflatedData.edgeIndices)),
 
-        matrices: new Float32Array(pako$6.inflate(deflatedData.matrices).buffer),
+        matrices: new Float32Array(inflate(deflatedData.matrices)),
 
-        reusedGeometriesDecodeMatrix: new Float32Array(pako$6.inflate(deflatedData.reusedGeometriesDecodeMatrix).buffer),
+        reusedGeometriesDecodeMatrix: new Float32Array(inflate(deflatedData.reusedGeometriesDecodeMatrix)),
 
-        eachGeometryPrimitiveType: new Uint8Array(pako$6.inflate(deflatedData.eachGeometryPrimitiveType).buffer),
-        eachGeometryPositionsPortion: new Uint32Array(pako$6.inflate(deflatedData.eachGeometryPositionsPortion).buffer),
-        eachGeometryNormalsPortion: new Uint32Array(pako$6.inflate(deflatedData.eachGeometryNormalsPortion).buffer),
-        eachGeometryColorsPortion: new Uint32Array(pako$6.inflate(deflatedData.eachGeometryColorsPortion).buffer),
-        eachGeometryIndicesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachGeometryIndicesPortion).buffer),
-        eachGeometryEdgeIndicesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachGeometryEdgeIndicesPortion).buffer),
+        eachGeometryPrimitiveType: new Uint8Array(inflate(deflatedData.eachGeometryPrimitiveType)),
+        eachGeometryPositionsPortion: new Uint32Array(inflate(deflatedData.eachGeometryPositionsPortion)),
+        eachGeometryNormalsPortion: new Uint32Array(inflate(deflatedData.eachGeometryNormalsPortion)),
+        eachGeometryColorsPortion: new Uint32Array(inflate(deflatedData.eachGeometryColorsPortion)),
+        eachGeometryIndicesPortion: new Uint32Array(inflate(deflatedData.eachGeometryIndicesPortion)),
+        eachGeometryEdgeIndicesPortion: new Uint32Array(inflate(deflatedData.eachGeometryEdgeIndicesPortion)),
 
-        eachMeshGeometriesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachMeshGeometriesPortion).buffer),
-        eachMeshMatricesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachMeshMatricesPortion).buffer),
-        eachMeshMaterial: new Uint8Array(pako$6.inflate(deflatedData.eachMeshMaterial).buffer),
+        eachMeshGeometriesPortion: new Uint32Array(inflate(deflatedData.eachMeshGeometriesPortion)),
+        eachMeshMatricesPortion: new Uint32Array(inflate(deflatedData.eachMeshMatricesPortion)),
+        eachMeshMaterial: new Uint8Array(inflate(deflatedData.eachMeshMaterial)),
 
         eachEntityId: pako$6.inflate(deflatedData.eachEntityId, {to: 'string'}),
-        eachEntityMeshesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachEntityMeshesPortion).buffer),
+        eachEntityMeshesPortion: new Uint32Array(inflate(deflatedData.eachEntityMeshesPortion)),
 
-        eachTileAABB: new Float64Array(pako$6.inflate(deflatedData.eachTileAABB).buffer),
-        eachTileEntitiesPortion: new Uint32Array(pako$6.inflate(deflatedData.eachTileEntitiesPortion).buffer),
+        eachTileAABB: new Float64Array(inflate(deflatedData.eachTileAABB)),
+        eachTileEntitiesPortion: new Uint32Array(inflate(deflatedData.eachTileEntitiesPortion)),
     };
 }
 
