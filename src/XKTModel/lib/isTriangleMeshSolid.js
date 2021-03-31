@@ -10,8 +10,6 @@
  */
 const isTriangleMeshSolid = (indices, positions) => {
 
-    return true;
-
     let numPositions = 0;
     const positionToAdjustedIndex = {};
     const adjustedIndices = [];
