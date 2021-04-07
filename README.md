@@ -1,14 +1,14 @@
-# xeokit-xkt-utils 
+# xeokit-xkt-utils
 
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-**````xeokit-xkt-utils````** is a JavaScript toolkit for
-creating [````XKT V7````](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md) model geometry files, which we
-then can load into [xeokit](http://xeokit.io) v1.7+. 
+A JavaScript toolkit for creating [````XKT````](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md) model files
+for loading into [xeokit](http://xeokit.io).
 
-Using this toolkit in either browser or node, we can convert glTF
-into ````XKT````, and can even generate ````XKT```` files programmatically.
+````XKT```` is xeokit's native geometry file format, which allows us to rapidly load complex, double-precision models over the
+Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF into ````XKT````, and can even generate ````XKT````
+files programmatically.
 
 This toolkit is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to
 convert glTF to ````XKT````.
@@ -40,7 +40,7 @@ convert glTF to ````XKT````.
 
 * A JavaScript document model that represents an XKT file
 * Parse glTF into the document model
-* Programmatically generate geometry within the document model  
+* Programmatically generate geometry within the document model
 * Serialize the document model to an array buffer
 * Save the array buffer as an XKT file
 
@@ -269,7 +269,7 @@ viewer.cameraFlight.flyTo(model);
 Let's
 use [````parseGLTFIntoXKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel)
 to import glTF into
-an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html). 
+an [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html).
 
 We'll also use the classes and functions introduced in the previous examples to serialize
 the [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) to

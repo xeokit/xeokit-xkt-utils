@@ -51,11 +51,11 @@
 
 <div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://percy.io/73524691/xeokit-xkt-utils"><img src="https://percy.io/static/images/percy-badge.svg" alt="This project is using Percy.io for visual regression testing."></a>
 <a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
-<p><strong><code>xeokit-xkt-utils</code></strong> is a JavaScript toolkit for
-creating <a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md"><code>XKT V7</code></a> model geometry files, which we
-then can load into <a href="http://xeokit.io">xeokit</a> v1.7+. </p>
-<p>Using this toolkit in either browser or node, we can convert glTF
-into <code>XKT</code>, and can even generate <code>XKT</code> files programmatically.</p>
+<p>A JavaScript toolkit for creating <a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md"><code>XKT</code></a> model files
+for loading into <a href="http://xeokit.io">xeokit</a>.</p>
+<p><code>XKT</code> is xeokit&apos;s native geometry file format, which allows us to rapidly load complex, double-precision models over the
+Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF into <code>XKT</code>, and can even generate <code>XKT</code>
+files programmatically.</p>
 <p>This toolkit is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to
 convert glTF to <code>XKT</code>.</p>
 <p><a href="https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_buildGeometries"><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></a></p>
@@ -83,7 +83,7 @@ convert glTF to <code>XKT</code>.</p>
 <h2 id="features">Features</h2><ul>
 <li>A JavaScript document model that represents an XKT file</li>
 <li>Parse glTF into the document model</li>
-<li>Programmatically generate geometry within the document model  </li>
+<li>Programmatically generate geometry within the document model</li>
 <li>Serialize the document model to an array buffer</li>
 <li>Save the array buffer as an XKT file</li>
 </ul>
@@ -274,7 +274,7 @@ const model = xktLoader.load({
 <h4 id="loading-gltf-into-an-xktmodel">Loading glTF into an XKTModel</h4><p>Let&apos;s
 use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel"><code>parseGLTFIntoXKTModel</code></a>
 to import glTF into
-an <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>. </p>
+an <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>.</p>
 <p>We&apos;ll also use the classes and functions introduced in the previous examples to serialize
 the <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to
 an <code>ArrayBuffer</code>, then validate the <code>ArrayBuffer</code> and load it into
