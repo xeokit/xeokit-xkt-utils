@@ -1,5 +1,6 @@
 # xeokit-xkt-utils 
 
+[![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
 **````xeokit-xkt-utils````** is a JavaScript toolkit for
@@ -12,7 +13,7 @@ into ````XKT````, and can even generate ````XKT```` files programmatically.
 This toolkit is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to
 convert glTF to ````XKT````.
 
-[![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#geometryBuilders_buildGeometries)
+[![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/#geometryBuilders_buildGeometries)
 
 ## Contents
 
@@ -32,7 +33,7 @@ convert glTF to ````XKT````.
 * [npm](https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils)
 * [API Documentation](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
-* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/examples)
+* [Live Tests](https://xeokit.github.io/xeokit-xkt-utils/tests)
 
 ## Features
 
@@ -77,9 +78,9 @@ We'll code this example to run in the browser, using the ES module
 in [xeokit-xkt-utils.es.js](./dist/xeokit-xkt-utils.es.js). We could also code it to run on node, using the CommonJS
 module in [xeokit-xkt-utils.cjs.js](./dist/xeokit-xkt-utils.cjs.js).
 
-[![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)](https://xeokit.github.io/xeokit-xkt-utils/examples/#generate_instancing_triangles)
+[![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_instancing_triangles)
 
-[[Run this example](https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate)]
+[[Run this example](https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_instancing_triangles)]
 
 ````javascript
 
@@ -364,10 +365,10 @@ Building the JavaScript API documentation in [````./docs````](https://xeokit.git
 npm run docs
 ````
 
-Building the live tests in [````./examples````](https://xeokit.github.io/xeokit-xkt-utils/examples):
+Building the live tests in [````./tests````](https://xeokit.github.io/xeokit-xkt-utils/tests):
 
 ````bash
-cd examples
+cd tests
 npm update
 npm run build
 ````

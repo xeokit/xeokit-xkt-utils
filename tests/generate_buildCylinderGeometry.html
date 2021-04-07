@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>buildCylinderGeometry</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"/>
+
+    <style>
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+            background: lightBlue;
+        }
+    </style>
+
+</head>
+
+<body>
+<canvas id="myCanvas"></canvas>
+</body>
+<script type="module">
+
+    import {
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        buildCylinderGeometry,
+        writeXKTModelToArrayBuffer,
+        validateXKTArrayBuffer
+    } from "./../dist/xeokit-xkt-utils.es.js";
+    import {signalTestComplete} from "./libs/utils.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.scene.camera.eye = [-8.13985059402106, -1.8393946127691516, 0.748789327349378];
+    viewer.scene.camera.look = [-3.9999999999999964, -6.000000000000006, -4.000000000000006];
+    viewer.scene.camera.up = [0.362131832124677, 0.8344486873514654, -0.41539851268323214];
+
+    const xktModel = new XKTModel();
+
+    const cylinder = buildCylinderGeometry({
+        center: [0, 0, 0],
+        radiusTop: 2.0,
+        radiusBottom: 2.0,
+        height: 5.0,
+        radialSegments: 20,
+        heightSegments: 1,
+        openEnded: false
+    });
+
+    const xktGeometry = xktModel.createGeometry({
+        geometryId: "cylinderGeometry",
+        primitiveType: cylinder.primitiveType, // Will be "triangles"
+        positions: cylinder.positions,
+        normals: cylinder.normals,
+        indices: cylinder.indices
+    });
+
+    const xktMesh = xktModel.createMesh({
+        meshId: "redCylinderMesh",
+        geometryId: "cylinderGeometry",
+        position: [-4, -6, -4],
+        scale: [1, 1, 1],
+        rotation: [0, 0, 0],
+        color: [1, 0.6, 0],
+        opacity: 1
+    });
+
+    const xktEntity = xktModel.createEntity({
+        entityId: "redCylinder",
+        meshIds: ["redCylinderMesh"]
+    });
+
+    xktModel.finalize();
+
+    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    const model = xktLoader.load({
+        id: "myModel",
+        xkt: xktArrayBuffer,
+        edges: true
+    });
+
+    model.on("loaded", () => {
+        signalTestComplete();
+    });
+
+</script>
+</html>
