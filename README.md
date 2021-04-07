@@ -13,7 +13,7 @@ into ````XKT````, and can even generate ````XKT```` files programmatically.
 This toolkit is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to
 convert glTF to ````XKT````.
 
-[![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/#geometryBuilders_buildGeometries)
+[![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_buildGeometries)
 
 ## Contents
 

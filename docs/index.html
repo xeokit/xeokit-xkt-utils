@@ -49,7 +49,8 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://percy.io/73524691/xeokit-xkt-utils"><img src="https://percy.io/static/images/percy-badge.svg" alt="This project is using Percy.io for visual regression testing."></a>
+<a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
 <p><strong><code>xeokit-xkt-utils</code></strong> is a JavaScript toolkit for
 creating <a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md"><code>XKT V7</code></a> model geometry files, which we
 then can load into <a href="http://xeokit.io">xeokit</a> v1.7+. </p>
@@ -57,7 +58,7 @@ then can load into <a href="http://xeokit.io">xeokit</a> v1.7+. </p>
 into <code>XKT</code>, and can even generate <code>XKT</code> files programmatically.</p>
 <p>This toolkit is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to
 convert glTF to <code>XKT</code>.</p>
-<p><a href="https://xeokit.github.io/xeokit-xkt-utils/examples/#geometryBuilders_buildGeometries"><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></a></p>
+<p><a href="https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_buildGeometries"><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></a></p>
 <h2 id="contents">Contents</h2><ul>
 <li><a href="#links">Links</a></li>
 <li><a href="#features">Features</a></li>
@@ -76,7 +77,7 @@ convert glTF to <code>XKT</code>.</p>
 <li><a href="https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils">npm</a></li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs">API Documentation</a></li>
 <li><a href="https://github.com/xeokit/xeokit-xkt-utils">Source Code</a></li>
-<li><a href="https://xeokit.github.io/xeokit-xkt-utils/examples">Live Tests</a></li>
+<li><a href="https://xeokit.github.io/xeokit-xkt-utils/tests">Live Tests</a></li>
 </ul>
 <h2 id="features">Features</h2><ul>
 <li>A JavaScript document model that represents an XKT file</li>
@@ -110,8 +111,8 @@ using <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoa
 <p>We&apos;ll code this example to run in the browser, using the ES module
 in <a href="./dist/xeokit-xkt-utils.es.js">xeokit-xkt-utils.es.js</a>. We could also code it to run on node, using the CommonJS
 module in <a href="./dist/xeokit-xkt-utils.cjs.js">xeokit-xkt-utils.cjs.js</a>.</p>
-<p><a href="https://xeokit.github.io/xeokit-xkt-utils/examples/#generate_instancing_triangles"><img src="http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png" alt="XKTModel Example"></a></p>
-<p>[<a href="https://xeokit.github.io/xeokit-xkt-utils/examples/#XKTModel_generate">Run this example</a>]</p>
+<p><a href="https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_instancing_triangles"><img src="http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png" alt="XKTModel Example"></a></p>
+<p>[<a href="https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_instancing_triangles">Run this example</a>]</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">
 import {XKTModel, writeXKTModelToArrayBuffer, validateXKTArrayBuffer} from &quot;./dist/xeokit-xkt-utils.es.js&quot;;
 
@@ -351,8 +352,8 @@ npm run build</code>
 <p>Building the JavaScript API documentation in <a href="https://xeokit.github.io/xeokit-xkt-utils/docs"><code>./docs</code></a>:</p>
 <pre><code class="lang-bash"><code class="source-code prettyprint">npm run docs</code>
 </code></pre>
-<p>Building the live tests in <a href="https://xeokit.github.io/xeokit-xkt-utils/examples"><code>./examples</code></a>:</p>
-<pre><code class="lang-bash"><code class="source-code prettyprint">cd examples
+<p>Building the live tests in <a href="https://xeokit.github.io/xeokit-xkt-utils/tests"><code>./tests</code></a>:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">cd tests
 npm update
 npm run build</code>
 </code></pre>
