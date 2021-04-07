@@ -365,11 +365,3 @@ Building the JavaScript API documentation in [````./docs````](https://xeokit.git
 ````bash
 npm run docs
 ````
-
-Building the live tests in [````./tests````](https://xeokit.github.io/xeokit-xkt-utils/tests):
-
-````bash
-cd tests
-npm update
-npm run build
-````
