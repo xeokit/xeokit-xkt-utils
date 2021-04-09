@@ -7,8 +7,7 @@ PercyScript.run(async (page, percySnapshot) => {
         await page.goto('http://localhost:8080/tests/' + pageName);
         await page.waitFor(() => !!document.querySelector('#percyLoaded'));
         await percySnapshot(pageName, {
-            widths: [1280],
-
+            widths: [1280]
         });
     }
 
