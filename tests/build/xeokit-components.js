@@ -20043,7 +20043,7 @@ class SAO extends Component {
 const PRESETS$2 = {
     "default": {
         pointSize: 4,
-        roundPoints: false,
+        roundPoints: true,
         perspectivePoints: true
     },
     "square": {
@@ -20125,7 +20125,7 @@ class PointsMaterial extends Material {
      * @param {*} [cfg] The PointsMaterial configuration
      * @param {String} [cfg.id] Optional ID, unique among all components in the parent {@link Scene}, generated automatically when omitted.
      * @param {Number} [cfg.pointSize=2] Point size in pixels.
-     * @param {Boolean} [cfg.roundPoints=false] Whether points are round (````true````) or square (````false````).
+     * @param {Boolean} [cfg.roundPoints=true] Whether points are round (````true````) or square (````false````).
      * @param {Boolean} [cfg.perspectivePoints=true] Whether apparent point size reduces with distance when {@link Camera#projection} is set to "perspective".
      * @param {Number} [cfg.minPerspectivePointSize=1] When ````perspectivePoints```` is ````true````, this is the minimum rendered size of each point in pixels.
      * @param {Number} [cfg.maxPerspectivePointSize=6] When ````perspectivePoints```` is ````true````, this is the maximum rendered size of each point in pixels.
@@ -20198,12 +20198,12 @@ class PointsMaterial extends Material {
     /**
      * Sets if points are round or square.
      *
-     * Default is ````false```` to set points square.
+     * Default is ````true```` to set points round.
      *
      * @type {Boolean}
      */
     set roundPoints(value) {
-        value = !!value;
+        value = (value !== false);
         if (this._state.roundPoints === value) {
             return;
         }
@@ -20215,7 +20215,7 @@ class PointsMaterial extends Material {
     /**
      * Gets if points are round or square.
      *
-     * Default is ````false```` to set points square.
+     * Default is ````true```` to set points round.
      *
      * @type {Boolean}
      */
@@ -30005,9 +30005,9 @@ class TrianglesBatchingColorRenderer {
                 }
             } else if (light.type === "point") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightPos" + i + " - viewPosition.xyz);");
+                    src.push("viewLightDir = -normalize(lightPos" + i + " - viewPosition.xyz);");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
+                    src.push("viewLightDir = -normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "spot") {
                 if (light.space === "view") {
@@ -35719,9 +35719,9 @@ class TrianglesInstancingColorRenderer {
                 }
             } else if (light.type === "point") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightPos" + i + " - viewPosition.xyz);");
+                    src.push("viewLightDir = -normalize(lightPos" + i + " - viewPosition.xyz);");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
+                    src.push("viewLightDir = -normalize((viewMatrix * vec4(lightPos" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "spot") {
                 if (light.space === "view") {
@@ -49886,7 +49886,7 @@ class PointsInstancingLayer {
         }
     }
 
-    drawSilhouetteSelected(frameCtx) {
+    drawSilhouetteSelected(renderFlags, frameCtx) {
         if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0 || this._numSelectedLayerPortions === 0) {
             return;
         }
@@ -49897,24 +49897,24 @@ class PointsInstancingLayer {
 
     //-- EDGES RENDERING -----------------------------------------------------------------------------------------------
 
-    drawEdgesColorOpaque(frameCtx) {
+    drawEdgesColorOpaque(renderFlags, frameCtx) {
     }
 
-    drawEdgesColorTransparent(frameCtx) {
+    drawEdgesColorTransparent(renderFlags, frameCtx) {
     }
 
-    drawEdgesHighlighted(frameCtx) {
+    drawEdgesHighlighted(renderFlags, frameCtx) {
     }
 
-    drawEdgesSelected(frameCtx) {
+    drawEdgesSelected(renderFlags, frameCtx) {
     }
 
-    drawEdgesXRayed(frameCtx) {
+    drawEdgesXRayed(renderFlags, frameCtx) {
     }
 
     // ---------------------- OCCLUSION CULL RENDERING -----------------------------------
 
-    drawOcclusion(frameCtx) {
+    drawOcclusion(renderFlags, frameCtx) {
         if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
             return;
         }
@@ -49926,12 +49926,12 @@ class PointsInstancingLayer {
 
     // ---------------------- SHADOW BUFFER RENDERING -----------------------------------
 
-    drawShadow(frameCtx) {
+    drawShadow(renderFlags, frameCtx) {
     }
 
     //---- PICKING ----------------------------------------------------------------------------------------------------
 
-    drawPickMesh(frameCtx) {
+    drawPickMesh(renderFlags, frameCtx) {
         if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
             return;
         }
@@ -49940,7 +49940,7 @@ class PointsInstancingLayer {
         }
     }
 
-    drawPickDepths(frameCtx) {
+    drawPickDepths(renderFlags, frameCtx) {
         if (this._numCulledLayerPortions === this._numPortions || this._numVisibleLayerPortions === 0) {
             return;
         }
@@ -49949,7 +49949,7 @@ class PointsInstancingLayer {
         }
     }
 
-    drawPickNormals(frameCtx) {
+    drawPickNormals(renderFlags, frameCtx) {
     }
 
     destroy() {
@@ -63979,9 +63979,9 @@ function buildVertexLambert(mesh) {
                 }
             } else if (light.type === "point") {
                 if (light.space === "view") {
-                    src.push("viewLightDir = normalize(lightPos" + i + " - viewPosition.xyz);");
+                    src.push("viewLightDir = -normalize(lightPos" + i + " - viewPosition.xyz);");
                 } else {
-                    src.push("viewLightDir = normalize((viewMatrix2 * vec4(lightPos" + i + ", 0.0)).xyz);");
+                    src.push("viewLightDir = -normalize((viewMatrix2 * vec4(lightPos" + i + ", 0.0)).xyz);");
                 }
             } else if (light.type === "spot") {
                 if (light.space === "view") {
