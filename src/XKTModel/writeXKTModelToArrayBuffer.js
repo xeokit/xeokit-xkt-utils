@@ -199,7 +199,7 @@ function getModelData(xktModel) {
     // Entities, geometry instances, and tiles
 
     let entityIndex = 0;
-    let countEntityGeometryInstancesPortion = 0;
+    let countEntityMeshesPortion = 0;
 
     for (let tileIndex = 0; tileIndex < numTiles; tileIndex++) {
 
@@ -218,27 +218,27 @@ function getModelData(xktModel) {
         for (let j = 0; j < numTileEntities; j++) {
 
             const entity = tileEntities[j];
-            const entityGeometryInstances = entity.meshes;
-            const numEntityGeometryInstances = entityGeometryInstances.length;
+            const entityMeshes = entity.meshes;
+            const numEntityMeshes = entityMeshes.length;
 
-            if (numEntityGeometryInstances === 0) {
+            if (numEntityMeshes === 0) {
                 continue;
             }
 
-            for (let k = 0; k < numEntityGeometryInstances; k++) {
+            for (let k = 0; k < numEntityMeshes; k++) {
 
-                const geometryInstance = entityGeometryInstances[k];
-                const geometry = geometryInstance.geometry;
+                const mesh = entityMeshes[k];
+                const geometry = mesh.geometry;
                 const geometryIndex = geometry.geometryIndex;
 
-                data.eachMeshGeometriesPortion [countEntityGeometryInstancesPortion + k] = geometryIndex;
+                data.eachMeshGeometriesPortion [countEntityMeshesPortion + k] = geometryIndex;
             }
 
             data.eachEntityId [entityIndex] = entity.entityId;
-            data.eachEntityMeshesPortion[entityIndex] = countEntityGeometryInstancesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityGeometryInstancesPortion correct?
+            data.eachEntityMeshesPortion[entityIndex] = countEntityMeshesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityMeshesPortion correct?
 
             entityIndex++;
-            countEntityGeometryInstancesPortion += numEntityGeometryInstances;
+            countEntityMeshesPortion += numEntityMeshes;
         }
 
         const tileAABBIndex = tileIndex * 6;
