@@ -4,8 +4,8 @@ const httpServer = require('http-server');
 PercyScript.run(async (page, percySnapshot) => {
 
     async function testPage(pageName) {
-        await page.goto('http://localhost:8080/tests/' + pageName);
-        await page.waitFor(() => !!document.querySelector('#percyLoaded'));
+        await page.goto('http://localhost:3000/tests/' + pageName);
+        await page.waitForFunction(() => !!document.querySelector('#percyLoaded'));
         await percySnapshot(pageName, {
             widths: [1280]
         });
@@ -13,7 +13,7 @@ PercyScript.run(async (page, percySnapshot) => {
 
     let server = httpServer.createServer();
 
-    server.listen(8080);
+    server.listen(3000);
 
     console.log(`Server started`);
 
