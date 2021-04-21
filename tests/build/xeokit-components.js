@@ -19549,7 +19549,7 @@ class Metrics extends Component {
  * }
  *
  * sao.enabled = true; // Enable SAO - only works if supported (see above)
- * sao.intensity = 0.20;
+ * sao.intensity = 0.15;
  * sao.bias = 0.5;
  * sao.scale = 1.0;
  * sao.minResolution = 0.0;
@@ -19795,13 +19795,13 @@ class SAO extends Component {
     /**
      * Sets the degree of darkening (ambient obscurance) produced by the SAO effect.
      *
-     * Default value is ````0.20````.
+     * Default value is ````0.15````.
      *
      * @type {Number}
      */
     set intensity(value) {
         if (value === undefined || value === null) {
-            value = 0.20;
+            value = 0.15;
         }
         if (this._intensity === value) {
             return;
@@ -19813,7 +19813,7 @@ class SAO extends Component {
     /**
      * Gets the degree of darkening (ambient obscurance) produced by the SAO effect.
      *
-     * Default value is ````0.25````.
+     * Default value is ````0.15````.
      * 
      * @type {Number}
      */
@@ -24621,7 +24621,7 @@ class MousePickHandler {
             if (pickResult && pickResult.worldPos) {
                 pos = pickResult.worldPos;
             }
-            const aabb = pickResult ? pickResult.entity.aabb : scene.aabb;
+            const aabb = pickResult && pickResult.entity ? pickResult.entity.aabb : scene.aabb;
             if (pos) { // Fly to look at point, don't change eye->look dist
                 const camera = scene.camera;
                 const diff = math.subVec3(camera.eye, camera.look, []);
@@ -33711,7 +33711,7 @@ class TrianglesBatchingColorQualityRenderer {
             }
 
             if (lightsState.reflectionMaps.length > 0) {
-                src.push("   vec3 reflectVec             = reflect(-geometry.viewEyeDir, geometry.viewNormal);");
+                src.push("   vec3 reflectVec             = reflect(geometry.viewEyeDir, geometry.viewNormal);");
                 src.push("   reflectVec                  = inverseTransformDirection(reflectVec, viewMatrix);");
                 src.push("   float blinnExpFromRoughness = GGXRoughnessToBlinnExponent(material.specularRoughness);");
                 src.push("   vec3 radiance               = getLightProbeIndirectRadiance(reflectVec, blinnExpFromRoughness, 8);");
@@ -33780,7 +33780,7 @@ class TrianglesBatchingColorQualityRenderer {
         src.push("material.specularColor     = mix(vec3(dielectricSpecular), diffuseColor, metallic);");
 
         src.push("geometry.position      = vViewPosition.xyz;");
-        src.push("geometry.viewNormal    = -vViewNormal;");
+        src.push("geometry.viewNormal    = -normalize(vViewNormal);");
         src.push("geometry.viewEyeDir    = normalize(vViewPosition.xyz);");
 
         if (lightsState.lightMaps.length > 0) {
@@ -39620,7 +39620,7 @@ class TrianglesInstancingColorQualityRenderer {
 
         src.push("vec4 modelNormal = vec4(octDecode(normal.xy), 0.0); ");
         src.push("vec4 worldNormal = worldNormalMatrix * vec4(dot(modelNormal, modelNormalMatrixCol0), dot(modelNormal, modelNormalMatrixCol1), dot(modelNormal, modelNormalMatrixCol2), 0.0);");
-        src.push("vec3 viewNormal = normalize(vec4(viewNormalMatrix * worldNormal).xyz);");
+        src.push("vec3 viewNormal = vec4(viewNormalMatrix * worldNormal).xyz;");
 
         src.push("vec4 clipPos = projMatrix * viewPosition;");
         if (scene.logarithmicDepthBufferEnabled) {
@@ -39892,7 +39892,7 @@ class TrianglesInstancingColorQualityRenderer {
             }
 
             if (lightsState.reflectionMaps.length > 0) {
-                src.push("   vec3 reflectVec             = reflect(-geometry.viewEyeDir, geometry.viewNormal);");
+                src.push("   vec3 reflectVec             = reflect(geometry.viewEyeDir, geometry.viewNormal);");
                 src.push("   reflectVec                  = inverseTransformDirection(reflectVec, viewMatrix);");
                 src.push("   float blinnExpFromRoughness = GGXRoughnessToBlinnExponent(material.specularRoughness);");
                 src.push("   vec3 radiance               = getLightProbeIndirectRadiance(reflectVec, blinnExpFromRoughness, 8);");
@@ -39961,7 +39961,7 @@ class TrianglesInstancingColorQualityRenderer {
         src.push("material.specularColor     = mix(vec3(dielectricSpecular), diffuseColor, metallic);");
 
         src.push("geometry.position      = vViewPosition.xyz;");
-        src.push("geometry.viewNormal    = -vViewNormal;");
+        src.push("geometry.viewNormal    = -normalize(vViewNormal);");
         src.push("geometry.viewEyeDir    = normalize(vViewPosition.xyz);");
         if (lightsState.lightMaps.length > 0) {
             src.push("geometry.worldNormal   = normalize(vWorldNormal);");
