@@ -2,7 +2,14 @@
   "name": "@xeokit/xeokit-xkt-utils",
   "version": "1.1.1",
   "description": "JavaScript utilities to create .XKT files",
-  "main": "index.js",
+  "main": "dist/xeokit-xkt-utils.cjs.js",
+  "module": "dist/xeokit-xkt-utils.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/xeokit-xkt-utils.es.js",
+      "require": "./dist/xeokit-xkt-utils.cjs.js"
+    }
+  },
   "directories": {},
   "scripts": {
     "build": " rollup -c",
@@ -30,7 +37,6 @@
     "url": "https://github.com/xeokit/xeokit-xkt-utils/issues"
   },
   "homepage": "https://github.com/xeokit/xeokit-xkt-utils#readme",
-  "dependencies": {},
   "devDependencies": {
     "@percy/script": "^1.1.0",
     "@rollup/plugin-commonjs": "^15.1.0",
