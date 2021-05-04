@@ -1,14 +1,7 @@
 import {utils} from "../XKTModel/lib/utils.js";
 import {math} from "../lib/math.js";
 
-// HACK: Allows node.js to find atob()
-let atob2;
-if (typeof atob === 'undefined') {
-    const atob = require('atob');
-    atob2 = atob;
-} else {
-    atob2 = atob;
-}
+const atob = a => Buffer.from(a, 'base64').toString('binary');
 
 const WEBGL_COMPONENT_TYPES = {
     5120: Int8Array,
@@ -95,7 +88,7 @@ async function parseArrayBuffer(parsingCtx, uri) {
         let data = dataUriRegexResult[3];
         data = decodeURIComponent(data);
         if (isBase64) {
-            data = atob2(data);
+            data = atob(data);
         }
         const buffer = new ArrayBuffer(data.length);
         const view = new Uint8Array(buffer);
