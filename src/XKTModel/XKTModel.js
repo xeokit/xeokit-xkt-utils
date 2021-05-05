@@ -67,7 +67,7 @@ class XKTModel {
          *
          * Each XKTMetaObject holds its position in this list in {@link XKTMetaObject#metaObjectIndex}.
          *
-         * Created by {@link XKTModel#createMetaObject}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTMetaObject[]}
          */
@@ -98,7 +98,7 @@ class XKTModel {
          *
          * Each XKTGeometry holds its position in this list in {@link XKTGeometry#geometryIndex}.
          *
-         * Created by {@link XKTModel#createGeometry}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTGeometry[]}
          */
@@ -118,7 +118,7 @@ class XKTModel {
          *
          * Each XKTMesh holds its position in this list in {@link XKTMesh#meshIndex}.
          *
-         * Created by {@link XKTModel#createMesh}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTMesh[]}
          */
@@ -138,7 +138,7 @@ class XKTModel {
          *
          * Each XKTEntity holds its position in this list in {@link XKTEntity#entityIndex}.
          *
-         * Created by {@link XKTModel#createEntity}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTEntity[]}
          */
