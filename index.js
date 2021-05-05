@@ -1,5 +1,4 @@
 export {XKTModel} from "./src/XKTModel/XKTModel.js";
-export {validateXKTArrayBuffer} from "./src/XKTModel/validateXKTArrayBuffer.js";
 export {writeXKTModelToArrayBuffer} from "./src/XKTModel/writeXKTModelToArrayBuffer.js";
 
 export {parseGLTFIntoXKTModel} from "./src/parsers/parseGLTFIntoXKTModel.js";

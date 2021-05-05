@@ -65,10 +65,10 @@ validating ````XKTModels````:
 
 * [**````parseGLTFIntoXKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel)
   loads glTF JSON into an ````XKTModel````.
+  * [**````parseMetaModelIntoXKTModel````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseMetaModelIntoXKTModel)
+    loads metamodel JSON into an ````XKTModel````.
 * [**````writeXKTModelToArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer)
   serializes an ````XKTModel```` to an ````ArrayBuffer````.
-* [**````validateXKTArrayBuffer````**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer)
-  validates an ````ArrayBuffer```` against the ````XKTModel```` it was serialized from.
 
 #### Building an XKTModel
 
@@ -266,23 +266,6 @@ an ````ArrayBuffer````.
 
 ````javascript
 const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-````
-
-#### Validating the ArrayBuffer
-
-Now we'll
-use [````validateXKTArrayBuffer````](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer)
-to validate the ````ArrayBuffer```` against
-our [````XKTModel````](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html). If
-this function finds any errors, it will log them to the console and return ````false````. Otherwise, it will
-return ````true````, to indicate that the ````ArrayBuffer```` is correct.
-
-````javascript
-const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
-
-if (!xktArrayBufferValid) {
-    console.error("XKT array buffer is invalid!");
-}
 ````
 
 #### Loading the ArrayBuffer into a Viewer

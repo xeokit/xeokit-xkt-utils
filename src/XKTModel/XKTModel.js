@@ -29,7 +29,6 @@ const kdTreeDimLength = new Float64Array(3);
  * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
  * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
- * * Validate an ArrayBuffer against an XKTModel using {@link validateXKTArrayBuffer}.
  *
  * ## Usage
  *
