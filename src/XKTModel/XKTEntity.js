@@ -23,6 +23,10 @@ class XKTEntity {
          *
          * For a BIM model, this will be an IFC product ID.
          *
+         * We can also use {@link XKTModel#createMetaObject} to create an {@link XKTMetaObject} to specify metadata for
+         * this ````XKTEntity````. To associate the {@link XKTMetaObject} with our {@link XKTEntity}, we give
+         * {@link XKTMetaObject#metaObjectId} the same value as {@link XKTEntity#entityId}.
+         *
          * @type {String}
          */
         this.entityId = entityId;
@@ -34,7 +38,7 @@ class XKTEntity {
          *
          * @type {Number}
          */
-        this.entityIndex = 0;
+        this.entityIndex = null;
 
         /**
          * A list of {@link XKTMesh}s that indicate which {@link XKTGeometry}s are used by this Entity.

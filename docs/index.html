@@ -32,6 +32,7 @@
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
@@ -51,10 +52,11 @@
 
 <div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://percy.io/73524691/xeokit-xkt-utils"><img src="https://percy.io/static/images/percy-badge.svg" alt="This project is using Percy.io for visual regression testing."></a>
 <a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
-<p>A JavaScript toolkit for creating <a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md"><code>XKT</code></a> model files
-for loading into <a href="http://xeokit.io">xeokit</a>.</p>
-<p><code>XKT</code> is xeokit&apos;s native geometry file format, which allows us to rapidly load complex, double-precision models over the
-Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF into <code>XKT</code>, and can even generate <code>XKT</code>
+<p>A JavaScript toolkit for creating <a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V8.md"><code>XKT</code></a> model
+files for loading into <a href="http://xeokit.io">xeokit</a>.</p>
+<p><code>XKT</code> is xeokit&apos;s native geometry file format, which allows us to rapidly load complex, double-precision models
+over the Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF
+into <code>XKT</code>, and can even generate <code>XKT</code>
 files programmatically.</p>
 <p>This toolkit is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to
 convert glTF to <code>XKT</code>.</p>
@@ -84,8 +86,13 @@ convert glTF to <code>XKT</code>.</p>
 <li>A JavaScript document model that represents an XKT file</li>
 <li>Parse glTF into the document model</li>
 <li>Programmatically generate geometry within the document model</li>
+<li>Define optional metadata within the document model (eg. an IFC element hierarchy)</li>
 <li>Serialize the document model to an array buffer</li>
 <li>Save the array buffer as an XKT file</li>
+</ul>
+<p>Then:</p>
+<ul>
+<li>Load the XKT (with optional metadata) into a xeokit viewer, to view the model in the browser.</li>
 </ul>
 <h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel">XKTModel</h4><p>At the center of <code>xeokit-xkt-utils</code> is
 the  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a>
@@ -121,6 +128,49 @@ import {XKTModel, writeXKTModelToArrayBuffer, validateXKTArrayBuffer} from &quot
 // const {XKTModel, parseGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require(&quot;./xeokit-xkt-utils.cjs.js&quot;);
 
 const xktModel = new XKTModel();
+
+// Create metamodel - this part is optional
+
+xktModel.createMetaObject({ // Root XKTMetaObject, has no XKTEntity
+    metaObjectId: &quot;table&quot;,
+    metaObjectName: &quot;The Table&quot;,
+    metaObjectType: &quot;furniture&quot;
+});
+
+xktModel.createMetaObject({
+    metaObjectId: &quot;redLeg&quot;,
+    metaObjectName: &quot;Red Table Leg&quot;,
+    metaObjectType: &quot;furniturePart&quot;,
+    parentMetaObjectId: &quot;table&quot;
+});
+
+xktModel.createMetaObject({
+    metaObjectId: &quot;greenLeg&quot;,
+    metaObjectName: &quot;Green Table Leg&quot;,
+    metaObjectType: &quot;furniturePart&quot;,
+    parentMetaObjectId: &quot;table&quot;
+});
+
+xktModel.createMetaObject({
+    metaObjectId: &quot;blueLeg&quot;,
+    metaObjectName: &quot;Blue Table Leg&quot;,
+    metaObjectType: &quot;furniturePart&quot;,
+    parentMetaObjectId: &quot;table&quot;
+});
+
+xktModel.createMetaObject({
+    metaObjectId: &quot;yellowLeg&quot;,
+    metaObjectName: &quot;Yellow Table Leg&quot;,
+    metaObjectType: &quot;furniturePart&quot;,
+    parentMetaObjectId: &quot;table&quot;
+});
+
+xktModel.createMetaObject({
+    metaObjectId: &quot;pinkTop&quot;,
+    metaObjectName: &quot;The Pink Table Top&quot;,
+    metaObjectType: &quot;furniturePart&quot;,
+    parentMetaObjectId: &quot;table&quot;
+});
 
 // Create an XKTGeometry that defines a box shape, as a triangle mesh 
 

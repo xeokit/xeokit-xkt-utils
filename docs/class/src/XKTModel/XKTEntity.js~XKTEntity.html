@@ -32,6 +32,7 @@
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
@@ -274,7 +275,7 @@ never shares only some of its <code>XKTGeometrys</code> - it always shares eithe
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber54">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber58">source</a></span></span>
     </span>
   </h3>
 
@@ -320,7 +321,7 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber28">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber32">source</a></span></span>
     </span>
   </h3>
 
@@ -329,6 +330,9 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
   
   <div data-ice="description"><p>Unique ID of this <code>XKTEntity</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entities">XKTModel#entities</a></span>.</p>
 <p>For a BIM model, this will be an IFC product ID.</p>
+<p>We can also use <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMetaObject">XKTModel#createMetaObject</a></span> to create an <span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span> to specify metadata for
+this <code>XKTEntity</code>. To associate the <span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span> with our <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>, we give
+<span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectId">XKTMetaObject#metaObjectId</a></span> the same value as <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-entityId">XKTEntity#entityId</a></span>.</p>
 </div>
 
   
@@ -365,7 +369,7 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber37">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber41">source</a></span></span>
     </span>
   </h3>
 
@@ -410,7 +414,7 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber66">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber70">source</a></span></span>
     </span>
   </h3>
 
@@ -457,7 +461,7 @@ never shares only some of its <code>XKTGeometrys</code> - it always shares eithe
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber44">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber48">source</a></span></span>
     </span>
   </h3>
 

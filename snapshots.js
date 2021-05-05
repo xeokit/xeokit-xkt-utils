@@ -47,6 +47,7 @@ PercyScript.run(async (page, percySnapshot) => {
     await testPage('generate_instancing_points.html');
     await testPage('generate_instancing_stairCase.html');
     await testPage('generate_instancing_triangles.html');
+    await testPage('generate_metaModel.html');
 
     server.close();
 });

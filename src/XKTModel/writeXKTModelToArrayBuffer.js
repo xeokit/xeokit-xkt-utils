@@ -5,7 +5,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako = pako.default;
 }
 
-const XKT_VERSION = 7; // XKT format version
+const XKT_VERSION = 8; // XKT format version
 
 /**
  * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
@@ -30,11 +30,13 @@ function getModelData(xktModel) {
     // Allocate data
     //------------------------------------------------------------------------------------------------------------------
 
+    const metaObjectsList = xktModel.metaObjectsList;
     const geometriesList = xktModel.geometriesList;
     const meshesList = xktModel.meshesList;
     const entitiesList = xktModel.entitiesList;
     const tilesList = xktModel.tilesList;
 
+    const numMetaObjects = metaObjectsList.length;
     const numGeometries = geometriesList.length;
     const numMeshes = meshesList.length;
     const numEntities = entitiesList.length;
@@ -75,20 +77,27 @@ function getModelData(xktModel) {
 
     const data = {
 
-        // Vertex attributes
+        // Metadata
+
+        types: [], // List of all meta object types. Will contain at least one type: "default". Shared by meta objects.
+        eachMetaObjectId: [], // For each meta object, an ID string
+        eachMetaObjectType: new Uint32Array(numMetaObjects), // For each meta object, the index of a type string in the types array. Default type will be "default".
+        eachMetaObjectName: [], // For each meta object, a human-readable name string. Defaults to the meta object ID.
+        eachMetaObjectParent: new Uint32Array(numMetaObjects), // For each meta object, the index of its parent meta object, if any. If the meta object has no parent, defaults to this meta object's index.
+
+        // Geometry data - vertex attributes and indices
 
         positions: new Uint16Array(lenPositions), // All geometry arrays
         normals: new Int8Array(lenNormals),
         colors: new Uint8Array(lenColors),
-
-        // Indices
-
         indices: new Uint32Array(lenIndices),
         edgeIndices: new Uint32Array(lenEdgeIndices),
 
-        // Transform matrices
+        // Transform matrices shared by meshes
 
         matrices: new Float32Array(lenMatrices), // Modeling matrices for entities that share geometries. Each entity either shares all it's geometries, or owns all its geometries exclusively. Exclusively-owned geometries are pre-transformed into World-space, and so their entities don't have modeling matrices in this array.
+
+        // De-quantization matrix shared by all rused geometries
 
         reusedGeometriesDecodeMatrix: new Float32Array(xktModel.reusedGeometriesDecodeMatrix), // A single, global vertex position de-quantization matrix for all reused geometries. Reused geometries are quantized to their collective Local-space AABB, and this matrix is derived from that AABB.
 
@@ -112,8 +121,8 @@ function getModelData(xktModel) {
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
-        eachEntityId: [], // For each entity, an ID string
-        eachEntityMeshesPortion: new Uint32Array(numEntities), // For each entity, the index of the the first element of meshes used by the entity
+        eachEntityMetaObject: new Uint32Array(numEntities), // For each entity, the index of its corresponding meta object
+        eachEntityMeshesPortion: new Uint32Array(numEntities), // For each entity, the index of the first element of meshes used by the entity
 
         eachTileAABB: new Float64Array(numTiles * 6), // For each tile, an axis-aligned bounding box
         eachTileEntitiesPortion: new Uint32Array(numTiles) // For each tile, the index of the the first element of eachEntityId, eachEntityMeshesPortion and eachEntityMatricesPortion used by the tile
@@ -129,6 +138,36 @@ function getModelData(xktModel) {
     let countIndices = 0;
     let countEdgeIndices = 0;
     let countMeshColors = 0;
+
+    // Metadata
+
+    const typeIndices = {};
+
+    for (let metaObjectIndex = 0; metaObjectIndex < numMetaObjects; metaObjectIndex++) {
+
+        const metaObject = metaObjectsList[metaObjectIndex];
+        const metaObjectId = metaObject.metaObjectId;
+        const metaObjectType = metaObject.metaObjectType;
+        const metaObjectName = metaObject.metaObjectName;
+        const parentMetaObjectId = metaObject.parentMetaObjectId;
+
+        let typeIndex = typeIndices[metaObjectType];
+
+        if (typeIndex === undefined) {
+            typeIndex = data.types.length;
+            typeIndices[metaObjectType] = typeIndex;
+            data.types.push(metaObjectType);
+        }
+
+        data.eachMetaObjectId[metaObjectIndex] = metaObjectId;
+        data.eachMetaObjectType[metaObjectIndex] = typeIndex;
+        data.eachMetaObjectName[metaObjectIndex] = metaObjectName;
+
+        const parentMetaObject = xktModel.metaObjects[parentMetaObjectId];
+        if (parentMetaObject) {
+            data.eachMetaObjectParent[metaObjectIndex] = parentMetaObject.metaObjectIndex;
+        }
+    }
 
     // Geometries
 
@@ -234,7 +273,9 @@ function getModelData(xktModel) {
                 data.eachMeshGeometriesPortion [countEntityMeshesPortion + k] = geometryIndex;
             }
 
-            data.eachEntityId [entityIndex] = entity.entityId;
+            const entityMetaObject = xktModel.metaObjects[entity.entityId];
+
+            data.eachEntityMetaObject [entityIndex] = entityMetaObject.metaObjectIndex;
             data.eachEntityMeshesPortion[entityIndex] = countEntityMeshesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityMeshesPortion correct?
 
             entityIndex++;
@@ -252,6 +293,12 @@ function getModelData(xktModel) {
 function deflateData(data) {
 
     return {
+
+        types: pako.deflate(deflateStrings(data.types)),
+        eachMetaObjectId: pako.deflate(deflateStrings(data.eachMetaObjectId)),
+        eachMetaObjectType: pako.deflate(data.eachMetaObjectType.buffer),
+        eachMetaObjectName: pako.deflate(deflateStrings(data.eachMetaObjectName)),
+        eachMetaObjectParent: pako.deflate(data.eachMetaObjectParent.buffer),
 
         positions: pako.deflate(data.positions.buffer),
         normals: pako.deflate(data.normals.buffer),
@@ -273,10 +320,7 @@ function deflateData(data) {
         eachMeshMatricesPortion: pako.deflate(data.eachMeshMatricesPortion.buffer),
         eachMeshMaterial: pako.deflate(data.eachMeshMaterial.buffer),
 
-        eachEntityId: pako.deflate(JSON.stringify(data.eachEntityId)
-            .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
-                return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
-            })),
+        eachEntityMetaObject: pako.deflate(data.eachEntityMetaObject.buffer),
         eachEntityMeshesPortion: pako.deflate(data.eachEntityMeshesPortion.buffer),
 
         eachTileAABB: pako.deflate(data.eachTileAABB.buffer),
@@ -284,14 +328,26 @@ function deflateData(data) {
     };
 }
 
+function deflateStrings(strings) {
+    return JSON.stringify(strings)
+        .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
+            return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
+        });
+}
+
 function createArrayBuffer(deflatedData) {
 
     return toArrayBuffer([
 
+        deflatedData.types,
+        deflatedData.eachMetaObjectId,
+        deflatedData.eachMetaObjectType,
+        deflatedData.eachMetaObjectName,
+        deflatedData.eachMetaObjectParent,
+
         deflatedData.positions,
         deflatedData.normals,
         deflatedData.colors,
-
         deflatedData.indices,
         deflatedData.edgeIndices,
 
@@ -309,7 +365,7 @@ function createArrayBuffer(deflatedData) {
         deflatedData.eachMeshMatricesPortion,
         deflatedData.eachMeshMaterial,
 
-        deflatedData.eachEntityId,
+        deflatedData.eachEntityMetaObject,
         deflatedData.eachEntityMeshesPortion,
 
         deflatedData.eachTileAABB,

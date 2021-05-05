@@ -32,6 +32,7 @@
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
@@ -60,6 +61,7 @@ import {XKTGeometry} from &apos;./XKTGeometry.js&apos;;
 import {XKTEntity} from &apos;./XKTEntity.js&apos;;
 import {XKTTile} from &apos;./XKTTile.js&apos;;
 import {KDNode} from &quot;./KDNode.js&quot;;
+import {XKTMetaObject} from &quot;./XKTMetaObject.js&quot;;
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
@@ -103,6 +105,26 @@ class XKTModel {
          * @type {Number|number}
          */
         this.edgeThreshold = cfg.edgeThreshold || 10;
+
+        /**
+         * Map of {@link XKTMetaObject}s within this XKTModel, each mapped to {@link XKTMetaObject#metaObjectId}.
+         *
+         * Created by {@link XKTModel#createMetaObject}.
+         *
+         * @type {{String:XKTMetaObject}}
+         */
+        this.metaObjects = {};
+
+        /**
+         * {@link XKTMetaObject}s within this XKTModel.
+         *
+         * Each XKTMetaObject holds its position in this list in {@link XKTMetaObject#metaObjectIndex}.
+         *
+         * Created by {@link XKTModel#createMetaObject}.
+         *
+         * @type {XKTMetaObject[]}
+         */
+        this.metaObjectsList = [];
 
         /**
          * The positions of all shared {@link XKTGeometry}s are de-quantized using this singular
@@ -167,9 +189,9 @@ class XKTModel {
         /**
          * {@link XKTEntity}s within this XKTModel.
          *
-         * Each XKTEntity holds its position in this list in {@link XKTMesh#entityIndex}.
+         * Each XKTEntity holds its position in this list in {@link XKTEntity#entityIndex}.
          *
-         * Created by {@link XKTModel#finalize}.
+         * Created by {@link XKTModel#createEntity}.
          *
          * @type {XKTEntity[]}
          */
@@ -192,6 +214,51 @@ class XKTModel {
          * @type {boolean}
          */
         this.finalized = false;
+    }
+
+    /**
+     * Creates an {@link XKTMetaObject} within this XKTModel.
+     *
+     * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
+     *
+     * @param {*} params Method parameters.
+     * @param {String} params.metaObjectId Unique ID for the {@link XKTMetaObject}.
+     * @param {String} [params.metaObjectType=&quot;default&quot;] A meta type for the {@link XKTMetaObject}. Can be anything, but is usually an IFC type, such as &quot;IfcSite&quot; or &quot;IfcWall&quot;.
+     * @param {String} [params.metaObjectName] Human-readable name for the {@link XKTMetaObject}. Defaults to the ````metaObjectId```` parameter.
+     * @param {String} [params.parentMetaObjectId] ID of the parent {@link XKTMetaObject}, if any. Defaults to the ````metaObjectId```` parameter.
+     * @returns {XKTMetaObject} The new {@link XKTMetaObject}.
+     */
+    createMetaObject(params) {
+
+        if (!params) {
+            throw &quot;Parameters expected: params&quot;;
+        }
+
+        if (params.metaObjectId === null || params.metaObjectId === undefined) {
+            throw &quot;Parameter expected: params.metaObjectId&quot;;
+        }
+
+        if (this.finalized) {
+            console.error(&quot;XKTModel has been finalized, can&apos;t add more meta objects&quot;);
+            return;
+        }
+
+        if (this.metaObjects[params.metaObjectId]) {
+            console.error(&quot;XKTMetaObject already exists with this ID: &quot; + params.metaObjectId);
+            return;
+        }
+
+        const metaObjectId = params.metaObjectId;
+        const metaObjectType = params.metaObjectType || &quot;default&quot;;
+        const metaObjectName = params.metaObjectName || params.metaObjectId;
+        const parentMetaObjectId = (params.parentMetaObjectId !== null &amp;&amp; params.parentMetaObjectId !== undefined) ? params.parentMetaObjectId : params.metaObjectId;
+
+        const metaObject = new XKTMetaObject(metaObjectId, metaObjectType, metaObjectName, parentMetaObjectId);
+
+        this.metaObjects[metaObjectId] = metaObject;
+        this.metaObjectsList.push(metaObject);
+
+        return metaObject;
     }
 
     /**
@@ -478,6 +545,7 @@ class XKTModel {
      *
      * Internally, this method:
      *
+     * * for each {@link XKTEntity} that doesn&apos;t already have a {@link XKTMetaObject}, creates one with {@link XKTMetaObject#metaObjectType} set to &quot;default&quot;
      * * sets each {@link XKTEntity}&apos;s {@link XKTEntity#hasReusedGeometries} true if it shares its {@link XKTGeometry}s with other {@link XKTEntity}s,
      * * creates each {@link XKTEntity}&apos;s {@link XKTEntity#aabb},
      * * creates {@link XKTTile}s in {@link XKTModel#tilesList}, and
@@ -489,6 +557,8 @@ class XKTModel {
             console.log(&quot;XKTModel already finalized&quot;);
             return;
         }
+
+        this._createDefaultMetaObjects();
 
         this._bakeSingleUseGeometryPositions();
 
@@ -505,6 +575,26 @@ class XKTModel {
         this._flagSolidGeometries();
 
         this.finalized = true;
+    }
+
+    _createDefaultMetaObjects() {
+
+        for (let i = 0, len = this.entitiesList.length; i &lt; len; i++) {
+
+            const entity = this.entitiesList[i];
+            const entityId = entity.entityId;
+            const metaObjectId = entityId;
+            const metaObject = this.metaObjects[metaObjectId];
+            
+            if (!metaObject) {
+                this.createMetaObject({
+                    metaObjectId: metaObjectId,
+                    metaObjectType: &quot;default&quot;,
+                    metaObjectName: &quot;&quot; + metaObjectId,
+                    parentMetaObjectId: metaObjectId
+                });
+            }
+        }
     }
 
     _bakeSingleUseGeometryPositions() {
@@ -556,7 +646,7 @@ class XKTModel {
                     geometryCompression.octEncodeNormals(geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
 
                 } else {
-                    const modelNormalMatrix =  math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
+                    const modelNormalMatrix = math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
                     geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
                 }
             }

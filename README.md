@@ -3,11 +3,12 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-A JavaScript toolkit for creating [````XKT````](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V7.md) model files
-for loading into [xeokit](http://xeokit.io).
+A JavaScript toolkit for creating [````XKT````](https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V8.md) model
+files for loading into [xeokit](http://xeokit.io).
 
-````XKT```` is xeokit's native geometry file format, which allows us to rapidly load complex, double-precision models over the
-Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF into ````XKT````, and can even generate ````XKT````
+````XKT```` is xeokit's native geometry file format, which allows us to rapidly load complex, double-precision models
+over the Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF
+into ````XKT````, and can even generate ````XKT````
 files programmatically.
 
 This toolkit is currently used within the [xeokit-gltf-to-xkt](https://github.com/xeokit/xeokit-gltf-to-xkt) tool to
@@ -41,8 +42,13 @@ convert glTF to ````XKT````.
 * A JavaScript document model that represents an XKT file
 * Parse glTF into the document model
 * Programmatically generate geometry within the document model
+* Define optional metadata within the document model (eg. an IFC element hierarchy)
 * Serialize the document model to an array buffer
 * Save the array buffer as an XKT file
+
+Then:
+
+* Load the XKT (with optional metadata) into a xeokit viewer, to view the model in the browser.
 
 ## JavaScript API
 
@@ -91,6 +97,49 @@ import {XKTModel, writeXKTModelToArrayBuffer, validateXKTArrayBuffer} from "./di
 // const {XKTModel, parseGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("./xeokit-xkt-utils.cjs.js");
 
 const xktModel = new XKTModel();
+
+// Create metamodel - this part is optional
+
+xktModel.createMetaObject({ // Root XKTMetaObject, has no XKTEntity
+    metaObjectId: "table",
+    metaObjectName: "The Table",
+    metaObjectType: "furniture"
+});
+
+xktModel.createMetaObject({
+    metaObjectId: "redLeg",
+    metaObjectName: "Red Table Leg",
+    metaObjectType: "furniturePart",
+    parentMetaObjectId: "table"
+});
+
+xktModel.createMetaObject({
+    metaObjectId: "greenLeg",
+    metaObjectName: "Green Table Leg",
+    metaObjectType: "furniturePart",
+    parentMetaObjectId: "table"
+});
+
+xktModel.createMetaObject({
+    metaObjectId: "blueLeg",
+    metaObjectName: "Blue Table Leg",
+    metaObjectType: "furniturePart",
+    parentMetaObjectId: "table"
+});
+
+xktModel.createMetaObject({
+    metaObjectId: "yellowLeg",
+    metaObjectName: "Yellow Table Leg",
+    metaObjectType: "furniturePart",
+    parentMetaObjectId: "table"
+});
+
+xktModel.createMetaObject({
+    metaObjectId: "pinkTop",
+    metaObjectName: "The Pink Table Top",
+    metaObjectType: "furniturePart",
+    parentMetaObjectId: "table"
+});
 
 // Create an XKTGeometry that defines a box shape, as a triangle mesh 
 

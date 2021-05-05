@@ -3,6 +3,7 @@ export {validateXKTArrayBuffer} from "./src/XKTModel/validateXKTArrayBuffer.js";
 export {writeXKTModelToArrayBuffer} from "./src/XKTModel/writeXKTModelToArrayBuffer.js";
 
 export {parseGLTFIntoXKTModel} from "./src/parsers/parseGLTFIntoXKTModel.js";
+export {parseMetaModelIntoXKTModel} from "./src/parsers/parseMetaModelIntoXKTModel.js";
 
 export {buildBoxGeometry} from "./src/geometryBuilders/buildBoxGeometry.js";
 export {buildBoxLinesGeometry} from "./src/geometryBuilders/buildBoxLinesGeometry.js";
