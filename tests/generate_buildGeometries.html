@@ -18,7 +18,6 @@
         XKTModel,
         buildSphereGeometry,
         writeXKTModelToArrayBuffer,
-        validateXKTArrayBuffer,
         buildTorusGeometry,
         buildGridGeometry,
         buildBoxGeometry,
@@ -214,8 +213,6 @@
     xktModel.finalize();
 
     const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-
-    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
     const xktLoader = new XKTLoaderPlugin(viewer);
 
