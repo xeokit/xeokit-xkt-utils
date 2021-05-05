@@ -8,6 +8,7 @@ import {XKTGeometry} from './XKTGeometry.js';
 import {XKTEntity} from './XKTEntity.js';
 import {XKTTile} from './XKTTile.js';
 import {KDNode} from "./KDNode.js";
+import {XKTMetaObject} from "./XKTMetaObject.js";
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
@@ -28,7 +29,6 @@ const kdTreeDimLength = new Float64Array(3);
  * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
  * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
- * * Validate an ArrayBuffer against an XKTModel using {@link validateXKTArrayBuffer}.
  *
  * ## Usage
  *
@@ -51,6 +51,26 @@ class XKTModel {
          * @type {Number|number}
          */
         this.edgeThreshold = cfg.edgeThreshold || 10;
+
+        /**
+         * Map of {@link XKTMetaObject}s within this XKTModel, each mapped to {@link XKTMetaObject#metaObjectId}.
+         *
+         * Created by {@link XKTModel#createMetaObject}.
+         *
+         * @type {{String:XKTMetaObject}}
+         */
+        this.metaObjects = {};
+
+        /**
+         * {@link XKTMetaObject}s within this XKTModel.
+         *
+         * Each XKTMetaObject holds its position in this list in {@link XKTMetaObject#metaObjectIndex}.
+         *
+         * Created by {@link XKTModel#finalize}.
+         *
+         * @type {XKTMetaObject[]}
+         */
+        this.metaObjectsList = [];
 
         /**
          * The positions of all shared {@link XKTGeometry}s are de-quantized using this singular
@@ -77,7 +97,7 @@ class XKTModel {
          *
          * Each XKTGeometry holds its position in this list in {@link XKTGeometry#geometryIndex}.
          *
-         * Created by {@link XKTModel#createGeometry}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTGeometry[]}
          */
@@ -97,7 +117,7 @@ class XKTModel {
          *
          * Each XKTMesh holds its position in this list in {@link XKTMesh#meshIndex}.
          *
-         * Created by {@link XKTModel#createMesh}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTMesh[]}
          */
@@ -115,7 +135,7 @@ class XKTModel {
         /**
          * {@link XKTEntity}s within this XKTModel.
          *
-         * Each XKTEntity holds its position in this list in {@link XKTMesh#entityIndex}.
+         * Each XKTEntity holds its position in this list in {@link XKTEntity#entityIndex}.
          *
          * Created by {@link XKTModel#finalize}.
          *
@@ -140,6 +160,52 @@ class XKTModel {
          * @type {boolean}
          */
         this.finalized = false;
+    }
+
+    /**
+     * Creates an {@link XKTMetaObject} within this XKTModel.
+     *
+     * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
+     *
+     * @param {*} params Method parameters.
+     * @param {String} params.metaObjectId Unique ID for the {@link XKTMetaObject}.
+     * @param {String} [params.metaObjectType="default"] A meta type for the {@link XKTMetaObject}. Can be anything, but is usually an IFC type, such as "IfcSite" or "IfcWall".
+     * @param {String} [params.metaObjectName] Human-readable name for the {@link XKTMetaObject}. Defaults to the ````metaObjectId```` parameter.
+     * @param {String} [params.parentMetaObjectId] ID of the parent {@link XKTMetaObject}, if any. Defaults to the ````metaObjectId```` parameter.
+     * @returns {XKTMetaObject} The new {@link XKTMetaObject}.
+     */
+    createMetaObject(params) {
+
+        if (!params) {
+            throw "Parameters expected: params";
+        }
+
+        if (params.metaObjectId === null || params.metaObjectId === undefined) {
+            throw "Parameter expected: params.metaObjectId";
+        }
+
+        if (this.finalized) {
+            console.error("XKTModel has been finalized, can't add more meta objects");
+            return;
+        }
+
+        if (this.metaObjects[params.metaObjectId]) {
+       //     console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
+            return;
+        }
+
+        const metaObjectId = params.metaObjectId;
+        const metaObjectType = params.metaObjectType || "default";
+        const metaObjectName = params.metaObjectName || params.metaObjectId;
+        const metaObjectIndex = this.metaObjectsList.length;
+        const parentMetaObjectId = (params.parentMetaObjectId !== null && params.parentMetaObjectId !== undefined) ? params.parentMetaObjectId : params.metaObjectId;
+
+        const metaObject = new XKTMetaObject(metaObjectId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
+
+        this.metaObjects[metaObjectId] = metaObject;
+        this.metaObjectsList.push(metaObject);
+
+        return metaObject;
     }
 
     /**
@@ -426,6 +492,7 @@ class XKTModel {
      *
      * Internally, this method:
      *
+     * * for each {@link XKTEntity} that doesn't already have a {@link XKTMetaObject}, creates one with {@link XKTMetaObject#metaObjectType} set to "default"
      * * sets each {@link XKTEntity}'s {@link XKTEntity#hasReusedGeometries} true if it shares its {@link XKTGeometry}s with other {@link XKTEntity}s,
      * * creates each {@link XKTEntity}'s {@link XKTEntity#aabb},
      * * creates {@link XKTTile}s in {@link XKTModel#tilesList}, and
@@ -446,11 +513,15 @@ class XKTModel {
 
         const rootKDNode = this._createKDTree();
 
+        this.entitiesList = [];
+
         this._createTilesFromKDTree(rootKDNode);
 
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
+
+        this._createDefaultMetaObjects();
 
         this.finalized = true;
     }
@@ -504,7 +575,7 @@ class XKTModel {
                     geometryCompression.octEncodeNormals(geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
 
                 } else {
-                    const modelNormalMatrix =  math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
+                    const modelNormalMatrix = math.inverseMat4(math.transposeMat4(mesh.matrix, tempMat4), tempMat4b);
                     geometryCompression.transformAndOctEncodeNormals(modelNormalMatrix, geometry.normals, geometry.normals.length, geometry.normalsOctEncoded, 0);
                 }
             }
@@ -783,6 +854,26 @@ class XKTModel {
             const geometry = this.geometriesList[i];
             if (geometry.primitiveType === "triangles") {
                 geometry.solid = isTriangleMeshSolid(geometry.indices, geometry.positionsQuantized); // Better memory/cpu performance with quantized values
+            }
+        }
+    }
+
+    _createDefaultMetaObjects() {
+
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+
+            const entity = this.entitiesList[i];
+            const entityId = entity.entityId;
+            const metaObjectId = entityId;
+            const metaObject = this.metaObjects[metaObjectId];
+
+            if (!metaObject) {
+                this.createMetaObject({
+                    metaObjectId: metaObjectId,
+                    metaObjectType: "default",
+                    metaObjectName: "" + metaObjectId,
+                    parentMetaObjectId: metaObjectId
+                });
             }
         }
     }

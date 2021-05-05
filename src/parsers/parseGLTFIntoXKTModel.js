@@ -1,7 +1,7 @@
 import {utils} from "../XKTModel/lib/utils.js";
 import {math} from "../lib/math.js";
 
-const atob = a => Buffer.from(a, 'base64').toString('binary');
+const atob2 = (typeof atob !== 'undefined') ?  atob : a => Buffer.from(a, 'base64').toString('binary');
 
 const WEBGL_COMPONENT_TYPES = {
     5120: Int8Array,
@@ -88,7 +88,7 @@ async function parseArrayBuffer(parsingCtx, uri) {
         let data = dataUriRegexResult[3];
         data = decodeURIComponent(data);
         if (isBase64) {
-            data = atob(data);
+            data = atob2(data);
         }
         const buffer = new ArrayBuffer(data.length);
         const view = new Uint8Array(buffer);

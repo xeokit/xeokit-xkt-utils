@@ -18,8 +18,7 @@
     import {
         XKTModel,
         buildSphereGeometry,
-        writeXKTModelToArrayBuffer,
-        validateXKTArrayBuffer
+        writeXKTModelToArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
     import {signalTestComplete} from "./libs/utils.js";
 
@@ -69,8 +68,6 @@
     xktModel.finalize();
 
     const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-
-    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
     const xktLoader = new XKTLoaderPlugin(viewer);
 

@@ -17,8 +17,7 @@
 
     import {
         XKTModel,
-        writeXKTModelToArrayBuffer,
-        validateXKTArrayBuffer
+        writeXKTModelToArrayBuffer
     } from "./../dist/xeokit-xkt-utils.es.js";
 
     import {visualizeXKTModelTileAABBs} from "./js/visualizeXKTModelTileAABBs.js";
@@ -120,8 +119,6 @@
     xktModel.finalize();
 
     const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-
-    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
     //log(xktArrayBufferValid ? "VALID" : "ERRORS (see JS console for log)");
 

@@ -1,7 +1,7 @@
 {
-  "coverage": "53.24%",
-  "expectCount": 154,
-  "actualCount": 82,
+  "coverage": "55.08%",
+  "expectCount": 167,
+  "actualCount": 92,
   "files": {
     "src/XKTModel/KDNode.js": {
       "expectCount": 6,
@@ -39,25 +39,31 @@
       "actualCount": 11,
       "undocumentLines": []
     },
+    "src/XKTModel/XKTMetaObject.js": {
+      "expectCount": 7,
+      "actualCount": 7,
+      "undocumentLines": []
+    },
     "src/XKTModel/XKTModel.js": {
-      "expectCount": 32,
-      "actualCount": 17,
+      "expectCount": 36,
+      "actualCount": 20,
       "undocumentLines": [
-        12,
         13,
-        15,
+        14,
         16,
-        18,
-        20,
-        458,
-        492,
-        514,
-        556,
-        575,
-        643,
-        647,
+        17,
+        19,
+        21,
+        527,
+        547,
+        581,
+        603,
+        645,
+        664,
+        732,
         736,
-        781
+        825,
+        870
       ]
     },
     "src/XKTModel/XKTTile.js": {
@@ -104,15 +110,16 @@
       ]
     },
     "src/XKTModel/writeXKTModelToArrayBuffer.js": {
-      "expectCount": 7,
+      "expectCount": 8,
       "actualCount": 1,
       "undocumentLines": [
         3,
         8,
         27,
-        252,
-        287,
-        320
+        289,
+        327,
+        334,
+        372
       ]
     },
     "src/geometryBuilders/buildBoxGeometry.js": {
@@ -169,26 +176,27 @@
       ]
     },
     "src/parsers/parseGLTFIntoXKTModel.js": {
-      "expectCount": 18,
+      "expectCount": 19,
       "actualCount": 1,
       "undocumentLines": [
-        13,
-        22,
+        4,
+        6,
+        15,
+        68,
         75,
-        82,
-        90,
-        112,
-        121,
-        129,
-        138,
-        149,
-        213,
-        223,
-        236,
-        238,
-        377,
-        391,
-        446
+        83,
+        105,
+        114,
+        122,
+        131,
+        142,
+        206,
+        216,
+        229,
+        231,
+        370,
+        384,
+        439
       ]
     },
     "src/parsers/parseSTLIntoXKTModel.js": {

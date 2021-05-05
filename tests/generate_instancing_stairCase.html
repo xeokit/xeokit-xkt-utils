@@ -19,7 +19,7 @@
         XKTModel,
         buildBoxGeometry,
         writeXKTModelToArrayBuffer,
-        validateXKTArrayBuffer, buildCylinderGeometry
+        buildCylinderGeometry
     } from "./../dist/xeokit-xkt-utils.es.js";
     import {math} from "../src/lib/math.js";
     import {signalTestComplete} from "./libs/utils.js";
@@ -109,8 +109,6 @@
     xktModel.finalize();
 
     const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-
-    const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
     const xktLoader = new XKTLoaderPlugin(viewer);
 

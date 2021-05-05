@@ -18,6 +18,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "@xeokit/xeokit-xkt-utils/src/xktmodel/xktmetaobject.js~xktmetaobject",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html",
+    "<span>XKTMetaObject</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTMetaObject.js</span>",
+    "class"
+  ],
+  [
     "@xeokit/xeokit-xkt-utils/src/xktmodel/xktmodel.js~xktmodel",
     "class/src/XKTModel/XKTModel.js~XKTModel.html",
     "<span>XKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTModel.js</span>",
@@ -570,6 +576,42 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/xktmodel/xktmetaobject.js",
+    "file/src/XKTModel/XKTMetaObject.js.html",
+    "src/XKTModel/XKTMetaObject.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/xktmetaobject.js~xktmetaobject#metaobjectid",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectId",
+    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#metaObjectId",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmetaobject.js~xktmetaobject#metaobjectindex",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectIndex",
+    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#metaObjectIndex",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmetaobject.js~xktmetaobject#metaobjectname",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectName",
+    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#metaObjectName",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmetaobject.js~xktmetaobject#metaobjecttype",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectType",
+    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#metaObjectType",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmetaobject.js~xktmetaobject#parentmetaobjectid",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-parentMetaObjectId",
+    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#parentMetaObjectId",
+    "member"
+  ],
+  [
     "src/xktmodel/xktmodel.js",
     "file/src/XKTModel/XKTModel.js.html",
     "src/XKTModel/XKTModel.js",
@@ -597,6 +639,12 @@ window.esdocSearchIndex = [
     "src/xktmodel/xktmodel.js~xktmodel#createmesh",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMesh",
     "src/XKTModel/XKTModel.js~XKTModel#createMesh",
+    "method"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#createmetaobject",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMetaObject",
+    "src/XKTModel/XKTModel.js~XKTModel#createMetaObject",
     "method"
   ],
   [
@@ -651,6 +699,18 @@ window.esdocSearchIndex = [
     "src/xktmodel/xktmodel.js~xktmodel#mesheslist",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-meshesList",
     "src/XKTModel/XKTModel.js~XKTModel#meshesList",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#metaobjects",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-metaObjects",
+    "src/XKTModel/XKTModel.js~XKTModel#metaObjects",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#metaobjectslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-metaObjectsList",
+    "src/XKTModel/XKTModel.js~XKTModel#metaObjectsList",
     "member"
   ],
   [
