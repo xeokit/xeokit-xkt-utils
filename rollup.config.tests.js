@@ -2,9 +2,9 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import minify from 'rollup-plugin-minify-es';
 
 export default {
-    input: './index.js',
+    input: './index.tests.js',
     output: {
-        file: './build/xeokit-components.js',
+        file: './tests/build/xeokit-components.js',
         format: 'es',
         name: 'bundle'
     },
