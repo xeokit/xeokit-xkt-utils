@@ -17,6 +17,6 @@ export default {
     ],
     plugins: [
         nodeResolve(),
-         minify()
+        minify()
     ]
 }

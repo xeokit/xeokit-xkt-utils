@@ -19,8 +19,10 @@
     import {
         XKTModel,
         parseGLTFIntoXKTModel,
-        writeXKTModelToArrayBuffer
+        writeXKTModelToArrayBuffer,
+        parseMetaModelIntoXKTModel
     } from "../dist/xeokit-xkt-utils.es.js";
+
     import {signalTestComplete} from "./libs/utils.js";
 
     const viewer = new Viewer({
@@ -34,29 +36,35 @@
 
     const xktLoader = new XKTLoaderPlugin(viewer);
 
-    utils.loadJSON("./models/gltf/schependomlaan/scene.gltf", async (json) => {
+    utils.loadJSON("./models/gltf/schependomlaan/scene.gltf", async (gltf) => {
 
-            const xktModel = new XKTModel();
+            utils.loadJSON("./metaModels/schependomlaan/metaModel.json", async (metamodel) => {
 
-            await parseGLTFIntoXKTModel(json, xktModel);
+                    const xktModel = new XKTModel();
 
-            xktModel.finalize();
+                    await parseGLTFIntoXKTModel(gltf, xktModel);
 
-            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+                    await parseMetaModelIntoXKTModel(metamodel, xktModel);
 
-            const xktLoader = new XKTLoaderPlugin(viewer);
+                    xktModel.finalize();
 
-            const model = xktLoader.load({
-                id: "myModel",
-                xkt: xktArrayBuffer,
-                metaModelSrc: "./metaModels/schependomlaan/metaModel.json",
-                edges: true
-            });
+                    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
-            model.on("loaded", () => {
-                signalTestComplete();
-            });
+                    const xktLoader = new XKTLoaderPlugin(viewer);
 
+                    const model = xktLoader.load({
+                        id: "myModel",
+                        xkt: xktArrayBuffer,
+                        edges: true
+                    });
+
+                    model.on("loaded", () => {
+                        signalTestComplete();
+                    });
+                },
+                function (errMsg) {
+                    console.error("ERROR: " + errMsg);
+                });
         },
         function (errMsg) {
             console.error("ERROR: " + errMsg);

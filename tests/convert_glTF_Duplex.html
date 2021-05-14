@@ -19,7 +19,8 @@
     import {
         XKTModel,
         parseGLTFIntoXKTModel,
-        writeXKTModelToArrayBuffer
+        writeXKTModelToArrayBuffer,
+        parseMetaModelIntoXKTModel
     } from "../dist/xeokit-xkt-utils.es.js";
     import {signalTestComplete} from "./libs/utils.js";
 
@@ -36,26 +37,33 @@
 
     utils.loadJSON("./models/gltf/duplex/scene.gltf", async (json) => {
 
-            const xktModel = new XKTModel();
+            utils.loadJSON("./metaModels/duplex/metaModel.json", async (metamodel) => {
 
-            await parseGLTFIntoXKTModel(json, xktModel);
+                    const xktModel = new XKTModel();
 
-            xktModel.finalize();
+                    await parseGLTFIntoXKTModel(json, xktModel);
 
-            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+                    await parseMetaModelIntoXKTModel(metamodel, xktModel);
 
-            const xktLoader = new XKTLoaderPlugin(viewer);
+                    xktModel.finalize();
 
-            const model = xktLoader.load({
-                id: "myModel",
-                xkt: xktArrayBuffer,
-                metaModelSrc: "./metaModels/duplex/metaModel.json",
-                edges: true
-            });
+                    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
-            model.on("loaded", () => {
-                signalTestComplete();
-            });
+                    const xktLoader = new XKTLoaderPlugin(viewer);
+
+                    const model = xktLoader.load({
+                        id: "myModel",
+                        xkt: xktArrayBuffer,
+                        edges: true
+                    });
+
+                    model.on("loaded", () => {
+                        signalTestComplete();
+                    });
+                },
+                function (errMsg) {
+                    console.error("ERROR: " + errMsg);
+                });
         },
         function (errMsg) {
             console.error("ERROR: " + errMsg);
