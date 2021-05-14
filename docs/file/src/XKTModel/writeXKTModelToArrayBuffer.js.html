@@ -35,7 +35,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxLinesGeometry">buildBoxLinesGeometry</a></span></span></li>
@@ -58,7 +57,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako = pako.default;
 }
 
-const XKT_VERSION = 7; // XKT format version
+const XKT_VERSION = 8; // XKT format version
 
 /**
  * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
@@ -215,7 +214,11 @@ function getModelData(xktModel) {
         data.eachMetaObjectId[metaObjectIndex] = metaObjectId;
         data.eachMetaObjectType[metaObjectIndex] = typeIndex;
         data.eachMetaObjectName[metaObjectIndex] = metaObjectName;
-        data.eachMetaObjectParent[metaObjectIndex] = parentMetaObjectId;
+
+        const parentMetaObject = xktModel.metaObjects[parentMetaObjectId];
+        if (parentMetaObject) {
+            data.eachMetaObjectParent[metaObjectIndex] = parentMetaObject.metaObjectIndex;
+        }
     }
 
     // Geometries
@@ -346,7 +349,7 @@ function deflateData(data) {
         types: pako.deflate(deflateStrings(data.types)),
         eachMetaObjectId: pako.deflate(deflateStrings(data.eachMetaObjectId)),
         eachMetaObjectType: pako.deflate(data.eachMetaObjectType.buffer),
-        eachMetaObjectName: pako.deflate(deflateStrings(data.eachMetaObjectName.buffer)),
+        eachMetaObjectName: pako.deflate(deflateStrings(data.eachMetaObjectName)),
         eachMetaObjectParent: pako.deflate(data.eachMetaObjectParent.buffer),
 
         positions: pako.deflate(data.positions.buffer),

@@ -90,12 +90,6 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "@xeokit/xeokit-xkt-utils/src/xktmodel/validatexktarraybuffer.js~validatexktarraybuffer",
-    "function/index.html#static-function-validateXKTArrayBuffer",
-    "<span>validateXKTArrayBuffer</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/validateXKTArrayBuffer.js</span>",
-    "function"
-  ],
-  [
     "@xeokit/xeokit-xkt-utils/src/xktmodel/writexktmodeltoarraybuffer.js~writexktmodeltoarraybuffer",
     "function/index.html#static-function-writeXKTModelToArrayBuffer",
     "<span>writeXKTModelToArrayBuffer</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/writeXKTModelToArrayBuffer.js</span>",
@@ -768,12 +762,6 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "src/xktmodel/validatexktarraybuffer.js",
-    "file/src/XKTModel/validateXKTArrayBuffer.js.html",
-    "src/XKTModel/validateXKTArrayBuffer.js",
-    "file"
-  ],
-  [
     "src/xktmodel/writexktmodeltoarraybuffer.js",
     "file/src/XKTModel/writeXKTModelToArrayBuffer.js.html",
     "src/XKTModel/writeXKTModelToArrayBuffer.js",
@@ -837,6 +825,12 @@ window.esdocSearchIndex = [
     "src/parsers/parsegltfintoxktmodel.js",
     "file/src/parsers/parseGLTFIntoXKTModel.js.html",
     "src/parsers/parseGLTFIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parsemetamodelintoxktmodel.js",
+    "file/src/parsers/parseMetaModelIntoXKTModel.js.html",
+    "src/parsers/parseMetaModelIntoXKTModel.js",
     "file"
   ],
   [

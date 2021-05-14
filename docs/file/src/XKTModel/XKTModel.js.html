@@ -35,7 +35,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxLinesGeometry">buildBoxLinesGeometry</a></span></span></li>
@@ -82,7 +81,6 @@ const kdTreeDimLength = new Float64Array(3);
  * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
  * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
- * * Validate an ArrayBuffer against an XKTModel using {@link validateXKTArrayBuffer}.
  *
  * ## Usage
  *
@@ -120,7 +118,7 @@ class XKTModel {
          *
          * Each XKTMetaObject holds its position in this list in {@link XKTMetaObject#metaObjectIndex}.
          *
-         * Created by {@link XKTModel#createMetaObject}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTMetaObject[]}
          */
@@ -151,7 +149,7 @@ class XKTModel {
          *
          * Each XKTGeometry holds its position in this list in {@link XKTGeometry#geometryIndex}.
          *
-         * Created by {@link XKTModel#createGeometry}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTGeometry[]}
          */
@@ -171,7 +169,7 @@ class XKTModel {
          *
          * Each XKTMesh holds its position in this list in {@link XKTMesh#meshIndex}.
          *
-         * Created by {@link XKTModel#createMesh}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTMesh[]}
          */
@@ -191,7 +189,7 @@ class XKTModel {
          *
          * Each XKTEntity holds its position in this list in {@link XKTEntity#entityIndex}.
          *
-         * Created by {@link XKTModel#createEntity}.
+         * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTEntity[]}
          */
@@ -244,16 +242,17 @@ class XKTModel {
         }
 
         if (this.metaObjects[params.metaObjectId]) {
-            console.error(&quot;XKTMetaObject already exists with this ID: &quot; + params.metaObjectId);
+       //     console.error(&quot;XKTMetaObject already exists with this ID: &quot; + params.metaObjectId);
             return;
         }
 
         const metaObjectId = params.metaObjectId;
         const metaObjectType = params.metaObjectType || &quot;default&quot;;
         const metaObjectName = params.metaObjectName || params.metaObjectId;
+        const metaObjectIndex = this.metaObjectsList.length;
         const parentMetaObjectId = (params.parentMetaObjectId !== null &amp;&amp; params.parentMetaObjectId !== undefined) ? params.parentMetaObjectId : params.metaObjectId;
 
-        const metaObject = new XKTMetaObject(metaObjectId, metaObjectType, metaObjectName, parentMetaObjectId);
+        const metaObject = new XKTMetaObject(metaObjectId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
 
         this.metaObjects[metaObjectId] = metaObject;
         this.metaObjectsList.push(metaObject);
@@ -558,8 +557,6 @@ class XKTModel {
             return;
         }
 
-        this._createDefaultMetaObjects();
-
         this._bakeSingleUseGeometryPositions();
 
         this._bakeAndOctEncodeNormals();
@@ -568,33 +565,17 @@ class XKTModel {
 
         const rootKDNode = this._createKDTree();
 
+        this.entitiesList = [];
+
         this._createTilesFromKDTree(rootKDNode);
 
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
 
+        this._createDefaultMetaObjects();
+
         this.finalized = true;
-    }
-
-    _createDefaultMetaObjects() {
-
-        for (let i = 0, len = this.entitiesList.length; i &lt; len; i++) {
-
-            const entity = this.entitiesList[i];
-            const entityId = entity.entityId;
-            const metaObjectId = entityId;
-            const metaObject = this.metaObjects[metaObjectId];
-            
-            if (!metaObject) {
-                this.createMetaObject({
-                    metaObjectId: metaObjectId,
-                    metaObjectType: &quot;default&quot;,
-                    metaObjectName: &quot;&quot; + metaObjectId,
-                    parentMetaObjectId: metaObjectId
-                });
-            }
-        }
     }
 
     _bakeSingleUseGeometryPositions() {
@@ -925,6 +906,26 @@ class XKTModel {
             const geometry = this.geometriesList[i];
             if (geometry.primitiveType === &quot;triangles&quot;) {
                 geometry.solid = isTriangleMeshSolid(geometry.indices, geometry.positionsQuantized); // Better memory/cpu performance with quantized values
+            }
+        }
+    }
+
+    _createDefaultMetaObjects() {
+
+        for (let i = 0, len = this.entitiesList.length; i &lt; len; i++) {
+
+            const entity = this.entitiesList[i];
+            const entityId = entity.entityId;
+            const metaObjectId = entityId;
+            const metaObject = this.metaObjects[metaObjectId];
+
+            if (!metaObject) {
+                this.createMetaObject({
+                    metaObjectId: metaObjectId,
+                    metaObjectType: &quot;default&quot;,
+                    metaObjectName: &quot;&quot; + metaObjectId,
+                    parentMetaObjectId: metaObjectId
+                });
             }
         }
     }

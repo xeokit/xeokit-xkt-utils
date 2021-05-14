@@ -35,7 +35,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxLinesGeometry">buildBoxLinesGeometry</a></span></span></li>
@@ -54,7 +53,7 @@
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {utils} from &quot;../XKTModel/lib/utils.js&quot;;
 import {math} from &quot;../lib/math.js&quot;;
 
-const atob = a =&gt; Buffer.from(a, &apos;base64&apos;).toString(&apos;binary&apos;);
+const atob2 = (typeof atob !== &apos;undefined&apos;) ?  atob : a =&gt; Buffer.from(a, &apos;base64&apos;).toString(&apos;binary&apos;);
 
 const WEBGL_COMPONENT_TYPES = {
     5120: Int8Array,
@@ -141,7 +140,7 @@ async function parseArrayBuffer(parsingCtx, uri) {
         let data = dataUriRegexResult[3];
         data = decodeURIComponent(data);
         if (isBase64) {
-            data = atob(data);
+            data = atob2(data);
         }
         const buffer = new ArrayBuffer(data.length);
         const view = new Uint8Array(buffer);

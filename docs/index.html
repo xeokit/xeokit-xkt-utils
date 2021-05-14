@@ -35,7 +35,6 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-validateXKTArrayBuffer">validateXKTArrayBuffer</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxLinesGeometry">buildBoxLinesGeometry</a></span></span></li>
@@ -102,11 +101,13 @@ class, which represents an <code>XKT</code> model.</p>
 validating <code>XKTModels</code>:</p>
 <ul>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel"><strong><code>parseGLTFIntoXKTModel</code></strong></a>
-loads glTF JSON into an <code>XKTModel</code>.</li>
+loads glTF JSON into an <code>XKTModel</code>.<ul>
+<li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseMetaModelIntoXKTModel"><strong><code>parseMetaModelIntoXKTModel</code></strong></a>
+loads metamodel JSON into an <code>XKTModel</code>.</li>
+</ul>
+</li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><strong><code>writeXKTModelToArrayBuffer</code></strong></a>
 serializes an <code>XKTModel</code> to an <code>ArrayBuffer</code>.</li>
-<li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer"><strong><code>validateXKTArrayBuffer</code></strong></a>
-validates an <code>ArrayBuffer</code> against the <code>XKTModel</code> it was serialized from.</li>
 </ul>
 <h4 id="building-an-xktmodel">Building an XKTModel</h4><p>To demonstrate the API, let&apos;s
 use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> &apos;s
@@ -289,18 +290,6 @@ to serialize
 our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to
 an <code>ArrayBuffer</code>.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);</code>
-</code></pre>
-<h4 id="validating-the-arraybuffer">Validating the ArrayBuffer</h4><p>Now we&apos;ll
-use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-validateXKTArrayBuffer"><code>validateXKTArrayBuffer</code></a>
-to validate the <code>ArrayBuffer</code> against
-our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>. If
-this function finds any errors, it will log them to the console and return <code>false</code>. Otherwise, it will
-return <code>true</code>, to indicate that the <code>ArrayBuffer</code> is correct.</p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
-
-if (!xktArrayBufferValid) {
-    console.error(&quot;XKT array buffer is invalid!&quot;);
-}</code>
 </code></pre>
 <h4 id="loading-the-arraybuffer-into-a-viewer">Loading the ArrayBuffer into a Viewer</h4><p>Let&apos;s now create a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>,
 then load the <code>ArrayBuffer</code> into it using
