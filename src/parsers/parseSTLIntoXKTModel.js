@@ -3,17 +3,24 @@ import {math} from "../lib/math.js";
 /**
  * @desc Parses STL file data into an {@link XKTModel}.
  *
- * @param {Object} data STL file data.
- * @param {XKTModel} model XKTModel to parse into.
- * @param {*} [options] Parsing options.
- * @private
+ * @param {Object} params Parsing parameters.
+ * @param {Object} params.stlData STL file data.
+ * @param {XKTModel} params.xktModel XKTModel to parse into.
  */
-async function parseSTLIntoXKTModel(data, model, options) {
-    const binData = ensureBinary(data);
+async function parseSTLIntoXKTModel(params) {
+    const stlData = params.stlData;
+    const xktModel = params.xktModel;
+    if (!stlData) {
+        throw "Argument expected: stlData";
+    }
+    if (!xktModel) {
+        throw "Argument expected: xktModel";
+    }
+    const binData = ensureBinary(stlData);
     if (isBinary(binData)) {
-        parseBinary(binData, model, options);
+        parseBinary(binData, xktModel, params);
     } else {
-        parseASCII(ensureString(data), model, options);
+        parseASCII(ensureString(stlData), xktModel, params);
     }
 }
 
@@ -26,7 +33,7 @@ function isBinary(data) {
         return true;
     }
     const solid = [115, 111, 108, 105, 100];
-    for (var i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i++) {
         if (solid[i] !== reader.getUint8(i, false)) {
             return true;
         }
@@ -34,7 +41,7 @@ function isBinary(data) {
     return false;
 }
 
-function parseBinary(data, model, options) {
+function parseBinary(data, xktModel, options) {
     const reader = new DataView(data);
     const faces = reader.getUint32(80, true);
     let r;
@@ -103,7 +110,7 @@ function parseBinary(data, model, options) {
             }
         }
         if (splitMeshes && newMesh) {
-            addMesh(model, positions, normals, colors, options);
+            addMesh(xktModel, positions, normals, colors, options);
             positions = [];
             normals = [];
             colors = colors ? [] : null;
@@ -111,11 +118,11 @@ function parseBinary(data, model, options) {
         }
     }
     if (positions.length > 0) {
-        addMesh(model, positions, normals, colors, options);
+        addMesh(xktModel, positions, normals, colors, options);
     }
 }
 
-function parseASCII(data, model, options) {
+function parseASCII(data, xktModel, options) {
     const faceRegex = /facet([\s\S]*?)endfacet/g;
     let faceCounter = 0;
     const floatRegex = /[\s]+([+-]?(?:\d+.\d+|\d+.|\d+|.\d+)(?:[eE][+-]?\d+)?)/.source;
@@ -156,12 +163,12 @@ function parseASCII(data, model, options) {
         }
         faceCounter++;
     }
-    addMesh(model, positions, normals, colors, options);
+    addMesh(xktModel, positions, normals, colors, options);
 }
 
 let nextGeometryId = 0;
 
-function addMesh(model, positions, normals, colors, options) {
+function addMesh(xktModel, positions, normals, colors, options) {
 
     const indices = new Int32Array(positions.length / 3);
     for (let ni = 0, len = indices.length; ni < len; ni++) {
@@ -179,7 +186,7 @@ function addMesh(model, positions, normals, colors, options) {
     const meshId = nextGeometryId++;
     const entityId = nextGeometryId++;
 
-    model.createGeometry({
+    xktModel.createGeometry({
         geometryId: geometryId,
         primitive: "triangles",
         positions: positions,
@@ -188,12 +195,12 @@ function addMesh(model, positions, normals, colors, options) {
         indices: indices
     });
 
-    model.createMesh({
+    xktModel.createMesh({
         meshId: meshId,
         geometryId: geometryId
     });
 
-    model.createEntity({
+    xktModel.createEntity({
         entityId: entityId,
         meshIds: [meshId]
     });
