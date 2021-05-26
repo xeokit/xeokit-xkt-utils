@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>xeokit-xkt-utils Visual Test Page</title>
+    <link href="css/pageStyle.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+</body>
+<script type="module">
+
+    import {
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        parseIFCIntoXKTModel,
+        writeXKTModelToArrayBuffer
+    } from "../dist/xeokit-xkt-utils.es.js";
+    import {signalTestComplete} from "./libs/utils.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.camera.eye = [102.07185264355974, 45.23873322531372, -54.1001537318987]
+    viewer.camera.look = [35.0291287591034, -3.5295781673428905, -20.312957533628705]
+    viewer.camera.up = [-0.48646319926706455, 0.8385999559445908, 0.24516049773277654]
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    utils.loadArraybuffer("./models/ifc/rac_advanced_sample_project.ifc", async (ifcData) => {
+
+            const xktModel = new XKTModel();
+
+            await parseIFCIntoXKTModel({
+                ifcData: ifcData,
+                xktModel: xktModel,
+                wasmPath: "../dist/"
+            });
+
+            xktModel.finalize();
+
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+            const xktLoader = new XKTLoaderPlugin(viewer);
+
+            const model = xktLoader.load({
+                id: "myModel",
+                xkt: xktArrayBuffer,
+                edges: true
+            });
+
+            model.on("loaded", () => {
+                signalTestComplete();
+            });
+        },
+        function (errMsg) {
+            console.error("ERROR: " + errMsg);
+        });
+
+
+</script>
+</html>
