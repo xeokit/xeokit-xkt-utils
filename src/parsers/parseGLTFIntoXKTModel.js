@@ -1,7 +1,7 @@
 import {utils} from "../XKTModel/lib/utils.js";
 import {math} from "../lib/math.js";
 
-const atob2 = (typeof atob !== 'undefined') ?  atob : a => Buffer.from(a, 'base64').toString('binary');
+const atob2 = (typeof atob !== 'undefined') ? atob : a => Buffer.from(a, 'base64').toString('binary');
 
 const WEBGL_COMPONENT_TYPES = {
     5120: Int8Array,
@@ -32,23 +32,24 @@ const WEBGL_TYPE_SIZES = {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_glTF_Duplex)]
  *
  * ````javascript
- * utils.loadJSON("./models/gltf/duplex/scene.gltf", async (json) => {
+ * utils.loadJSON("./models/gltf/duplex/scene.gltf", async (gltfData) => {
  *
  *     const xktModel = new XKTModel();
  *
- *     parseGLTFIntoXKTModel(json, xktModel);
+ *     parseGLTFIntoXKTModel({gltfData, xktModel});
  *
  *     xktModel.finalize();
  * });
  * ````
  *
- * @param {Object} gltf The glTF JSON.
- * @param {XKTModel} xktModel XKTModel to parse into
- * @param {function} getAttachment Callback through which to fetch attachments, if the glTF has them.
+ * @param {Object} params Parsing parameters.
+ * @param {Object} params.gltfData The glTF JSON.
+ * @param {XKTModel} params.xktModel XKTModel to parse into
+ * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
  */
-async function parseGLTFIntoXKTModel(gltf, xktModel, getAttachment) {
+async function parseGLTFIntoXKTModel({gltfData, xktModel, getAttachment}) {
     const parsingCtx = {
-        gltf: gltf,
+        gltf: gltfData,
         getAttachment: getAttachment || (() => {
             throw new Error('You must define getAttachment() method to convert glTF with external resources')
         }),

@@ -1,25 +1,19 @@
 import {IfcAPI} from "web-ifc/web-ifc-api.js";
 
-
 /**
  * @desc Parses IFC file data into an {@link XKTModel}.
  *
  * Internally, this function uses [web-ifc](https://github.com/tomvandig/web-ifc) to parse the IFC, which relies on a
  * WASM file to do the parsing.
  *
- * Depending on how we use this function, we may need to provide it with a path to the directory where that WASM file
- * stored.
+ * Depending on how we use this function, we may need to provide it with a path to the directory where that WASM file is stored.
  *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer} params.ifcData IFC file data.
- * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {ArrayBuffer|Response} [params.ifcData] IFC file data.
+ * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
  */
-async function parseIFCIntoXKTModel(params) {
-
-    const ifcData = params.ifcData;
-    const xktModel = params.xktModel;
-    const wasmPath = params.wasmPath;
+async function parseIFCIntoXKTModel({ifcData, xktModel, wasmPath}) {
 
     if (!ifcData) {
         throw "Argument expected: ifcData";
@@ -38,14 +32,14 @@ async function parseIFCIntoXKTModel(params) {
     const ifcApi = new IfcAPI();
 
     if (wasmPath) {
-        ifcApi.SetWasmPath(params.wasmPath);
+        ifcApi.SetWasmPath(wasmPath);
     }
 
     await ifcApi.Init();
 
-    const data = new Uint8Array(ifcData);
+    const dataArray = new Uint8Array(ifcData);
 
-    const modelID = ifcApi.OpenModel("foo.ifc", data);
+    const modelID = ifcApi.OpenModel("foo.ifc", dataArray);
 
     const flatMeshes = ifcApi.LoadAllGeometry(modelID);
 

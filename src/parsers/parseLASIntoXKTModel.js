@@ -9,13 +9,10 @@ import {LASLoader} from '@loaders.gl/las';
  * for LIDAR mapping purposes.
  *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer} params.lazData LAS/LAZ file data.
+ * @param {ArrayBuffer|Response} params.lazData LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  */
-async function parseLASIntoXKTModel(params) {
-
-    const lazData = params.lazData;
-    const xktModel = params.xktModel;
+async function parseLASIntoXKTModel({lazData, xktModel}) {
 
     if (!lazData) {
         throw "Argument expected: lazData";

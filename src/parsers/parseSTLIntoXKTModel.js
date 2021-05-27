@@ -3,20 +3,22 @@ import {math} from "../lib/math.js";
 /**
  * @desc Parses STL file data into an {@link XKTModel}.
  *
- * @param {Object} params Parsing parameters.
- * @param {Object} params.stlData STL file data.
- * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {Object} params Parsing params.
+ * @param {ArrayBuffer|Response} [params.stlData] STL file data.
+ * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  */
-async function parseSTLIntoXKTModel(params) {
-    const stlData = params.stlData;
-    const xktModel = params.xktModel;
+async function parseSTLIntoXKTModel({stlData, xktModel}) {
+
     if (!stlData) {
         throw "Argument expected: stlData";
     }
+
     if (!xktModel) {
         throw "Argument expected: xktModel";
     }
+
     const binData = ensureBinary(stlData);
+
     if (isBinary(binData)) {
         parseBinary(binData, xktModel, params);
     } else {
