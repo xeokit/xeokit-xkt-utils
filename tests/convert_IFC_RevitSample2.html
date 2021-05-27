@@ -38,11 +38,7 @@
 
             const xktModel = new XKTModel();
 
-            await parseIFCIntoXKTModel({
-                ifcData: ifcData,
-                xktModel: xktModel,
-                wasmPath: "../dist/"
-            });
+            await parseIFCIntoXKTModel({ifcData, xktModel, wasmPath: "../dist/"});
 
             xktModel.finalize();
 
