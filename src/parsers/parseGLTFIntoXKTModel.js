@@ -372,12 +372,14 @@ function createPrimitiveGeometryHash(primitiveInfo) {
     if (!attributes) {
         return "empty";
     }
+    const positions = primitiveInfo.attributes.POSITION;
+    const normals = primitiveInfo.attributes.NORMAL;
     return [
         primitiveInfo.mode,
         (primitiveInfo.indices !== null && primitiveInfo.indices !== undefined) ? primitiveInfo.indices : "-",
-        (primitiveInfo.positions !== null && primitiveInfo.positions !== undefined) ? primitiveInfo.positions : "-",
-        (primitiveInfo.normals !== null && primitiveInfo.normals !== undefined) ? primitiveInfo.normals : "-",
-        (primitiveInfo.colors !== null && primitiveInfo.colors !== undefined) ? primitiveInfo.colors : "-"
+        (positions !== null && positions !== undefined) ? positions : "-",
+        (normals !== null && normals !== undefined) ? normals : "-",
+        (primitiveInfo.material !== null && primitiveInfo.material !== undefined) ? primitiveInfo.material : "-"
     ].join(";");
 }
 
