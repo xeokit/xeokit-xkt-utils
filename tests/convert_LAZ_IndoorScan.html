@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>xeokit-xkt-utils Visual Test Page</title>
+    <link href="css/pageStyle.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+</body>
+<script type="module">
+
+    import {
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        parseLASIntoXKTModel,
+        writeXKTModelToArrayBuffer
+    } from "../dist/xeokit-xkt-utils.es.js";
+
+    import {signalTestComplete} from "./libs/utils.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.scene.camera.eye = [-14.178261690907558, 16.90857800434199, -9.235654751825258];
+    viewer.scene.camera.look = [-9.019576794539304, 2.3915683871226836, 3.458304950077976];
+    viewer.scene.camera.up = [0.273790165300491, 0.686401912000719, 0.673714598763072];
+
+    viewer.scene.pointsMaterial.pointSize = 1;
+    viewer.scene.pointsMaterial.perspectivePoints = false;
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    const xktModel = new XKTModel();
+
+    fetch("./models/laz/indoor.0.1.laz").then((lazData) => {
+
+        parseLASIntoXKTModel({lazData, xktModel}).then(() => {
+
+            xktModel.finalize();
+
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+            const model = xktLoader.load({
+                id: "myModel",
+                xkt: xktArrayBuffer,
+                edges: true
+            });
+
+            model.on("loaded", () => {
+                signalTestComplete();
+            });
+        });
+    });
+
+</script>
+</html>
