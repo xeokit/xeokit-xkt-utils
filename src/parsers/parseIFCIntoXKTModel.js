@@ -65,12 +65,16 @@ async function parseIFCIntoXKTModel({ifcData, xktModel, wasmPath}) {
 
 function parseEntities(ctx) {
 
+    // Create XKTEntity, XKTMesh and XKTGeometry elements within the XKTModel.
+    // An XKTEntity has one or more XKTMesh components, which each have exactly one XKTGeometry.
+    // Each XKTMesh can share its XKTGeometry with other XKTMeshes.
+
     const flatMeshes = ctx.ifcAPI.LoadAllGeometry(ctx.modelID);
 
     for (let i = 0, len = flatMeshes.size(); i < len; i++) {
 
         const flatMesh = flatMeshes.get(i);
-        const entityId = flatMesh.expressID;
+        const entityId = flatMesh.expressID; // <<--------- This should be the entity's product ID
         const placedGeometries = flatMesh.geometries;
 
         const meshIds = [];
