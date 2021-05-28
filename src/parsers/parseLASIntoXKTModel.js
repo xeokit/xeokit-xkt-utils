@@ -8,8 +8,25 @@ import {LASLoader} from '@loaders.gl/las';
  * a public format for the interchange of 3-dimensional point cloud data data, developed
  * for LIDAR mapping purposes.
  *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then load an LAZ point cloud model into it.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_LAZ_IndoorScan)]
+ *
+ * ````javascript
+ * utils.loadArraybuffer("./models/laz/indoor.0.1.laz", async (lazData) => {
+ *
+ *     const xktModel = new XKTModel();
+ *
+ *     parseLASIntoXKTModel({lazData, xktModel});
+ *
+ *     xktModel.finalize();
+ * });
+ * ````
+ *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer|Response} params.lazData LAS/LAZ file data.
+ * @param {ArrayBuffer} params.lazData LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  */
 async function parseLASIntoXKTModel({lazData, xktModel}) {
