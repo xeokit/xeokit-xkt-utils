@@ -8,6 +8,23 @@ import {IfcAPI} from "web-ifc/web-ifc-api.js";
  *
  * Depending on how we use this function, we may need to provide it with a path to the directory where that WASM file is stored.
  *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then load an IFC model into it.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_IFC_RevitSample1)]
+ *
+ * ````javascript
+ * utils.loadArraybuffer("./models/ifc/rac_advanced_sample_project.ifc", async (ifcData) => {
+ *
+ *     const xktModel = new XKTModel();
+ *
+ *     parseIFCIntoXKTModel({ifcData, xktModel, wasmPath: "../dist/"});
+ *
+ *     xktModel.finalize();
+ * });
+ * ````
+ *
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer|Response} [params.ifcData] IFC file data.
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
