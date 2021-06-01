@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>xeokit-xkt-utils Visual Test Page</title>
+    <link href="css/pageStyle.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+</body>
+<script async type="module">
+
+    import {
+        DirLight, Mesh, ReadableGeometry, PhongMaterial,
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        parseCityJSONIntoXKTModel,
+        writeXKTModelToArrayBuffer
+    } from "../dist/xeokit-xkt-utils.es.js";
+
+    import {signalTestComplete} from "./libs/utils.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true
+    });
+
+    viewer.scene.camera.eye = [6.388397178307795, 6.401881542028507, 6.645492597490846];
+    viewer.scene.camera.look = [6.324294439747439, 0.45251627147179985, 1.263156433658228];
+    viewer.scene.camera.up = [-0.008830973302054098, 0.6709105017697298, -0.7414857466773235];
+
+    viewer.scene.clearLights();
+
+    new DirLight(viewer.scene, {
+        id: "keyLight",
+        dir: [0.8, -0.6, -0.8],
+        color: [1.0, 0.3, 0.3],
+        intensity: 1.0,
+        space: "world"
+    });
+
+    new DirLight(viewer.scene, {
+        id: "fillLight",
+        dir: [-0.8, -0.4, -0.4],
+        color: [0.3, 1.0, 0.3],
+        intensity: 1.0,
+        space: "world"
+    });
+
+    new DirLight(viewer.scene, {
+        id: "rimLight",
+        dir: [0.2, -0.8, 0.8],
+        color: [0.6, 0.6, 0.6],
+        intensity: 1.0,
+        space: "world"
+    });
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    function load(src, pos) {
+        return new Promise((resolve, reject) => {
+            utils.loadJSON(src, (cityJSONData => {
+                const xktModel = new XKTModel();
+                parseCityJSONIntoXKTModel({cityJSONData, xktModel}).then(() => {
+                    xktModel.finalize();
+                    const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+                    xktLoader.load({
+                        id: src,
+                        xkt: xktArrayBuffer,
+                        position: pos,
+                        edges: true
+                    });
+                    resolve();
+                });
+            }));
+        });
+    }
+
+    load("./models/cityjson/cube.json", [0, 0, 0]).then(() => {
+        load("./models/cityjson/msol.json", [3, 0, 0]).then(() => {
+            load("./models/cityjson/csol.json", [6, 0, 0]).then(() => {
+                load("./models/cityjson/tetra.json", [9, 0, 0]).then(() => {
+                    load("./models/cityjson/msurface.json", [12, 0, 0]).then(() => {
+                        load("./models/cityjson/torus.json", [15, 0, 0]).then(() => {
+                            signalTestComplete();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+</script>
+</html>
