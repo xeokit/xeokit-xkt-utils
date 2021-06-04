@@ -6,6 +6,7 @@ const package = require('./package.json');
 
 const {
     XKTModel,
+    parseCityJSONIntoXKTModel,
     parseIFCIntoXKTModel,
     parseGLTFIntoXKTModel,
     parseLASIntoXKTModel,
@@ -21,15 +22,19 @@ const program = new commander.Command();
 program.version(package.version, '-v, --version');
 
 program
-    .option('-s, --source [file]', 'path to source file; supported formats are .gltf, .ifc, .laz, .las, .pcd, .ply and .stl')
+    .option('-s, --source [file]', 'path to source file')
+    .option('-f, --format [string]', 'source file format; supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson')
     .option('-m, --metamodel [file]', 'path to source metamodel JSON file (optional)')
-    .option('-o, --output [file]', 'path to target .xkt file');
+    .option('-o, --output [file]', 'path to target .xkt file')
+    .option('-l, --log', 'log output');
 
 program.on('--help', () => {
 
 });
 
 program.parse(process.argv);
+
+const options = program.opts();
 
 if (program.source === undefined) {
     console.error('\n\nError: please specify source file path.');
@@ -43,7 +48,13 @@ if (program.output === undefined) {
     process.exit(1);
 }
 
-console.log('\n\nReading input file: ' + program.source);
+function log(msg) {
+    if (options.log) {
+        console.log(msg);
+    }
+}
+
+log('\n\nReading input file: ' + program.source);
 
 async function main() {
 
@@ -66,6 +77,11 @@ async function main() {
 
     switch (ext) {
 
+        case "json":
+            const cityJSONData = JSON.parse(fileContent);
+            await parseCityJSONIntoXKTModel({cityJSONData, xktModel, log});
+            break;
+
         case "gltf":
             const gltfData = JSON.parse(fileContent);
             const gltfBasePath = getBasePath(program.source);
@@ -74,29 +90,35 @@ async function main() {
                 xktModel,
                 getAttachment: async (name) => {
                     return fs.readFile(gltfBasePath + name);
-                }
+                },
+                log
             });
             break;
 
         case "ifc":
-            await parseIFCIntoXKTModel({ifcData: fileContent, xktModel, wasmPath: "../dist/"});
+            await parseIFCIntoXKTModel({
+                ifcData: fileContent, xktModel, wasmPath: "../dist/", log
+            });
             break;
 
         case "laz":
+            await parseLASIntoXKTModel({lazData: fileContent, xktModel, log});
+            break;
+
         case "las":
-            await parseLASIntoXKTModel({lazData: fileContent, xktModel});
+            await parseLASIntoXKTModel({lazData: fileContent, xktModel, log});
             break;
 
         case "pcd":
-            await parsePCDIntoXKTModel({pcdData: fileContent, xktModel});
+            await parsePCDIntoXKTModel({pcdData: fileContent, xktModel, log});
             break;
 
         case "ply":
-            await parsePLYIntoXKTModel({plyData: fileContent, xktModel});
+            await parsePLYIntoXKTModel({plyData: fileContent, xktModel, log});
             break;
 
         case "stl":
-            await parseSTLIntoXKTModel({stlData: fileContent, xktModel});
+            await parseSTLIntoXKTModel({stlData: fileContent, xktModel, log});
             break;
 
         default:
@@ -106,7 +128,7 @@ async function main() {
             break;
     }
 
-    console.log('Converting to XKT format v8');
+    log('Writing XKT v8');
 
     xktModel.finalize();
 
