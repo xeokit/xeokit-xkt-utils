@@ -9,6 +9,7 @@ import {XKTEntity} from './XKTEntity.js';
 import {XKTTile} from './XKTTile.js';
 import {KDNode} from "./KDNode.js";
 import {XKTMetaObject} from "./XKTMetaObject.js";
+import {mergeVertices} from "../lib/mergeVertices.js";
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
@@ -45,6 +46,75 @@ class XKTModel {
      * @param {Number} [cfg.edgeThreshold=10]
      */
     constructor(cfg = {}) {
+
+        /**
+         * The model's ID, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @type {String}
+         */
+        this.modelId = cfg.modelId || "";
+
+        /**
+         * The project ID, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @type {String}
+         */
+        this.projectId = cfg.projectId || "";
+
+        /**
+         * The revision ID, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @type {String}
+         */
+        this.revisionId = cfg.revisionId || "";
+
+        /**
+         * The model author, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @property author
+         * @type {String}
+         */
+        this.author = cfg.author || "";
+
+        /**
+         * The date the model was created, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @property createdAt
+         * @type {String}
+         */
+        this.createdAt = cfg.createdAt || "";
+
+        /**
+         * The application that created the model, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @property creatingApplication
+         * @type {String}
+         */
+        this.creatingApplication = cfg.creatingApplication || "";
+
+        /**
+         * The model schema version, if available.
+         *
+         * In the case of IFC, this could be "IFC2x3" or "IFC4", for example.
+         *
+         * Will be an empty string by default.
+         *
+         * @property schema
+         * @type {String}
+         */
+        this.schema = cfg.schema || "";
 
         /**
          *
@@ -190,7 +260,7 @@ class XKTModel {
         }
 
         if (this.metaObjects[params.metaObjectId]) {
-       //     console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
+            //     console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
             return;
         }
 
@@ -217,7 +287,7 @@ class XKTModel {
      * @param {Number} params.geometryId Unique ID for the {@link XKTGeometry}.
      * @param {String} params.primitiveType The type of {@link XKTGeometry}: "triangles", "lines" or "points".
      * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}. Required for all primitive types.
-     * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Required for triangles primitives. Ignored for points and lines.
+     * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Only used with triangles primitives. Ignored for points and lines.
      * @param {Number[]} [params.colors] Floating-point RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Number[]} [params.colorsCompressed] Integer RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Uint32Array} [params.indices] Indices for the {@link XKTGeometry}. Required for triangles and lines primitives. Ignored for points.
@@ -251,9 +321,6 @@ class XKTModel {
         }
 
         if (triangles) {
-            if (!params.normals) {
-                throw "Parameter expected for 'triangles' primitive: params.normals";
-            }
             if (!params.indices) {
                 throw "Parameter expected for 'triangles' primitive: params.indices";
             }
@@ -293,9 +360,10 @@ class XKTModel {
         }
 
         if (triangles) {
-            xktGeometryCfg.normals = new Float64Array(params.normals); // May modify in #finalize
+            if (params.normals) {
+                xktGeometryCfg.normals = new Float32Array(params.normals);
+            }
             xktGeometryCfg.indices = params.indices;
-            xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
         }
 
         if (points) {
@@ -313,6 +381,25 @@ class XKTModel {
 
         if (lines) {
             xktGeometryCfg.indices = params.indices;
+        }
+
+        if (triangles) {
+
+            if (!params.normals) {
+
+                // Building models often duplicate positions to allow face-aligned vertex normals; when we're not
+                // providing normals for a geometry, it becomes possible to merge duplicate vertex positions within it.
+
+                // TODO: Make vertex merging also merge normals?
+
+                const mergedPositions = [];
+                const mergedIndices = [];
+                mergeVertices(xktGeometryCfg.positions, xktGeometryCfg.indices, mergedPositions, mergedIndices);
+                xktGeometryCfg.positions = new Float64Array(mergedPositions);
+                xktGeometryCfg.indices = mergedIndices;
+            }
+
+            xktGeometryCfg.edgeIndices = buildEdgeIndices(xktGeometryCfg.positions, xktGeometryCfg.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
         }
 
         const geometry = new XKTGeometry(xktGeometryCfg);

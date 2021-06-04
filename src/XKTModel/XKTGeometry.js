@@ -74,7 +74,7 @@ class XKTGeometry {
         /**
          * Non-compressed 3D vertex normals.
          *
-         * Defined only for triangle primitives. Ignored for points and lines.
+         * Defined only for triangle primitives. Can be null if we want xeokit to auto-generate them. Ignored for points and lines.
          *
          * @type {Float32Array}
          */
@@ -86,6 +86,8 @@ class XKTGeometry {
          * Defined only for triangle primitives. Ignored for points and lines.
          *
          * This array is later created from {@link XKTGeometry#normals} by {@link XKTModel#finalize}.
+         *
+         * Will be null if {@link XKTGeometry#normals} is also null.
          *
          * @type {Int8Array}
          */
