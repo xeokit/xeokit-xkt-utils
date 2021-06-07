@@ -7,11 +7,19 @@ const tempVec3b = math.vec3();
 const tempVec3c = math.vec3();
 
 /**
- * @desc Parses CityJSON models into an {@link XKTModel}.
+ * @desc Parses a CityJSON model into an {@link XKTModel}.
  *
  * [CityJSON](https://www.cityjson.org) is a JSON-based encoding for a subset of the CityGML data model (version 2.0.0),
  * which is an open standardised data model and exchange format to store digital 3D models of cities and
  * landscapes. CityGML is an official standard of the [Open Geospatial Consortium](https://www.ogc.org/).
+ *
+ * This converter function supports most of the [CityJSON 1.0.2 Specification](https://www.cityjson.org/specs/1.0.2),
+ * with the following limitations:
+ *
+ * * Does not (yet) support CityJSON semantics for geometry primitives.
+ * * Does not (yet) support textured geometries.
+ * * Does not (yet) support geometry templates.
+ * * When the CityJSON file provides multiple *themes* for a geometry, then we parse only the first of the provided themes for that geometry.
  *
  * ## Usage
  *
@@ -59,48 +67,40 @@ async function parseCityJSONIntoXKTModel({cityJSONData, xktModel, log}) {
         xktModel,
         log: (log || function (msg) {
         }),
-        nextId: 0
+        nextId: 0,
+        stats: {
+            convertedObjects: 0,
+            convertedGeometries: 0
+        }
     };
 
     ctx.xktModel.schema = cityJSONData.type + " " + cityJSONData.version;
 
     ctx.log("Converting " + ctx.xktModel.schema);
 
-    await parse(ctx);
+    await parseCityJSON(ctx);
 }
 
 function transformVertices(vertices, transform) {
-
     const transformedVertices = [];
     const scale = transform.scale || math.vec3([1, 1, 1]);
     const translate = transform.translate || math.vec3([0, 0, 0]);
-
     for (let i = 0, j = 0; i < vertices.length; i++, j += 3) {
-
         const x = (vertices[i][0] * scale[0]) + translate[0];
         const y = (vertices[i][1] * scale[1]) + translate[1];
         const z = (vertices[i][2] * scale[2]) + translate[2];
-
         transformedVertices.push([x, y, z]);
     }
-
     return transformedVertices;
 }
 
-function parse(ctx) {
+function parseCityJSON(ctx) {
 
     const xktModel = ctx.xktModel;
-
     const cityJSONData = ctx.cityJSONData;
-    const extensions = cityJSONData.extensions;
-    const metadata = cityJSONData.metadata;
     const cityObjects = cityJSONData.CityObjects;
-    const transform = cityJSONData.transform;
 
-    let countGeometries = 0;
-    let countObjects = 0;
-
-    const rootMetaObject = xktModel.createMetaObject({
+    ctx.rootMetaObject = xktModel.createMetaObject({
         metaObjectId: "myModel",
         metaObjectName: "CityJSON",
         metaObjectType: "CityJSON"
@@ -108,203 +108,135 @@ function parse(ctx) {
 
     for (const objectId in cityObjects) {
         if (cityObjects.hasOwnProperty(objectId)) {
-
             const cityObject = cityObjects[objectId];
-            const metaObjectType = cityObject.type;
+            parseCityObject(ctx, cityObject, objectId);
+        }
+    }
 
-            xktModel.createMetaObject({
-                metaObjectId: objectId,
-                metaObjectName: metaObjectType + " : " + objectId,
-                metaObjectType: metaObjectType,
-                parentMetaObjectId: cityObject.parents ? cityObject.parents[0] : rootMetaObject.metaObjectId
-            });
+    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
+    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
+}
 
-            if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
-                continue;
-            }
+function parseCityObject(ctx, cityObject, objectId) {
 
-            const meshIds = [];
-            const sharedIndices = [];
+    const cityJSONData = ctx.cityJSONData;
+    const metaObjectType = cityObject.type;
+    const xktModel = ctx.xktModel;
 
-            for (let i = 0, len = cityObject.geometry.length; i < len; i++) {
+    xktModel.createMetaObject({
+        metaObjectId: objectId,
+        metaObjectName: metaObjectType + " : " + objectId,
+        metaObjectType: metaObjectType,
+        parentMetaObjectId: cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObject.metaObjectId
+    });
 
-                const geometry = cityObject.geometry[i];
-                const geomType = geometry.type;
+    if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
+        return;
+    }
 
-                let objectMaterial;
-                let surfaceMaterials;
+    const meshIds = [];
 
-                const appearance = cityJSONData.appearance;
-                if (appearance) {
-                    const materials = appearance.materials;
-                    if (materials) {
+    for (let i = 0, len = cityObject.geometry.length; i < len; i++) {
 
-                        const geometryMaterial = geometry.material;
-                        if (geometryMaterial) {
+        const geometry = cityObject.geometry[i];
 
-                            const themeIds = Object.keys(geometryMaterial);
+        let objectMaterial;
+        let surfaceMaterials;
 
-                            if (themeIds.length > 0) {
-
-                                const themeId = themeIds[0];
-                                const theme = geometryMaterial[themeId];
-
-                                if (theme.value !== undefined) {
-
-                                    objectMaterial = materials[theme.value];
-
-                                } else {
-                                    const values = theme.values;
-                                    if (values) {
-                                        surfaceMaterials = [];
-                                        for (let j = 0, lenj = values.length; j < lenj; j++) {
-                                            const value = values[i];
-                                            const surfaceMaterial = materials[value];
-
-                                            surfaceMaterials.push(surfaceMaterial);
-                                        }
-                                    }
+        const appearance = cityJSONData.appearance;
+        if (appearance) {
+            const materials = appearance.materials;
+            if (materials) {
+                const geometryMaterial = geometry.material;
+                if (geometryMaterial) {
+                    const themeIds = Object.keys(geometryMaterial);
+                    if (themeIds.length > 0) {
+                        const themeId = themeIds[0];
+                        const theme = geometryMaterial[themeId];
+                        if (theme.value !== undefined) {
+                            objectMaterial = materials[theme.value];
+                        } else {
+                            const values = theme.values;
+                            if (values) {
+                                surfaceMaterials = [];
+                                for (let j = 0, lenj = values.length; j < lenj; j++) {
+                                    const value = values[i];
+                                    const surfaceMaterial = materials[value];
+                                    surfaceMaterials.push(surfaceMaterial);
                                 }
                             }
                         }
                     }
                 }
-
-                if (surfaceMaterials) {
-
-                    switch (geomType) {
-
-                        case "MultiPoint":
-                            break;
-
-                        case "MultiLineString":
-                            break;
-
-                        case "MultiSurface":
-                        case "CompositeSurface":
-                            const surfaces = geometry.boundaries;
-
-                            parseSurfacesWithOwnMaterials(ctx, surfaces, surfaceMaterials, meshIds);
-                            break;
-
-                        case "Solid":
-                            const shells = geometry.boundaries;
-                            for (let j = 0; j < shells.length; j++) {
-                                const surfaces = shells[j];
-
-                                parseSurfacesWithOwnMaterials(ctx, surfaces, surfaceMaterials, meshIds);
-                            }
-                            break;
-
-                        case "MultiSolid":
-                        case "CompositeSolid":
-                            const solids = geometry.boundaries;
-                            for (let j = 0; j < solids.length; j++) {
-                                for (let k = 0; k < solids[j].length; k++) {
-                                    const surfaces = solids[j][k];
-
-                                    parseSurfacesWithOwnMaterials(ctx, surfaces, surfaceMaterials, meshIds);
-                                }
-                            }
-                            break;
-
-                        case "GeometryInstance":
-                            break;
-                    }
-
-                } else {
-
-                    const geometryCfg = {
-                        positions: [],
-                        indices: []
-                    };
-
-                    switch (geomType) {
-
-                        case "MultiPoint":
-                            break;
-
-                        case "MultiLineString":
-                            break;
-
-                        case "MultiSurface":
-                        case "CompositeSurface":
-                            const surfaces = geometry.boundaries;
-
-                            parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, geometryCfg);
-                            break;
-
-                        case "Solid":
-                            const shells = geometry.boundaries;
-                            for (let j = 0; j < shells.length; j++) {
-                                const surfaces = shells[j];
-
-                                parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, geometryCfg);
-                            }
-                            break;
-
-                        case "MultiSolid":
-                        case "CompositeSolid":
-                            const solids = geometry.boundaries;
-                            for (let j = 0; j < solids.length; j++) {
-                                for (let k = 0; k < solids[j].length; k++) {
-                                    const surfaces = solids[j][k];
-
-                                    parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, geometryCfg);
-                                }
-                            }
-                            break;
-
-                        case "GeometryInstance":
-                            break;
-                    }
-
-                    const geometryId = "" + ctx.nextId++;
-                    const meshId = "" + ctx.nextId++;
-
-                    xktModel.createGeometry({
-                        geometryId: geometryId,
-                        primitiveType: "triangles",
-                        positions: geometryCfg.positions,
-                        indices: geometryCfg.indices
-                    });
-
-                    xktModel.createMesh({
-                        meshId: meshId,
-                        geometryId: geometryId,
-                        color: (objectMaterial && objectMaterial.diffuseColor) ? objectMaterial.diffuseColor : [0.8, 0.8, 0.8],
-                        opacity: 1.0
-                        //opacity: (objectMaterial && objectMaterial.transparency !== undefined) ? (1.0 - objectMaterial.transparency) : 1.0
-                    });
-
-                    meshIds.push(meshId);
-                }
             }
+        }
 
-            if (meshIds.length > 0) {
+        if (surfaceMaterials) {
+            parseGeometrySurfacesWithOwnMaterials(ctx, geometry, surfaceMaterials, meshIds);
 
-                xktModel.createEntity({
-                    entityId: objectId,
-                    meshIds: meshIds
-                });
-
-                countObjects++;
-                countGeometries += meshIds.length;
-            }
+        } else {
+            parseGeometrySurfacesWithSharedMaterial(ctx, geometry, objectMaterial, meshIds);
         }
     }
 
-    // ctx.log("Converted objects: " + countObjects);
-    // ctx.log("Converted geometries: " + countGeometries);
+    if (meshIds.length > 0) {
+        xktModel.createEntity({
+            entityId: objectId,
+            meshIds: meshIds
+        });
+        ctx.stats.convertedObjects++;
+    }
 }
 
-function parseMultiPoint(ctx, boundaries) {
+/**
+ *
+ */
+function parseGeometrySurfacesWithOwnMaterials(ctx, geometry, surfaceMaterials, meshIds) {
 
+    const geomType = geometry.type;
+
+    switch (geomType) {
+
+        case "MultiPoint":
+            break;
+
+        case "MultiLineString":
+            break;
+
+        case "MultiSurface":
+
+        case "CompositeSurface":
+            const surfaces = geometry.boundaries;
+            parseSurfacesWithOwnMaterials(ctx, surfaceMaterials, surfaces, meshIds);
+            break;
+
+        case "Solid":
+            const shells = geometry.boundaries;
+            for (let j = 0; j < shells.length; j++) {
+                const surfaces = shells[j];
+                parseSurfacesWithOwnMaterials(ctx, surfaceMaterials, surfaces, meshIds);
+            }
+            break;
+
+        case "MultiSolid":
+
+        case "CompositeSolid":
+            const solids = geometry.boundaries;
+            for (let j = 0; j < solids.length; j++) {
+                for (let k = 0; k < solids[j].length; k++) {
+                    const surfaces = solids[j][k];
+                    parseSurfacesWithOwnMaterials(ctx, surfaceMaterials, surfaces, meshIds);
+                }
+            }
+            break;
+
+        case "GeometryInstance":
+            break;
+    }
 }
 
-function parseSurfacesWithOwnMaterials(ctx, surfaces, surfaceMaterials, meshIds) {
+function parseSurfacesWithOwnMaterials(ctx, surfaceMaterials, surfaces, meshIds) {
 
-    const cityJSONData = ctx.cityJSONData;
     const vertices = ctx.vertices;
     const xktModel = ctx.xktModel;
 
@@ -400,14 +332,93 @@ function parseSurfacesWithOwnMaterials(ctx, surfaces, surfaceMaterials, meshIds)
         });
 
         meshIds.push(meshId);
+
+        ctx.stats.convertedGeometries++;
     }
 }
 
+/**
+ *
+ */
+function parseGeometrySurfacesWithSharedMaterial(ctx, geometry, objectMaterial, meshIds) {
+
+    const xktModel = ctx.xktModel;
+    const sharedIndices = [];
+    const geometryCfg = {
+        positions: [],
+        indices: []
+    };
+
+    const geomType = geometry.type;
+
+    switch (geomType) {
+        case "MultiPoint":
+            break;
+
+        case "MultiLineString":
+            break;
+
+        case "MultiSurface":
+        case "CompositeSurface":
+            const surfaces = geometry.boundaries;
+            parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, geometryCfg);
+            break;
+
+        case "Solid":
+            const shells = geometry.boundaries;
+            for (let j = 0; j < shells.length; j++) {
+                const surfaces = shells[j];
+                parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, geometryCfg);
+            }
+            break;
+
+        case "MultiSolid":
+        case "CompositeSolid":
+            const solids = geometry.boundaries;
+            for (let j = 0; j < solids.length; j++) {
+                for (let k = 0; k < solids[j].length; k++) {
+                    const surfaces = solids[j][k];
+                    parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, geometryCfg);
+                }
+            }
+            break;
+
+        case "GeometryInstance":
+            break;
+    }
+
+    const geometryId = "" + ctx.nextId++;
+    const meshId = "" + ctx.nextId++;
+
+    xktModel.createGeometry({
+        geometryId: geometryId,
+        primitiveType: "triangles",
+        positions: geometryCfg.positions,
+        indices: geometryCfg.indices
+    });
+
+    xktModel.createMesh({
+        meshId: meshId,
+        geometryId: geometryId,
+        color: (objectMaterial && objectMaterial.diffuseColor) ? objectMaterial.diffuseColor : [0.8, 0.8, 0.8],
+        opacity: 1.0
+        //opacity: (objectMaterial && objectMaterial.transparency !== undefined) ? (1.0 - objectMaterial.transparency) : 1.0
+    });
+
+    meshIds.push(meshId);
+
+    ctx.stats.convertedGeometries++;
+}
+
 function parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, primitiveCfg) {
+
     const vertices = ctx.vertices;
+
     for (let i = 0; i < surfaces.length; i++) {
+
         let boundary = [];
         let holes = [];
+
         for (let j = 0; j < surfaces[i].length; j++) {
             if (boundary.length > 0) {
                 holes.push(boundary.length);
@@ -415,12 +426,17 @@ function parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, primitive
             const newBoundary = extractLocalIndices(ctx, surfaces[i][j], sharedIndices, primitiveCfg);
             boundary.push(...newBoundary);
         }
+
         if (boundary.length === 3) { // Triangle
+
             primitiveCfg.indices.push(boundary[0]);
             primitiveCfg.indices.push(boundary[1]);
             primitiveCfg.indices.push(boundary[2]);
+
         } else if (boundary.length > 3) { // Polygon
+
             let pList = [];
+
             for (let k = 0; k < boundary.length; k++) {
                 pList.push({
                     x: vertices[sharedIndices[boundary[k]]][0],
@@ -428,14 +444,18 @@ function parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, primitive
                     z: vertices[sharedIndices[boundary[k]]][2]
                 });
             }
+
             const normal = getNormalOfPositions(pList, math.vec3());
             let pv = [];
+
             for (let k = 0; k < pList.length; k++) {
                 to2D(pList[k], normal, tempVec2a);
                 pv.unshift(tempVec2a[0]);
                 pv.unshift(tempVec2a[1]);
             }
+
             const tr = earcut(pv, holes, 2);
+
             for (let k = 0; k < tr.length; k += 3) {
                 primitiveCfg.indices.unshift(boundary[tr[k]]);
                 primitiveCfg.indices.unshift(boundary[tr[k + 1]]);
@@ -487,23 +507,6 @@ function getNormalOfPositions(positions, normal) {
     }
 
     return math.normalizeVec3(normal);
-}
-
-function buildDisjointTriangles(positions, indices, positionsDisjoint, indicesDisjoint) {
-
-    for (let i = 0, len = indices.length; i < len; i++) {
-
-        const idx = indices[i];
-        const x = positions[(idx * 3) + 0];
-        const y = positions[(idx * 3) + 1];
-        const z = positions[(idx * 3) + 2];
-
-        positionsDisjoint.push(x);
-        positionsDisjoint.push(y);
-        positionsDisjoint.push(z);
-
-        indicesDisjoint.push(i);
-    }
 }
 
 function to2D(_p, _n, re) {
