@@ -25,6 +25,9 @@ const WEBGL_TYPE_SIZES = {
 /**
  * @desc Parses glTF JSON into an {@link XKTModel}.
  *
+ * * Supports glTF 2.
+ * * Provides option to automatically generate (face-aligned) normal vectors.
+ *
  * ## Usage
  *
  * In the example below we'll create an {@link XKTModel}, then load a glTF model into it.
@@ -36,7 +39,11 @@ const WEBGL_TYPE_SIZES = {
  *
  *     const xktModel = new XKTModel();
  *
- *     parseGLTFIntoXKTModel({gltfData, xktModel});
+ *     parseGLTFIntoXKTModel({
+ *          gltfData,
+ *          xktModel,
+ *          log: (msg) => { console.log(msg); }
+ *     });
  *
  *     xktModel.finalize();
  * });
@@ -44,44 +51,56 @@ const WEBGL_TYPE_SIZES = {
  *
  * @param {Object} params Parsing parameters.
  * @param {Object} params.gltfData The glTF JSON.
- * @param {XKTModel} params.xktModel XKTModel to parse into
+ * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {Boolean} [params.autoNormals=false] Set true to automatically generate flat-shading normals.
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
+ * @param {function} [params.log] Logging callback.
  */
-async function parseGLTFIntoXKTModel({gltfData, xktModel, getAttachment}) {
-    const parsingCtx = {
+async function parseGLTFIntoXKTModel({gltfData, xktModel, autoNormals, getAttachment, log}) {
+    const ctx = {
         gltf: gltfData,
         getAttachment: getAttachment || (() => {
             throw new Error('You must define getAttachment() method to convert glTF with external resources')
         }),
+        log: (log || function (msg) {
+        }),
         xktModel: xktModel,
+        autoNormals: autoNormals,
         geometryCreated: {},
         nextGeometryId: 0,
         nextMeshId: 0,
-        nextDefaultEntityId: 0
+        nextDefaultEntityId: 0,
+        stats: {
+            convertedObjects: 0,
+            convertedGeometries: 0
+        }
     };
-    await parseBuffers(parsingCtx);
-    parseBufferViews(parsingCtx);
-    freeBuffers(parsingCtx);
-    parseMaterials(parsingCtx);
-    parseDefaultScene(parsingCtx);
+    await parseBuffers(ctx);
+    parseBufferViews(ctx);
+    freeBuffers(ctx);
+    parseMaterials(ctx);
+    parseDefaultScene(ctx);
+
+    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
+    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
 }
 
-async function parseBuffers(parsingCtx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
-    const buffers = parsingCtx.gltf.buffers;
+async function parseBuffers(ctx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+    const buffers = ctx.gltf.buffers;
     if (buffers) {
-        await Promise.all(buffers.map(buffer => parseBuffer(parsingCtx, buffer)));
+        await Promise.all(buffers.map(buffer => parseBuffer(ctx, buffer)));
     }
 }
 
-async function parseBuffer(parsingCtx, bufferInfo) {
+async function parseBuffer(ctx, bufferInfo) {
     const uri = bufferInfo.uri;
     if (!uri) {
         throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
     }
-    bufferInfo._buffer = await parseArrayBuffer(parsingCtx, uri);
+    bufferInfo._buffer = await parseArrayBuffer(ctx, uri);
 }
 
-async function parseArrayBuffer(parsingCtx, uri) {
+async function parseArrayBuffer(ctx, uri) {
     const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
     const dataUriRegexResult = uri.match(dataUriRegex);
     if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
@@ -98,30 +117,30 @@ async function parseArrayBuffer(parsingCtx, uri) {
         }
         return buffer;
     } else { // Uri is a path to a file
-        const arraybuffer = await parsingCtx.getAttachment(uri);
+        const arraybuffer = await ctx.getAttachment(uri);
         return arraybuffer;
     }
 }
 
-function parseBufferViews(parsingCtx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
-    const bufferViewsInfo = parsingCtx.gltf.bufferViews;
+function parseBufferViews(ctx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
+    const bufferViewsInfo = ctx.gltf.bufferViews;
     if (bufferViewsInfo) {
         for (let i = 0, len = bufferViewsInfo.length; i < len; i++) {
-            parseBufferView(parsingCtx, bufferViewsInfo[i]);
+            parseBufferView(ctx, bufferViewsInfo[i]);
         }
     }
 }
 
-function parseBufferView(parsingCtx, bufferViewInfo) {
-    const buffer = parsingCtx.gltf.buffers[bufferViewInfo.buffer];
+function parseBufferView(ctx, bufferViewInfo) {
+    const buffer = ctx.gltf.buffers[bufferViewInfo.buffer];
     bufferViewInfo._typedArray = null;
     const byteLength = bufferViewInfo.byteLength || 0;
     const byteOffset = bufferViewInfo.byteOffset || 0;
     bufferViewInfo._buffer = buffer._buffer.slice(byteOffset, byteOffset + byteLength);
 }
 
-function freeBuffers(parsingCtx) { // Deletes the "_buffer" properties from the glTF "buffer" elements, to save memory
-    const buffers = parsingCtx.gltf.buffers;
+function freeBuffers(ctx) { // Deletes the "_buffer" properties from the glTF "buffer" elements, to save memory
+    const buffers = ctx.gltf.buffers;
     if (buffers) {
         for (let i = 0, len = buffers.length; i < len; i++) {
             buffers[i]._buffer = null;
@@ -129,18 +148,18 @@ function freeBuffers(parsingCtx) { // Deletes the "_buffer" properties from the 
     }
 }
 
-function parseMaterials(parsingCtx) {
-    const materialsInfo = parsingCtx.gltf.materials;
+function parseMaterials(ctx) {
+    const materialsInfo = ctx.gltf.materials;
     if (materialsInfo) {
         for (let i = 0, len = materialsInfo.length; i < len; i++) {
             const materialInfo = materialsInfo[i];
-            const material = parseMaterial(parsingCtx, materialInfo);
+            const material = parseMaterial(ctx, materialInfo);
             materialInfo._materialData = material;
         }
     }
 }
 
-function parseMaterial(parsingCtx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
+function parseMaterial(ctx, materialInfo) { // Attempts to extract an RGBA color for a glTF material
     const material = {
         color: new Float32Array([1, 1, 1]),
         opacity: 1.0,
@@ -204,35 +223,35 @@ function parseMaterial(parsingCtx, materialInfo) { // Attempts to extract an RGB
     return material;
 }
 
-function parseDefaultScene(parsingCtx) {
-    const scene = parsingCtx.gltf.scene || 0;
-    const defaultSceneInfo = parsingCtx.gltf.scenes[scene];
+function parseDefaultScene(ctx) {
+    const scene = ctx.gltf.scene || 0;
+    const defaultSceneInfo = ctx.gltf.scenes[scene];
     if (!defaultSceneInfo) {
         throw new Error("glTF has no default scene");
     }
-    parseScene(parsingCtx, defaultSceneInfo);
+    parseScene(ctx, defaultSceneInfo);
 }
 
 
-function parseScene(parsingCtx, sceneInfo) {
+function parseScene(ctx, sceneInfo) {
     const nodes = sceneInfo.nodes;
     if (!nodes) {
         return;
     }
     for (let i = 0, len = nodes.length; i < len; i++) {
-        const glTFNode = parsingCtx.gltf.nodes[nodes[i]];
+        const glTFNode = ctx.gltf.nodes[nodes[i]];
         if (glTFNode) {
-            parseNode(parsingCtx, glTFNode, null);
+            parseNode(ctx, glTFNode, null);
         }
     }
 }
 
 let count = 0;
 
-function parseNode(parsingCtx, glTFNode, matrix) {
+function parseNode(ctx, glTFNode, matrix) {
 
-    const gltf = parsingCtx.gltf;
-    const xktModel = parsingCtx.xktModel;
+    const gltf = ctx.gltf;
+    const xktModel = ctx.xktModel;
 
     let localMatrix;
 
@@ -298,11 +317,11 @@ function parseNode(parsingCtx, glTFNode, matrix) {
 
                     const xktGeometryId = createPrimitiveGeometryHash(primitiveInfo);
 
-                    if (!parsingCtx.geometryCreated[xktGeometryId]) {
+                    if (!ctx.geometryCreated[xktGeometryId]) {
 
                         const geometryArrays = {};
 
-                        parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays);
+                        parsePrimitiveGeometry(ctx, primitiveInfo, geometryArrays);
 
                         const colors = geometryArrays.colors;
 
@@ -321,15 +340,17 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                             geometryId: xktGeometryId,
                             primitiveType: geometryArrays.primitive,
                             positions: geometryArrays.positions,
-                            normals: geometryArrays.normals,
+                            normals: ctx.autoNormals ? null : geometryArrays.normals,
                             colorsCompressed: colorsCompressed,
                             indices: geometryArrays.indices
                         });
 
-                        parsingCtx.geometryCreated[xktGeometryId] = true;
+                        ctx.stats.convertedGeometries++;
+
+                        ctx.geometryCreated[xktGeometryId] = true;
                     }
 
-                    const xktMeshId = parsingCtx.nextMeshId++;
+                    const xktMeshId = ctx.nextMeshId++;
 
                     xktModel.createMesh({
                         meshId: xktMeshId,
@@ -344,12 +365,14 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                     xktMeshIds.push(xktMeshId);
                 }
 
-                const xktEntityId = glTFNode.name || ("entity" + parsingCtx.nextDefaultEntityId++);
+                const xktEntityId = glTFNode.name || ("entity" + ctx.nextDefaultEntityId++);
 
                 xktModel.createEntity({
                     entityId: xktEntityId,
                     meshIds: xktMeshIds
                 });
+
+                ctx.stats.convertedObjects++;
             }
         }
     }
@@ -363,7 +386,7 @@ function parseNode(parsingCtx, glTFNode, matrix) {
                 console.warn('Node not found: ' + i);
                 continue;
             }
-            parseNode(parsingCtx, childGLTFNode, matrix);
+            parseNode(ctx, childGLTFNode, matrix);
         }
     }
 }
@@ -386,7 +409,7 @@ function createPrimitiveGeometryHash(primitiveInfo) {
     ].join(";");
 }
 
-function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
+function parsePrimitiveGeometry(ctx, primitiveInfo, geometryArrays) {
     const attributes = primitiveInfo.attributes;
     if (!attributes) {
         return;
@@ -418,31 +441,31 @@ function parsePrimitiveGeometry(parsingCtx, primitiveInfo, geometryArrays) {
             geometryArrays.primitive = "triangles";
             break;
     }
-    const accessors = parsingCtx.gltf.accessors;
+    const accessors = ctx.gltf.accessors;
     const indicesIndex = primitiveInfo.indices;
     if (indicesIndex !== null && indicesIndex !== undefined) {
         const accessorInfo = accessors[indicesIndex];
-        geometryArrays.indices = parseAccessorTypedArray(parsingCtx, accessorInfo);
+        geometryArrays.indices = parseAccessorTypedArray(ctx, accessorInfo);
     }
     const positionsIndex = attributes.POSITION;
     if (positionsIndex !== null && positionsIndex !== undefined) {
         const accessorInfo = accessors[positionsIndex];
-        geometryArrays.positions = parseAccessorTypedArray(parsingCtx, accessorInfo);
+        geometryArrays.positions = parseAccessorTypedArray(ctx, accessorInfo);
     }
     const normalsIndex = attributes.NORMAL;
     if (normalsIndex !== null && normalsIndex !== undefined) {
         const accessorInfo = accessors[normalsIndex];
-        geometryArrays.normals = parseAccessorTypedArray(parsingCtx, accessorInfo);
+        geometryArrays.normals = parseAccessorTypedArray(ctx, accessorInfo);
     }
     const colorsIndex = attributes.COLOR_0;
     if (colorsIndex !== null && colorsIndex !== undefined) {
         const accessorInfo = accessors[colorsIndex];
-        geometryArrays.colors = parseAccessorTypedArray(parsingCtx, accessorInfo);
+        geometryArrays.colors = parseAccessorTypedArray(ctx, accessorInfo);
     }
 }
 
-function parseAccessorTypedArray(parsingCtx, accessorInfo) {
-    const bufferView = parsingCtx.gltf.bufferViews[accessorInfo.bufferView];
+function parseAccessorTypedArray(ctx, accessorInfo) {
+    const bufferView = ctx.gltf.bufferViews[accessorInfo.bufferView];
     const itemSize = WEBGL_TYPE_SIZES[accessorInfo.type];
     const TypedArray = WEBGL_COMPONENT_TYPES[accessorInfo.componentType];
     const elementBytes = TypedArray.BYTES_PER_ELEMENT; // For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
