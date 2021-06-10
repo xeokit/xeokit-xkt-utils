@@ -167,7 +167,6 @@ function getModelData(xktModel) {
         data.metadata.metaObjects.push(metaObjectJSON);
     }
 
-    console.log(JSON.stringify(data.metadata))
     // Geometries
 
     let matricesIndex = 0;
