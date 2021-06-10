@@ -1,4 +1,6 @@
-CityJSON test models from https://github.com/cityjson
+These CityJSON test models are from https://github.com/cityjson
+
+The test files we use for simple test cases are: 
 
 * csol           one CompositeSolid: 2 adjacent unit cubes, valid
 * cube           a unit cube, valid
