@@ -1,14 +1,54 @@
 import {math} from "../lib/math.js";
+import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
 
 /**
  * @desc Parses STL file data into an {@link XKTModel}.
  *
+ * * Supports binary and ASCII STL formats.
+ * * Option to create a separate {@link XKTEntity} for each group of faces that share the same vertex colors.
+ * * Option to smooth face-aligned normals loaded from STL.
+ * * Option to automatically generate (face-aligned) normal vectors.
+ *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then load an STL model into it.
+ *
+ * ````javascript
+ * utils.loadArraybuffer("./models/stl/binary/spurGear.stl", async (stlData) => {
+ *
+ *     const xktModel = new XKTModel();
+ *
+ *     parseSTLIntoXKTModel({stlData, xktModel});
+ *
+ *     xktModel.finalize();
+ * });
+ * ````
+ *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer|Response} [params.stlData] STL file data.
+ * @param {ArrayBuffer} [params.stlData] STL file data.
+ * @param {Boolean} [params.autoNormals=false] Set true to automatically generate flat-shading normals.
+ * Overrides ````smoothNormals```` when ````true````. This ignores the normals in the STL, and loads no
+ * normals from the STL into the {@link XKTModel}, resulting in the XKT file storing no normals for the STL model. The
+ * xeokit-sdk will then automatically generate the normals within its shaders. The disadvantages are that auto-normals
+ * may slow rendering down a little bit, and that the normals can only be face-aligned (and thus rendered using flat
+ * shading). The advantages, however, are a smaller XKT file size, and the ability to apply certain geometry optimizations
+ * during parsing, such as removing duplicated STL vertex positions, that are not possible when normals are loaded
+ * for the STL vertices.
+ * @param {Boolean} [params.smoothNormals=true] When true, automatically converts face-oriented STL normals to vertex normals, for a smooth appearance. Ignored if ````autoNormals```` is ````true````.
+ * @param {Number} [params.smoothNormalsAngleThreshold=20] This is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
+ * @param {Boolean} [params.splitMeshes=true] When true, creates a separate {@link XKTEntity} for each group of faces that share the same vertex colors. Only works with binary STL.
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
+ * @param {function} [params.log] Logging callback.
  */
-async function parseSTLIntoXKTModel({stlData, xktModel}) {
-
+async function parseSTLIntoXKTModel({
+                                        stlData,
+                                        splitMeshes,
+                                        autoNormals,
+                                        smoothNormals,
+                                        smoothNormalsAngleThreshold,
+                                        xktModel,
+                                        log
+                                    }) {
     if (!stlData) {
         throw "Argument expected: stlData";
     }
@@ -17,13 +57,32 @@ async function parseSTLIntoXKTModel({stlData, xktModel}) {
         throw "Argument expected: xktModel";
     }
 
+    const ctx = {
+        stlData,
+        splitMeshes,
+        autoNormals,
+        smoothNormals,
+        smoothNormalsAngleThreshold,
+        xktModel,
+        nextId: 0,
+        log: (log || function (msg) {
+        }),
+        stats: {
+            convertedObjects: 0,
+            convertedGeometries: 0
+        }
+    };
+
     const binData = ensureBinary(stlData);
 
     if (isBinary(binData)) {
-        parseBinary(binData, xktModel, params);
+        parseBinary(ctx, binData);
     } else {
-        parseASCII(ensureString(stlData), xktModel, params);
+        parseASCII(ctx, ensureString(stlData));
     }
+
+    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
+    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
 }
 
 function isBinary(data) {
@@ -43,7 +102,7 @@ function isBinary(data) {
     return false;
 }
 
-function parseBinary(data, xktModel, options) {
+function parseBinary(ctx, data) {
     const reader = new DataView(data);
     const faces = reader.getUint32(80, true);
     let r;
@@ -75,7 +134,7 @@ function parseBinary(data, xktModel, options) {
     let faceLength = 12 * 4 + 2;
     let positions = [];
     let normals = [];
-    let splitMeshes = options.splitMeshes;
+    let splitMeshes = ctx.splitMeshes;
     for (let face = 0; face < faces; face++) {
         let start = dataOffset + face * faceLength;
         let normalX = reader.getFloat32(start, true);
@@ -106,13 +165,15 @@ function parseBinary(data, xktModel, options) {
             positions.push(reader.getFloat32(vertexstart, true));
             positions.push(reader.getFloat32(vertexstart + 4, true));
             positions.push(reader.getFloat32(vertexstart + 8, true));
-            normals.push(normalX, normalY, normalZ);
+            if (!ctx.autoNormals) {
+                normals.push(normalX, normalY, normalZ);
+            }
             if (hasColors) {
                 colors.push(r, g, b, 1); // TODO: handle alpha
             }
         }
         if (splitMeshes && newMesh) {
-            addMesh(xktModel, positions, normals, colors, options);
+            addMesh(ctx, positions, normals, colors);
             positions = [];
             normals = [];
             colors = colors ? [] : null;
@@ -120,11 +181,11 @@ function parseBinary(data, xktModel, options) {
         }
     }
     if (positions.length > 0) {
-        addMesh(xktModel, positions, normals, colors, options);
+        addMesh(ctx, positions, normals, colors);
     }
 }
 
-function parseASCII(data, xktModel, options) {
+function parseASCII(ctx, data) {
     const faceRegex = /facet([\s\S]*?)endfacet/g;
     let faceCounter = 0;
     const floatRegex = /[\s]+([+-]?(?:\d+.\d+|\d+.|\d+|.\d+)(?:[eE][+-]?\d+)?)/.source;
@@ -156,21 +217,21 @@ function parseASCII(data, xktModel, options) {
             verticesPerFace++;
         }
         if (normalsPerFace !== 1) {
-            console.error("Error in normal of face " + faceCounter);
+            ctx.log("Error in normal of face " + faceCounter);
             return -1;
         }
         if (verticesPerFace !== 3) {
-            console.error("Error in positions of face " + faceCounter);
+            ctx.log("Error in positions of face " + faceCounter);
             return -1;
         }
         faceCounter++;
     }
-    addMesh(xktModel, positions, normals, colors, options);
+    addMesh(ctx, positions, normals, colors);
 }
 
 let nextGeometryId = 0;
 
-function addMesh(xktModel, positions, normals, colors, options) {
+function addMesh(ctx, positions, normals, colors) {
 
     const indices = new Int32Array(positions.length / 3);
     for (let ni = 0, len = indices.length; ni < len; ni++) {
@@ -180,32 +241,38 @@ function addMesh(xktModel, positions, normals, colors, options) {
     normals = normals && normals.length > 0 ? normals : null;
     colors = colors && colors.length > 0 ? colors : null;
 
-    if (options.smoothNormals) {
-        math.faceToVertexNormals(positions, normals, options);
+    if (!ctx.autoNormals && ctx.smoothNormals) {
+        faceToVertexNormals(positions, normals, {smoothNormalsAngleThreshold: ctx.smoothNormalsAngleThreshold});
     }
 
-    const geometryId = nextGeometryId++;
-    const meshId = nextGeometryId++;
-    const entityId = nextGeometryId++;
+    const geometryId = "" + nextGeometryId++;
+    const meshId = "" + nextGeometryId++;
+    const entityId = "" + nextGeometryId++;
 
-    xktModel.createGeometry({
+    ctx.xktModel.createGeometry({
         geometryId: geometryId,
-        primitive: "triangles",
+        primitiveType: "triangles",
         positions: positions,
-        normals: normals,
+        normals: (!ctx.autoNormals) ? normals : null,
         colors: colors,
         indices: indices
     });
 
-    xktModel.createMesh({
+    ctx.xktModel.createMesh({
         meshId: meshId,
-        geometryId: geometryId
+        geometryId: geometryId,
+        color: colors ? null : [1, 1, 1],
+        metallic: 0.9,
+        roughness: 0.1
     });
 
-    xktModel.createEntity({
+    ctx.xktModel.createEntity({
         entityId: entityId,
         meshIds: [meshId]
     });
+
+    ctx.stats.convertedGeometries++;
+    ctx.stats.convertedObjects++;
 }
 
 function ensureString(buffer) {
