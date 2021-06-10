@@ -12,14 +12,16 @@ import {LASLoader} from '@loaders.gl/las';
  *
  * In the example below we'll create an {@link XKTModel}, then load an LAZ point cloud model into it.
  *
- * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_LAZ_IndoorScan)]
- *
  * ````javascript
- * utils.loadArraybuffer("./models/laz/indoor.0.1.laz", async (lazData) => {
+ * utils.loadArraybuffer("./models/laz/autzen.laz", async (lazData) => {
  *
  *     const xktModel = new XKTModel();
  *
- *     parseLASIntoXKTModel({lazData, xktModel});
+ *     await parseLASIntoXKTModel({
+ *          lazData,
+ *          xktModel,
+ *          log: (msg) => { console.log(msg); }
+ *     });
  *
  *     xktModel.finalize();
  * });
@@ -28,8 +30,9 @@ import {LASLoader} from '@loaders.gl/las';
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer} params.lazData LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {function} [params.log] Logging callback.
  */
-async function parseLASIntoXKTModel({lazData, xktModel}) {
+async function parseLASIntoXKTModel({lazData, xktModel, log}) {
 
     if (!lazData) {
         throw "Argument expected: lazData";
@@ -39,15 +42,22 @@ async function parseLASIntoXKTModel({lazData, xktModel}) {
         throw "Argument expected: xktModel";
     }
 
+    if (log) {
+        log("Converting LAZ/LAS");
+    }
+
     let parsedData;
     try {
         parsedData = await parse(lazData, LASLoader);
     } catch (e) {
-        console.log("[parseLASIntoXKTModel] " + e);
+        if (log) {
+            log("[parseLASIntoXKTModel] " + e);
+        }
         return;
     }
 
     const attributes = parsedData.attributes;
+    const positionsValue = attributes.POSITION.value;
     const colorsValue = attributes.COLOR_0.value;
     const colorsCompressed = [];
 
@@ -60,7 +70,7 @@ async function parseLASIntoXKTModel({lazData, xktModel}) {
     xktModel.createGeometry({
         geometryId: "pointsGeometry",
         primitiveType: "points",
-        positions: attributes.POSITION.value,
+        positions: positionsValue,
         colorsCompressed: colorsCompressed
     });
 
@@ -73,6 +83,10 @@ async function parseLASIntoXKTModel({lazData, xktModel}) {
         entityId: "geometries",
         meshIds: ["pointsMesh"]
     });
+
+    if (log) {
+        log("Converted points: " + (positionsValue.length / 3));
+    }
 }
 
 export {parseLASIntoXKTModel};
