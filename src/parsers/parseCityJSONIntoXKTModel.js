@@ -32,7 +32,11 @@ const tempVec3c = math.vec3();
  *
  *     const xktModel = new XKTModel();
  *
- *     parseCityJSONIntoXKTModel({cityJSONData, xktModel});
+ *     await parseCityJSONIntoXKTModel({
+ *          cityJSONData,
+ *          xktModel,
+ *          log: (msg) => { console.log(msg); }
+ *     });
  *
  *     xktModel.finalize();
  * });
@@ -188,9 +192,6 @@ function parseCityObject(ctx, cityObject, objectId) {
     }
 }
 
-/**
- *
- */
 function parseGeometrySurfacesWithOwnMaterials(ctx, geometry, surfaceMaterials, meshIds) {
 
     const geomType = geometry.type;
@@ -337,9 +338,6 @@ function parseSurfacesWithOwnMaterials(ctx, surfaceMaterials, surfaces, meshIds)
     }
 }
 
-/**
- *
- */
 function parseGeometrySurfacesWithSharedMaterial(ctx, geometry, objectMaterial, meshIds) {
 
     const xktModel = ctx.xktModel;
