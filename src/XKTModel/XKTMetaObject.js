@@ -69,9 +69,9 @@ class XKTMetaObject {
         /**
          * The parent XKTMetaObject, if any.
          *
-         * If there is no parent, then this defaults to the value of {@link XKTMetaObject#metaObjectId}.
+         * Will be null if there is no parent.
          *
-         * @type {XKTMetaObject|null}
+         * @type {String}
          */
         this.parentMetaObjectId = parentMetaObjectId;
     }

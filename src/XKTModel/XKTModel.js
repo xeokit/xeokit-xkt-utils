@@ -50,11 +50,11 @@ class XKTModel {
         /**
          * The model's ID, if available.
          *
-         * Will be an empty string by default.
+         * Will be "default" by default.
          *
          * @type {String}
          */
-        this.modelId = cfg.modelId || "";
+        this.modelId = cfg.modelId || "default";
 
         /**
          * The project ID, if available.
@@ -268,7 +268,7 @@ class XKTModel {
         const metaObjectType = params.metaObjectType || "default";
         const metaObjectName = params.metaObjectName || params.metaObjectId;
         const metaObjectIndex = this.metaObjectsList.length;
-        const parentMetaObjectId = (params.parentMetaObjectId !== null && params.parentMetaObjectId !== undefined) ? params.parentMetaObjectId : params.metaObjectId;
+        const parentMetaObjectId = params.parentMetaObjectId;
 
         const metaObject = new XKTMetaObject(metaObjectId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
 
@@ -947,19 +947,29 @@ class XKTModel {
 
     _createDefaultMetaObjects() {
 
+        let rootMetaObject = null;
+
         for (let i = 0, len = this.entitiesList.length; i < len; i++) {
 
             const entity = this.entitiesList[i];
-            const entityId = entity.entityId;
-            const metaObjectId = entityId;
+            const metaObjectId = entity.entityId;
             const metaObject = this.metaObjects[metaObjectId];
 
             if (!metaObject) {
+
+                if (!rootMetaObject) {
+                    rootMetaObject = this.createMetaObject({
+                        metaObjectId: this.modelId,
+                        metaObjectType: "Default",
+                        metaObjectName: this.modelId
+                    });
+                }
+
                 this.createMetaObject({
                     metaObjectId: metaObjectId,
-                    metaObjectType: "default",
+                    metaObjectType: "Default",
                     metaObjectName: "" + metaObjectId,
-                    parentMetaObjectId: metaObjectId
+                    parentMetaObjectId: rootMetaObject.metaObjectId
                 });
             }
         }

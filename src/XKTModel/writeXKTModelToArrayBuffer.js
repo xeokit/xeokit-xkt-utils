@@ -5,7 +5,7 @@ if (!pako.inflate) {  // See https://github.com/nodeca/pako/issues/97
     pako = pako.default;
 }
 
-const XKT_VERSION = 8; // XKT format version
+const XKT_VERSION = 9; // XKT format version
 
 /**
  * Writes an {@link XKTModel} to an {@link ArrayBuffer}.
@@ -79,11 +79,7 @@ function getModelData(xktModel) {
 
         // Metadata
 
-        types: [], // List of all meta object types. Will contain at least one type: "default". Shared by meta objects.
-        eachMetaObjectId: [], // For each meta object, an ID string
-        eachMetaObjectType: new Uint32Array(numMetaObjects), // For each meta object, the index of a type string in the types array. Default type will be "default".
-        eachMetaObjectName: [], // For each meta object, a human-readable name string. Defaults to the meta object ID.
-        eachMetaObjectParent: new Uint32Array(numMetaObjects), // For each meta object, the index of its parent meta object, if any. If the meta object has no parent, defaults to this meta object's index.
+        metadata: {},
 
         // Geometry data - vertex attributes and indices
 
@@ -121,7 +117,7 @@ function getModelData(xktModel) {
 
         // Entity elements in the following arrays are grouped in runs that are shared by the same tiles
 
-        eachEntityMetaObject: new Uint32Array(numEntities), // For each entity, the index of its corresponding meta object
+        eachEntityId: [], // For each entity, an ID string
         eachEntityMeshesPortion: new Uint32Array(numEntities), // For each entity, the index of the first element of meshes used by the entity
 
         eachTileAABB: new Float64Array(numTiles * 6), // For each tile, an axis-aligned bounding box
@@ -141,34 +137,37 @@ function getModelData(xktModel) {
 
     // Metadata
 
-    const typeIndices = {};
+    data.metadata = {
 
-    for (let metaObjectIndex = 0; metaObjectIndex < numMetaObjects; metaObjectIndex++) {
+        id: xktModel.modelId,
+        projectId: xktModel.projectId,
+        revisionId: xktModel.revisionId,
+        author: xktModel.author,
+        createdAt: xktModel.createdAt,
+        creatingApplication: xktModel.creatingApplication,
+        schema: xktModel.schema,
 
-        const metaObject = metaObjectsList[metaObjectIndex];
-        const metaObjectId = metaObject.metaObjectId;
-        const metaObjectType = metaObject.metaObjectType;
-        const metaObjectName = metaObject.metaObjectName;
-        const parentMetaObjectId = metaObject.parentMetaObjectId;
+        metaObjects: []
+    };
 
-        let typeIndex = typeIndices[metaObjectType];
+    for (let metaObjectsIndex = 0; metaObjectsIndex < numMetaObjects; metaObjectsIndex++) {
 
-        if (typeIndex === undefined) {
-            typeIndex = data.types.length;
-            typeIndices[metaObjectType] = typeIndex;
-            data.types.push(metaObjectType);
+        const metaObject = metaObjectsList[metaObjectsIndex];
+
+        const metaObjectJSON = {
+            name: metaObject.metaObjectName,
+            type: metaObject.metaObjectType,
+            id: "" + metaObject.metaObjectId
+        };
+
+        if (metaObject.parentMetaObjectId !== undefined && metaObject.parentMetaObjectId !== null) {
+            metaObjectJSON.parent = "" + metaObject.parentMetaObjectId;
         }
 
-        data.eachMetaObjectId[metaObjectIndex] = metaObjectId;
-        data.eachMetaObjectType[metaObjectIndex] = typeIndex;
-        data.eachMetaObjectName[metaObjectIndex] = metaObjectName;
-
-        const parentMetaObject = xktModel.metaObjects[parentMetaObjectId];
-        if (parentMetaObject) {
-            data.eachMetaObjectParent[metaObjectIndex] = parentMetaObject.metaObjectIndex;
-        }
+        data.metadata.metaObjects.push(metaObjectJSON);
     }
 
+    console.log(JSON.stringify(data.metadata))
     // Geometries
 
     let matricesIndex = 0;
@@ -273,9 +272,7 @@ function getModelData(xktModel) {
                 data.eachMeshGeometriesPortion [countEntityMeshesPortion + k] = geometryIndex;
             }
 
-            const entityMetaObject = xktModel.metaObjects[entity.entityId];
-
-            data.eachEntityMetaObject [entityIndex] = entityMetaObject.metaObjectIndex;
+            data.eachEntityId [entityIndex] = entity.entityId;
             data.eachEntityMeshesPortion[entityIndex] = countEntityMeshesPortion; // <<<<<<<<<<<<<<<<<<<< Error here? Order/value of countEntityMeshesPortion correct?
 
             entityIndex++;
@@ -294,11 +291,7 @@ function deflateData(data) {
 
     return {
 
-        types: pako.deflate(deflateStrings(data.types)),
-        eachMetaObjectId: pako.deflate(deflateStrings(data.eachMetaObjectId)),
-        eachMetaObjectType: pako.deflate(data.eachMetaObjectType.buffer),
-        eachMetaObjectName: pako.deflate(deflateStrings(data.eachMetaObjectName)),
-        eachMetaObjectParent: pako.deflate(data.eachMetaObjectParent.buffer),
+        metadata: pako.deflate(deflateJSON(data.metadata)),
 
         positions: pako.deflate(data.positions.buffer),
         normals: pako.deflate(data.normals.buffer),
@@ -320,7 +313,10 @@ function deflateData(data) {
         eachMeshMatricesPortion: pako.deflate(data.eachMeshMatricesPortion.buffer),
         eachMeshMaterial: pako.deflate(data.eachMeshMaterial.buffer),
 
-        eachEntityMetaObject: pako.deflate(data.eachEntityMetaObject.buffer),
+        eachEntityId: pako.deflate(JSON.stringify(data.eachEntityId)
+            .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
+                return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
+            })),
         eachEntityMeshesPortion: pako.deflate(data.eachEntityMeshesPortion.buffer),
 
         eachTileAABB: pako.deflate(data.eachTileAABB.buffer),
@@ -328,7 +324,7 @@ function deflateData(data) {
     };
 }
 
-function deflateStrings(strings) {
+function deflateJSON(strings) {
     return JSON.stringify(strings)
         .replace(/[\u007F-\uFFFF]/g, function (chr) { // Produce only ASCII-chars, so that the data can be inflated later
             return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
@@ -339,11 +335,7 @@ function createArrayBuffer(deflatedData) {
 
     return toArrayBuffer([
 
-        deflatedData.types,
-        deflatedData.eachMetaObjectId,
-        deflatedData.eachMetaObjectType,
-        deflatedData.eachMetaObjectName,
-        deflatedData.eachMetaObjectParent,
+        deflatedData.metadata,
 
         deflatedData.positions,
         deflatedData.normals,
@@ -365,7 +357,7 @@ function createArrayBuffer(deflatedData) {
         deflatedData.eachMeshMatricesPortion,
         deflatedData.eachMeshMaterial,
 
-        deflatedData.eachEntityMetaObject,
+        deflatedData.eachEntityId,
         deflatedData.eachEntityMeshesPortion,
 
         deflatedData.eachTileAABB,
@@ -393,7 +385,7 @@ function toArrayBuffer(elements) {
         dataArray.set(element, offset);
         offset += element.length;
     }
-    console.log("Array buffer size: " + (dataArray.length / 1024).toFixed(3) + " kB");
+    console.log("XKT size: " + (dataArray.length / 1024).toFixed(3) + " kB");
     return dataArray.buffer;
 }
 
