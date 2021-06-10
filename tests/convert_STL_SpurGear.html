@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>xeokit-xkt-utils Visual Test Page</title>
+    <link href="css/pageStyle.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+</body>
+<script type="module">
+
+    import {
+        ReflectionMap,
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./build/xeokit-components.js";
+
+    import {
+        XKTModel,
+        parseSTLIntoXKTModel,
+        writeXKTModelToArrayBuffer
+    } from "../dist/xeokit-xkt-utils.es.js";
+
+    import {signalTestComplete} from "./libs/utils.js";
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true,
+        pbrEnabled: true
+    });
+
+    viewer.scene.camera.eye = [18.31692165660765, -60.243345613570355, -55.5908912857729];
+    viewer.scene.camera.look = [10.90522289276123, 10.905222892761202, 7.999999999999979];
+    viewer.scene.camera.up = [0.08605796073164425, 0.6688934392083067, -0.7383600709537279];
+
+    viewer.scene.pointsMaterial.pointSize = 1;
+    viewer.scene.pointsMaterial.perspectivePoints = false;
+
+    new ReflectionMap(viewer.scene, {
+        src: [
+            "textures/reflect/desertRoad/px.png",
+            "textures/reflect/desertRoad/nx.png",
+            "textures/reflect/desertRoad/py.png",
+            "textures/reflect/desertRoad/ny.png",
+            "textures/reflect/desertRoad/pz.png",
+            "textures/reflect/desertRoad/nz.png"
+        ],
+        encoding: "sRGB"
+    });
+
+    const xktLoader = new XKTLoaderPlugin(viewer);
+
+    let nextId = 0;
+
+    function loadSTLData({stlData, pos, autoNormals, smoothNormals, pbrEnabled}) {
+
+        new Promise(function (resolve) {
+
+            const xktModel = new XKTModel();
+
+            parseSTLIntoXKTModel({
+                stlData,
+                autoNormals,
+                smoothNormals,
+                xktModel
+            }).then(() => {
+
+                xktModel.finalize();
+
+                const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+                const model = xktLoader.load({
+                    id: "myModel" + nextId++,
+                    xkt: xktArrayBuffer,
+                    edges: true,
+                    position: pos,
+                    pbrEnabled
+                });
+
+                model.on("loaded", () => {
+                    resolve();
+                });
+            });
+        });
+    }
+
+    utils.loadArraybuffer("./models/stl/binary/spurGear.stl", async (stlData) => {
+
+        await loadSTLData({stlData, pos: [-35, 0, 0], autoNormals: false, smoothNormals: false, pbrEnabled: false});
+        await loadSTLData({stlData, pos: [0, 0, 0], autoNormals: true, smoothNormals: false, pbrEnabled: false});
+        await loadSTLData({stlData, pos: [35, 0, 0], autoNormals: false, smoothNormals: true, pbrEnabled: false});
+
+        await loadSTLData({stlData, pos: [-35, 35, 0], autoNormals: false, smoothNormals: false, pbrEnabled: true});
+        await loadSTLData({stlData, pos: [0, 35, 0], autoNormals: true, smoothNormals: false, pbrEnabled: true});
+        await loadSTLData({stlData, pos: [35, 35, 0], autoNormals: false, smoothNormals: true, pbrEnabled: true});
+
+        signalTestComplete();
+    });
+
+</script>
+</html>
