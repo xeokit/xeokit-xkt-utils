@@ -1,3 +1,4 @@
+/** @private */
 function earcut(data, holeIndices, dim) {
 
     dim = dim || 2;
