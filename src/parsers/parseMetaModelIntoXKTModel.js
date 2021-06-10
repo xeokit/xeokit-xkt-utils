@@ -3,19 +3,20 @@
  *
  * @param {Object} params Parsing parameters.
  * @param {JSON} params.metaModelData Metamodel data.
- * @param {String[]} params.excludeTypes Types to exclude from parsing.
- * @param {String[]} params.includeTypes Types to include in parsing.
+ * @param {String[]} [params.excludeTypes] Types to exclude from parsing.
+ * @param {String[]} [params.includeTypes] Types to include in parsing.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  */
 function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excludeTypes}) {
 
-    const projectId = metaModelData.projectId || "none";
-    const revisionId = metaModelData.revisionId || "none";
     const metaObjects = metaModelData.metaObjects || [];
-    const author = metaModelData.author;
-    const createdAt = metaModelData.createdAt;
-    const creatingApplication = metaModelData.creatingApplication;
-    const schema = metaModelData.schema;
+
+    xktModel.projectId = metaModelData.projectId || "";
+    xktModel.revisionId = metaModelData.revisionId || "";
+    xktModel.author = metaModelData.author || "";
+    xktModel.createdAt = metaModelData.createdAt || "";
+    xktModel.creatingApplication = metaModelData.creatingApplication || "";
+    xktModel.schema = metaModelData.schema || "";
 
     let includeTypesMap;
     if (includeTypes) {
