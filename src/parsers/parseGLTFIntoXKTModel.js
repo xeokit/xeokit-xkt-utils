@@ -26,7 +26,7 @@ const WEBGL_TYPE_SIZES = {
  * @desc Parses glTF JSON into an {@link XKTModel}.
  *
  * * Supports glTF 2.
- * * Provides option to automatically generate (face-aligned) normal vectors.
+ * * Provides option to reduce XKT file size by ignoring STL normals and relying on xeokit to auto-generate them.
  *
  * ## Usage
  *
@@ -52,7 +52,10 @@ const WEBGL_TYPE_SIZES = {
  * @param {Object} params Parsing parameters.
  * @param {Object} params.gltfData The glTF JSON.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
- * @param {Boolean} [params.autoNormals=false] Set true to automatically generate flat-shading normals.
+ * @param {Boolean} [params.autoNormals=false] When true, the parser will ignore the glTF geometry normals, and the glTF
+ * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
+ * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
+ * of the glTF.
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
  * @param {function} [params.log] Logging callback.
  */

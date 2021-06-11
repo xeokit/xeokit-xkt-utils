@@ -7,7 +7,7 @@ import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
  * * Supports binary and ASCII STL formats.
  * * Option to create a separate {@link XKTEntity} for each group of faces that share the same vertex colors.
  * * Option to smooth face-aligned normals loaded from STL.
- * * Option to automatically generate (face-aligned) normal vectors.
+ * * Option to reduce XKT file size by ignoring STL normals and relying on xeokit to auto-generate them.
  *
  * ## Usage
  *
@@ -26,7 +26,10 @@ import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
  *
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer} [params.stlData] STL file data.
- * @param {Boolean} [params.autoNormals=false] Set true to automatically generate flat-shading normals.
+ * @param {Boolean} [params.autoNormals=false] When true, the parser will ignore the STL geometry normals, and the STL
+ * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
+ * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
+ * of the STL.
  * Overrides ````smoothNormals```` when ````true````. This ignores the normals in the STL, and loads no
  * normals from the STL into the {@link XKTModel}, resulting in the XKT file storing no normals for the STL model. The
  * xeokit-sdk will then automatically generate the normals within its shaders. The disadvantages are that auto-normals
