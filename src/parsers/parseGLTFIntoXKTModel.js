@@ -330,9 +330,9 @@ function parseNode(ctx, glTFNode, matrix) {
                         if (geometryArrays.colors) {
                             colorsCompressed = [];
                             for (let j = 0, lenj = colors.length; j < lenj; j += 4) {
-                                colorsCompressed.push(Math.floor(colors[j + 0] * 255));
-                                colorsCompressed.push(Math.floor(colors[j + 1] * 255));
-                                colorsCompressed.push(Math.floor(colors[j + 2] * 255));
+                                colorsCompressed.push(colors[j + 0]);
+                                colorsCompressed.push(colors[j + 1]);
+                                colorsCompressed.push(colors[j + 2]);
                             }
                         }
 
