@@ -260,12 +260,12 @@ class XKTModel {
         }
 
         if (this.metaObjects[params.metaObjectId]) {
-            //     console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
+            //          console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
             return;
         }
 
         const metaObjectId = params.metaObjectId;
-        const metaObjectType = params.metaObjectType || "default";
+        const metaObjectType = params.metaObjectType || "Default";
         const metaObjectName = params.metaObjectName || params.metaObjectId;
         const metaObjectIndex = this.metaObjectsList.length;
         const parentMetaObjectId = params.parentMetaObjectId;
@@ -274,6 +274,12 @@ class XKTModel {
 
         this.metaObjects[metaObjectId] = metaObject;
         this.metaObjectsList.push(metaObject);
+
+        if (!parentMetaObjectId) {
+            if (!this._rootMetaObject) {
+                this._rootMetaObject = metaObject;
+            }
+        }
 
         return metaObject;
     }
@@ -369,6 +375,7 @@ class XKTModel {
         if (points) {
             if (params.colorsCompressed) {
                 xktGeometryCfg.colorsCompressed = new Uint8Array(params.colorsCompressed);
+
             } else {
                 const colors = params.colors;
                 const colorsCompressed = new Uint8Array(colors.length);
@@ -437,14 +444,6 @@ class XKTModel {
         if (params.geometryId === null || params.geometryId === undefined) {
             throw "Parameter expected: params.geometryId";
         }
-
-        // if (!params.color) {
-        //     throw "Parameter expected: params.color";
-        // }
-        //
-        // if (params.opacity === null || params.opacity === undefined) {
-        //     throw "Parameter expected: params.opacity";
-        // }
 
         if (this.finalized) {
             throw "XKTModel has been finalized, can't add more meshes";
@@ -571,6 +570,39 @@ class XKTModel {
     }
 
     /**
+     * Creates a default {@link XKTMetaObject} for each {@link XKTEntity} that does not already have one.
+     */
+    createDefaultMetaObjects() {
+
+        let rootMetaObject = null;
+
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+
+            const entity = this.entitiesList[i];
+            const metaObjectId = entity.entityId;
+            const metaObject = this.metaObjects[metaObjectId];
+
+            if (!metaObject) {
+
+                if (!this._rootMetaObject) {
+                    this._rootMetaObject = this.createMetaObject({
+                        metaObjectId: this.modelId,
+                        metaObjectType: "Default",
+                        metaObjectName: this.modelId
+                    });
+                }
+
+                this.createMetaObject({
+                    metaObjectId: metaObjectId,
+                    metaObjectType: "Default",
+                    metaObjectName: "" + metaObjectId,
+                    parentMetaObjectId: this._rootMetaObject.metaObjectId
+                });
+            }
+        }
+    }
+
+    /**
      * Finalizes this XKTModel.
      *
      * After finalizing, we may then serialize the model to an array buffer using {@link writeXKTModelToArrayBuffer}.
@@ -607,8 +639,6 @@ class XKTModel {
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
-
-        this._createDefaultMetaObjects();
 
         this.finalized = true;
     }
@@ -941,36 +971,6 @@ class XKTModel {
             const geometry = this.geometriesList[i];
             if (geometry.primitiveType === "triangles") {
                 geometry.solid = isTriangleMeshSolid(geometry.indices, geometry.positionsQuantized); // Better memory/cpu performance with quantized values
-            }
-        }
-    }
-
-    _createDefaultMetaObjects() {
-
-        let rootMetaObject = null;
-
-        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
-
-            const entity = this.entitiesList[i];
-            const metaObjectId = entity.entityId;
-            const metaObject = this.metaObjects[metaObjectId];
-
-            if (!metaObject) {
-
-                if (!rootMetaObject) {
-                    rootMetaObject = this.createMetaObject({
-                        metaObjectId: this.modelId,
-                        metaObjectType: "Default",
-                        metaObjectName: this.modelId
-                    });
-                }
-
-                this.createMetaObject({
-                    metaObjectId: metaObjectId,
-                    metaObjectType: "Default",
-                    metaObjectName: "" + metaObjectId,
-                    parentMetaObjectId: rootMetaObject.metaObjectId
-                });
             }
         }
     }
