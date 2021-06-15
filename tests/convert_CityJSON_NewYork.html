@@ -15,7 +15,7 @@
         utils,
         Viewer,
         XKTLoaderPlugin
-    } from "./build/xeokit-components.js";
+    } from "./libs/xeokit-sdk.es.js";
 
     import {
         XKTModel,
@@ -35,6 +35,8 @@
     viewer.camera.look = [4.400, 3.724, 8.899];
     viewer.camera.up = [-0.018, 0.999, 0.039];
 
+    viewer.camera.perspective.near = 0.01;
+
     viewer.camera.eye = [300378.560901013, 5041670.826812327, 1029.4101343370114];
     viewer.camera.look = [300373.9426177017, 5041530.4881802695, 743.0834699981298];
     viewer.camera.up = [-0.007097096699155929, 0.8979651260520652, -0.440009390368821];
@@ -45,7 +47,13 @@
 
     utils.loadJSON("./models/cityjson/VM05_2009.json", async (cityJSONData) => {
 
-        parseCityJSONIntoXKTModel({cityJSONData, xktModel}).then(() => {
+        parseCityJSONIntoXKTModel({
+            cityJSONData,
+            xktModel,
+            log: function (msg) {
+                console.log(msg);
+            }
+        }).then(() => {
 
             xktModel.finalize();
 

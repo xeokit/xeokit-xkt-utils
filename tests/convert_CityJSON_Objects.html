@@ -15,7 +15,7 @@
         utils,
         Viewer,
         XKTLoaderPlugin
-    } from "./build/xeokit-components.js";
+    } from "./libs/xeokit-sdk.es.js";
 
     import {
         XKTModel,
@@ -81,12 +81,16 @@
         });
     }
 
-    load("./models/cityjson/cube.json", [0, 0, 0]).then(() => {
-        load("./models/cityjson/msol.json", [3, 0, 0]).then(() => {
-            load("./models/cityjson/csol.json", [6, 0, 0]).then(() => {
-                load("./models/cityjson/tetra.json", [9, 0, 0]).then(() => {
-                    load("./models/cityjson/msurface.json", [12, 0, 0]).then(() => {
-                        load("./models/cityjson/torus.json", [15, 0, 0]).then(() => {
+    function log(msg) {
+        console.log(msg);
+    }
+
+    load("./models/cityjson/cube.json", [0, 0, 0], log).then(() => {
+        load("./models/cityjson/msol.json", [3, 0, 0], log).then(() => {
+            load("./models/cityjson/csol.json", [6, 0, 0], log).then(() => {
+                load("./models/cityjson/tetra.json", [9, 0, 0], log).then(() => {
+                    load("./models/cityjson/msurface.json", [12, 0, 0], log).then(() => {
+                        load("./models/cityjson/torus.json", [15, 0, 0], log).then(() => {
                             signalTestComplete();
                         });
                     });
