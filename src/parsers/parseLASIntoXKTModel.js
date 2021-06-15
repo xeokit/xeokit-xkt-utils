@@ -59,19 +59,12 @@ async function parseLASIntoXKTModel({lazData, xktModel, log}) {
     const attributes = parsedData.attributes;
     const positionsValue = attributes.POSITION.value;
     const colorsValue = attributes.COLOR_0.value;
-    const colorsCompressed = [];
-
-    for (let i = 0, len = colorsValue.length; i < len; i += 4) {
-        colorsCompressed.push(colorsValue[i]);
-        colorsCompressed.push(colorsValue[i + 1]);
-        colorsCompressed.push(colorsValue[i + 2]);
-    }
 
     xktModel.createGeometry({
         geometryId: "pointsGeometry",
         primitiveType: "points",
         positions: positionsValue,
-        colorsCompressed: colorsCompressed
+        colorsCompressed: colorsValue
     });
 
     xktModel.createMesh({
