@@ -17,7 +17,7 @@ class XKTGeometry {
      * @param {Number} cfg.geometryIndex Index of this XKTGeometry in {@link XKTModel#geometriesList}.
      * @param {Float64Array} cfg.positions Non-quantized 3D vertex positions.
      * @param {Float32Array} cfg.normals Non-compressed vertex normals.
-     * @param {Uint8Array} cfg.colorsCompressed Integer RGB vertex colors.
+     * @param {Uint8Array} cfg.colorsCompressed Integer RGBA vertex colors.
      * @param {Uint32Array} cfg.indices Indices to organize the vertex positions and normals into triangles.
      * @param {Uint32Array} cfg.edgeIndices Indices to organize the vertex positions into edges.
      */
@@ -94,7 +94,7 @@ class XKTGeometry {
         this.normalsOctEncoded = null;
 
         /**
-         * Compressed RGB vertex colors.
+         * Compressed RGBA vertex colors.
          *
          * Defined only for point primitives. Ignored for triangles and lines.
          *
