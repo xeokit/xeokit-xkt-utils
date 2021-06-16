@@ -1,7 +1,7 @@
 import * as WebIFC from "web-ifc/web-ifc-api.js";
 
 /**
- * @desc Parses IFC file data into an {@link XKTModel}.
+ * @desc Parses IFC STEP file data into an {@link XKTModel}.
  *
  * Internally, this function uses [web-ifc](https://github.com/tomvandig/web-ifc) to parse the IFC, which relies on a
  * WASM file to do the parsing.
@@ -19,7 +19,13 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  *
  *     const xktModel = new XKTModel();
  *
- *     parseIFCIntoXKTModel({ifcData, xktModel, wasmPath: "../dist/"});
+ *     parseIFCIntoXKTModel({
+ *          ifcData,
+ *          xktModel,
+ *          wasmPath: "../dist/",
+ *          autoNormals: true,
+ *          log: (msg) => { console.log(msg); }
+ *     });
  *
  *     xktModel.finalize();
  * });
@@ -28,9 +34,14 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer} [params.ifcData] IFC file data.
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
+ * @param {Boolean} [params.autoNormals=false] When true, the parser will ignore the IFC geometry normals, and the IFC
+ * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
+ * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
+ * of the IFC model.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
+ * @param {function} [params.log] Logging callback.
  */
-async function parseIFCIntoXKTModel({ifcData, xktModel, wasmPath}) {
+async function parseIFCIntoXKTModel({ifcData, xktModel, autoNormals = true, wasmPath, log}) {
 
     if (!ifcData) {
         throw "Argument expected: ifcData";
@@ -54,30 +65,55 @@ async function parseIFCIntoXKTModel({ifcData, xktModel, wasmPath}) {
 
     const dataArray = new Uint8Array(ifcData);
 
-    const modelID = ifcAPI.OpenModel("foo.ifc", dataArray);
+    const modelID = ifcAPI.OpenModel(dataArray);
 
-    const ctx = {modelID, ifcAPI, xktModel, nextId: 0};
+    const ctx = {
+        modelID,
+        ifcAPI,
+        xktModel,
+        autoNormals,
+        log: (log || function (msg) {
+        }),
+        nextId: 0,
+        stats: {
+            convertedObjects: 0,
+            convertedGeometries: 0
+        }
+    };
 
-    parseEntities(ctx);
+    const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
+    const ifcProjectId = lines.get(0);
+    const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+
+    ctx.xktModel.schema = "";
+    ctx.xktModel.modelId = "" + modelID;
+    ctx.xktModel.projectId = "" + ifcProjectId;
+
+    parseGeometry(ctx);
 
     parseMetadata(ctx);
+
+    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
+    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
 }
 
-function parseEntities(ctx) {
+function parseGeometry(ctx) {
 
-    // Create XKTEntity, XKTMesh and XKTGeometry elements within the XKTModel.
-    // An XKTEntity has one or more XKTMesh components, which each have exactly one XKTGeometry.
-    // Each XKTMesh can share its XKTGeometry with other XKTMeshes.
+    // Parses the geometry and materials in the IFC, creates
+    // XKTEntity, XKTMesh and XKTGeometry components within the XKTModel.
 
     const flatMeshes = ctx.ifcAPI.LoadAllGeometry(ctx.modelID);
 
     for (let i = 0, len = flatMeshes.size(); i < len; i++) {
 
         const flatMesh = flatMeshes.get(i);
-        const entityId = flatMesh.expressID; // <<--------- This should be the entity's product ID
+        const flatMeshExpressID = flatMesh.expressID;
         const placedGeometries = flatMesh.geometries;
 
         const meshIds = [];
+
+        const properties = ctx.ifcAPI.GetLine(ctx.modelID, flatMeshExpressID);
+        const entityId = properties.GlobalId.value;
 
         for (let j = 0, lenj = placedGeometries.size(); j < lenj; j++) {
 
@@ -96,23 +132,28 @@ function parseEntities(ctx) {
                 const normals = [];
 
                 for (let k = 0, lenk = vertexData.length / 6; k < lenk; k++) {
-
                     positions.push(vertexData[k * 6 + 0]);
                     positions.push(vertexData[k * 6 + 1]);
                     positions.push(vertexData[k * 6 + 2]);
+                }
 
-                    normals.push(vertexData[k * 6 + 3]);
-                    normals.push(vertexData[k * 6 + 4]);
-                    normals.push(vertexData[k * 6 + 5]);
+                if (!ctx.autoNormals) {
+                    for (let k = 0, lenk = vertexData.length / 6; k < lenk; k++) {
+                        normals.push(vertexData[k * 6 + 3]);
+                        normals.push(vertexData[k * 6 + 4]);
+                        normals.push(vertexData[k * 6 + 5]);
+                    }
                 }
 
                 ctx.xktModel.createGeometry({
                     geometryId: geometryId,
                     primitiveType: "triangles",
                     positions: positions,
-                    normals: normals,
+                    normals: ctx.autoNormals ? null : normals,
                     indices: indices
                 });
+
+                ctx.stats.convertedGeometries++;
             }
 
             const meshId = ("mesh" + ctx.nextId++);
@@ -132,97 +173,94 @@ function parseEntities(ctx) {
             entityId: entityId,
             meshIds: meshIds
         });
+
+        ctx.stats.convertedObjects++;
     }
 }
 
 function parseMetadata(ctx) {
+
+    // Parses element properties within the IFC, creates a hierarchy of XKTMetaObject
+    // components within the XKTModel. Each leaf XKTMetaObject should correspond to an
+    // XKTEntity created with parseGeometry().
+
     const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, WebIFC.IFCPROJECT);
     const ifcProjectId = lines.get(0);
     const ifcProject = ctx.ifcAPI.GetLine(ctx.modelID, ifcProjectId);
-    getAllSpatialChildren(ctx, ifcProject);
-    createMetaObjects(ctx, ifcProject);
+
+    parseSpatialChildren(ctx, ifcProject);
 }
 
-// function getAllSpatialChildren(ctx, spatialElement) {
-//     const ifcAPI = ctx.ifcAPI;
-//     const id = spatialElement.expressID;
-//     const spatialChildrenIDs = getAllRelatedItemsOfType(ctx, id, WebIFC.IFCRELAGGREGATES, "RelatingObject", "RelatedObjects");
-//     spatialElement.spatialChildren = spatialChildrenIDs.map((id) => ifcAPI.GetLine(ctx.modelID, id, false));
-//     spatialElement.hasChildren = getAllRelatedItemsOfType(ctx, id, WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE, "RelatingStructure", "RelatedElements");
-//     spatialElement.spatialChildren.forEach(child => getAllSpatialChildren(ctx, child));
-// }
+function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
 
-function getAllSpatialChildren(ctx, spatialElement) {
-
-    const ifcAPI = ctx.ifcAPI;
-    const elementId = spatialElement.expressID;
-
-    const childrenIDs = getAllRelatedItemsOfType(ctx, elementId, WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE, "RelatingStructure", "RelatedElements");
-    const spatialChildrenIDs = getAllRelatedItemsOfType(ctx, elementId, WebIFC.IFCRELAGGREGATES, "RelatingObject", "RelatedObjects");
-
-    spatialElement.spatialChildren = spatialChildrenIDs.map((id) => ifcAPI.GetLine(ctx.modelID, id, false));
-    spatialElement.hasChildren = childrenIDs.map((id) => ifcAPI.GetLine(ctx.modelID, id, false));
-
-    spatialElement.hasChildren.forEach(child => getAllSpatialChildren(ctx, child));
-    spatialElement.spatialChildren.forEach(child => getAllSpatialChildren(ctx, child));
-}
-
-
-function getAllRelatedItemsOfType(ctx, elementID, type, relation, relatedProperty) {
-    const ifcAPI = ctx.ifcAPI;
-    const lines = ifcAPI.GetLineIDsWithType(ctx.modelID, type);
-    const ids = [];
-    for (let i = 0; i < lines.size(); i++) {
-        const relID = lines.get(i);
-        const rel = ifcAPI.GetLine(ctx.modelID, relID);
-        const relatedItems = rel[relation];
-        let foundElement = false;
-        if (Array.isArray(relatedItems)) {
-            relatedItems.forEach((relID) => {
-                if (relID.value === elementID) {
-                    foundElement = true;
-                }
-            });
-        } else {
-            foundElement = (relatedItems.value === elementID);
-        }
-        if (foundElement) {
-            const element = rel[relatedProperty];
-            if (!Array.isArray(element)) {
-                ids.push(element.value);
-            } else {
-                element.forEach(ele => ids.push(ele.value))
-            }
-        }
-    }
-    return ids;
-}
-
-function createMetaObjects(ctx, ifcElement, parentMetaObjectId) {
     const metaObjectId = ifcElement.GlobalId.value;
-    //const metaObjectId = ifcElement.expressID;
+
+    createMetaObject(ctx, ifcElement, parentMetaObjectId);
+
+    parseRelatedItemsOfType(
+        ctx,
+        ifcElement.expressID,
+        'RelatingObject',
+        'RelatedObjects',
+        WebIFC.IFCRELAGGREGATES,
+        metaObjectId);
+
+    parseRelatedItemsOfType(
+        ctx,
+        ifcElement.expressID,
+        'RelatingStructure',
+        'RelatedElements',
+        WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE,
+        metaObjectId);
+}
+
+function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
+
+    const metaObjectId = ifcElement.GlobalId.value;
     const metaObjectType = ifcElement.__proto__.constructor.name;
-    const metaObjectName = ifcElement.Name ? ifcElement.Name.value : metaObjectType;
-    ctx.xktModel.createMetaObject({
-        metaObjectId: metaObjectId,
-        metaObjectType: metaObjectType,
-        metaObjectName: metaObjectName,
-        parentMetaObjectId: parentMetaObjectId
-    });
-    console.log(metaObjectId + " - " + metaObjectType);
-    const spatialChildren = ifcElement.spatialChildren;
-    if (spatialChildren && spatialChildren.length > 0) {
-        for (let i = 0, len = spatialChildren.length; i < len; i++) {
-            const spatialChildElement = spatialChildren[i];
-            createMetaObjects(ctx, spatialChildElement, ifcElement, metaObjectId);
+    const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
+
+    ctx.xktModel.createMetaObject({metaObjectId, metaObjectType, metaObjectName, parentMetaObjectId});
+}
+
+function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, type);
+
+    for (let i = 0; i < lines.size(); i++) {
+
+        const relID = lines.get(i);
+        const rel = ctx.ifcAPI.GetLine(ctx.modelID, relID);
+        const relatedItems = rel[relation];
+
+        let foundElement = false;
+
+        if (Array.isArray(relatedItems)) {
+            const values = relatedItems.map((item) => item.value);
+            foundElement = values.includes(id);
+
+        } else {
+            foundElement = (relatedItems.value === id);
         }
-    } else {
-        const hasChildren = ifcElement.hasChildren;
-        if (hasChildren && hasChildren.length > 0) {
-            for (let i = 0, len = hasChildren.length; i < len; i++) {
-                const childElement = hasChildren[i];
-                const _parentMetaObjectId = metaObjectId;
-                createMetaObjects(ctx, childElement, ifcElement, metaObjectId);
+
+        if (foundElement) {
+
+            const element = rel[related];
+
+            if (!Array.isArray(element)) {
+
+                const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element.value);
+
+                parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
+
+            } else {
+
+                element.forEach((element2) => {
+
+                    const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element2.value);
+
+                    parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
+                });
             }
         }
     }
