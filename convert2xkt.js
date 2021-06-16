@@ -63,8 +63,6 @@ async function main() {
     const fileContent = await fs.readFile(program.source);
     const sourceFileSizeBytes = fileContent.byteLength;
 
-    log("Input file size: " + (sourceFileSizeBytes / 1000).toFixed(3) + " kB");
-
     let metaModelData;
 
     if (program.metamodel) {
@@ -79,6 +77,14 @@ async function main() {
     }
 
     const ext = program.format || program.source.split('.').pop();
+
+    if (ext === "ifc") {
+        console.log("Warning: Here be dragons; IFC conversion is very alpha!")
+    }
+
+    log("Input file size: " + (sourceFileSizeBytes / 1000).toFixed(2) + " kB");
+
+    log("Converting...");
 
     switch (ext) {
 
@@ -101,7 +107,6 @@ async function main() {
             break;
 
         case "ifc":
-            console.log("Warning: IFC conversion is very alpha!")
             await parseIFCIntoXKTModel({
                 ifcData: fileContent, xktModel, wasmPath: "./", log
             });
@@ -134,7 +139,7 @@ async function main() {
             break;
     }
 
-    log('Writing XKT v8');
+    log('Writing XKT file: ' + program.output);
 
     xktModel.finalize();
 
@@ -145,9 +150,10 @@ async function main() {
 
     const targetFileSizeBytes = xktArrayBuffer.byteLength;
 
-    log("XKT size: " + (targetFileSizeBytes / 1000).toFixed(3) + " kB");
+    log("XKT version: 8");
+    log("XKT size: " + (targetFileSizeBytes / 1000).toFixed(2) + " kB");
     log("Compression ratio: " + (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2));
-    log("Conversion time: " + (new Date() - startTime) / 1000.0 + " s");
+    log("Conversion time: " + ((new Date() - startTime) / 1000.0).toFixed(2) + " s");
 }
 
 function getBasePath(src) {

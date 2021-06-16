@@ -51,7 +51,7 @@ async function parseLASIntoXKTModel({lazData, xktModel, log}) {
         parsedData = await parse(lazData, LASLoader);
     } catch (e) {
         if (log) {
-            log("[parseLASIntoXKTModel] " + e);
+            log("Error: " + e);
         }
         return;
     }

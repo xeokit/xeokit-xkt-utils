@@ -6,11 +6,13 @@
  * @param {String[]} [params.excludeTypes] Types to exclude from parsing.
  * @param {String[]} [params.includeTypes] Types to include in parsing.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {function} [params.log] Logging callback.
  */
-function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excludeTypes}) {
+function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excludeTypes, log}) {
 
     const metaObjects = metaModelData.metaObjects || [];
 
+    xktModel.modelId = metaModelData.revisionId || ""; // HACK
     xktModel.projectId = metaModelData.projectId || "";
     xktModel.revisionId = metaModelData.revisionId || "";
     xktModel.author = metaModelData.author || "";
@@ -34,6 +36,8 @@ function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excl
         }
     }
 
+    let countMetaObjects = 0;
+
     for (let i = 0, len = metaObjects.length; i < len; i++) {
 
         const metaObject = metaObjects[i];
@@ -52,7 +56,13 @@ function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excl
             metaObjectType: metaObject.type,
             metaObjectName: metaObject.name,
             parentMetaObjectId: metaObject.parent
-        })
+        });
+
+        countMetaObjects++;
+    }
+
+    if (log) {
+        log("Converted meta objects: " + countMetaObjects);
     }
 }
 

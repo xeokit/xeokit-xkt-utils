@@ -193,9 +193,9 @@ function parseMetadata(ctx) {
 
 function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
 
-    const metaObjectId = ifcElement.GlobalId.value;
-
     createMetaObject(ctx, ifcElement, parentMetaObjectId);
+
+    const metaObjectId = ifcElement.GlobalId.value;
 
     parseRelatedItemsOfType(
         ctx,

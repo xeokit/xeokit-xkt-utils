@@ -1,12 +1,34 @@
 /**
  * @desc Parses PCD point cloud data into an {@link XKTModel}.
  *
+ * ## Usage
+ *
+ * In the example below we'll create an {@link XKTModel}, then load an LAZ point cloud model into it.
+ *
+ * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_PCD_Test)]
+ *
+ * ````javascript
+ * utils.loadArraybuffer(""./models/pcd/ism_test_cat.pcd"", async (pcdData) => {
+ *
+ *     const xktModel = new XKTModel();
+ *
+ *     await parsePCDIntoXKTModel({
+ *          pcdData,
+ *          xktModel,
+ *          log: (msg) => { console.log(msg); }
+ *     });
+ *
+ *     xktModel.finalize();
+ * });
+ * ````
+ *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer|Response} params.pcdData PCD file data.
+ * @param {ArrayBuffer} params.pcdData PCD file data.
  * @param {Boolean} [params.littleEndian=true] Whether PCD binary data is Little-Endian or Big-Endian.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {function} [params.log] Logging callback.
  */
-function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true}) {
+function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true, log}) {
 
     const textData = decodeText(new Uint8Array(pcdData));
 
@@ -47,12 +69,6 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true}) {
                 colors.push(255);
                 colors.push(255);
             }
-
-            if (offset.normal_x !== undefined) {
-                normals.push(parseFloat(line[offset.normal_x]));
-                normals.push(parseFloat(line[offset.normal_y]));
-                normals.push(parseFloat(line[offset.normal_z]));
-            }
         }
     }
 
@@ -83,12 +99,6 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true}) {
                 colors.push(1);
                 colors.push(1);
             }
-
-            if (offset.normal_x !== undefined) {
-                normals.push(dataview.getFloat32((header.points * offset.normal_x) + header.size[4] * i, littleEndian));
-                normals.push(dataview.getFloat32((header.points * offset.normal_y) + header.size[5] * i, littleEndian));
-                normals.push(dataview.getFloat32((header.points * offset.normal_z) + header.size[6] * i, littleEndian));
-            }
         }
     }
 
@@ -113,32 +123,14 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true}) {
                 colors.push(255);
                 colors.push(255);
             }
-
-            if (offset.normal_x !== undefined) {
-                normals.push(dataview.getFloat32(row + offset.normal_x, littleEndian));
-                normals.push(dataview.getFloat32(row + offset.normal_y, littleEndian));
-                normals.push(dataview.getFloat32(row + offset.normal_z, littleEndian));
-            }
         }
-    }
-
-    if (positions.length > 0) {
-
-    }
-
-    // if (normals.length > 0) {
-    //
-    // }
-
-    if (colors.length > 0) {
-
     }
 
     xktModel.createGeometry({
         geometryId: "pointsGeometry",
         primitiveType: "points",
         positions: positions,
-        colorsCompressed: colors && colors.length > 0 ? colors : null
+        colors: colors && colors.length > 0 ? colors : null
     });
 
     xktModel.createMesh({
@@ -150,6 +142,11 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true}) {
         entityId: "geometries",
         meshIds: ["pointsMesh"]
     });
+
+    if (log) {
+        log("Converted objects: 1");
+        log("Converted geometries: 1");
+    }
 }
 
 function parseHeader(data) {
