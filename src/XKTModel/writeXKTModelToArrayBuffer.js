@@ -167,6 +167,8 @@ function getModelData(xktModel) {
         data.metadata.metaObjects.push(metaObjectJSON);
     }
 
+   // console.log(JSON.stringify(data.metadata, null, "\t"))
+
     // Geometries
 
     let matricesIndex = 0;
@@ -384,7 +386,6 @@ function toArrayBuffer(elements) {
         dataArray.set(element, offset);
         offset += element.length;
     }
-    console.log("XKT size: " + (dataArray.length / 1024).toFixed(3) + " kB");
     return dataArray.buffer;
 }
 

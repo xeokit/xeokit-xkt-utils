@@ -56,6 +56,8 @@ function log(msg) {
 
 log('\n\nReading input file: ' + program.source);
 
+const startTime = new Date();
+
 async function main() {
 
     const fileContent = await fs.readFile(program.source);
@@ -97,7 +99,7 @@ async function main() {
 
         case "ifc":
             await parseIFCIntoXKTModel({
-                ifcData: fileContent, xktModel, wasmPath: "../dist/", log
+                ifcData: fileContent, xktModel, wasmPath: "./", log
             });
             break;
 
@@ -136,6 +138,9 @@ async function main() {
     const xktContent = Buffer.from(xktArrayBuffer);
 
     await fs.writeFile(program.output, xktContent);
+
+    log("XKT size: " + (xktArrayBuffer.byteLength / 1000).toFixed(3) + " kB");
+    log("Time: "+ (new Date() - startTime) / 1000.0 + " s");
 }
 
 function getBasePath(src) {
