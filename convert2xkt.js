@@ -23,10 +23,10 @@ program.version(package.version, '-v, --version');
 
 program
     .option('-s, --source [file]', 'path to source file')
-    .option('-f, --format [string]', 'source file format; supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson')
+    .option('-f, --format [string]', 'source file format (optional); supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson')
     .option('-m, --metamodel [file]', 'path to source metamodel JSON file (optional)')
     .option('-o, --output [file]', 'path to target .xkt file')
-    .option('-l, --log', 'log output');
+    .option('-l, --log', 'enable logging');
 
 program.on('--help', () => {
 
@@ -37,13 +37,13 @@ program.parse(process.argv);
 const options = program.opts();
 
 if (program.source === undefined) {
-    console.error('\n\nError: please specify source file path.');
+    console.error('Error: please specify source file path.');
     program.help();
     process.exit(1);
 }
 
 if (program.output === undefined) {
-    console.error('\n\nError: please specify target xkt file path.');
+    console.error('Error: please specify target xkt file path.');
     program.help();
     process.exit(1);
 }
@@ -54,13 +54,16 @@ function log(msg) {
     }
 }
 
-log('\n\nReading input file: ' + program.source);
+log('Reading input file: ' + program.source);
 
 const startTime = new Date();
 
 async function main() {
 
     const fileContent = await fs.readFile(program.source);
+    const sourceFileSizeBytes = fileContent.byteLength;
+
+    log("Input file size: " + (sourceFileSizeBytes / 1000).toFixed(3) + " kB");
 
     let metaModelData;
 
@@ -75,7 +78,7 @@ async function main() {
         await parseMetaModelIntoXKTModel({metaModelData, xktModel});
     }
 
-    const ext = program.source.split('.').pop();
+    const ext = program.format || program.source.split('.').pop();
 
     switch (ext) {
 
@@ -98,6 +101,7 @@ async function main() {
             break;
 
         case "ifc":
+            console.log("Warning: IFC conversion is very alpha!")
             await parseIFCIntoXKTModel({
                 ifcData: fileContent, xktModel, wasmPath: "./", log
             });
@@ -124,7 +128,7 @@ async function main() {
             break;
 
         default:
-            console.error('\n\nError: unsupported source file format.');
+            console.error('Error: unsupported source file format.');
             program.help();
             process.exit(1);
             break;
@@ -139,8 +143,11 @@ async function main() {
 
     await fs.writeFile(program.output, xktContent);
 
-    log("XKT size: " + (xktArrayBuffer.byteLength / 1000).toFixed(3) + " kB");
-    log("Time: "+ (new Date() - startTime) / 1000.0 + " s");
+    const targetFileSizeBytes = xktArrayBuffer.byteLength;
+
+    log("XKT size: " + (targetFileSizeBytes / 1000).toFixed(3) + " kB");
+    log("Compression ratio: " + (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2));
+    log("Conversion time: " + (new Date() - startTime) / 1000.0 + " s");
 }
 
 function getBasePath(src) {
@@ -149,6 +156,6 @@ function getBasePath(src) {
 }
 
 main().catch(err => {
-    console.error('Something went wrong:', err);
+    console.error('Error:', err);
     process.exit(1);
 });

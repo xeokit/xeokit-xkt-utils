@@ -83,6 +83,9 @@ async function parseCityJSONIntoXKTModel({cityJSONData, xktModel, log}) {
     ctx.log("Converting " + ctx.xktModel.schema);
 
     await parseCityJSON(ctx);
+
+    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
+    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
 }
 
 function transformVertices(vertices, transform) {
@@ -116,9 +119,6 @@ function parseCityJSON(ctx) {
             parseCityObject(ctx, cityObject, objectId);
         }
     }
-
-    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
-    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
 }
 
 function parseCityObject(ctx, cityObject, objectId) {
