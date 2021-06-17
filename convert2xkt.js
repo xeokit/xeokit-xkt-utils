@@ -3,6 +3,7 @@
 const fs = require('fs').promises;
 const commander = require('commander');
 const package = require('./package.json');
+const DOMParser = require('xmldom').DOMParser;
 
 const {
     XKTModel,
@@ -13,6 +14,7 @@ const {
     parsePCDIntoXKTModel,
     parseSTLIntoXKTModel,
     parsePLYIntoXKTModel,
+    parse3DXMLIntoXKTModel,
     parseMetaModelIntoXKTModel,
     writeXKTModelToArrayBuffer
 } = require("./dist/xeokit-xkt-utils.cjs.js");
@@ -60,14 +62,35 @@ const startTime = new Date();
 
 async function main() {
 
-    const fileContent = await fs.readFile(program.source);
+    const ext = program.format || program.source.split('.').pop();
+
+    if (ext === "ifc") {
+        console.log("Warning: Here be dragons; IFC conversion is very alpha!")
+    }
+
+    let fileContent;
+
+    try {
+        fileContent = await fs.readFile(program.source);
+    } catch (err) {
+        console.error(err);
+        process.exit(1);
+    }
+
     const sourceFileSizeBytes = fileContent.byteLength;
+
+    log("Input file size: " + (sourceFileSizeBytes / 1000).toFixed(2) + " kB");
 
     let metaModelData;
 
     if (program.metamodel) {
-        const metaModelFileData = await fs.readFile(program.metamodel);
-        metaModelData = JSON.parse(metaModelFileData);
+        try {
+            const metaModelFileData = await fs.readFile(program.metamodel);
+            metaModelData = JSON.parse(metaModelFileData);
+        } catch (err) {
+            console.error(err);
+            process.exit(1);
+        }
     }
 
     const xktModel = new XKTModel();
@@ -75,14 +98,6 @@ async function main() {
     if (metaModelData) {
         await parseMetaModelIntoXKTModel({metaModelData, xktModel});
     }
-
-    const ext = program.format || program.source.split('.').pop();
-
-    if (ext === "ifc") {
-        console.log("Warning: Here be dragons; IFC conversion is very alpha!")
-    }
-
-    log("Input file size: " + (sourceFileSizeBytes / 1000).toFixed(2) + " kB");
 
     log("Converting...");
 
@@ -132,6 +147,11 @@ async function main() {
             await parseSTLIntoXKTModel({stlData: fileContent, xktModel, log});
             break;
 
+        case "3dxml":
+            const domParser = new DOMParser();
+            await parse3DXMLIntoXKTModel({blob: fileContent, domParser, xktModel, log});
+            break;
+
         default:
             console.error('Error: unsupported source file format.');
             program.help();
@@ -150,7 +170,7 @@ async function main() {
 
     const targetFileSizeBytes = xktArrayBuffer.byteLength;
 
-    log("XKT version: 8");
+    log("XKT version: 9");
     log("XKT size: " + (targetFileSizeBytes / 1000).toFixed(2) + " kB");
     log("Compression ratio: " + (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2));
     log("Conversion time: " + ((new Date() - startTime) / 1000.0).toFixed(2) + " s");
