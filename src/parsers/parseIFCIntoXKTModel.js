@@ -34,10 +34,11 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer} [params.ifcData] IFC file data.
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
- * @param {Boolean} [params.autoNormals=false] When true, the parser will ignore the IFC geometry normals, and the IFC
+ * @param {Boolean} [params.autoNormals=true] When true, the parser will ignore the IFC geometry normals, and the IFC
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
- * of the IFC model.
+ * of the IFC model. This is ````true```` by default, because IFC models tend to look acceptable with flat-shading,
+ * and we always want to minimize IFC model size wherever possible.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
  * @param {function} [params.log] Logging callback.
  */
