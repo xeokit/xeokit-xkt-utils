@@ -15,12 +15,12 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_IFC_RevitSample1)]
  *
  * ````javascript
- * utils.loadArraybuffer("./models/ifc/rac_advanced_sample_project.ifc", async (ifcData) => {
+ * utils.loadArraybuffer("./models/ifc/rac_advanced_sample_project.ifc", async (data) => {
  *
  *     const xktModel = new XKTModel();
  *
  *     parseIFCIntoXKTModel({
- *          ifcData,
+ *          data,
  *          xktModel,
  *          wasmPath: "../dist/",
  *          autoNormals: true,
@@ -32,7 +32,7 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * ````
  *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer} [params.ifcData] IFC file data.
+ * @param {ArrayBuffer} [params.data] IFC file data.
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  * @param {Boolean} [params.autoNormals=true] When true, the parser will ignore the IFC geometry normals, and the IFC
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
@@ -40,12 +40,13 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * of the IFC model. This is ````true```` by default, because IFC models tend to look acceptable with flat-shading,
  * and we always want to minimize IFC model size wherever possible.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
+ * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {function} [params.log] Logging callback.
  */
-async function parseIFCIntoXKTModel({ifcData, xktModel, autoNormals = true, wasmPath, log}) {
+async function parseIFCIntoXKTModel({data, xktModel, autoNormals = true, wasmPath, outputObjectProperties, log}) {
 
-    if (!ifcData) {
-        throw "Argument expected: ifcData";
+    if (!data) {
+        throw "Argument expected: data";
     }
 
     if (!xktModel) {
@@ -64,7 +65,7 @@ async function parseIFCIntoXKTModel({ifcData, xktModel, autoNormals = true, wasm
 
     await ifcAPI.Init();
 
-    const dataArray = new Uint8Array(ifcData);
+    const dataArray = new Uint8Array(data);
 
     const modelID = ifcAPI.OpenModel(dataArray);
 
@@ -73,6 +74,7 @@ async function parseIFCIntoXKTModel({ifcData, xktModel, autoNormals = true, wasm
         ifcAPI,
         xktModel,
         autoNormals,
+        outputObjectProperties,
         log: (log || function (msg) {
         }),
         nextId: 0,
@@ -222,6 +224,17 @@ function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
     const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
 
     ctx.xktModel.createMetaObject({metaObjectId, metaObjectType, metaObjectName, parentMetaObjectId});
+
+    if (ctx.outputObjectProperties) {
+
+        const json = {
+            id: metaObjectId,
+            type: metaObjectType,
+            name: metaObjectName
+        };
+
+        ctx.outputObjectProperties(metaObjectId, json);
+    }
 }
 
 function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {

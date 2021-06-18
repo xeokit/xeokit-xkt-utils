@@ -28,12 +28,12 @@ const tempVec3c = math.vec3();
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_CityJSON_DenHaag)]
  *
  * ````javascript
- * utils.loadJSON("./models/cityjson/DenHaag.json", async (cityJSONData) => {
+ * utils.loadJSON("./models/cityjson/DenHaag.json", async (data) => {
  *
  *     const xktModel = new XKTModel();
  *
  *     await parseCityJSONIntoXKTModel({
- *          cityJSONData,
+ *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
  *     });
@@ -43,30 +43,30 @@ const tempVec3c = math.vec3();
  * ````
  *
  * @param {Object} params Parsing params.
- * @param {Object} params.cityJSONData CityJSON data.
+ * @param {Object} params.data CityJSON data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {function} [params.log] Logging callback.
  */
-async function parseCityJSONIntoXKTModel({cityJSONData, xktModel, log}) {
+async function parseCityJSONIntoXKTModel({data, xktModel, log}) {
 
-    if (!cityJSONData) {
-        throw "Argument expected: cityJSONData";
+    if (!data) {
+        throw "Argument expected: data";
     }
 
-    if (cityJSONData.type !== "CityJSON") {
-        throw "Invalid argument: cityJSONData is not a CityJSON file";
+    if (data.type !== "CityJSON") {
+        throw "Invalid argument: data is not a CityJSON file";
     }
 
     if (!xktModel) {
         throw "Argument expected: xktModel";
     }
 
-    const vertices = cityJSONData.transform // Avoid side effects - don't modify the CityJSON data
-        ? transformVertices(cityJSONData.vertices, cityJSONData.transform)
-        : cityJSONData.vertices;
+    const vertices = data.transform // Avoid side effects - don't modify the CityJSON data
+        ? transformVertices(data.vertices, data.transform)
+        : data.vertices;
 
     const ctx = {
-        cityJSONData,
+        data,
         vertices,
         xktModel,
         log: (log || function (msg) {
@@ -78,7 +78,7 @@ async function parseCityJSONIntoXKTModel({cityJSONData, xktModel, log}) {
         }
     };
 
-    ctx.xktModel.schema = cityJSONData.type + " " + cityJSONData.version;
+    ctx.xktModel.schema = data.type + " " + data.version;
 
     ctx.log("Converting " + ctx.xktModel.schema);
 
@@ -104,8 +104,8 @@ function transformVertices(vertices, transform) {
 function parseCityJSON(ctx) {
 
     const xktModel = ctx.xktModel;
-    const cityJSONData = ctx.cityJSONData;
-    const cityObjects = cityJSONData.CityObjects;
+    const data = ctx.data;
+    const cityObjects = data.CityObjects;
 
     ctx.rootMetaObject = xktModel.createMetaObject({
         metaObjectId: "myModel",
@@ -123,7 +123,7 @@ function parseCityJSON(ctx) {
 
 function parseCityObject(ctx, cityObject, objectId) {
 
-    const cityJSONData = ctx.cityJSONData;
+    const data = ctx.data;
     const metaObjectType = cityObject.type;
     const xktModel = ctx.xktModel;
 
@@ -147,7 +147,7 @@ function parseCityObject(ctx, cityObject, objectId) {
         let objectMaterial;
         let surfaceMaterials;
 
-        const appearance = cityJSONData.appearance;
+        const appearance = data.appearance;
         if (appearance) {
             const materials = appearance.materials;
             if (materials) {

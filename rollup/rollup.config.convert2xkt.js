@@ -21,6 +21,6 @@ export default {
             preferBuiltins: false
         }),
         commonjs(),
-        // minify()
+       // minify()
     ]
 }

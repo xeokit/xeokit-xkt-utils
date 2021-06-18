@@ -1,6 +1,5 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
-import minify from 'rollup-plugin-minify-es';
 
 export default {
     input: './index.dist.js',
@@ -23,7 +22,6 @@ export default {
             browser: true,
             preferBuiltins: false
         }),
-        commonjs(),
-        // minify()
+        commonjs()
     ]
 }

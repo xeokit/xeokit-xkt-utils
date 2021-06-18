@@ -8,12 +8,12 @@
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_PCD_Test)]
  *
  * ````javascript
- * utils.loadArraybuffer(""./models/pcd/ism_test_cat.pcd"", async (pcdData) => {
+ * utils.loadArraybuffer(""./models/pcd/ism_test_cat.pcd"", async (data) => {
  *
  *     const xktModel = new XKTModel();
  *
  *     await parsePCDIntoXKTModel({
- *          pcdData,
+ *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
  *     });
@@ -23,14 +23,14 @@
  * ````
  *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer} params.pcdData PCD file data.
+ * @param {ArrayBuffer} params.data PCD file data.
  * @param {Boolean} [params.littleEndian=true] Whether PCD binary data is Little-Endian or Big-Endian.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {function} [params.log] Logging callback.
  */
-function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true, log}) {
+function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, log}) {
 
-    const textData = decodeText(new Uint8Array(pcdData));
+    const textData = decodeText(new Uint8Array(data));
 
     const header = parseHeader(textData);
 
@@ -41,8 +41,8 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true, log}) {
     if (header.data === 'ascii') {
 
         const offset = header.offset;
-        const pcdData = textData.substr(header.headerLen);
-        const lines = pcdData.split('\n');
+        const data = textData.substr(header.headerLen);
+        const lines = data.split('\n');
 
         for (let i = 0, l = lines.length; i < l; i++) {
 
@@ -74,10 +74,10 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true, log}) {
 
     if (header.data === 'binary_compressed') {
 
-        const sizes = new Uint32Array(pcdData.slice(header.headerLen, header.headerLen + 8));
+        const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
         const compressedSize = sizes[0];
         const decompressedSize = sizes[1];
-        const decompressed = decompressLZF(new Uint8Array(pcdData, header.headerLen + 8, compressedSize), decompressedSize);
+        const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
         const dataview = new DataView(decompressed.buffer);
         const offset = header.offset;
 
@@ -104,7 +104,7 @@ function parsePCDIntoXKTModel({pcdData, xktModel, littleEndian = true, log}) {
 
     if (header.data === 'binary') {
 
-        const dataview = new DataView(pcdData, header.headerLen);
+        const dataview = new DataView(data, header.headerLen);
         const offset = header.offset;
 
         for (let i = 0, row = 0; i < header.points; i++, row += header.rowSize) {

@@ -1,3 +1,5 @@
+import {math} from "./math.js";
+
 /**
  * Converts surface-perpendicular face normals to vertex normals. Assumes that the mesh contains disjoint triangles
  * that don't share vertex array elements. Works by finding groups of vertices that have the same location and
@@ -6,8 +8,6 @@
  * @returns {{positions: Array, normals: *}}
  * @private
  */
-import {math} from "./math.js";
-
 function faceToVertexNormals(positions, normals, options = {}) {
     const smoothNormalsAngleThreshold = options.smoothNormalsAngleThreshold || 20;
     const vertexMap = {};

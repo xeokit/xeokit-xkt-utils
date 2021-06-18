@@ -9,7 +9,7 @@ const supportedSchemas = ["4.2"];
  * Supports 3DXML Schema 4.2.
  *
  * @param {Object} params Parsing parameters.
- * @param {String} params.blob 3DXML BLOB data.
+ * @param {ArrayBuffer} params.data 3DXML BLOB data.
  * @param {DOMParser} params.domParser A DOMParser implementation (eg. ````xmldom````), required when
  * we're not running in a browser and ````window.DOMParser```` is not available.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
@@ -19,7 +19,7 @@ const supportedSchemas = ["4.2"];
  * of the 3DXML model. This is ````false```` by default because CAD models tend to prefer smooth shading.
  * @param {function} [params.log] Logging callback.
  */
-async function parse3DXMLIntoXKTModel({blob, domParser, xktModel, autoNormals=false, log}) {
+async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, log}) {
 
     const isBrowser = (typeof window !== 'undefined');
 
@@ -29,8 +29,8 @@ async function parse3DXMLIntoXKTModel({blob, domParser, xktModel, autoNormals=fa
         throw "Config expected: domParser (needed when running in node.js)";
     }
 
-    if (!blob) {
-        throw "Config expected: blob";
+    if (!data) {
+        throw "Config expected: data";
     }
 
     if (!xktModel) {
@@ -39,7 +39,7 @@ async function parse3DXMLIntoXKTModel({blob, domParser, xktModel, autoNormals=fa
 
     const zipArchive = new ZIPArchive(domParser);
 
-    await zipArchive.init(blob);
+    await zipArchive.init(data);
 
     const ctx = {
         zipArchive: zipArchive,

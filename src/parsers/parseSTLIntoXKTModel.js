@@ -14,18 +14,18 @@ import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
  * In the example below we'll create an {@link XKTModel}, then load an STL model into it.
  *
  * ````javascript
- * utils.loadArraybuffer("./models/stl/binary/spurGear.stl", async (stlData) => {
+ * utils.loadArraybuffer("./models/stl/binary/spurGear.stl", async (data) => {
  *
  *     const xktModel = new XKTModel();
  *
- *     parseSTLIntoXKTModel({stlData, xktModel});
+ *     parseSTLIntoXKTModel({data, xktModel});
  *
  *     xktModel.finalize();
  * });
  * ````
  *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer} [params.stlData] STL file data.
+ * @param {ArrayBuffer|String} [params.data] STL file data. Can be binary or string.
  * @param {Boolean} [params.autoNormals=false] When true, the parser will ignore the STL geometry normals, and the STL
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
@@ -39,12 +39,12 @@ import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
  * for the STL vertices.
  * @param {Boolean} [params.smoothNormals=true] When true, automatically converts face-oriented STL normals to vertex normals, for a smooth appearance. Ignored if ````autoNormals```` is ````true````.
  * @param {Number} [params.smoothNormalsAngleThreshold=20] This is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
- * @param {Boolean} [params.splitMeshes=true] When true, creates a separate {@link XKTEntity} for each group of faces that share the same vertex colors. Only works with binary STL.
+ * @param {Boolean} [params.splitMeshes=true] When true, creates a separate {@link XKTEntity} for each group of faces that share the same vertex colors. Only works with binary STL (ie. when ````data```` is an ArrayBuffer).
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  * @param {function} [params.log] Logging callback.
  */
 async function parseSTLIntoXKTModel({
-                                        stlData,
+                                        data,
                                         splitMeshes,
                                         autoNormals,
                                         smoothNormals,
@@ -52,8 +52,8 @@ async function parseSTLIntoXKTModel({
                                         xktModel,
                                         log
                                     }) {
-    if (!stlData) {
-        throw "Argument expected: stlData";
+    if (!data) {
+        throw "Argument expected: data";
     }
 
     if (!xktModel) {
@@ -61,7 +61,7 @@ async function parseSTLIntoXKTModel({
     }
 
     const ctx = {
-        stlData,
+        data,
         splitMeshes,
         autoNormals,
         smoothNormals,
@@ -76,12 +76,12 @@ async function parseSTLIntoXKTModel({
         }
     };
 
-    const binData = ensureBinary(stlData);
+    const binData = ensureBinary(data);
 
     if (isBinary(binData)) {
         parseBinary(ctx, binData);
     } else {
-        parseASCII(ctx, ensureString(stlData));
+        parseASCII(ctx, ensureString(data));
     }
 
     ctx.log("Converted objects: " + ctx.stats.convertedObjects);

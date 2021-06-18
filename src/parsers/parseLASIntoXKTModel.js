@@ -13,12 +13,12 @@ import {LASLoader} from '@loaders.gl/las';
  * In the example below we'll create an {@link XKTModel}, then load an LAZ point cloud model into it.
  *
  * ````javascript
- * utils.loadArraybuffer("./models/laz/autzen.laz", async (lazData) => {
+ * utils.loadArraybuffer("./models/laz/autzen.laz", async (data) => {
  *
  *     const xktModel = new XKTModel();
  *
  *     await parseLASIntoXKTModel({
- *          lazData,
+ *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
  *     });
@@ -28,14 +28,14 @@ import {LASLoader} from '@loaders.gl/las';
  * ````
  *
  * @param {Object} params Parsing params.
- * @param {ArrayBuffer} params.lazData LAS/LAZ file data.
+ * @param {ArrayBuffer} params.data LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {function} [params.log] Logging callback.
  */
-async function parseLASIntoXKTModel({lazData, xktModel, log}) {
+async function parseLASIntoXKTModel({data, xktModel, log}) {
 
-    if (!lazData) {
-        throw "Argument expected: lazData";
+    if (!data) {
+        throw "Argument expected: data";
     }
 
     if (!xktModel) {
@@ -48,7 +48,7 @@ async function parseLASIntoXKTModel({lazData, xktModel, log}) {
 
     let parsedData;
     try {
-        parsedData = await parse(lazData, LASLoader);
+        parsedData = await parse(data, LASLoader);
     } catch (e) {
         if (log) {
             log("Error: " + e);

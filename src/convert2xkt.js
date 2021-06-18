@@ -15,28 +15,48 @@ const {
     writeXKTModelToArrayBuffer
 } = require("../dist/xeokit-xkt-utils.cjs.js");
 
+/**
+ * Converts an IFC file into an XKT file, plus optional per-object property sets.
+ *
+ * @private
+ * @param {Object} params Conversion parameters.
+ * @param {String}[params.source] Path to source file. Alternative to ````sourceData````.
+ * @param {ArrayBuffer|JSON}[params.sourceData] Source file data. Alternative to ````source````.
+ * @param {String}[params.sourceFormat] Format of source file/data. Always needed with ````sourceData````, but not normally needed with ````source````, because convert2xkt will determine the format automatically from the file extension of ````source````.
+ * @param {Object}[params.metamodel]
+ * @param {String}[params.output] Path to destination file. Alternative to ````outputXKT````.
+ * @param {Function}[params.outputXKT] Callback to collect XKT file data.
+ * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
+ * @param {Function}[params.log] Logging callback.
+ * @return {Promise<number>}
+ */
 async function convert2xkt({
                                source,
-                               format,
+                               sourceData,
+                               sourceFormat,
                                metamodel,
                                output,
+                               outputXKT,
+                               outputObjectProperties,
                                log = (msg) => {
                                }
                            }) {
 
-    if (!source) {
-        throw "Argument expected: source";
+    if (!source && !sourceData) {
+        throw "Argument expected: source or sourceData";
     }
 
-    if (!output) {
-        throw "Argument expected: output";
+    if (!output && !outputXKT) {
+        throw "Argument expected: output or outputXKT";
     }
 
-    log('Reading input file: ' + source);
+    if (source) {
+        log('Reading input file: ' + source);
+    }
 
     const startTime = new Date();
 
-    const ext = format || source.split('.').pop();
+    const ext = sourceFormat || source.split('.').pop();
 
     if (ext === "ifc") {
         log("Warning: Here be dragons; IFC conversion is very alpha!")
@@ -94,7 +114,13 @@ async function convert2xkt({
             break;
 
         case "ifc":
-            await parseIFCIntoXKTModel({data, xktModel, wasmPath: "./", log});
+            await parseIFCIntoXKTModel({
+                data,
+                xktModel,
+                wasmPath: "./",
+                outputObjectProperties,
+                log
+            });
             break;
 
         case "laz":
@@ -123,25 +149,30 @@ async function convert2xkt({
             break;
 
         default:
-            log('Error: unsupported source file format.');
+            log('Error: unsupported source format.');
             return -1;
     }
-
-    log('Writing XKT file: ' + output);
 
     xktModel.finalize();
 
     const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
     const xktContent = Buffer.from(xktArrayBuffer);
 
-    await fs.writeFile(output, xktContent);
-
     const targetFileSizeBytes = xktArrayBuffer.byteLength;
 
-    log("XKT version: 9");
+    log("Converted to: XKT v9");
     log("XKT size: " + (targetFileSizeBytes / 1000).toFixed(2) + " kB");
     log("Compression ratio: " + (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2));
     log("Conversion time: " + ((new Date() - startTime) / 1000.0).toFixed(2) + " s");
+
+    if (output) {
+        log('Writing XKT file: ' + output);
+        await fs.writeFile(output, xktContent);
+    }
+
+    if (outputXKT) {
+        await outputXKT(xktContent);
+    }
 
     return 0;
 }

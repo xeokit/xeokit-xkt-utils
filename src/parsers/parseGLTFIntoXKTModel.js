@@ -35,12 +35,12 @@ const WEBGL_TYPE_SIZES = {
  * [[Run this example](http://xeokit.github.io/xeokit-sdk/examples/#parsers_glTF_Duplex)]
  *
  * ````javascript
- * utils.loadJSON("./models/gltf/duplex/scene.gltf", async (gltfData) => {
+ * utils.loadJSON("./models/gltf/duplex/scene.gltf", async (data) => {
  *
  *     const xktModel = new XKTModel();
  *
  *     parseGLTFIntoXKTModel({
- *          gltfData,
+ *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
  *     });
@@ -50,7 +50,7 @@ const WEBGL_TYPE_SIZES = {
  * ````
  *
  * @param {Object} params Parsing parameters.
- * @param {Object} params.gltfData The glTF JSON.
+ * @param {Object} params.data The glTF JSON.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Boolean} [params.autoNormals=false] When true, the parser will ignore the glTF geometry normals, and the glTF
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
@@ -59,9 +59,9 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
  * @param {function} [params.log] Logging callback.
  */
-async function parseGLTFIntoXKTModel({gltfData, xktModel, autoNormals, getAttachment, log}) {
+async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, log}) {
     const ctx = {
-        gltf: gltfData,
+        gltf: data,
         getAttachment: getAttachment || (() => {
             throw new Error('You must define getAttachment() method to convert glTF with external resources')
         }),
