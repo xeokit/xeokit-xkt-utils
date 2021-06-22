@@ -44,7 +44,15 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildSphereGeometry">buildSphereGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildTorusGeometry">buildTorusGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePCDIntoXKTModel">parsePCDIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePLYIntoXKTModel">parsePLYIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseSTLIntoXKTModel">parseSTLIntoXKTModel</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -53,47 +61,53 @@
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
  * @desc Parses JSON metamodel into an {@link XKTModel}.
  *
- * @param {Object} metaModelData Metamodel data.
- * @param {XKTModel} xktModel XKTModel to parse into.
- * @param {*} [options] Parsing options.
- * @private
+ * @param {Object} params Parsing parameters.
+ * @param {JSON} params.metaModelData Metamodel data.
+ * @param {String[]} [params.excludeTypes] Types to exclude from parsing.
+ * @param {String[]} [params.includeTypes] Types to include in parsing.
+ * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {function} [params.log] Logging callback.
  */
-function parseMetaModelIntoXKTModel(metaModelData, xktModel, options = {}) {
+function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excludeTypes, log}) {
 
-    const projectId = metaModelData.projectId || &quot;none&quot;;
-    const revisionId = metaModelData.revisionId || &quot;none&quot;;
     const metaObjects = metaModelData.metaObjects || [];
-    const author = metaModelData.author;
-    const createdAt = metaModelData.createdAt;
-    const creatingApplication = metaModelData.creatingApplication;
-    const schema = metaModelData.schema;
 
-    let includeTypes;
-    if (options.includeTypes) {
-        includeTypes = {};
-        for (let i = 0, len = options.includeTypes.length; i &lt; len; i++) {
-            includeTypes[options.includeTypes[i]] = true;
+    xktModel.modelId = metaModelData.revisionId || &quot;&quot;; // HACK
+    xktModel.projectId = metaModelData.projectId || &quot;&quot;;
+    xktModel.revisionId = metaModelData.revisionId || &quot;&quot;;
+    xktModel.author = metaModelData.author || &quot;&quot;;
+    xktModel.createdAt = metaModelData.createdAt || &quot;&quot;;
+    xktModel.creatingApplication = metaModelData.creatingApplication || &quot;&quot;;
+    xktModel.schema = metaModelData.schema || &quot;&quot;;
+
+    let includeTypesMap;
+    if (includeTypes) {
+        includeTypesMap = {};
+        for (let i = 0, len = includeTypes.length; i &lt; len; i++) {
+            includeTypesMap[includeTypes[i]] = true;
         }
     }
 
-    let excludeTypes;
-    if (options.excludeTypes) {
-        excludeTypes = {};
-        for (let i = 0, len = options.excludeTypes.length; i &lt; len; i++) {
-            includeTypes[options.excludeTypes[i]] = true;
+    let excludeTypesMap;
+    if (excludeTypes) {
+        excludeTypesMap = {};
+        for (let i = 0, len = excludeTypes.length; i &lt; len; i++) {
+            includeTypesMap[excludeTypes[i]] = true;
         }
     }
+
+    let countMetaObjects = 0;
 
     for (let i = 0, len = metaObjects.length; i &lt; len; i++) {
 
         const metaObject = metaObjects[i];
         const type = metaObject.type;
 
-        if (excludeTypes &amp;&amp; excludeTypes[type]) {
+        if (excludeTypesMap &amp;&amp; excludeTypesMap[type]) {
             continue;
         }
 
-        if (includeTypes &amp;&amp; !includeTypes[type]) {
+        if (includeTypesMap &amp;&amp; !includeTypesMap[type]) {
             continue;
         }
 
@@ -102,7 +116,13 @@ function parseMetaModelIntoXKTModel(metaModelData, xktModel, options = {}) {
             metaObjectType: metaObject.type,
             metaObjectName: metaObject.name,
             parentMetaObjectId: metaObject.parent
-        })
+        });
+
+        countMetaObjects++;
+    }
+
+    if (log) {
+        log(&quot;Converted meta objects: &quot; + countMetaObjects);
     }
 }
 

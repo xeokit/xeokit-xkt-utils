@@ -44,7 +44,15 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildSphereGeometry">buildSphereGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildTorusGeometry">buildTorusGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePCDIntoXKTModel">parsePCDIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePLYIntoXKTModel">parsePLYIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseSTLIntoXKTModel">parseSTLIntoXKTModel</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -73,12 +81,13 @@ class XKTMetaObject {
     /**
      * @private
      * @param metaObjectId
+     * @param propertySetId
      * @param metaObjectType
      * @param metaObjectName
      * @param metaObjectIndex
      * @param parentMetaObjectId
      */
-    constructor(metaObjectId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId) {
+    constructor(metaObjectId, propertySetId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId) {
 
         /**
          * Unique ID of this ````XKTMetaObject```` in {@link XKTModel#metaObjects}.
@@ -92,6 +101,16 @@ class XKTMetaObject {
          * @type {String}
          */
         this.metaObjectId = metaObjectId;
+
+        /**
+         * Unique ID of an external property set for this ````XKTMetaObject````.
+         *
+         * We only store basic structural metadata in the XKT, and store object property sets externally,
+         * because they tend to be large and application-specific and would bloat the XKT file.
+         *
+         * @type {String}
+         */
+        this.propertySetId = null;
 
         /**
          * Indicates the XKTMetaObject meta object type.
@@ -121,9 +140,9 @@ class XKTMetaObject {
         /**
          * The parent XKTMetaObject, if any.
          *
-         * If there is no parent, then this defaults to the value of {@link XKTMetaObject#metaObjectId}.
+         * Will be null if there is no parent.
          *
-         * @type {XKTMetaObject|null}
+         * @type {String}
          */
         this.parentMetaObjectId = parentMetaObjectId;
     }

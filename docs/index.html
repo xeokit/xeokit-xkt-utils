@@ -44,19 +44,28 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildSphereGeometry">buildSphereGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildTorusGeometry">buildTorusGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePCDIntoXKTModel">parsePCDIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePLYIntoXKTModel">parsePLYIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseSTLIntoXKTModel">parseSTLIntoXKTModel</a></span></span></li>
 </ul>
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://percy.io/73524691/xeokit-xkt-utils"><img src="https://percy.io/static/images/percy-badge.svg" alt="This project is using Percy.io for visual regression testing."></a>
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="xeokit-xkt-utils">xeokit-xkt-utils</h1><p><a href="https://twitter.com/xeolabs"><img src="https://img.shields.io/twitter/follow/xeolabs?style=social" alt="Twitter Follow"></a>
+<a href="https://percy.io/73524691/xeokit-xkt-utils"><img src="https://percy.io/static/images/percy-badge.svg" alt="This project is using Percy.io for visual regression testing."></a>
 <a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
 <p>A JavaScript toolkit for creating <a href="https://github.com/xeokit/xeokit-xkt-utils/blob/master/XKT_V8.md"><code>XKT</code></a> model
 files for loading into <a href="http://xeokit.io">xeokit</a>.</p>
 <p><code>XKT</code> is xeokit&apos;s native geometry file format, which allows us to rapidly load complex, double-precision models
-over the Web and into a xeokit viewer. Using this toolkit in either browser or node, we can convert glTF
-into <code>XKT</code>, and can even generate <code>XKT</code>
-files programmatically.</p>
+over the Web and into a xeokit viewer.</p>
+<p>Using this toolkit in either browser or node, we can convert various source formats (eg. IFC, glTF, LAZ)
+into <code>XKT</code>, and can even generate <code>XKT</code> files programmatically.</p>
 <p>This toolkit is currently used within the <a href="https://github.com/xeokit/xeokit-gltf-to-xkt">xeokit-gltf-to-xkt</a> tool to
 convert glTF to <code>XKT</code>.</p>
 <p><a href="https://xeokit.github.io/xeokit-xkt-utils/tests/#generate_buildGeometries"><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></a></p>
@@ -81,19 +90,133 @@ convert glTF to <code>XKT</code>.</p>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/tests">Demos</a></li>
 <li><a href="https://percy.io/73524691/xeokit-xkt-utils">Automated Tests</a></li>
 </ul>
-<h2 id="features">Features</h2><ul>
+<h2 id="converter-tool">Converter Tool</h2><h3 id="performance">Performance</h3><table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Objects</th>
+<th>Triangles</th>
+<th>Vertices</th>
+<th>Source kB</th>
+<th>XKT kB</th>
+<th>Compression</th>
+<th>Convert Secs</th>
+<th>Load Secs</th>
+<th>FPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></td>
+<td>40</td>
+<td>613</td>
+<td>1801</td>
+<td>112.76</td>
+<td>6.43</td>
+<td>17.54</td>
+<td>0.30</td>
+<td>0.11</td>
+<td>28</td>
+</tr>
+<tr>
+<td><img src="https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png" alt="Spatial partitioning"></td>
+<td>40</td>
+<td>613</td>
+<td>1801</td>
+<td>113.26</td>
+<td>6.43</td>
+<td>17.63</td>
+<td>0.23</td>
+<td>0.08</td>
+<td>29</td>
+</tr>
+</tbody>
+</table>
+<h3 id="supported-formats">Supported Formats</h3><ul>
+<li>glTF</li>
+<li>CityJSON</li>
+<li>3DXML</li>
+<li>IFC</li>
+<li>OBJ</li>
+<li>STL</li>
+<li>LAZ/LAS</li>
+<li>PCL</li>
+</ul>
+<h3 id="usage-examples">Usage Examples</h3><h4 id="node-js">Node.js</h4><pre><code class="lang-javascript"><code class="source-code prettyprint">const convert2xkt = require(&apos;./dist/convert2xkt.cjs.js&apos;);
+
+const result = await convert2xkt({
+    source: &quot;rme_advanced_sample_project.ifc&quot;,
+    output: &quot;rme_advanced_sample_project.ifc.xkt&quot;,
+    log: (msg) =&gt; {
+        console.log(msg)
+    }
+});
+
+if (result &lt; 0) {
+    console.error(&quot;Conversion failed - see log for details&quot;)
+}</code>
+</code></pre>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">await convert2xkt({
+
+  // source: &quot;rme_advanced_sample_project.ifc&quot;,
+
+    sourceData: ifcData,
+
+    outputXKT: (xktData) =&gt; {
+
+    },
+    outputObjectProperties: (id, props) =&gt; {
+
+    },
+    log: (msg) =&gt; {
+        console.log(msg)
+    }
+});
+</code>
+</code></pre>
+<h4 id="cli">CLI</h4><p>Let&apos;s convert an IFC file to XKT, with logging enabled:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">convert2xkt.js -s rme_advanced_sample_project.ifc -o rme_advanced_sample_project.ifc.xkt -l</code>
+</code></pre>
+<p>Console logging output:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">Reading input file: rme_advanced_sample_project.ifc
+Input file size: 35309.94 kB
+Converting...
+Converted objects: 6442
+Converted geometries: 3897
+Writing XKT file: rme_advanced_sample_project.ifc.xkt
+XKT version: 9
+XKT size: 1632.98 kB
+Compression ratio: 21.62
+Conversion time: 74.31 s</code>
+</code></pre>
+<h3 id="converting-gltf">Converting glTF</h3><h3 id="converting-point-clouds">Converting Point Clouds</h3><h3 id="converting-3dxml">Converting 3DXML</h3><h3 id="converting-cityjson">Converting CityJSON</h3><pre><code class="lang-bash"><code class="source-code prettyprint">convert2xkt.js -s VM05_2009.json -o VM05_2009.json.xkt -l</code>
+</code></pre>
+<p>Console output:</p>
+<pre><code class="lang-bash"><code class="source-code prettyprint">Reading input file: tests/models/cityjson/VM05_2009.json
+Input file size: 5950.85 kB
+Converting...
+Converting CityJSON 1.0
+Converted objects: 294
+Converted geometries: 294
+Writing XKT file: VM05_2009.json.xkt
+XKT version: 8
+XKT size: 519.13 kB
+Compression ratio: 11.46
+Conversion time: 1.20 s</code>
+</code></pre>
+<h2 id="javascript-api">JavaScript API</h2><h3 id="features">Features</h3><ul>
 <li>A JavaScript document model that represents an XKT file</li>
-<li>Parse glTF into the document model</li>
+<li>Parse various source model file formats into the document model</li>
 <li>Programmatically generate geometry within the document model</li>
-<li>Define optional metadata within the document model (eg. an IFC element hierarchy)</li>
+<li>Define optional metadata within the document model</li>
 <li>Serialize the document model to an array buffer</li>
 <li>Save the array buffer as an XKT file</li>
 </ul>
 <p>Then:</p>
 <ul>
-<li>Load the XKT (with optional metadata) into a xeokit viewer, to view the model in the browser.</li>
+<li>Load the XKT into a xeokit viewer, to view the model in the browser.</li>
 </ul>
-<h2 id="javascript-api">JavaScript API</h2><h4 id="xktmodel">XKTModel</h4><p>At the center of <code>xeokit-xkt-utils</code> is
+<h3 id="xktmodel">XKTModel</h3><p>At the center of <code>xeokit-xkt-utils</code> is
 the  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong><code>XKTModel</code></strong></a>
 class, which represents an <code>XKT</code> model.</p>
 <p><code>XKTModel</code> provides builder methods, with which we can programmatically populate it with 3D objects.</p>
@@ -109,7 +232,7 @@ loads metamodel JSON into an <code>XKTModel</code>.</li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><strong><code>writeXKTModelToArrayBuffer</code></strong></a>
 serializes an <code>XKTModel</code> to an <code>ArrayBuffer</code>.</li>
 </ul>
-<h4 id="building-an-xktmodel">Building an XKTModel</h4><p>To demonstrate the API, let&apos;s
+<h3 id="building-an-xktmodel">Building an XKTModel</h3><p>To demonstrate the API, let&apos;s
 use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> &apos;s
 builder methods to programmatically build a model that resembles the screenshot below. Then we&apos;ll serialize
 the <code>XKTModel</code> to an
@@ -284,14 +407,14 @@ our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/X
 need to finalize it. Then it&apos;s ready to use.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">xktModel.finalize();</code>
 </code></pre>
-<h4 id="serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</h4><p>Next, we&apos;ll
+<h3 id="serializing-the-xktmodel-to-an-arraybuffer">Serializing the XKTModel to an ArrayBuffer</h3><p>Next, we&apos;ll
 use  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><code>writeXKTModelToArrayBuffer</code></a>
 to serialize
 our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to
 an <code>ArrayBuffer</code>.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);</code>
 </code></pre>
-<h4 id="loading-the-arraybuffer-into-a-viewer">Loading the ArrayBuffer into a Viewer</h4><p>Let&apos;s now create a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>,
+<h3 id="loading-the-arraybuffer-into-a-viewer">Loading the ArrayBuffer into a Viewer</h3><p>Let&apos;s now create a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>,
 then load the <code>ArrayBuffer</code> into it using
 an <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html"><code>XKTLoaderPlugin</code></a>
 .</p>
@@ -310,7 +433,43 @@ const model = xktLoader.load({
 <p>Finally, let&apos;s fit the whole model in view.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">viewer.cameraFlight.flyTo(model);</code>
 </code></pre>
-<h4 id="loading-gltf-into-an-xktmodel">Loading glTF into an XKTModel</h4><p>Let&apos;s
+<h3 id="loading-ifc-into-an-xktmodel">Loading IFC into an XKTModel</h3><p>Let&apos;s
+use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel"><code>parseIFCIntoXKTModel</code></a>
+to import IFC into
+an <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>.</p>
+<p>As before, we&apos;ll also use the classes and functions introduced in the previous examples to serialize
+the <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to
+an <code>ArrayBuffer</code>, then load it into
+a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>.</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const viewer = new Viewer({
+    canvasId: &quot;myCanvas&quot;
+});
+
+const xktLoader = new XKTLoaderPlugin(viewer);
+
+utils.loadArraybuffer(&quot;./models/ifc/rac_advanced_sample_project.ifc&quot;, async (data) =&gt; {
+
+        const xktModel = new XKTModel();
+
+        parseIFCIntoXKTModel({data, xktModel, wasmPath: &quot;../dist/&quot;}).then(() =&gt; {
+
+            xktModel.finalize();
+
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+            xktLoader.load({
+                id: &quot;myModel&quot;,
+                xkt: xktArrayBuffer,
+                edges: true
+            });
+
+            viewer.cameraFlight.flyTo(viewer.scene);
+        });
+    },
+    (errMsg) =&gt; {
+    });</code>
+</code></pre>
+<h3 id="loading-gltf-into-an-xktmodel">Loading glTF into an XKTModel</h3><p>Let&apos;s
 use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel"><code>parseGLTFIntoXKTModel</code></a>
 to import glTF into
 an <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>.</p>
@@ -328,7 +487,9 @@ utils.loadJSON(&quot;./models/gltf/MAP/MAP.gltf&quot;, (json) =&gt; {
 
         const xktModel = new XKTModel();
 
-        parseGLTFIntoXKTModel(json, xktModel).then(() =&gt; {
+        parseGLTFIntoXKTModel({gltfData: json, xktModel: xktModel}).then(() =&gt; {
+
+            xktModel.finalize();
 
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
@@ -345,13 +506,13 @@ utils.loadJSON(&quot;./models/gltf/MAP/MAP.gltf&quot;, (json) =&gt; {
     (errMsg) =&gt; {
     });</code>
 </code></pre>
-<h4 id="loading-stl-into-an-xktmodel">Loading STL into an XKTModel</h4><p>Let&apos;s
+<h3 id="loading-stl-into-an-xktmodel">Loading STL into an XKTModel</h3><p>Let&apos;s
 use <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel"><code>parseSTLIntoXKTModel</code></a>
 to import STL into
 an <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a>.</p>
 <p>As before, we&apos;ll also use the classes and functions introduced in the previous examples to serialize
 the <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to
-an <code>ArrayBuffer</code>, then validate the <code>ArrayBuffer</code> and load it into
+an <code>ArrayBuffer</code>, then load it into
 a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>.</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">const viewer = new Viewer({
     canvasId: &quot;myCanvas&quot;
@@ -363,11 +524,11 @@ utils.loadJSON(&quot;./models/stl/binary/spurGear.stl&quot;, (json) =&gt; {
 
         const xktModel = new XKTModel();
 
-        parseSTLIntoXKTModel(json, xktModel).then(() =&gt; {
+        parseSTLIntoXKTModel({stlData: json, xktModel: xktModel}).then(() =&gt; {
+
+            xktModel.finalize();
 
             const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
-
-            const xktArrayBufferValid = validateXKTArrayBuffer(xktArrayBuffer, xktModel);
 
             xktLoader.load({
                 id: &quot;myModel&quot;,
