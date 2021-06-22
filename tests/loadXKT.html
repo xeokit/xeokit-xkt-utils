@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>convert2xkt Visual Test Page</title>
+
+    <style>
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-size: 15px;
+            line-height: 1.50;
+            color: #000000;
+            background-color: rgba(0, 0, 0, 0);
+            text-decoration: none;
+            word-spacing: normal;
+            text-align: left;
+            letter-spacing: 0;
+            -webkit-font-smoothing: antialiased;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #myCanvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            background: lightblue;
+        }
+
+        /* ----------------------------------------------------------------------------------------------------------*/
+        /* TreeViewPlugin */
+        /* ----------------------------------------------------------------------------------------------------------*/
+
+        #treeViewContainer {
+            pointer-events: all;
+            height: 100%;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: black;
+            top: 80px;
+            z-index: 200000;
+            float: left;
+            left: 0;
+            padding-left: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 15px;
+            user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            width: 350px;
+        }
+
+        #treeViewContainer ul {
+            list-style: none;
+            padding-left: 1.75em;
+            pointer-events: none;
+        }
+
+        #treeViewContainer ul li {
+            position: relative;
+            width: 500px;
+            pointer-events: none;
+            padding-top: 3px;
+            padding-bottom: 3px;
+            vertical-align: middle;
+        }
+
+        #treeViewContainer ul li a {
+            background-color: #eee;
+            border-radius: 50%;
+            color: #000;
+            display: inline-block;
+            height: 1.5em;
+            left: -1.5em;
+            position: absolute;
+            text-align: center;
+            text-decoration: none;
+            width: 1.5em;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li a.plus {
+            background-color: #ded;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li a.minus {
+            background-color: #eee;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li a:active {
+            top: 1px;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li span:hover {
+            color: white;
+            cursor: pointer;
+            background: black;
+            padding-left: 2px;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li span {
+            display: inline-block;
+            width: calc(100% - 50px);
+            padding-left: 2px;
+            pointer-events: all;
+            height: 23px;
+        }
+
+        #treeViewContainer .highlighted-node { /* Appearance of node highlighted with TreeViewPlugin#showNode() */
+            border: black solid 1px;
+            background: yellow;
+            color: black;
+            padding-left: 1px;
+            padding-right: 5px;
+            pointer-events: all;
+        }
+
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas"></canvas>
+
+<!--<div id="treeViewContainer"></div>-->
+
+</body>
+
+<script type="module">
+
+    import {
+        TreeViewPlugin,
+        utils,
+        Viewer,
+        XKTLoaderPlugin
+    } from "./libs/xeokit-sdk.es.js";
+
+    import {getRequestParams, signalTestComplete} from "./libs/utils.js";
+
+    const modelId = getRequestParams()["modelId"];
+
+    if (!modelId) {
+        throw "Page param expected: modelId";
+    }
+
+    const viewer = new Viewer({
+        canvasId: "myCanvas",
+        transparent: true,
+        saoEnabled: true
+    });
+
+    viewer.scene.camera.eye = [15.843945885131395, 11.178365963264165, 15.335366124584503];
+    viewer.scene.camera.look = [7.966524811730224, 1.7646620314077617, 8.469692299970651];
+    viewer.scene.camera.up = [-0.5045771807575089, 0.7429691949294307, -0.43977112688842773];
+
+    viewer.camera.perspective.far = 10000000;
+
+    const treeView = new TreeViewPlugin(viewer, {
+        containerElement: document.getElementById("treeViewContainer"),
+        autoExpandDepth: 1
+    });
+
+    class MyXKTDataSource {
+
+        constructor() {
+
+        }
+
+        getMetaModel(metaModelSrc, ok, error) {
+            utils.loadJSON(metaModelSrc,
+                (json) => {
+                    ok(json);
+                },
+                function (errMsg) {
+                    error(errMsg);
+                });
+        }
+
+        getXKT(src, ok, error) {
+            utils.loadArraybuffer("./models/xkt/" + src + "/model.xkt",
+                (arraybuffer) => {
+                    ok(arraybuffer);
+                },
+                function (errMsg) {
+                    error(errMsg);
+                });
+        }
+
+        async getProperties(src, propertySetId) {
+            utils.loadJSON("./models/xkt/" + src + "/props/" + propertySetId + ".json",
+                (json) => {
+                    //ok(json);
+                },
+                function (errMsg) {
+                    //error(errMsg);
+                });
+        }
+    }
+
+    const xktLoader = new XKTLoaderPlugin(viewer, {
+        dataSource: new MyXKTDataSource()
+    });
+
+    const t0 = performance.now();
+
+    const model = xktLoader.load({
+        id: "myModel",
+        src: modelId,
+        saoEnabled: false,
+        edges: false
+    });
+
+    model.on("loaded", () => {
+
+        const t1 = performance.now();
+
+        const loadingTime = (Math.floor(t1 - t0) / 1000.0)
+
+        viewer.cameraFlight.jumpTo(model);
+
+        let yaw = 0;
+        let frameCount = 0;
+
+        const t2 = performance.now();
+
+        const render =() => {
+
+            viewer.scene.camera.orbitYaw(1.0);
+
+            yaw += 1;
+            frameCount++;
+
+            if (yaw > 180) {
+
+                const t3 = performance.now();
+                const renderTimeSecs = (Math.floor(t3 - t2) / 1000.0);
+                const fps = frameCount / renderTimeSecs;
+
+                signalTestComplete({
+                    fps: Math.round(fps),
+                    loadingTime: loadingTime.toFixed(2)
+                });
+            } else {
+                requestAnimationFrame(render);
+            }
+        }
+
+        requestAnimationFrame(render);
+    });
+
+    javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+</script>
+</html>
