@@ -45,9 +45,13 @@ const tempVec3c = math.vec3();
  * @param {Object} params Parsing params.
  * @param {Object} params.data CityJSON data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y
+ * axis "up", if neccessary.
+ * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseCityJSONIntoXKTModel({data, xktModel, log}) {
+async function parseCityJSONIntoXKTModel({data, xktModel, rotateX=true, outputObjectProperties, stats, log}) {
 
     if (!data) {
         throw "Argument expected: data";
@@ -62,19 +66,22 @@ async function parseCityJSONIntoXKTModel({data, xktModel, log}) {
     }
 
     const vertices = data.transform // Avoid side effects - don't modify the CityJSON data
-        ? transformVertices(data.vertices, data.transform)
+        ? transformVertices(data.vertices, data.transform, rotateX)
         : data.vertices;
 
     const ctx = {
         data,
         vertices,
         xktModel,
+        outputObjectProperties,
         log: (log || function (msg) {
         }),
         nextId: 0,
         stats: {
-            convertedObjects: 0,
-            convertedGeometries: 0
+            numObjects: 0,
+            numGeometries: 0,
+            numTriangles: 0,
+            numVertices: 0
         }
     };
 
@@ -82,13 +89,26 @@ async function parseCityJSONIntoXKTModel({data, xktModel, log}) {
 
     ctx.log("Converting " + ctx.xktModel.schema);
 
+    if (rotateX) {
+        ctx.log("Rotating model about X-axis");
+    }
+
     await parseCityJSON(ctx);
 
-    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
-    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
+    ctx.log("Converted objects: " + ctx.stats.numObjects);
+    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+    if (stats) {
+        stats.numTriangles = ctx.stats.numTriangles;
+        stats.numVertices = ctx.stats.numVertices;
+        stats.numObjects = ctx.stats.numObjects;
+        stats.numGeometries = ctx.stats.numGeometries;
+    }
 }
 
-function transformVertices(vertices, transform) {
+function transformVertices(vertices, transform, rotateX) {
     const transformedVertices = [];
     const scale = transform.scale || math.vec3([1, 1, 1]);
     const translate = transform.translate || math.vec3([0, 0, 0]);
@@ -96,7 +116,11 @@ function transformVertices(vertices, transform) {
         const x = (vertices[i][0] * scale[0]) + translate[0];
         const y = (vertices[i][1] * scale[1]) + translate[1];
         const z = (vertices[i][2] * scale[2]) + translate[2];
-        transformedVertices.push([x, y, z]);
+        if (rotateX) {
+            transformedVertices.push([x, z, y]);
+        } else {
+            transformedVertices.push([x, y, z]);
+        }
     }
     return transformedVertices;
 }
@@ -124,15 +148,27 @@ function parseCityJSON(ctx) {
 function parseCityObject(ctx, cityObject, objectId) {
 
     const data = ctx.data;
+
+    const metaObjectId = objectId;
+    const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
     const metaObjectType = cityObject.type;
+    const metaObjectName = metaObjectType + " : " + objectId;
+    const parentMetaObjectId = cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObject.metaObjectId;
+
     const xktModel = ctx.xktModel;
 
     xktModel.createMetaObject({
-        metaObjectId: objectId,
-        metaObjectName: metaObjectType + " : " + objectId,
-        metaObjectType: metaObjectType,
-        parentMetaObjectId: cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObject.metaObjectId
+        metaObjectId,
+        propertySetId,
+        metaObjectName,
+        metaObjectType,
+        parentMetaObjectId
     });
+
+    if (ctx.outputObjectProperties) {
+        const json = {};
+        ctx.outputObjectProperties(propertySetId, json);
+    }
 
     if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
         return;
@@ -188,7 +224,7 @@ function parseCityObject(ctx, cityObject, objectId) {
             entityId: objectId,
             meshIds: meshIds
         });
-        ctx.stats.convertedObjects++;
+        ctx.stats.numObjects++;
     }
 }
 
@@ -334,7 +370,9 @@ function parseSurfacesWithOwnMaterials(ctx, surfaceMaterials, surfaces, meshIds)
 
         meshIds.push(meshId);
 
-        ctx.stats.convertedGeometries++;
+        ctx.stats.numGeometries++;
+        ctx.stats.numVertices += geometryCfg.positions.length / 3;
+        ctx.stats.numTriangles += geometryCfg.indices.length / 3;
     }
 }
 
@@ -405,7 +443,9 @@ function parseGeometrySurfacesWithSharedMaterial(ctx, geometry, objectMaterial, 
 
     meshIds.push(meshId);
 
-    ctx.stats.convertedGeometries++;
+    ctx.stats.numGeometries++;
+    ctx.stats.numVertices += geometryCfg.positions.length / 3;
+    ctx.stats.numTriangles += geometryCfg.indices.length / 3;
 }
 
 function parseSurfacesWithSharedMaterial(ctx, surfaces, sharedIndices, primitiveCfg) {

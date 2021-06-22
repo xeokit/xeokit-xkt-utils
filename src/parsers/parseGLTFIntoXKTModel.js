@@ -57,9 +57,10 @@ const WEBGL_TYPE_SIZES = {
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
  * of the glTF.
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, log}) {
+async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
     const ctx = {
         gltf: data,
         getAttachment: getAttachment || (() => {
@@ -74,8 +75,10 @@ async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment
         nextMeshId: 0,
         nextDefaultEntityId: 0,
         stats: {
-            convertedObjects: 0,
-            convertedGeometries: 0
+            numObjects: 0,
+            numGeometries: 0,
+            numTriangles: 0,
+            numVertices: 0
         }
     };
     await parseBuffers(ctx);
@@ -84,8 +87,17 @@ async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment
     parseMaterials(ctx);
     parseDefaultScene(ctx);
 
-    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
-    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
+    ctx.log("Converted objects: " + ctx.stats.numObjects);
+    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+    if (stats) {
+        stats.numTriangles = ctx.stats.numTriangles;
+        stats.numVertices = ctx.stats.numVertices;
+        stats.numObjects = ctx.stats.numObjects;
+        stats.numGeometries = ctx.stats.numGeometries;
+    }
 }
 
 async function parseBuffers(ctx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
@@ -348,7 +360,9 @@ function parseNode(ctx, glTFNode, matrix) {
                             indices: geometryArrays.indices
                         });
 
-                        ctx.stats.convertedGeometries++;
+                        ctx.stats.numGeometries++;
+                        ctx.stats.numVertices = geometryArrays.positions ? geometryArrays.positions.length/3 : 0;
+                        ctx.stats.numTriangles = geometryArrays.indices ? geometryArrays.indices.length/3 : 0;
 
                         ctx.geometryCreated[xktGeometryId] = true;
                     }
@@ -375,7 +389,7 @@ function parseNode(ctx, glTFNode, matrix) {
                     meshIds: xktMeshIds
                 });
 
-                ctx.stats.convertedObjects++;
+                ctx.stats.numObjects++;
             }
         }
     }

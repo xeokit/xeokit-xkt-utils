@@ -30,9 +30,11 @@ import {LASLoader} from '@loaders.gl/las';
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer} params.data LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if necessary.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseLASIntoXKTModel({data, xktModel, log}) {
+async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}) {
 
     if (!data) {
         throw "Argument expected: data";
@@ -60,6 +62,19 @@ async function parseLASIntoXKTModel({data, xktModel, log}) {
     const positionsValue = attributes.POSITION.value;
     const colorsValue = attributes.COLOR_0.value;
 
+    if (rotateX) {
+        if (log) {
+            log("Rotating model about X-axis");
+        }
+        if (positionsValue) {
+            for (let i = 0, len = positionsValue.length; i < len; i += 3) {
+                const temp = positionsValue[i + 1];
+                positionsValue[i + 1] = positionsValue[i + 2];
+                positionsValue[i + 2] = temp;
+            }
+        }
+    }
+
     xktModel.createGeometry({
         geometryId: "pointsGeometry",
         primitiveType: "points",
@@ -78,7 +93,15 @@ async function parseLASIntoXKTModel({data, xktModel, log}) {
     });
 
     if (log) {
+        log("Converted objects: 1");
+        log("Converted geometries: 1");
         log("Converted points: " + (positionsValue.length / 3));
+    }
+
+    if (stats) {
+        stats.numObjects = 1;
+        stats.numGeometries = 1;
+        stats.numVertices = positionsValue.length / 3;
     }
 }
 

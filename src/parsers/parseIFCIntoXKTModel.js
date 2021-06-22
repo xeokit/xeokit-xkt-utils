@@ -41,9 +41,18 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * and we always want to minimize IFC model size wherever possible.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseIFCIntoXKTModel({data, xktModel, autoNormals = true, wasmPath, outputObjectProperties, log}) {
+async function parseIFCIntoXKTModel({
+                                        data,
+                                        xktModel,
+                                        autoNormals = true,
+                                        wasmPath,
+                                        outputObjectProperties,
+                                        stats,
+                                        log
+                                    }) {
 
     if (!data) {
         throw "Argument expected: data";
@@ -79,8 +88,10 @@ async function parseIFCIntoXKTModel({data, xktModel, autoNormals = true, wasmPat
         }),
         nextId: 0,
         stats: {
-            convertedObjects: 0,
-            convertedGeometries: 0
+            numTriangles: 0,
+            numVertices: 0,
+            numObjects: 0,
+            numGeometries: 0
         }
     };
 
@@ -96,8 +107,17 @@ async function parseIFCIntoXKTModel({data, xktModel, autoNormals = true, wasmPat
 
     parseMetadata(ctx);
 
-    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
-    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
+    ctx.log("Converted objects: " + ctx.stats.numObjects);
+    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+    if (stats) {
+        stats.numTriangles = ctx.stats.numTriangles;
+        stats.numVertices = ctx.stats.numVertices;
+        stats.numObjects = ctx.stats.numObjects;
+        stats.numGeometries = ctx.stats.numGeometries;
+    }
 }
 
 function parseGeometry(ctx) {
@@ -156,7 +176,9 @@ function parseGeometry(ctx) {
                     indices: indices
                 });
 
-                ctx.stats.convertedGeometries++;
+                ctx.stats.numGeometries++;
+                ctx.stats.numVertices += (positions.length / 3);
+                ctx.stats.numTriangles += (indices.length / 3);
             }
 
             const meshId = ("mesh" + ctx.nextId++);
@@ -177,7 +199,7 @@ function parseGeometry(ctx) {
             meshIds: meshIds
         });
 
-        ctx.stats.convertedObjects++;
+        ctx.stats.numObjects++;
     }
 }
 
@@ -220,12 +242,22 @@ function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
 function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
 
     const metaObjectId = ifcElement.GlobalId.value;
+    const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
     const metaObjectType = ifcElement.__proto__.constructor.name;
     const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
 
-    ctx.xktModel.createMetaObject({metaObjectId, metaObjectType, metaObjectName, parentMetaObjectId});
+    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
 
     if (ctx.outputObjectProperties) {
+
+        // const typeId = getAllRelatedItemsOfType(
+        //     modelID,
+        //     elementID,
+        //     IFCRELDEFINESBYTYPE,
+        //     'RelatedObjects',
+        //     'RelatingType'
+        // );
+        // return typeId.map((id) => this.state.api.GetLine(modelID, id, recursive));
 
         const json = {
             id: metaObjectId,
@@ -233,7 +265,11 @@ function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
             name: metaObjectName
         };
 
-        ctx.outputObjectProperties(metaObjectId, json);
+        if (parentMetaObjectId) {
+            json.parent = parentMetaObjectId;
+        }
+
+        ctx.outputObjectProperties(propertySetId, json);
     }
 }
 

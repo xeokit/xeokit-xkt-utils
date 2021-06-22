@@ -17,9 +17,10 @@ const supportedSchemas = ["4.2"];
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
  * of the 3DXML model. This is ````false```` by default because CAD models tend to prefer smooth shading.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, log}) {
+async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, stats={}, log}) {
 
     const isBrowser = (typeof window !== 'undefined');
 
@@ -65,10 +66,28 @@ async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=fa
             }
         },
         nextId: 0,
-        materials: {}
+        materials: {},
+        stats: {
+            numObjects: 0,
+            numGeometries: 0,
+            numTriangles: 0,
+            numVertices: 0
+        }
     };
 
     await parseDocument(ctx);
+
+    ctx.log("Converted objects: " + ctx.stats.numObjects);
+    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+    if (stats) {
+        stats.numTriangles = ctx.stats.numTriangles;
+        stats.numVertices = ctx.stats.numVertices;
+        stats.numObjects = ctx.stats.numObjects;
+        stats.numGeometries = ctx.stats.numGeometries;
+    }
 }
 
 async function parseDocument(ctx) {
@@ -383,6 +402,8 @@ function parseInstanceRep(ctx, instanceRep, matrix) {
                     meshIds: [meshId]
                 });
 
+                ctx.stats.numObjects++;
+
                 // ctx.xktModel.createMetaObject({
                 //     metaObjectId: entityId,
                 //     metaObjectType: "Default",
@@ -547,6 +568,10 @@ function parse3DRepRep(ctx, node, result) {
             color: meshesResult.color || [1.0, 1.0, 1.0, 1.0],
             materialId: meshesResult.materialId
         };
+
+        ctx.stats.numGeometries++;
+        ctx.stats.numVertices += meshesResult.positions ? meshesResult.positions.length/3 : 0;
+        ctx.stats.numTriangles += meshesResult.indices ? meshesResult.indices.length/3 : 0;
     }
 }
 

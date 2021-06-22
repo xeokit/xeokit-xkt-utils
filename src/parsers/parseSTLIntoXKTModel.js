@@ -41,6 +41,7 @@ import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
  * @param {Number} [params.smoothNormalsAngleThreshold=20] This is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
  * @param {Boolean} [params.splitMeshes=true] When true, creates a separate {@link XKTEntity} for each group of faces that share the same vertex colors. Only works with binary STL (ie. when ````data```` is an ArrayBuffer).
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseSTLIntoXKTModel({
@@ -50,6 +51,7 @@ async function parseSTLIntoXKTModel({
                                         smoothNormals,
                                         smoothNormalsAngleThreshold,
                                         xktModel,
+                                        stats,
                                         log
                                     }) {
     if (!data) {
@@ -71,8 +73,10 @@ async function parseSTLIntoXKTModel({
         log: (log || function (msg) {
         }),
         stats: {
-            convertedObjects: 0,
-            convertedGeometries: 0
+            numObjects: 0,
+            numGeometries: 0,
+            numTriangles: 0,
+            numVertices: 0
         }
     };
 
@@ -84,8 +88,17 @@ async function parseSTLIntoXKTModel({
         parseASCII(ctx, ensureString(data));
     }
 
-    ctx.log("Converted objects: " + ctx.stats.convertedObjects);
-    ctx.log("Converted geometries: " + ctx.stats.convertedGeometries);
+    ctx.log("Converted objects: " + ctx.stats.numObjects);
+    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+    if (stats) {
+        stats.numObjects = 1;
+        stats.numGeometries = 1;
+        stats.numTriangles = ctx.stats.numTriangles;
+        stats.numVertices = ctx.stats.numVertices;
+    }
 }
 
 function isBinary(data) {
@@ -274,8 +287,10 @@ function addMesh(ctx, positions, normals, colors) {
         meshIds: [meshId]
     });
 
-    ctx.stats.convertedGeometries++;
-    ctx.stats.convertedObjects++;
+    ctx.stats.numGeometries++;
+    ctx.stats.numObjects++;
+    ctx.stats.numVertices += positions.length / 3;
+    ctx.stats.numTriangles += indices.length / 3;
 }
 
 function ensureString(buffer) {

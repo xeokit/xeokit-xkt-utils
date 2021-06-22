@@ -26,9 +26,10 @@
  * @param {ArrayBuffer} params.data PCD file data.
  * @param {Boolean} [params.littleEndian=true] Whether PCD binary data is Little-Endian or Big-Endian.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
+ * @param {Object}[stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, log}) {
+function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log}) {
 
     const textData = decodeText(new Uint8Array(data));
 
@@ -146,6 +147,13 @@ function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, log}) {
     if (log) {
         log("Converted objects: 1");
         log("Converted geometries: 1");
+        log("Converted vertices: " + positions.length / 3);
+    }
+
+    if (stats) {
+        stats.numObjects = 1;
+        stats.numGeometries = 1;
+        stats.numVertices = positions.length / 3;
     }
 }
 
