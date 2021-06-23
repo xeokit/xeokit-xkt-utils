@@ -31,10 +31,6 @@
             background: lightblue;
         }
 
-        /* ----------------------------------------------------------------------------------------------------------*/
-        /* TreeViewPlugin */
-        /* ----------------------------------------------------------------------------------------------------------*/
-
         #treeViewContainer {
             pointer-events: all;
             height: 100%;
@@ -43,7 +39,7 @@
             position: absolute;
             background-color: rgba(255, 255, 255, 0.2);
             color: black;
-            top: 80px;
+            top: 0px;
             z-index: 200000;
             float: left;
             left: 0;
@@ -147,16 +143,18 @@
 
     import {getRequestParams, signalTestComplete} from "./libs/utils.js";
 
-    const modelId = getRequestParams()["modelId"];
+    const xktSrc = getRequestParams()["xktSrc"];
+    const treeView = getRequestParams()["treeView"];
 
-    if (!modelId) {
-        throw "Page param expected: modelId";
+    if (!xktSrc) {
+        throw "Page param expected: xktSrc";
     }
 
     const viewer = new Viewer({
         canvasId: "myCanvas",
         transparent: true,
-        saoEnabled: true
+        saoEnabled: false,
+        antialias: true
     });
 
     viewer.scene.camera.eye = [15.843945885131395, 11.178365963264165, 15.335366124584503];
@@ -165,10 +163,14 @@
 
     viewer.camera.perspective.far = 10000000;
 
-    const treeView = new TreeViewPlugin(viewer, {
-        containerElement: document.getElementById("treeViewContainer"),
-        autoExpandDepth: 1
-    });
+    // if (treeView !== "false") {
+    //     new TreeViewPlugin(viewer, {
+    //         containerElement: document.getElementById("treeViewContainer"),
+    //         autoExpandDepth: 2
+    //     });
+    // } else {
+    //     document.getElementById("treeViewContainer").outerHTML = "";
+    // }
 
     class MyXKTDataSource {
 
@@ -187,7 +189,7 @@
         }
 
         getXKT(src, ok, error) {
-            utils.loadArraybuffer("./models/xkt/" + src + "/model.xkt",
+            utils.loadArraybuffer(src,
                 (arraybuffer) => {
                     ok(arraybuffer);
                 },
@@ -196,15 +198,15 @@
                 });
         }
 
-        async getProperties(src, propertySetId) {
-            utils.loadJSON("./models/xkt/" + src + "/props/" + propertySetId + ".json",
-                (json) => {
-                    //ok(json);
-                },
-                function (errMsg) {
-                    //error(errMsg);
-                });
-        }
+        // async getProperties(src, propertySetId) {
+        //     utils.loadJSON("./models/xkt/" + src + "/props/" + propertySetId + ".json",
+        //         (json) => {
+        //             //ok(json);
+        //         },
+        //         function (errMsg) {
+        //             //error(errMsg);
+        //         });
+        // }
     }
 
     const xktLoader = new XKTLoaderPlugin(viewer, {
@@ -215,10 +217,13 @@
 
     const model = xktLoader.load({
         id: "myModel",
-        src: modelId,
-        saoEnabled: false,
-        edges: false
+        src: xktSrc,
+        saoEnabled: true,
+        edges: true
     });
+
+    viewer.scene.sao.enabled = false;
+    viewer.scene.edgeMaterial.edges = false;
 
     model.on("loaded", () => {
 
@@ -228,12 +233,11 @@
 
         viewer.cameraFlight.jumpTo(model);
 
+        let t2;
         let yaw = 0;
         let frameCount = 0;
 
-        const t2 = performance.now();
-
-        const render =() => {
+        const render = () => {
 
             viewer.scene.camera.orbitYaw(1.0);
 
@@ -246,18 +250,78 @@
                 const renderTimeSecs = (Math.floor(t3 - t2) / 1000.0);
                 const fps = frameCount / renderTimeSecs;
 
-                signalTestComplete({
-                    fps: Math.round(fps),
-                    loadingTime: loadingTime.toFixed(2)
-                });
+                setTimeout(()=>{
+                    viewer.scene.sao.enabled = true;
+                    viewer.scene.edgeMaterial.edges = true;
+
+                    signalTestComplete({
+                        fps: Math.round(fps),
+                        loadingTime: loadingTime.toFixed(2)
+                    });
+                }, 1000);
+
             } else {
                 requestAnimationFrame(render);
             }
         }
 
-        requestAnimationFrame(render);
+        setTimeout(() => {
+            t2 = performance.now();
+            requestAnimationFrame(render);
+        }, 2000);
+
     });
 
-    javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
+    // model.on("loaded", () => {
+    //
+    //     const t1 = performance.now();
+    //
+    //     const loadingTime = (Math.floor(t1 - t0) / 1000.0)
+    //
+    //     viewer.cameraFlight.jumpTo(model);
+    //
+    //     let t2;
+    //     let yaw = 0;
+    //     let frameCount = 0;
+    //
+    //
+    //     setTimeout(() => {
+    //
+    //         t2 = performance.now();
+    //
+    //         const onTick = viewer.scene.on("tick", () => {
+    //
+    //             viewer.scene.camera.orbitYaw(1.0);
+    //
+    //             yaw += 1;
+    //             frameCount++;
+    //
+    //             if (yaw > 180) {
+    //
+    //                 const t3 = performance.now();
+    //                 const renderTimeSecs = (Math.floor(t3 - t2) / 1000.0);
+    //                 const fps = frameCount / renderTimeSecs;
+    //
+    //                 setTimeout(() => {
+    //
+    //                     viewer.scene.off(onTick);
+    //
+    //                     viewer.scene.sao.enabled = true;
+    //                     viewer.scene.edgeMaterial.edges = true;
+    //
+    //                     signalTestComplete({
+    //                         fps: Math.round(fps),
+    //                         loadingTime: loadingTime.toFixed(2)
+    //                     });
+    //                 }, 1000);
+    //             }
+    //
+    //         });
+    //
+    //     }, 2000);
+
+    // });
+
+    // javascript:(function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//mrdoob.github.io/stats.js/build/stats.min.js';document.head.appendChild(script);})()
 </script>
 </html>
