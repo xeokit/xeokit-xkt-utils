@@ -361,8 +361,8 @@ function parseNode(ctx, glTFNode, matrix) {
                         });
 
                         ctx.stats.numGeometries++;
-                        ctx.stats.numVertices = geometryArrays.positions ? geometryArrays.positions.length/3 : 0;
-                        ctx.stats.numTriangles = geometryArrays.indices ? geometryArrays.indices.length/3 : 0;
+                        ctx.stats.numVertices += geometryArrays.positions ? geometryArrays.positions.length/3 : 0;
+                        ctx.stats.numTriangles += geometryArrays.indices ? geometryArrays.indices.length/3 : 0;
 
                         ctx.geometryCreated[xktGeometryId] = true;
                     }

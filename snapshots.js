@@ -324,7 +324,7 @@ function statsToMarkdown(testStats) {
     rows.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
     for (let modelId in modelStats) {
         const stats = modelStats[modelId];
-        rows.push(`| [![](./tests/models/xkt/${modelId}/screenshot/screenshot.png)](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} |`);
+        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/tests/models/xkt/${modelId}/screenshot/screenshot.png)](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} |`);
     }
     const markdown = rows.join("\n");
     return markdown;

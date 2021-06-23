@@ -16,14 +16,22 @@ const {
 } = require("../dist/xeokit-xkt-utils.cjs.js");
 
 /**
- * Converts an IFC file into an XKT file, plus optional per-object property sets.
+ * Converts model files into xeokit's native XKT format.
  *
- * @private
+ * Supported source formats are:
+ *
+ * * IFC (experimental),
+ * * CityJSON
+ * * 3DXML
+ * * glTF
+ * * LAZ & LAS
+ *
  * @param {Object} params Conversion parameters.
  * @param {String}[params.source] Path to source file. Alternative to ````sourceData````.
  * @param {ArrayBuffer|JSON}[params.sourceData] Source file data. Alternative to ````source````.
  * @param {String}[params.sourceFormat] Format of source file/data. Always needed with ````sourceData````, but not normally needed with ````source````, because convert2xkt will determine the format automatically from the file extension of ````source````.
- * @param {Object}[params.metamodel]
+ * @param {String}[params.metaModelSource] Path to source metaModel file. Alternative to ````metaModelData````.
+ * @param {ArrayBuffer|JSON}[params.metaModelData] Source file data. Alternative to ````metaModelSource````.
  * @param {String}[params.output] Path to destination XKT file.
  * @param {Function}[params.outputXKTModel] Callback to collect the ````XKTModel```` that is internally build by this method.
  * @param {Function}[params.outputXKT] Callback to collect XKT file data.
@@ -37,7 +45,8 @@ async function convert2xkt({
                                source,
                                sourceData,
                                sourceFormat,
-                               metamodel,
+                               metaModelSource,
+                               metaModelData,
                                output,
                                outputXKTModel,
                                outputXKT,
@@ -50,6 +59,10 @@ async function convert2xkt({
 
     if (!source && !sourceData) {
         throw "Argument expected: source or sourceData";
+    }
+
+    if (!sourceFormat && sourceData) {
+        throw "Argument expected: sourceFormat is required with sourceData";
     }
 
     if (!output && !outputXKTModel && !outputXKT) {
@@ -68,24 +81,22 @@ async function convert2xkt({
         log("Warning: Here be dragons; IFC conversion is very alpha!")
     }
 
-    let data;
-
-    try {
-        data = await fs.readFile(source);
-    } catch (err) {
-        log(err);
-        return -1;
+    if (!sourceData) {
+        try {
+            sourceData = await fs.readFile(source);
+        } catch (err) {
+            log(err);
+            return -1;
+        }
     }
 
-    const sourceFileSizeBytes = data.byteLength;
+    const sourceFileSizeBytes = sourceData.byteLength;
 
     log("Input file size: " + (sourceFileSizeBytes / 1000).toFixed(2) + " kB");
 
-    let metaModelData;
-
-    if (metamodel) {
+    if (!metaModelData && metaModelSource) {
         try {
-            const metaModelFileData = await fs.readFile(metamodel);
+            const metaModelFileData = await fs.readFile(metaModelSource);
             metaModelData = JSON.parse(metaModelFileData);
         } catch (err) {
             log(err);
@@ -93,20 +104,20 @@ async function convert2xkt({
         }
     }
 
+    log("Converting...");
+
     const xktModel = new XKTModel();
 
     if (metaModelData) {
         await parseMetaModelIntoXKTModel({metaModelData, xktModel});
     }
 
-    log("Converting...");
-
     switch (ext) {
 
         case "json":
 
             await parseCityJSONIntoXKTModel({
-                data: JSON.parse(data),
+                data: JSON.parse(sourceData),
                 xktModel,
                 outputObjectProperties,
                 stats,
@@ -120,7 +131,7 @@ async function convert2xkt({
             const gltfBasePath = source ? getBasePath(source) : "";
 
             await parseGLTFIntoXKTModel({
-                data: JSON.parse(data),
+                data: JSON.parse(sourceData),
                 xktModel,
                 getAttachment: async (name) => {
                     return fs.readFile(gltfBasePath + name);
@@ -133,7 +144,7 @@ async function convert2xkt({
         case "ifc":
 
             await parseIFCIntoXKTModel({
-                data,
+                data: sourceData,
                 xktModel,
                 wasmPath: "./",
                 outputObjectProperties,
@@ -146,7 +157,7 @@ async function convert2xkt({
         case "laz":
 
             await parseLASIntoXKTModel({
-                data,
+                data: sourceData,
                 xktModel,
                 stats,
                 rotateX,
@@ -158,7 +169,7 @@ async function convert2xkt({
         case "las":
 
             await parseLASIntoXKTModel({
-                data,
+                data: sourceData,
                 xktModel,
                 stats,
                 log
@@ -169,7 +180,7 @@ async function convert2xkt({
         case "pcd":
 
             await parsePCDIntoXKTModel({
-                data,
+                data: sourceData,
                 xktModel,
                 stats,
                 log
@@ -180,7 +191,7 @@ async function convert2xkt({
         case "ply":
 
             await parsePLYIntoXKTModel({
-                data,
+                data: sourceData,
                 xktModel,
                 stats,
                 log
@@ -191,7 +202,7 @@ async function convert2xkt({
         case "stl":
 
             await parseSTLIntoXKTModel({
-                data,
+                data: sourceData,
                 xktModel,
                 stats,
                 log
@@ -204,7 +215,7 @@ async function convert2xkt({
             const domParser = new DOMParser();
 
             await parse3DXMLIntoXKTModel({
-                data,
+                data: sourceData,
                 domParser,
                 xktModel,
                 outputObjectProperties,

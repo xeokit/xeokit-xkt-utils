@@ -158,9 +158,9 @@ function parseHeader(ctx, node) {
             case "SchemaVersion":
                 metaData.schemaVersion = child.children[0];
                 if (!isSchemaVersionSupported(ctx, metaData.schemaVersion)) {
-                    ctx.error("Schema version not supported: " + metaData.schemaVersion + " - supported versions are: " + supportedSchemas.join(","));
+                    ctx.error("3DXML schema version not supported: " + metaData.schemaVersion + " - supported versions are: " + supportedSchemas.join(","));
                 } else {
-                    ctx.log("Parsing schema version: " + metaData.schemaVersion);
+                    ctx.log("Parsing 3DXML schema version: " + metaData.schemaVersion);
                 }
                 break;
             case "Title":
