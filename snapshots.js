@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const PercyScript = require('@percy/script');
 const httpServer = require('http-server');
 const convert2xkt = require("./dist/convert2xkt.cjs.js");
 const fs = require('fs');
@@ -140,10 +139,6 @@ const chromeOptions = {
         height: SCREENSHOT_SIZE[1]
     }
 };
-
-// PercyScript.run(async (page, percySnapshot) => {
-//     await test();
-// });
 
 performanceTest().catch(err => {
     console.error('Error:', err);
@@ -309,9 +304,7 @@ async function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) 
 }
 
 function statsToMarkdown(testStats) {
-
     const modelStats = testStats.modelStats;
-
     const rows = [];
     rows.push("## convert2xkt Performance Tests");
     rows.push("\n");
@@ -326,8 +319,6 @@ function statsToMarkdown(testStats) {
     rows.push("* Click thumbnails to view models with xeokit.");
     rows.push("\n");
     rows.push("## Results");
-    rows.push("\n");
-    rows.push("---");
     rows.push("\n");
     rows.push('| Screenshot | Source | Objects | Triangles | Vertices | Source kB | XKT kB | Compression | Convert Secs | Load Secs | FPS |');
     rows.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
