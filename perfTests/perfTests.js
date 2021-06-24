@@ -11,7 +11,7 @@ const package = require('../package.json');
 const SERVER_PORT = 3000;
 const SCREENSHOT_SIZE = [200, 200];
 const HEADLESS = false;
-const OUTPUT_DIR = "./assets/models/xkt";
+const OUTPUT_DIR = "../assets/models/xkt";
 const TEST_REPORT_PATH = "./perfTests/index.md";
 
 const firefoxOptions = {
@@ -256,6 +256,7 @@ async function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) 
         }
     });
 }
+
 
 function statsToMarkdown(testStats) {
     const modelStats = testStats.modelStats;
