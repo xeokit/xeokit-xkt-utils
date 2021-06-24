@@ -152,8 +152,8 @@ async function performanceTest() {
     await convertModels(testStats);
     await testModels(testStats);
     const statsMarkdown = statsToMarkdown(testStats);
-    await fs.promises.writeFile("testResults.json", JSON.stringify(testStats, null, "\t"));
-    await fs.promises.writeFile("testResults.md", statsMarkdown);
+    await fs.promises.writeFile("perfTestResults.json", JSON.stringify(testStats, null, "\t"));
+    await fs.promises.writeFile("perfTestResults.md", statsMarkdown);
     console.log("Done.");
     process.exit(0);
 }
@@ -216,7 +216,7 @@ async function testModels(testStats) {
             testStats.browserVersion = await page.browser().version();
         }
         await page.setDefaultNavigationTimeout(3000000);
-        await page.goto(`http://localhost:${SERVER_PORT}/testXKT.html?xktSrc=../${xktDest}`);
+        await page.goto(`http://localhost:${SERVER_PORT}/perfTestXKT.html?xktSrc=../${xktDest}`);
         await page.waitForSelector('#percyLoaded')
         const element = await page.$('#percyLoaded')
         const value = await page.evaluate(el => el.innerText, element)
@@ -277,7 +277,7 @@ function statsToMarkdown(testStats) {
     rows.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
     for (let modelId in modelStats) {
         const stats = modelStats[modelId];
-        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/tests/models/xkt/${modelId}/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/testXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} |`);
+        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/tests/models/xkt/${modelId}/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/perfTestXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} |`);
     }
     return rows.join("\n");
 }
