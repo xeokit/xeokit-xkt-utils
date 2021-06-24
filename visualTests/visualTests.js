@@ -4,7 +4,7 @@ const httpServer = require('http-server');
 PercyScript.run(async (page, percySnapshot) => {
 
     async function testPage(pageName) {
-        await page.goto('http://localhost:3000/' + pageName);
+        await page.goto('http://localhost:3001/' + pageName);
         await page.waitForFunction(() => !!document.querySelector('#percyLoaded'));
         await percySnapshot(pageName, {
             widths: [1280]
@@ -13,50 +13,57 @@ PercyScript.run(async (page, percySnapshot) => {
 
     let server = httpServer.createServer();
 
-    server.listen(3000);
+    server.listen(3001);
 
     console.log(`Server started`);
 
-    // Programmatically generating XKT
+    try {
+        // Programmatically generating XKT
 
-    await testPage('./visualTests/test_generate_batching_lines.html');
-    await testPage('./visualTests/test_generate_batching_points.html');
-    await testPage('./visualTests/test_generate_batching_triangles.html');
-    await testPage('./visualTests/test_generate_batching_stairCase.html');
-    await testPage('./visualTests/test_generate_batching_stairCase_autoNormals.html');
+        await testPage('./visualTests/test_generate_batching_lines.html');
+        await testPage('./visualTests/test_generate_batching_points.html');
+        await testPage('./visualTests/test_generate_batching_triangles.html');
+        await testPage('./visualTests/test_generate_batching_stairCase.html');
+        await testPage('./visualTests/test_generate_batching_stairCase_autoNormals.html');
 
-    await testPage('./visualTests/test_generate_instancing_lines.html');
-    await testPage('./visualTests/test_generate_instancing_points.html');
-    await testPage('./visualTests/test_generate_instancing_triangles.html');
-    await testPage('./visualTests/test_generate_instancing_stairCase.html');
-    await testPage('./visualTests/test_generate_instancing_stairCase_autoNormals.html');
+        await testPage('./visualTests/test_generate_instancing_lines.html');
+        await testPage('./visualTests/test_generate_instancing_points.html');
+        await testPage('./visualTests/test_generate_instancing_triangles.html');
+        await testPage('./visualTests/test_generate_instancing_stairCase.html');
+        await testPage('./visualTests/test_generate_instancing_stairCase_autoNormals.html');
 
-    // PBR
+        // PBR
 
-    await testPage('./visualTests/test_generate_batching_PBR_metallicVsRoughness.html');
-    await testPage('./visualTests/test_generate_instancing_PBR_metallicVsRoughness.html');
+        await testPage('./visualTests/test_generate_batching_PBR_metallicVsRoughness.html');
+        await testPage('./visualTests/test_generate_instancing_PBR_metallicVsRoughness.html');
 
-    // glTF -> XKT
+        // glTF -> XKT
 
-    await testPage('./visualTests/test_convert_glTF_IfcOpenHouse2x3.html');
-    await testPage('./visualTests/test_convert_glTF_IfcOpenHouse4.html');
+        await testPage('./visualTests/test_convert_glTF_Duplex.html');
+        await testPage('./visualTests/test_convert_glTF_IfcOpenHouse2x3.html');
+        await testPage('./visualTests/test_convert_glTF_IfcOpenHouse4.html');
 
-    // IFC -> XKT
+        // IFC -> XKT
 
-    await testPage('./visualTests/test_convert_IFC_IfcOpenHouse2x3.html');
-    await testPage('./visualTests/test_convert_IFC_IfcOpenHouse4.html');
+        await testPage('./visualTests/test_convert_IFC_IfcOpenHouse2x3.html');
+        await testPage('./visualTests/test_convert_IFC_IfcOpenHouse4.html');
 
-    // LAZ -> XKT
+        // LAZ -> XKT
 
-    await testPage('./visualTests/test_convert_LAZ_Autzen.html');
-    await testPage('./visualTests/test_convert_LAZ_IndoorScan.html');
+       // await testPage('./visualTests/test_convert_LAZ_Autzen.html');
+        await testPage('./visualTests/test_convert_LAZ_IndoorScan.html');
 
-    // CityJSON -> XKT
+        // CityJSON -> XKT
 
-    await testPage('./visualTests/test_convert_CityJSON_Railway.html');
-    await testPage('./visualTests/test_convert_CityJSON_NewYork.html');
+        await testPage('./visualTests/test_convert_CityJSON_Railway.html');
+        await testPage('./visualTests/test_convert_CityJSON_NewYork.html');
 
-    server.close();
+        // STC -> XKT
 
+      //  await testPage('./visualTests/test_convert_STL_SpurGear.html');
+
+    } finally {
+        server.close();
+    }
 });
 
