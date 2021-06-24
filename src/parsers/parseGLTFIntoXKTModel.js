@@ -61,6 +61,15 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.log] Logging callback.
  */
 async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
+
+    if (!data) {
+        throw "Argument expected: data";
+    }
+
+    if (!xktModel) {
+        throw "Argument expected: xktModel";
+    }
+
     const ctx = {
         gltf: data,
         getAttachment: getAttachment || (() => {
@@ -81,7 +90,9 @@ async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment
             numVertices: 0
         }
     };
+
     await parseBuffers(ctx);
+
     parseBufferViews(ctx);
     freeBuffers(ctx);
     parseMaterials(ctx);
