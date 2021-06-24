@@ -11,7 +11,8 @@ const package = require('../package.json');
 const SERVER_PORT = 3000;
 const SCREENSHOT_SIZE = [200, 200];
 const HEADLESS = false;
-const OUTPUT_DIR = "./models/xkt";
+const OUTPUT_DIR = "./assets/models/xkt";
+const TEST_REPORT_PATH = "./perfTests/index.md";
 
 const firefoxOptions = {
     product: 'firefox',
@@ -39,101 +40,101 @@ const chromeOptions = {
 };
 
 const SOURCE_FILES = [
-    // {
-    //     modelId: "3dxml_widget",
-    //     modelSrc:"./models/3dxml/widget.3dxml"
-    // },
-    // {
-    //     modelId: "cityjson_csol",
-    //     modelSrc:"./models/cityjson/csol.json"
-    // },
-    // {
-    //     modelId: "cityjson_msol",
-    //     modelSrc:"./models/cityjson/msol.json"
-    // },
-    // {
-    //     modelId: "cityjson_msurface",
-    //     modelSrc:"./models/cityjson/msurface.json"
-    // },
-    // {
-    //     modelId: "cityjson_twocube",
-    //     modelSrc:"./models/cityjson/twocube.json"
-    // },
-    // {
-    //     modelId: "cityjson_cube",
-    //     modelSrc:"./models/cityjson/cube.json"
-    // },
-    // {
-    //     modelId: "cityjson_tetra",
-    //     modelSrc:"./models/cityjson/tetra.json"
-    // },
-    // {
-    //     modelId: "cityjson_torus",
-    //     modelSrc:"./models/cityjson/torus.json"
-    // },
-    // {
-    //     modelId: "cityjson_denhaag",
-    //     modelSrc:"./models/cityjson/DenHaag_01.json"
-    // },
-    // {
-    //     modelId: "cityjson_railway",
-    //     modelSrc:"./models/cityjson/LoD3_Railway.json"
-    // },
-    // {
-    //     modelId: "ifc_conferencecenter",
-    //     modelSrc:"./models/ifc/OTCConferenceCenter.ifc"
-    // },
+    {
+        modelId: "3dxml_widget",
+        modelSrc:"./assets/models/3dxml/widget.3dxml"
+    },
+    {
+        modelId: "cityjson_csol",
+        modelSrc:"./assets/models/cityjson/csol.json"
+    },
+    {
+        modelId: "cityjson_msol",
+        modelSrc:"./assets/models/cityjson/msol.json"
+    },
+    {
+        modelId: "cityjson_msurface",
+        modelSrc:"./assets/models/cityjson/msurface.json"
+    },
+    {
+        modelId: "cityjson_twocube",
+        modelSrc:"./assets/models/cityjson/twocube.json"
+    },
+    {
+        modelId: "cityjson_cube",
+        modelSrc:"./assets/models/cityjson/cube.json"
+    },
+    {
+        modelId: "cityjson_tetra",
+        modelSrc:"./assets/models/cityjson/tetra.json"
+    },
+    {
+        modelId: "cityjson_torus",
+        modelSrc:"./assets/models/cityjson/torus.json"
+    },
+    {
+        modelId: "cityjson_denhaag",
+        modelSrc:"./assets/models/cityjson/DenHaag_01.json"
+    },
+    {
+        modelId: "cityjson_railway",
+        modelSrc:"./assets/models/cityjson/LoD3_Railway.json"
+    },
+    {
+        modelId: "ifc_conferencecenter",
+        modelSrc:"./assets/models/ifc/OTCConferenceCenter.ifc"
+    },
     {
         modelId: "ifc_duplex",
-        modelSrc:"./models/ifc/Duplex.ifc"
+        modelSrc:"./assets/models/ifc/Duplex.ifc"
     },
-    // {
-    //     modelId: "ifc_openhouse2x3",
-    //     modelSrc:"./models/ifc/IfcOpenHouse2x3.ifc"
-    // },
-    // {
-    //     modelId: "ifc_openhouse4",
-    //     modelSrc:"./models/ifc/IfcOpenHouse4.ifc"
-    // },
-    // {
-    //     modelId: "ifc_map",
-    //     modelSrc:"./models/ifc/MAP.ifc"
-    // },
-    // {
-    //     modelId: "ifc_rac_advanced_sample_project",
-    //     modelSrc:"./models/ifc/rac_advanced_sample_project.ifc"
-    // },
-    // {
-    //     modelId: "ifc_rme_advanced_sample_project",
-    //     modelSrc:"./models/ifc/rme_advanced_sample_project.ifc"
-    // },
-    // {
-    //     modelId: "laz_autzen",
-    //     modelSrc:"./models/laz/autzen.laz"
-    // },
-    // {
-    //     modelId: "laz_indoor_scan",
-    //     modelSrc:"./models/laz/indoor.0.1.laz"
-    // },
+    {
+        modelId: "ifc_openhouse2x3",
+        modelSrc:"./assets/models/ifc/IfcOpenHouse2x3.ifc"
+    },
+    {
+        modelId: "ifc_openhouse4",
+        modelSrc:"./assets/models/ifc/IfcOpenHouse4.ifc"
+    },
+    {
+        modelId: "ifc_map",
+        modelSrc:"./assets/models/ifc/MAP.ifc"
+    },
+    {
+        modelId: "ifc_rac_advanced_sample_project",
+        modelSrc:"./assets/models/ifc/rac_advanced_sample_project.ifc"
+    },
+    {
+        modelId: "ifc_rme_advanced_sample_project",
+        modelSrc:"./assets/models/ifc/rme_advanced_sample_project.ifc"
+    },
+    {
+        modelId: "laz_autzen",
+        modelSrc:"./assets/models/laz/autzen.laz"
+    },
+    {
+        modelId: "laz_indoor_scan",
+        modelSrc:"./assets/models/laz/indoor.0.1.laz"
+    },
     // // // // // // // // // "stl/ascii/slotted_disk.stl"},
     // // // // // // // // // "stl/binary/spurGear.stl"},
-    // {
-    //     modelSrc:"./models/gltf/Schependomlaan.gltf",
-    //     metaModelSrc: "./metaModels/Schependomlaan.json"
-    // },
-    // {
-    //     modelId: "gltf_duplex",
-    //     modelSrc:"./models/gltf/Duplex.gltf",
-    //     metaModelSrc: "./metaModels/Duplex.json"
-    // },
-    // {
-    //     modelId: "gltf_map",
-    //     modelSrc:"./models/gltf/MAP.gltf",
-    //     metaModelSrc: "./metaModels/MAP.json"
-    // },
+    {
+        modelSrc:"./assets/models/gltf/Schependomlaan.gltf",
+        metaModelSrc: "./assets/metaModels/Schependomlaan.json"
+    },
+    {
+        modelId: "gltf_duplex",
+        modelSrc:"./assets/models/gltf/Duplex.gltf",
+        metaModelSrc: "./assets/metaModels/Duplex.json"
+    },
+    {
+        modelId: "gltf_map",
+        modelSrc:"./assets/models/gltf/MAP.gltf",
+        metaModelSrc: "./assets/metaModels/MAP.json"
+    },
     // {
     //     modelId: "gltf_map_pointcloud",
-    //     modelSrc:"./models/gltf/MAP_from_e57_inf3cm.gltf"
+    //     modelSrc:"./assets/models/gltf/MAP_from_e57_inf3cm.gltf"
     // }
 ];
 
@@ -152,8 +153,8 @@ async function performanceTest() {
     await convertModels(testStats);
     await testModels(testStats);
     const statsMarkdown = statsToMarkdown(testStats);
-    await fs.promises.writeFile("perfTestResults.json", JSON.stringify(testStats, null, "\t"));
-    await fs.promises.writeFile("perfTestResults.md", statsMarkdown);
+    //await fs.promises.writeFile("perfTestResults.json", JSON.stringify(testStats, null, "\t"));
+    await fs.promises.writeFile(TEST_REPORT_PATH, statsMarkdown);
     console.log("Done.");
     process.exit(0);
 }
@@ -216,7 +217,7 @@ async function testModels(testStats) {
             testStats.browserVersion = await page.browser().version();
         }
         await page.setDefaultNavigationTimeout(3000000);
-        await page.goto(`http://localhost:${SERVER_PORT}/perfTestXKT.html?xktSrc=../${xktDest}`);
+        await page.goto(`http://localhost:${SERVER_PORT}/perfTests/perfTestXKT.html?xktSrc=../${xktDest}`);
         await page.waitForSelector('#percyLoaded')
         const element = await page.$('#percyLoaded')
         const value = await page.evaluate(el => el.innerText, element)
@@ -277,7 +278,7 @@ function statsToMarkdown(testStats) {
     rows.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
     for (let modelId in modelStats) {
         const stats = modelStats[modelId];
-        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/tests/models/xkt/${modelId}/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/tests/perfTestXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](./tests/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} |`);
+        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/${modelId}/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](https://xeokit.github.io/xeokit-xkt-utils/demos/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} |`);
     }
     return rows.join("\n");
 }
