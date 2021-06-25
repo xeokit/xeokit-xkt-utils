@@ -29,7 +29,8 @@
 <nav class="navigation" data-ice="nav"><div>
   <ul>
     
-  <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+  <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convert2xkt">convert2xkt</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
@@ -101,7 +102,7 @@ import {faceToVertexNormals} from &quot;../lib/faceToVertexNormals.js&quot;;
  * @param {Number} [params.smoothNormalsAngleThreshold=20] This is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
  * @param {Boolean} [params.splitMeshes=true] When true, creates a separate {@link XKTEntity} for each group of faces that share the same vertex colors. Only works with binary STL (ie. when ````data```` is an ArrayBuffer).
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseSTLIntoXKTModel({
