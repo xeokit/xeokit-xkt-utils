@@ -48,7 +48,7 @@ const tempVec3c = math.vec3();
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y
  * axis "up", if neccessary.
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseCityJSONIntoXKTModel({data, xktModel, rotateX=true, outputObjectProperties, stats, log}) {
