@@ -58,7 +58,6 @@ document models. These are used by the converter, but we can also use them for b
 | [parseSTLIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel) | Parses STL into an ````XKTModel```` |
 | [writeXKTModelToArrayBuffer**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) | Serializes an ````XKTModel```` to an XKT file | 
 
-  
 # Supported Formats
 
 * IFC (2x3 and 4)
