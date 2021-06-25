@@ -13581,7 +13581,7 @@ const tempVec3c = math.vec3();
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y
  * axis "up", if neccessary.
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseCityJSONIntoXKTModel({data, xktModel, rotateX=true, outputObjectProperties, stats, log}) {
@@ -14184,7 +14184,7 @@ const WEBGL_TYPE_SIZES = {
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
  * of the glTF.
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
@@ -14734,7 +14734,7 @@ const supportedSchemas = ["4.2"];
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
  * of the 3DXML model. This is ````false```` by default because CAD models tend to prefer smooth shading.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, stats={}, log}) {
@@ -51875,8 +51875,8 @@ var IfcAPI = class {
  * of the IFC model. This is ````true```` by default, because IFC models tend to look acceptable with flat-shading,
  * and we always want to minimize IFC model size wherever possible.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
- * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
- * @param {Object}[stats] Collects statistics.
+ * @param {Function} [params.outputObjectProperties] Callback to collect each object's property set.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseIFCIntoXKTModel({
@@ -76061,7 +76061,7 @@ var LASLoader$1 = _objectSpread$4(_objectSpread$4({}, LASWorkerLoader), {}, {
  * @param {ArrayBuffer} params.data LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if necessary.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}) {
@@ -76231,7 +76231,7 @@ function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excl
  * @param {ArrayBuffer} params.data PCD file data.
  * @param {Boolean} [params.littleEndian=true] Whether PCD binary data is Little-Endian or Big-Endian.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log}) {
@@ -77279,7 +77279,7 @@ var PLYLoader = _objectSpread$5(_objectSpread$5({}, PLYWorkerLoader), {}, {
  * @param {Object} params Parsing params.
  * @param {ArrayBuffer} params.data PLY file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
@@ -77483,7 +77483,7 @@ function faceToVertexNormals(positions, normals, options = {}) {
  * @param {Number} [params.smoothNormalsAngleThreshold=20] This is the threshold angle between normals of adjacent triangles, below which their shared wireframe edge is not drawn.
  * @param {Boolean} [params.splitMeshes=true] When true, creates a separate {@link XKTEntity} for each group of faces that share the same vertex colors. Only works with binary STL (ie. when ````data```` is an ArrayBuffer).
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseSTLIntoXKTModel({
