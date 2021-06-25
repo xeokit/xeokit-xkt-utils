@@ -279,7 +279,7 @@ function statsToMarkdown(testStats) {
     rows.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
     for (let modelId in modelStats) {
         const stats = modelStats[modelId];
-        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/${modelId}/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](https://xeokit.github.io/xeokit-xkt-utils/demos/loadXKT.html?xktSrc=../${stats.xktDest}) | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} |`);
+        rows.push(`| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/${modelId}/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=../${stats.xktDest}) | [${modelId}](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=../${stats.xktDest}) | ${stats.conversionTime} | ${stats.loadingTime} | ${stats.fps} | ${stats.numObjects} | ${stats.numTriangles} | ${stats.numVertices} | ${stats.sourceSize} | ${stats.xktSize} | ${stats.compressionRatio} |`);
     }
     return rows.join("\n");
 }
