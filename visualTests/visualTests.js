@@ -50,17 +50,17 @@ PercyScript.run(async (page, percySnapshot) => {
 
         // LAZ -> XKT
 
-       // await testPage('./visualTests/test_convert_LAZ_Autzen.html');
+        await testPage('./visualTests/test_convert_LAZ_Autzen.html');
         await testPage('./visualTests/test_convert_LAZ_IndoorScan.html');
 
         // CityJSON -> XKT
 
         await testPage('./visualTests/test_convert_CityJSON_Railway.html');
-        await testPage('./visualTests/test_convert_CityJSON_NewYork.html');
+        await testPage('./visualTests/test_convert_CityJSON_DenHaag.html');
 
         // STC -> XKT
 
-      //  await testPage('./visualTests/test_convert_STL_SpurGear.html');
+        await testPage('./visualTests/test_convert_STL_SpurGear.html');
 
     } finally {
         server.close();

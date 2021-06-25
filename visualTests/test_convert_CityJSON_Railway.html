@@ -54,7 +54,8 @@
     const viewer = new Viewer({
         canvasId: "myCanvas",
         transparent: true,
-        saoEnabled: true
+        saoEnabled: true,
+        edges: true
     });
 
     viewer.scene.camera.eye = [15.843945885131395, 11.178365963264165, 15.335366124584503];
@@ -67,7 +68,7 @@
 
     const xktModel = new XKTModel();
 
-    utils.loadJSON("./../assets/models/cityjson/VM05_2009.json", async (data) => {
+    utils.loadJSON("../assets/models/cityjson/LoD3_Railway.json", async (data) => {
 
         parseCityJSONIntoXKTModel({
             data,

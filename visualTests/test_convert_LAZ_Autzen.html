@@ -70,7 +70,7 @@
 
     const xktModel = new XKTModel();
 
-    utils.loadArraybuffer("./../assets/models/laz/autzen.laz", async (data) => {
+    utils.loadArraybuffer("../assets/models/laz/autzen.laz", async (data) => {
 
         parseLASIntoXKTModel({data, xktModel}).then(() => {
 
