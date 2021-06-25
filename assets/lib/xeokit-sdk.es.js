@@ -1,4 +1,4 @@
-/** @private */
+** @private */
 class Map {
 
     constructor(items, baseId) {
@@ -75010,11 +75010,11 @@ function decodeText(array) {
  *  * [[Run this example](https://xeokit.github.io/xeokit-sdk/examples/#loading_STL_dataAsParam)]
  *
  * ````javascript
- * loadSTL("./models/stl/binary/spurGear.stl", (data) =>{
+ * loadSTL("./models/stl/binary/spurGear.stl", (stlData) =>{
  *
  *      const model = stlLoader.load({
  *          id: "myModel",
- *          stl: data,
+ *          stl: stlData,
  *          smoothNormals: true
  *      });
  *
@@ -78864,7 +78864,7 @@ class XKTDefaultDataSource {
     }
 
     async getProperties(propertiesId) {
-        return propertiesId; // Whatever for now
+        return {};
     }
 }
 
@@ -101914,6 +101914,50 @@ class MetaModel {
 }
 
 /**
+ * @desc A property of a {@link MetaObject}.
+ *
+ * These are located in {@link MetaObject#properties}.
+ *
+ * @class MetaObject
+ */
+class MetaObjectProperty {
+
+    /**
+     * @private
+     */
+    constructor({metaObject, name, type, value}) {
+
+        /**
+         * The {@link MetaObject} that owns this property.
+         * @property metaObject
+         * @type {MetaObject}
+         */
+        this.metaObject = metaObject;
+
+        /**
+         * The name of this property.
+         * @property name
+         * @type {String}
+         */
+        this.name = name;
+
+        /**
+         * The type of this property.
+         * @property type
+         * @type {String}
+         */
+        this.type = type;
+
+        /**
+         * The value of this property.
+         * @property value
+         * @type {*}
+         */
+        this.value = value;
+    }
+}
+
+/**
  * @desc Metadata corresponding to an {@link Entity} that represents an object.
  *
  * An {@link Entity} represents an object when {@link Entity#isObject} is ````true````
@@ -101934,8 +101978,8 @@ class MetaObject {
     constructor(getProperties, metaModel, id, propertiesId, originalSystemId, name, type, properties, parent, children, external) {
 
         this._getProperties = getProperties;
-
-        this.propertiesId = propertiesId;
+        this._propertiesId = propertiesId;
+        this._properties = {};
 
         /**
          * Model metadata.
@@ -102033,7 +102077,11 @@ class MetaObject {
     }
 
     /**
-     * Dynamically gets the full set of properties for this MetaObject.
+     * Dynamically fetches the full set of properties for this MetaObject.
+     *
+     * Each property is implemented by a {@link MetaObjectProperty}.
+     *
+     * These are cached the first time they are fetched.
      *
      * @return {Promise<*|*|{}>}
      */
@@ -102041,8 +102089,13 @@ class MetaObject {
         if (this._properties) {
             return this._properties;
         }
-        if (this._getProperties && this.propertiesId !== null && this.propertiesId !== undefined) {
-            this._properties = await this._getProperties(this.propertiesId);
+        if (this._getProperties && this._propertiesId !== null && this._propertiesId !== undefined) {
+            this._properties = {};
+            const properties = await this._getProperties(this._propertiesId);
+            for (let name in properties) {
+                const value = properties[name];
+                this._properties[name] = new MetaObjectProperty({metaObject: this, name, value });
+            }
         }
         if (!this._properties) {
             this._properties = {};
