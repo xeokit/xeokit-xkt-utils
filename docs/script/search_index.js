@@ -84,9 +84,57 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parse3dxmlintoxktmodel.js~parse3dxmlintoxktmodel",
+    "function/index.html#static-function-parse3DXMLIntoXKTModel",
+    "<span>parse3DXMLIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parse3DXMLIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsecityjsonintoxktmodel.js~parsecityjsonintoxktmodel",
+    "function/index.html#static-function-parseCityJSONIntoXKTModel",
+    "<span>parseCityJSONIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseCityJSONIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
     "@xeokit/xeokit-xkt-utils/src/parsers/parsegltfintoxktmodel.js~parsegltfintoxktmodel",
     "function/index.html#static-function-parseGLTFIntoXKTModel",
     "<span>parseGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseGLTFIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parseifcintoxktmodel.js~parseifcintoxktmodel",
+    "function/index.html#static-function-parseIFCIntoXKTModel",
+    "<span>parseIFCIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseIFCIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parselasintoxktmodel.js~parselasintoxktmodel",
+    "function/index.html#static-function-parseLASIntoXKTModel",
+    "<span>parseLASIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseLASIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsemetamodelintoxktmodel.js~parsemetamodelintoxktmodel",
+    "function/index.html#static-function-parseMetaModelIntoXKTModel",
+    "<span>parseMetaModelIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseMetaModelIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsepcdintoxktmodel.js~parsepcdintoxktmodel",
+    "function/index.html#static-function-parsePCDIntoXKTModel",
+    "<span>parsePCDIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parsePCDIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parseplyintoxktmodel.js~parseplyintoxktmodel",
+    "function/index.html#static-function-parsePLYIntoXKTModel",
+    "<span>parsePLYIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parsePLYIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsestlintoxktmodel.js~parsestlintoxktmodel",
+    "function/index.html#static-function-parseSTLIntoXKTModel",
+    "<span>parseSTLIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseSTLIntoXKTModel.js</span>",
     "function"
   ],
   [
@@ -606,15 +654,33 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/xktmodel/xktmetaobject.js~xktmetaobject#propertysetid",
+    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-propertySetId",
+    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#propertySetId",
+    "member"
+  ],
+  [
     "src/xktmodel/xktmodel.js",
     "file/src/XKTModel/XKTModel.js.html",
     "src/XKTModel/XKTModel.js",
     "file"
   ],
   [
+    "src/xktmodel/xktmodel.js~xktmodel#author",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-author",
+    "src/XKTModel/XKTModel.js~XKTModel#author",
+    "member"
+  ],
+  [
     "src/xktmodel/xktmodel.js~xktmodel#constructor",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-constructor-constructor",
     "src/XKTModel/XKTModel.js~XKTModel#constructor",
+    "method"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#createdefaultmetaobjects",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createDefaultMetaObjects",
+    "src/XKTModel/XKTModel.js~XKTModel#createDefaultMetaObjects",
     "method"
   ],
   [
@@ -640,6 +706,18 @@ window.esdocSearchIndex = [
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMetaObject",
     "src/XKTModel/XKTModel.js~XKTModel#createMetaObject",
     "method"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#createdat",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-createdAt",
+    "src/XKTModel/XKTModel.js~XKTModel#createdAt",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#creatingapplication",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-creatingApplication",
+    "src/XKTModel/XKTModel.js~XKTModel#creatingApplication",
+    "member"
   ],
   [
     "src/xktmodel/xktmodel.js~xktmodel#edgethreshold",
@@ -708,9 +786,33 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/xktmodel/xktmodel.js~xktmodel#modelid",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-modelId",
+    "src/XKTModel/XKTModel.js~XKTModel#modelId",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#projectid",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-projectId",
+    "src/XKTModel/XKTModel.js~XKTModel#projectId",
+    "member"
+  ],
+  [
     "src/xktmodel/xktmodel.js~xktmodel#reusedgeometriesdecodematrix",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-reusedGeometriesDecodeMatrix",
     "src/XKTModel/XKTModel.js~XKTModel#reusedGeometriesDecodeMatrix",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#revisionid",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-revisionId",
+    "src/XKTModel/XKTModel.js~XKTModel#revisionId",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#schema",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-schema",
+    "src/XKTModel/XKTModel.js~XKTModel#schema",
     "member"
   ],
   [
@@ -744,6 +846,30 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "src/xktmodel/lib/buildfacenormals.js",
+    "file/src/XKTModel/lib/buildFaceNormals.js.html",
+    "src/XKTModel/lib/buildFaceNormals.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/lib/buildvertexnormals.js",
+    "file/src/XKTModel/lib/buildVertexNormals.js.html",
+    "src/XKTModel/lib/buildVertexNormals.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/lib/earcut.js",
+    "file/src/XKTModel/lib/earcut.js.html",
+    "src/XKTModel/lib/earcut.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/lib/facetovertexnormals.js",
+    "file/src/XKTModel/lib/faceToVertexNormals.js.html",
+    "src/XKTModel/lib/faceToVertexNormals.js",
+    "file"
+  ],
+  [
     "src/xktmodel/lib/geometrycompression.js",
     "file/src/XKTModel/lib/geometryCompression.js.html",
     "src/XKTModel/lib/geometryCompression.js",
@@ -756,6 +882,18 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "src/xktmodel/lib/math.js",
+    "file/src/XKTModel/lib/math.js.html",
+    "src/XKTModel/lib/math.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/lib/mergevertices.js",
+    "file/src/XKTModel/lib/mergeVertices.js.html",
+    "src/XKTModel/lib/mergeVertices.js",
+    "file"
+  ],
+  [
     "src/xktmodel/lib/utils.js",
     "file/src/XKTModel/lib/utils.js.html",
     "src/XKTModel/lib/utils.js",
@@ -765,6 +903,12 @@ window.esdocSearchIndex = [
     "src/xktmodel/writexktmodeltoarraybuffer.js",
     "file/src/XKTModel/writeXKTModelToArrayBuffer.js.html",
     "src/XKTModel/writeXKTModelToArrayBuffer.js",
+    "file"
+  ],
+  [
+    "src/convert2xkt.js",
+    "file/src/convert2xkt.js.html",
+    "src/convert2xkt.js",
     "file"
   ],
   [
@@ -816,9 +960,57 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "src/lib/buildfacenormals.js",
+    "file/src/lib/buildFaceNormals.js.html",
+    "src/lib/buildFaceNormals.js",
+    "file"
+  ],
+  [
+    "src/lib/buildvertexnormals.js",
+    "file/src/lib/buildVertexNormals.js.html",
+    "src/lib/buildVertexNormals.js",
+    "file"
+  ],
+  [
+    "src/lib/earcut.js",
+    "file/src/lib/earcut.js.html",
+    "src/lib/earcut.js",
+    "file"
+  ],
+  [
+    "src/lib/facetovertexnormals.js",
+    "file/src/lib/faceToVertexNormals.js.html",
+    "src/lib/faceToVertexNormals.js",
+    "file"
+  ],
+  [
     "src/lib/math.js",
     "file/src/lib/math.js.html",
     "src/lib/math.js",
+    "file"
+  ],
+  [
+    "src/lib/mergevertices.js",
+    "file/src/lib/mergeVertices.js.html",
+    "src/lib/mergeVertices.js",
+    "file"
+  ],
+  [
+    "src/parsers/ziparchive.js",
+    "file/src/parsers/ZIPArchive.js.html",
+    "src/parsers/ZIPArchive.js",
+    "file"
+  ],
+  [
+    "src/parsers/parse3dxmlintoxktmodel.js",
+    "file/src/parsers/parse3DXMLIntoXKTModel.js.html",
+    "src/parsers/parse3DXMLIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parsecityjsonintoxktmodel.js",
+    "file/src/parsers/parseCityJSONIntoXKTModel.js.html",
+    "src/parsers/parseCityJSONIntoXKTModel.js",
     "file"
   ],
   [
@@ -828,9 +1020,33 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "src/parsers/parseifcintoxktmodel.js",
+    "file/src/parsers/parseIFCIntoXKTModel.js.html",
+    "src/parsers/parseIFCIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parselasintoxktmodel.js",
+    "file/src/parsers/parseLASIntoXKTModel.js.html",
+    "src/parsers/parseLASIntoXKTModel.js",
+    "file"
+  ],
+  [
     "src/parsers/parsemetamodelintoxktmodel.js",
     "file/src/parsers/parseMetaModelIntoXKTModel.js.html",
     "src/parsers/parseMetaModelIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parsepcdintoxktmodel.js",
+    "file/src/parsers/parsePCDIntoXKTModel.js.html",
+    "src/parsers/parsePCDIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parseplyintoxktmodel.js",
+    "file/src/parsers/parsePLYIntoXKTModel.js.html",
+    "src/parsers/parsePLYIntoXKTModel.js",
     "file"
   ],
   [

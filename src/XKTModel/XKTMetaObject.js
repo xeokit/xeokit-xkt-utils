@@ -21,12 +21,13 @@ class XKTMetaObject {
     /**
      * @private
      * @param metaObjectId
+     * @param propertySetId
      * @param metaObjectType
      * @param metaObjectName
      * @param metaObjectIndex
      * @param parentMetaObjectId
      */
-    constructor(metaObjectId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId) {
+    constructor(metaObjectId, propertySetId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId) {
 
         /**
          * Unique ID of this ````XKTMetaObject```` in {@link XKTModel#metaObjects}.
@@ -40,6 +41,16 @@ class XKTMetaObject {
          * @type {String}
          */
         this.metaObjectId = metaObjectId;
+
+        /**
+         * Unique ID of an external property set for this ````XKTMetaObject````.
+         *
+         * We only store basic structural metadata in the XKT, and store object property sets externally,
+         * because they tend to be large and application-specific and would bloat the XKT file.
+         *
+         * @type {String}
+         */
+        this.propertySetId = null;
 
         /**
          * Indicates the XKTMetaObject meta object type.
@@ -69,9 +80,9 @@ class XKTMetaObject {
         /**
          * The parent XKTMetaObject, if any.
          *
-         * If there is no parent, then this defaults to the value of {@link XKTMetaObject#metaObjectId}.
+         * Will be null if there is no parent.
          *
-         * @type {XKTMetaObject|null}
+         * @type {String}
          */
         this.parentMetaObjectId = parentMetaObjectId;
     }

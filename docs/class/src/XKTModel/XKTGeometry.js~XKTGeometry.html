@@ -44,7 +44,15 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildSphereGeometry">buildSphereGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildTorusGeometry">buildTorusGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePCDIntoXKTModel">parsePCDIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parsePLYIntoXKTModel">parsePLYIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseSTLIntoXKTModel">parseSTLIntoXKTModel</a></span></span></li>
 </ul>
 </div>
 </nav>
@@ -121,7 +129,7 @@
       <div>
         
         
-        <div data-ice="description"><p>Compressed RGB vertex colors.</p>
+        <div data-ice="description"><p>Compressed RGBA vertex colors.</p>
 </div>
       </div>
     </td>
@@ -502,14 +510,14 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber101">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber103">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Compressed RGB vertex colors.</p>
+  <div data-ice="description"><p>Compressed RGBA vertex colors.</p>
 <p>Defined only for point primitives. Ignored for triangles and lines.</p>
 </div>
 
@@ -547,7 +555,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber119">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber121">source</a></span></span>
     </span>
   </h3>
 
@@ -680,7 +688,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber110">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber112">source</a></span></span>
     </span>
   </h3>
 
@@ -733,7 +741,7 @@
   
   
   <div data-ice="description"><p>Non-compressed 3D vertex normals.</p>
-<p>Defined only for triangle primitives. Ignored for points and lines.</p>
+<p>Defined only for triangle primitives. Can be null if we want xeokit to auto-generate them. Ignored for points and lines.</p>
 </div>
 
   
@@ -770,7 +778,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber92">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber94">source</a></span></span>
     </span>
   </h3>
 
@@ -780,6 +788,7 @@
   <div data-ice="description"><p>Compressed vertex normals.</p>
 <p>Defined only for triangle primitives. Ignored for points and lines.</p>
 <p>This array is later created from <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-normals">XKTGeometry#normals</a></span> by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
+<p>Will be null if <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-normals">XKTGeometry#normals</a></span> is also null.</p>
 </div>
 
   
@@ -995,7 +1004,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber137">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber139">source</a></span></span>
     </span>
   </h3>
 
@@ -1051,7 +1060,7 @@
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber130">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTGeometry.js.html#lineNumber132">source</a></span></span>
     </span>
   </h3>
 

@@ -17,7 +17,7 @@ class XKTGeometry {
      * @param {Number} cfg.geometryIndex Index of this XKTGeometry in {@link XKTModel#geometriesList}.
      * @param {Float64Array} cfg.positions Non-quantized 3D vertex positions.
      * @param {Float32Array} cfg.normals Non-compressed vertex normals.
-     * @param {Uint8Array} cfg.colorsCompressed Integer RGB vertex colors.
+     * @param {Uint8Array} cfg.colorsCompressed Integer RGBA vertex colors.
      * @param {Uint32Array} cfg.indices Indices to organize the vertex positions and normals into triangles.
      * @param {Uint32Array} cfg.edgeIndices Indices to organize the vertex positions into edges.
      */
@@ -74,7 +74,7 @@ class XKTGeometry {
         /**
          * Non-compressed 3D vertex normals.
          *
-         * Defined only for triangle primitives. Ignored for points and lines.
+         * Defined only for triangle primitives. Can be null if we want xeokit to auto-generate them. Ignored for points and lines.
          *
          * @type {Float32Array}
          */
@@ -87,12 +87,14 @@ class XKTGeometry {
          *
          * This array is later created from {@link XKTGeometry#normals} by {@link XKTModel#finalize}.
          *
+         * Will be null if {@link XKTGeometry#normals} is also null.
+         *
          * @type {Int8Array}
          */
         this.normalsOctEncoded = null;
 
         /**
-         * Compressed RGB vertex colors.
+         * Compressed RGBA vertex colors.
          *
          * Defined only for point primitives. Ignored for triangles and lines.
          *

@@ -9,6 +9,7 @@ import {XKTEntity} from './XKTEntity.js';
 import {XKTTile} from './XKTTile.js';
 import {KDNode} from "./KDNode.js";
 import {XKTMetaObject} from "./XKTMetaObject.js";
+import {mergeVertices} from "../lib/mergeVertices.js";
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
 const tempVec4b = math.vec4([0, 0, 0, 1]);
@@ -45,6 +46,75 @@ class XKTModel {
      * @param {Number} [cfg.edgeThreshold=10]
      */
     constructor(cfg = {}) {
+
+        /**
+         * The model's ID, if available.
+         *
+         * Will be "default" by default.
+         *
+         * @type {String}
+         */
+        this.modelId = cfg.modelId || "default";
+
+        /**
+         * The project ID, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @type {String}
+         */
+        this.projectId = cfg.projectId || "";
+
+        /**
+         * The revision ID, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @type {String}
+         */
+        this.revisionId = cfg.revisionId || "";
+
+        /**
+         * The model author, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @property author
+         * @type {String}
+         */
+        this.author = cfg.author || "";
+
+        /**
+         * The date the model was created, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @property createdAt
+         * @type {String}
+         */
+        this.createdAt = cfg.createdAt || "";
+
+        /**
+         * The application that created the model, if available.
+         *
+         * Will be an empty string by default.
+         *
+         * @property creatingApplication
+         * @type {String}
+         */
+        this.creatingApplication = cfg.creatingApplication || "";
+
+        /**
+         * The model schema version, if available.
+         *
+         * In the case of IFC, this could be "IFC2x3" or "IFC4", for example.
+         *
+         * Will be an empty string by default.
+         *
+         * @property schema
+         * @type {String}
+         */
+        this.schema = cfg.schema || "";
 
         /**
          *
@@ -169,7 +239,11 @@ class XKTModel {
      *
      * @param {*} params Method parameters.
      * @param {String} params.metaObjectId Unique ID for the {@link XKTMetaObject}.
-     * @param {String} [params.metaObjectType="default"] A meta type for the {@link XKTMetaObject}. Can be anything, but is usually an IFC type, such as "IfcSite" or "IfcWall".
+     * @param {String} params.propertySetId ID of externally-stored property set data. We only store basic structural
+     * metadata in the XKT, and store object property sets externally, because they tend to be large and
+     * application-specific and would bloat the XKT file.
+     * @param {String} [params.metaObjectType="default"] A meta type for the {@link XKTMetaObject}. Can be anything,
+     * but is usually an IFC type, such as "IfcSite" or "IfcWall".
      * @param {String} [params.metaObjectName] Human-readable name for the {@link XKTMetaObject}. Defaults to the ````metaObjectId```` parameter.
      * @param {String} [params.parentMetaObjectId] ID of the parent {@link XKTMetaObject}, if any. Defaults to the ````metaObjectId```` parameter.
      * @returns {XKTMetaObject} The new {@link XKTMetaObject}.
@@ -190,20 +264,27 @@ class XKTModel {
         }
 
         if (this.metaObjects[params.metaObjectId]) {
-       //     console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
+            //          console.error("XKTMetaObject already exists with this ID: " + params.metaObjectId);
             return;
         }
 
         const metaObjectId = params.metaObjectId;
-        const metaObjectType = params.metaObjectType || "default";
+        const propertySetId = params.propertySetId;
+        const metaObjectType = params.metaObjectType || "Default";
         const metaObjectName = params.metaObjectName || params.metaObjectId;
         const metaObjectIndex = this.metaObjectsList.length;
-        const parentMetaObjectId = (params.parentMetaObjectId !== null && params.parentMetaObjectId !== undefined) ? params.parentMetaObjectId : params.metaObjectId;
+        const parentMetaObjectId = params.parentMetaObjectId;
 
-        const metaObject = new XKTMetaObject(metaObjectId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
+        const metaObject = new XKTMetaObject(metaObjectId, propertySetId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
 
         this.metaObjects[metaObjectId] = metaObject;
         this.metaObjectsList.push(metaObject);
+
+        if (!parentMetaObjectId) {
+            if (!this._rootMetaObject) {
+                this._rootMetaObject = metaObject;
+            }
+        }
 
         return metaObject;
     }
@@ -217,7 +298,7 @@ class XKTModel {
      * @param {Number} params.geometryId Unique ID for the {@link XKTGeometry}.
      * @param {String} params.primitiveType The type of {@link XKTGeometry}: "triangles", "lines" or "points".
      * @param {Float64Array} params.positions Floating-point Local-space vertex positions for the {@link XKTGeometry}. Required for all primitive types.
-     * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Required for triangles primitives. Ignored for points and lines.
+     * @param {Number[]} [params.normals] Floating-point vertex normals for the {@link XKTGeometry}. Only used with triangles primitives. Ignored for points and lines.
      * @param {Number[]} [params.colors] Floating-point RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Number[]} [params.colorsCompressed] Integer RGBA vertex colors for the {@link XKTGeometry}. Required for points primitives. Ignored for lines and triangles.
      * @param {Uint32Array} [params.indices] Indices for the {@link XKTGeometry}. Required for triangles and lines primitives. Ignored for points.
@@ -251,9 +332,6 @@ class XKTModel {
         }
 
         if (triangles) {
-            if (!params.normals) {
-                throw "Parameter expected for 'triangles' primitive: params.normals";
-            }
             if (!params.indices) {
                 throw "Parameter expected for 'triangles' primitive: params.indices";
             }
@@ -293,14 +371,16 @@ class XKTModel {
         }
 
         if (triangles) {
-            xktGeometryCfg.normals = new Float64Array(params.normals); // May modify in #finalize
+            if (params.normals) {
+                xktGeometryCfg.normals = new Float32Array(params.normals);
+            }
             xktGeometryCfg.indices = params.indices;
-            xktGeometryCfg.edgeIndices = buildEdgeIndices(positions, params.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
         }
 
         if (points) {
             if (params.colorsCompressed) {
                 xktGeometryCfg.colorsCompressed = new Uint8Array(params.colorsCompressed);
+
             } else {
                 const colors = params.colors;
                 const colorsCompressed = new Uint8Array(colors.length);
@@ -313,6 +393,25 @@ class XKTModel {
 
         if (lines) {
             xktGeometryCfg.indices = params.indices;
+        }
+
+        if (triangles) {
+
+            if (!params.normals) {
+
+                // Building models often duplicate positions to allow face-aligned vertex normals; when we're not
+                // providing normals for a geometry, it becomes possible to merge duplicate vertex positions within it.
+
+                // TODO: Make vertex merging also merge normals?
+
+                const mergedPositions = [];
+                const mergedIndices = [];
+                mergeVertices(xktGeometryCfg.positions, xktGeometryCfg.indices, mergedPositions, mergedIndices);
+                xktGeometryCfg.positions = new Float64Array(mergedPositions);
+                xktGeometryCfg.indices = mergedIndices;
+            }
+
+            xktGeometryCfg.edgeIndices = buildEdgeIndices(xktGeometryCfg.positions, xktGeometryCfg.indices, null, params.edgeThreshold || this.edgeThreshold || 10);
         }
 
         const geometry = new XKTGeometry(xktGeometryCfg);
@@ -350,14 +449,6 @@ class XKTModel {
         if (params.geometryId === null || params.geometryId === undefined) {
             throw "Parameter expected: params.geometryId";
         }
-
-        // if (!params.color) {
-        //     throw "Parameter expected: params.color";
-        // }
-        //
-        // if (params.opacity === null || params.opacity === undefined) {
-        //     throw "Parameter expected: params.opacity";
-        // }
 
         if (this.finalized) {
             throw "XKTModel has been finalized, can't add more meshes";
@@ -484,6 +575,39 @@ class XKTModel {
     }
 
     /**
+     * Creates a default {@link XKTMetaObject} for each {@link XKTEntity} that does not already have one.
+     */
+    createDefaultMetaObjects() {
+
+        let rootMetaObject = null;
+
+        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
+
+            const entity = this.entitiesList[i];
+            const metaObjectId = entity.entityId;
+            const metaObject = this.metaObjects[metaObjectId];
+
+            if (!metaObject) {
+
+                if (!this._rootMetaObject) {
+                    this._rootMetaObject = this.createMetaObject({
+                        metaObjectId: this.modelId,
+                        metaObjectType: "Default",
+                        metaObjectName: this.modelId
+                    });
+                }
+
+                this.createMetaObject({
+                    metaObjectId: metaObjectId,
+                    metaObjectType: "Default",
+                    metaObjectName: "" + metaObjectId,
+                    parentMetaObjectId: this._rootMetaObject.metaObjectId
+                });
+            }
+        }
+    }
+
+    /**
      * Finalizes this XKTModel.
      *
      * After finalizing, we may then serialize the model to an array buffer using {@link writeXKTModelToArrayBuffer}.
@@ -520,8 +644,6 @@ class XKTModel {
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
-
-        this._createDefaultMetaObjects();
 
         this.finalized = true;
     }
@@ -854,26 +976,6 @@ class XKTModel {
             const geometry = this.geometriesList[i];
             if (geometry.primitiveType === "triangles") {
                 geometry.solid = isTriangleMeshSolid(geometry.indices, geometry.positionsQuantized); // Better memory/cpu performance with quantized values
-            }
-        }
-    }
-
-    _createDefaultMetaObjects() {
-
-        for (let i = 0, len = this.entitiesList.length; i < len; i++) {
-
-            const entity = this.entitiesList[i];
-            const entityId = entity.entityId;
-            const metaObjectId = entityId;
-            const metaObject = this.metaObjects[metaObjectId];
-
-            if (!metaObject) {
-                this.createMetaObject({
-                    metaObjectId: metaObjectId,
-                    metaObjectType: "default",
-                    metaObjectName: "" + metaObjectId,
-                    parentMetaObjectId: metaObjectId
-                });
             }
         }
     }
