@@ -32,7 +32,7 @@ function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excl
     if (excludeTypes) {
         excludeTypesMap = {};
         for (let i = 0, len = excludeTypes.length; i < len; i++) {
-            includeTypesMap[excludeTypes[i]] = true;
+            excludeTypesMap[excludeTypes[i]] = true;
         }
     }
 
