@@ -31,7 +31,7 @@ import {LASLoader} from '@loaders.gl/las';
  * @param {ArrayBuffer} params.data LAS/LAZ file data.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if necessary.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}) {

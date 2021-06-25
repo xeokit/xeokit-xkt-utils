@@ -57,7 +57,7 @@ const WEBGL_TYPE_SIZES = {
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
  * of the glTF.
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {

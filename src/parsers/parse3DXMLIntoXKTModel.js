@@ -17,7 +17,7 @@ const supportedSchemas = ["4.2"];
  * data will rely on the xeokit ````Viewer```` to automatically generate them. This has the limitation that the
  * normals will be face-aligned, and therefore the ````Viewer```` will only be able to render a flat-shaded representation
  * of the 3DXML model. This is ````false```` by default because CAD models tend to prefer smooth shading.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, stats={}, log}) {

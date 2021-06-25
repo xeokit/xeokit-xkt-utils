@@ -26,7 +26,7 @@
  * @param {ArrayBuffer} params.data PCD file data.
  * @param {Boolean} [params.littleEndian=true] Whether PCD binary data is Little-Endian or Big-Endian.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
- * @param {Object}[stats] Collects statistics.
+ * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log}) {
