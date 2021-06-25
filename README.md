@@ -43,32 +43,21 @@
 
 # Overview
 
-At the center of ````xeokit-xkt-utils````, we have a CLI tool for converting files into XKT:
-
-* [**convert2xkt**]() is a Node.js-based JavaScript function and CLI tool that converts various AEC model formats into
-  xeokit's native, super-fast-loading XKT format. Supported formats include: IFC (2x3 and 4), CityJSON, glTF, 3DXML,
-  LAZ, LAS, STL and PCL.
-
-Underneath the converter tool we've got an extensible library of components for loading, generating and saving XKT
+At the center of ````xeokit-xkt-utils````, we have a CLI tool for converting files into XKT. Underneath the converter tool we've got an extensible library of components for loading, generating and saving XKT
 document models. These are used by the converter, but we can also use them for building our own custom XKT tools.
 
-* [**XKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) is a
-  JavaScript document model that represents the contents of an XKT file in memory. We can programmatically build a
-  document model in JavaScript, adding geometries, materials, objects etc, then serialize it to an XKT file.
-* [**parseIFCIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel)
-  parses IFC data into an ````XKTModel````.
-* [**parseGLTFIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel)
-  parses glTF into an ````XKTModel````.
-* [**parse3DXMLIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parse3DXMLIntoXKTModel)
-  parses 3DXML into an ````XKTModel````.
-* [**parseCityJSONIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseJSONIntoXKTModel)
-  parses CityJSON into an ````XKTModel````.
-* [**parseLASIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseLASIntoXKTModel)
-  parses LAS and LAZ into an ````XKTModel````.
-* [**parseSTLIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel)
-  parses STL into an ````XKTModel````.
-* [**writeXKTModelToArrayBuffer**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer)
-  serializes an ````XKTModel```` to an XKT file.
+| Component | Description |
+| --- | --- |
+| [convert2xkt]() | A Node.js-based JavaScript function and CLI tool that converts various AEC model formats into xeokit's native, super-fast-loading XKT format. Supported formats include: IFC (2x3 and 4), CityJSON, glTF, 3DXML, LAZ, LAS, STL and PCL. |
+| [XKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) | A JavaScript document model that represents the contents of an XKT file in memory. We can programmatically build a document model in JavaScript, adding geometries, materials, objects etc, then serialize it to an XKT file. |
+| [parseIFCIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel) | Parses IFC data into an ````XKTModel```` |
+| [parseGLTFIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel) |  Parses glTF into an ````XKTModel```` |
+| [parse3DXMLIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parse3DXMLIntoXKTModel) |  Parses 3DXML into an ````XKTModel```` |
+| [parseCityJSONIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseJSONIntoXKTModel) |  Parses CityJSON into an ````XKTModel```` |
+| [parseLASIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseLASIntoXKTModel) | Parses LAS and LAZ into an ````XKTModel```` |
+| [parseSTLIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel) | Parses STL into an ````XKTModel```` |
+| [writeXKTModelToArrayBuffer**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) | Serializes an ````XKTModel```` to an XKT file | 
+
   
 # Supported Formats
 
