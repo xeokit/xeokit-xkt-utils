@@ -26,6 +26,7 @@ const {
  * * glTF
  * * LAZ & LAS
  *
+ * @private
  * @param {Object} params Conversion parameters.
  * @param {String}[params.source] Path to source file. Alternative to ````sourceData````.
  * @param {ArrayBuffer|JSON}[params.sourceData] Source file data. Alternative to ````source````.
