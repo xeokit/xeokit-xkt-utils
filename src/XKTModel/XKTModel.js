@@ -24,10 +24,10 @@ const kdTreeDimLength = new Float64Array(3);
 /**
  * A document model that represents the contents of an .XKT file.
  *
- * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
+ * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into axis-aligned, box-shaped regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
  * * Each {@link XKTEntity} has {@link XKTMesh}s, which each have a {@link XKTGeometry}. Each {@link XKTGeometry} can be shared by multiple {@link XKTMesh}s.
- * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
+ * * Import models into an XKTModel using {@link parseGLTFIntoXKTModel}, {@link parseIFCIntoXKTModel}, {@link parse3DXMLIntoXKTModel}, {@link parseCityJSONIntoXKTModel} etc.
  * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
  *
