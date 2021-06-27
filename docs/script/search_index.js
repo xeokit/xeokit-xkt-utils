@@ -84,12 +84,6 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
-    "@xeokit/xeokit-xkt-utils/src/convert2xkt.js~convert2xkt",
-    "function/index.html#static-function-convert2xkt",
-    "<span>convert2xkt</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/convert2xkt.js</span>",
-    "function"
-  ],
-  [
     "@xeokit/xeokit-xkt-utils/src/parsers/parse3dxmlintoxktmodel.js~parse3dxmlintoxktmodel",
     "function/index.html#static-function-parse3DXMLIntoXKTModel",
     "<span>parse3DXMLIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parse3DXMLIntoXKTModel.js</span>",
