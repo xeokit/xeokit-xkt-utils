@@ -32,13 +32,16 @@ const tempVec3c = math.vec3();
  *
  *     const xktModel = new XKTModel();
  *
- *     await parseCityJSONIntoXKTModel({
+ *     parseCityJSONIntoXKTModel({
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -50,62 +53,71 @@ const tempVec3c = math.vec3();
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parseCityJSONIntoXKTModel({data, xktModel, rotateX=true, outputObjectProperties, stats, log}) {
+function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObjectProperties, stats, log}) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (data.type !== "CityJSON") {
-        throw "Invalid argument: data is not a CityJSON file";
-    }
-
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    const vertices = data.transform // Avoid side effects - don't modify the CityJSON data
-        ? transformVertices(data.vertices, data.transform, rotateX)
-        : data.vertices;
-
-    const ctx = {
-        data,
-        vertices,
-        xktModel,
-        outputObjectProperties,
-        log: (log || function (msg) {
-        }),
-        nextId: 0,
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    ctx.xktModel.schema = data.type + " " + data.version;
+        if (data.type !== "CityJSON") {
+            reject("Invalid argument: data is not a CityJSON file");
+            return;
+        }
 
-    ctx.log("Converting " + ctx.xktModel.schema);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    if (rotateX) {
-        ctx.log("Rotating model about X-axis");
-    }
+        const vertices = data.transform // Avoid side effects - don't modify the CityJSON data
+            ? transformVertices(data.vertices, data.transform, rotateX)
+            : data.vertices;
 
-    await parseCityJSON(ctx);
+        const ctx = {
+            data,
+            vertices,
+            xktModel,
+            outputObjectProperties,
+            log: (log || function (msg) {
+            }),
+            nextId: 0,
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        ctx.xktModel.schema = data.type + " " + data.version;
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+        ctx.log("Converting " + ctx.xktModel.schema);
+
+        if (rotateX) {
+            ctx.log("Rotating model about X-axis");
+        }
+
+        parseCityJSON(ctx);
+
+        ctx.log("Converted objects: " + ctx.stats.numObjects);
+        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+        ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+        if (stats) {
+            stats.numTriangles = ctx.stats.numTriangles;
+            stats.numVertices = ctx.stats.numVertices;
+            stats.numObjects = ctx.stats.numObjects;
+            stats.numGeometries = ctx.stats.numGeometries;
+        }
+
+        resolve();
+    });
 }
 
 function transformVertices(vertices, transform, rotateX) {

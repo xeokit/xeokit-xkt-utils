@@ -10,7 +10,7 @@ class ZIPArchive {
         this._domParser = domParser;
     }
 
-    async init(blob) {
+    init(blob) {
         return this._zip.loadAsync(blob);
     }
 

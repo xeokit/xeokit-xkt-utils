@@ -1,6 +1,7 @@
 import {parse} from '@loaders.gl/core';
 import {LASLoader} from '@loaders.gl/las';
 
+
 /**
  * @desc Parses LAS and LAZ point cloud data into an {@link XKTModel}.
  *
@@ -21,9 +22,12 @@ import {LASLoader} from '@loaders.gl/las';
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *

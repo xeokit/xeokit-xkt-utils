@@ -25,9 +25,12 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  *          wasmPath: "../dist/",
  *          autoNormals: true,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -44,7 +47,7 @@ import * as WebIFC from "web-ifc/web-ifc-api.js";
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseIFCIntoXKTModel({
+function parseIFCIntoXKTModel({
                                         data,
                                         xktModel,
                                         autoNormals = true,
@@ -54,70 +57,82 @@ async function parseIFCIntoXKTModel({
                                         log
                                     }) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function(resolve, reject) {
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    if (!wasmPath) {
-        throw "Argument expected: wasmPath";
-    }
-
-    const ifcAPI = new WebIFC.IfcAPI();
-
-    if (wasmPath) {
-        ifcAPI.SetWasmPath(wasmPath);
-    }
-
-    await ifcAPI.Init();
-
-    const dataArray = new Uint8Array(data);
-
-    const modelID = ifcAPI.OpenModel(dataArray);
-
-    const ctx = {
-        modelID,
-        ifcAPI,
-        xktModel,
-        autoNormals,
-        outputObjectProperties,
-        log: (log || function (msg) {
-        }),
-        nextId: 0,
-        stats: {
-            numTriangles: 0,
-            numVertices: 0,
-            numObjects: 0,
-            numGeometries: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
-    const ifcProjectId = lines.get(0);
-    const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    ctx.xktModel.schema = "";
-    ctx.xktModel.modelId = "" + modelID;
-    ctx.xktModel.projectId = "" + ifcProjectId;
+        if (!wasmPath) {
+            reject("Argument expected: wasmPath");
+            return;
+        }
 
-    parseGeometry(ctx);
+        const ifcAPI = new WebIFC.IfcAPI();
 
-    parseMetadata(ctx);
+        if (wasmPath) {
+            ifcAPI.SetWasmPath(wasmPath);
+        }
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        ifcAPI.Init().then(() => {
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+            const dataArray = new Uint8Array(data);
+
+            const modelID = ifcAPI.OpenModel(dataArray);
+
+            const ctx = {
+                modelID,
+                ifcAPI,
+                xktModel,
+                autoNormals,
+                outputObjectProperties,
+                log: (log || function (msg) {
+                }),
+                nextId: 0,
+                stats: {
+                    numTriangles: 0,
+                    numVertices: 0,
+                    numObjects: 0,
+                    numGeometries: 0
+                }
+            };
+
+            const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
+            const ifcProjectId = lines.get(0);
+            const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+
+            ctx.xktModel.schema = "";
+            ctx.xktModel.modelId = "" + modelID;
+            ctx.xktModel.projectId = "" + ifcProjectId;
+
+            parseGeometry(ctx);
+            parseMetadata(ctx);
+
+            ctx.log("Converted objects: " + ctx.stats.numObjects);
+            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+            ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+            if (stats) {
+                stats.numTriangles = ctx.stats.numTriangles;
+                stats.numVertices = ctx.stats.numVertices;
+                stats.numObjects = ctx.stats.numObjects;
+                stats.numGeometries = ctx.stats.numGeometries;
+            }
+
+            resolve();
+
+        }).catch((e) => {
+
+            reject(e);
+        })
+    });
 }
 
 function parseGeometry(ctx) {

@@ -20,74 +20,88 @@ const supportedSchemas = ["4.2"];
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, stats={}, log}) {
+function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false, stats = {}, log}) {
 
-    const isBrowser = (typeof window !== 'undefined');
+    return new Promise(function (resolve, reject) {
 
-    if (isBrowser) {
-        domParser = new DOMParser();
-    } else if (!domParser) {
-        throw "Config expected: domParser (needed when running in node.js)";
-    }
+        const isBrowser = (typeof window !== 'undefined');
 
-    if (!data) {
-        throw "Config expected: data";
-    }
+        if (isBrowser) {
+            domParser = new DOMParser();
 
-    if (!xktModel) {
-        throw "Config expected: xktModel";
-    }
-
-    const zipArchive = new ZIPArchive(domParser);
-
-    await zipArchive.init(data);
-
-    const ctx = {
-        zipArchive: zipArchive,
-        edgeThreshold: 10,
-        xktModel: xktModel,
-        autoNormals: autoNormals,
-        info: {
-            references: {}
-        },
-        log: (msg) => {
-            if (log) {
-                log(msg);
-            }
-        },
-        warn: (msg) => {
-            if (log) {
-                log("Warning: " + msg);
-            }
-        },
-        error: (msg) => {
-            if (log) {
-                log("Error: " + msg);
-            }
-        },
-        nextId: 0,
-        materials: {},
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        } else if (!domParser) {
+            reject("Config expected: domParser (needed when running in node.js)");
+            return;
         }
-    };
 
-    await parseDocument(ctx);
+        if (!data) {
+            reject("Config expected: data");
+            return;
+        }
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        if (!xktModel) {
+            reject("Config expected: xktModel");
+            return;
+        }
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+        const zipArchive = new ZIPArchive(domParser);
+
+        zipArchive.init(data).then(() => {
+
+            const ctx = {
+                zipArchive: zipArchive,
+                edgeThreshold: 10,
+                xktModel: xktModel,
+                autoNormals: autoNormals,
+                info: {
+                    references: {}
+                },
+                log: (msg) => {
+                    if (log) {
+                        log(msg);
+                    }
+                },
+                warn: (msg) => {
+                    if (log) {
+                        log("Warning: " + msg);
+                    }
+                },
+                error: (msg) => {
+                    if (log) {
+                        log("Error: " + msg);
+                    }
+                },
+                nextId: 0,
+                materials: {},
+                stats: {
+                    numObjects: 0,
+                    numGeometries: 0,
+                    numTriangles: 0,
+                    numVertices: 0
+                }
+            };
+
+            parseDocument(ctx).then(() => {
+                ctx.log("Converted objects: " + ctx.stats.numObjects);
+                ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+                ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+                ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+                if (stats) {
+                    stats.numTriangles = ctx.stats.numTriangles;
+                    stats.numVertices = ctx.stats.numVertices;
+                    stats.numObjects = ctx.stats.numObjects;
+                    stats.numGeometries = ctx.stats.numGeometries;
+                }
+
+                resolve();
+            });
+
+
+        }, (errMsg) => {
+            reject(errMsg);
+        });
+    });
 }
 
 async function parseDocument(ctx) {
@@ -570,8 +584,8 @@ function parse3DRepRep(ctx, node, result) {
         };
 
         ctx.stats.numGeometries++;
-        ctx.stats.numVertices += meshesResult.positions ? meshesResult.positions.length/3 : 0;
-        ctx.stats.numTriangles += meshesResult.indices ? meshesResult.indices.length/3 : 0;
+        ctx.stats.numVertices += meshesResult.positions ? meshesResult.positions.length / 3 : 0;
+        ctx.stats.numTriangles += meshesResult.indices ? meshesResult.indices.length / 3 : 0;
     }
 }
 

@@ -16,9 +16,12 @@
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -28,133 +31,139 @@
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log}) {
 
-    const textData = decodeText(new Uint8Array(data));
+    return new Promise(function(resolve, reject) {
 
-    const header = parseHeader(textData);
+        const textData = decodeText(new Uint8Array(data));
 
-    const positions = [];
-    const normals = [];
-    const colors = [];
+        const header = parseHeader(textData);
 
-    if (header.data === 'ascii') {
+        const positions = [];
+        const normals = [];
+        const colors = [];
 
-        const offset = header.offset;
-        const data = textData.substr(header.headerLen);
-        const lines = data.split('\n');
+        if (header.data === 'ascii') {
 
-        for (let i = 0, l = lines.length; i < l; i++) {
+            const offset = header.offset;
+            const data = textData.substr(header.headerLen);
+            const lines = data.split('\n');
 
-            if (lines[i] === '') {
-                continue;
-            }
+            for (let i = 0, l = lines.length; i < l; i++) {
 
-            const line = lines[i].split(' ');
+                if (lines[i] === '') {
+                    continue;
+                }
 
-            if (offset.x !== undefined) {
-                positions.push(parseFloat(line[offset.x]));
-                positions.push(parseFloat(line[offset.y]));
-                positions.push(parseFloat(line[offset.z]));
-            }
+                const line = lines[i].split(' ');
 
-            if (offset.rgb !== undefined) {
-                const rgb = parseFloat(line[offset.rgb]);
-                const r = (rgb >> 16) & 0x0000ff;
-                const g = (rgb >> 8) & 0x0000ff;
-                const b = (rgb >> 0) & 0x0000ff;
-                colors.push(r, g, b, 255);
-            } else {
-                colors.push(255);
-                colors.push(255);
-                colors.push(255);
-            }
-        }
-    }
+                if (offset.x !== undefined) {
+                    positions.push(parseFloat(line[offset.x]));
+                    positions.push(parseFloat(line[offset.y]));
+                    positions.push(parseFloat(line[offset.z]));
+                }
 
-    if (header.data === 'binary_compressed') {
-
-        const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
-        const compressedSize = sizes[0];
-        const decompressedSize = sizes[1];
-        const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
-        const dataview = new DataView(decompressed.buffer);
-        const offset = header.offset;
-
-        for (let i = 0; i < header.points; i++) {
-
-            if (offset.x !== undefined) {
-                positions.push(dataview.getFloat32((header.points * offset.x) + header.size[0] * i, littleEndian));
-                positions.push(dataview.getFloat32((header.points * offset.y) + header.size[1] * i, littleEndian));
-                positions.push(dataview.getFloat32((header.points * offset.z) + header.size[2] * i, littleEndian));
-            }
-
-            if (offset.rgb !== undefined) {
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 0));
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 1));
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 2));
-                //    colors.push(255);
-            } else {
-                colors.push(1);
-                colors.push(1);
-                colors.push(1);
+                if (offset.rgb !== undefined) {
+                    const rgb = parseFloat(line[offset.rgb]);
+                    const r = (rgb >> 16) & 0x0000ff;
+                    const g = (rgb >> 8) & 0x0000ff;
+                    const b = (rgb >> 0) & 0x0000ff;
+                    colors.push(r, g, b, 255);
+                } else {
+                    colors.push(255);
+                    colors.push(255);
+                    colors.push(255);
+                }
             }
         }
-    }
 
-    if (header.data === 'binary') {
+        if (header.data === 'binary_compressed') {
 
-        const dataview = new DataView(data, header.headerLen);
-        const offset = header.offset;
+            const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
+            const compressedSize = sizes[0];
+            const decompressedSize = sizes[1];
+            const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
+            const dataview = new DataView(decompressed.buffer);
+            const offset = header.offset;
 
-        for (let i = 0, row = 0; i < header.points; i++, row += header.rowSize) {
-            if (offset.x !== undefined) {
-                positions.push(dataview.getFloat32(row + offset.x, littleEndian));
-                positions.push(dataview.getFloat32(row + offset.y, littleEndian));
-                positions.push(dataview.getFloat32(row + offset.z, littleEndian));
-            }
+            for (let i = 0; i < header.points; i++) {
 
-            if (offset.rgb !== undefined) {
-                colors.push(dataview.getUint8(row + offset.rgb + 2));
-                colors.push(dataview.getUint8(row + offset.rgb + 1));
-                colors.push(dataview.getUint8(row + offset.rgb + 0));
-            } else {
-                colors.push(255);
-                colors.push(255);
-                colors.push(255);
+                if (offset.x !== undefined) {
+                    positions.push(dataview.getFloat32((header.points * offset.x) + header.size[0] * i, littleEndian));
+                    positions.push(dataview.getFloat32((header.points * offset.y) + header.size[1] * i, littleEndian));
+                    positions.push(dataview.getFloat32((header.points * offset.z) + header.size[2] * i, littleEndian));
+                }
+
+                if (offset.rgb !== undefined) {
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 0));
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 1));
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 2));
+                    //    colors.push(255);
+                } else {
+                    colors.push(1);
+                    colors.push(1);
+                    colors.push(1);
+                }
             }
         }
-    }
 
-    xktModel.createGeometry({
-        geometryId: "pointsGeometry",
-        primitiveType: "points",
-        positions: positions,
-        colors: colors && colors.length > 0 ? colors : null
+        if (header.data === 'binary') {
+
+            const dataview = new DataView(data, header.headerLen);
+            const offset = header.offset;
+
+            for (let i = 0, row = 0; i < header.points; i++, row += header.rowSize) {
+                if (offset.x !== undefined) {
+                    positions.push(dataview.getFloat32(row + offset.x, littleEndian));
+                    positions.push(dataview.getFloat32(row + offset.y, littleEndian));
+                    positions.push(dataview.getFloat32(row + offset.z, littleEndian));
+                }
+
+                if (offset.rgb !== undefined) {
+                    colors.push(dataview.getUint8(row + offset.rgb + 2));
+                    colors.push(dataview.getUint8(row + offset.rgb + 1));
+                    colors.push(dataview.getUint8(row + offset.rgb + 0));
+                } else {
+                    colors.push(255);
+                    colors.push(255);
+                    colors.push(255);
+                }
+            }
+        }
+
+        xktModel.createGeometry({
+            geometryId: "pointsGeometry",
+            primitiveType: "points",
+            positions: positions,
+            colors: colors && colors.length > 0 ? colors : null
+        });
+
+        xktModel.createMesh({
+            meshId: "pointsMesh",
+            geometryId: "pointsGeometry"
+        });
+
+        xktModel.createEntity({
+            entityId: "geometries",
+            meshIds: ["pointsMesh"]
+        });
+
+        if (log) {
+            log("Converted objects: 1");
+            log("Converted geometries: 1");
+            log("Converted vertices: " + positions.length / 3);
+        }
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numVertices = positions.length / 3;
+        }
+
+        resolve();
     });
-
-    xktModel.createMesh({
-        meshId: "pointsMesh",
-        geometryId: "pointsGeometry"
-    });
-
-    xktModel.createEntity({
-        entityId: "geometries",
-        meshIds: ["pointsMesh"]
-    });
-
-    if (log) {
-        log("Converted objects: 1");
-        log("Converted geometries: 1");
-        log("Converted vertices: " + positions.length / 3);
-    }
-
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = positions.length / 3;
-    }
 }
 
 function parseHeader(data) {

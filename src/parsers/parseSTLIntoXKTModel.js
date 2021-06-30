@@ -1,4 +1,4 @@
-import {math} from "../lib/math.js";
+
 import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
 
 /**
@@ -43,6 +43,7 @@ import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 async function parseSTLIntoXKTModel({
                                         data,
@@ -54,51 +55,59 @@ async function parseSTLIntoXKTModel({
                                         stats,
                                         log
                                     }) {
-    if (!data) {
-        throw "Argument expected: data";
-    }
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
+    return new Promise(function(resolve, reject) {
 
-    const ctx = {
-        data,
-        splitMeshes,
-        autoNormals,
-        smoothNormals,
-        smoothNormalsAngleThreshold,
-        xktModel,
-        nextId: 0,
-        log: (log || function (msg) {
-        }),
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    const binData = ensureBinary(data);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    if (isBinary(binData)) {
-        parseBinary(ctx, binData);
-    } else {
-        parseASCII(ctx, ensureString(data));
-    }
+        const ctx = {
+            data,
+            splitMeshes,
+            autoNormals,
+            smoothNormals,
+            smoothNormalsAngleThreshold,
+            xktModel,
+            nextId: 0,
+            log: (log || function (msg) {
+            }),
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        const binData = ensureBinary(data);
 
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-    }
+        if (isBinary(binData)) {
+            parseBinary(ctx, binData);
+        } else {
+            parseASCII(ctx, ensureString(data));
+        }
+
+        ctx.log("Converted objects: " + ctx.stats.numObjects);
+        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+        ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numTriangles = ctx.stats.numTriangles;
+            stats.numVertices = ctx.stats.numVertices;
+        }
+
+        resolve();
+    });
 }
 
 function isBinary(data) {

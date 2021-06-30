@@ -15,9 +15,12 @@ import {PLYLoader} from '@loaders.gl/ply';
  *
  *     const xktModel = new XKTModel();
  *
- *     parsePLYIntoXKTModel({data, xktModel});
- *
- *     xktModel.finalize();
+ *     parsePLYIntoXKTModel({data, xktModel}).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
+ *     });
  * });
  * ````
  *
@@ -26,65 +29,71 @@ import {PLYLoader} from '@loaders.gl/ply';
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
+function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    let parsedData;
-    try {
-        parsedData = await parse(data, PLYLoader);
-    } catch (e) {
-        if (log) {
-            log("[parsePLYIntoXKTModel] " + e);
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-        return;
-    }
 
-    const attributes = parsedData.attributes;
-    const colorsValue = attributes.COLOR_0.value;
-    const colorsCompressed = [];
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    for (let i = 0, len = colorsValue.length; i < len; i += 4) {
-        colorsCompressed.push(colorsValue[i]);
-        colorsCompressed.push(colorsValue[i + 1]);
-        colorsCompressed.push(colorsValue[i + 2]);
-    }
+        let parsedData;
+        try {
+            parsedData = parse(data, PLYLoader);
+        } catch (e) {
+            reject("Parsing error: " + e);
+            return;
+        }
 
-    xktModel.createGeometry({
-        geometryId: "plyGeometry",
-        primitiveType: "triangles",
-        positions: attributes.POSITION.value,
-        colorsCompressed: colorsCompressed
+        const attributes = parsedData.attributes;
+        const colorsValue = attributes.COLOR_0.value;
+        const colorsCompressed = [];
+
+        for (let i = 0, len = colorsValue.length; i < len; i += 4) {
+            colorsCompressed.push(colorsValue[i]);
+            colorsCompressed.push(colorsValue[i + 1]);
+            colorsCompressed.push(colorsValue[i + 2]);
+        }
+
+        xktModel.createGeometry({
+            geometryId: "plyGeometry",
+            primitiveType: "triangles",
+            positions: attributes.POSITION.value,
+            colorsCompressed: colorsCompressed
+        });
+
+        xktModel.createMesh({
+            meshId: "plyMesh",
+            geometryId: "plyGeometry"
+        });
+
+        xktModel.createEntity({
+            entityId: "ply",
+            meshIds: ["plyMesh"]
+        });
+
+        if (log) {
+            log("Converted objects: 1");
+            log("Converted geometries: 1");
+            log("Converted vertices: " + positions.length / 3);
+        }
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numVertices = attributes.POSITION.value.length / 3;
+        }
+
+        resolve();
     });
-
-    xktModel.createMesh({
-        meshId: "plyMesh",
-        geometryId: "plyGeometry"
-    });
-
-    xktModel.createEntity({
-        entityId: "ply",
-        meshIds: ["plyMesh"]
-    });
-
-    if (log) {
-        log("Converted objects: 1");
-        log("Converted geometries: 1");
-        log("Converted vertices: " + positions.length / 3);
-    }
-
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = attributes.POSITION.value.length / 3;
-    }
 }
 
 export {parsePLYIntoXKTModel};

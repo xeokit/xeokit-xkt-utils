@@ -43,9 +43,12 @@ const WEBGL_TYPE_SIZES = {
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -59,93 +62,124 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
+function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    const ctx = {
-        gltf: data,
-        getAttachment: getAttachment || (() => {
-            throw new Error('You must define getAttachment() method to convert glTF with external resources')
-        }),
-        log: (log || function (msg) {
-        }),
-        xktModel: xktModel,
-        autoNormals: autoNormals,
-        geometryCreated: {},
-        nextGeometryId: 0,
-        nextMeshId: 0,
-        nextDefaultEntityId: 0,
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    await parseBuffers(ctx);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    parseBufferViews(ctx);
-    freeBuffers(ctx);
-    parseMaterials(ctx);
-    parseDefaultScene(ctx);
+        const ctx = {
+            gltf: data,
+            getAttachment: getAttachment || (() => {
+                throw new Error('You must define getAttachment() method to convert glTF with external resources')
+            }),
+            log: (log || function (msg) {
+            }),
+            xktModel: xktModel,
+            autoNormals: autoNormals,
+            geometryCreated: {},
+            nextGeometryId: 0,
+            nextMeshId: 0,
+            nextDefaultEntityId: 0,
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        parseBuffers(ctx).then(() => {
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+            parseBufferViews(ctx);
+            freeBuffers(ctx);
+            parseMaterials(ctx);
+            parseDefaultScene(ctx);
+
+            ctx.log("Converted objects: " + ctx.stats.numObjects);
+            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+            ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+            if (stats) {
+                stats.numTriangles = ctx.stats.numTriangles;
+                stats.numVertices = ctx.stats.numVertices;
+                stats.numObjects = ctx.stats.numObjects;
+                stats.numGeometries = ctx.stats.numGeometries;
+            }
+
+            resolve();
+
+        }, (errMsg) => {
+            reject(errMsg);
+        });
+    });
 }
 
-async function parseBuffers(ctx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+function parseBuffers(ctx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
     const buffers = ctx.gltf.buffers;
     if (buffers) {
-        await Promise.all(buffers.map(buffer => parseBuffer(ctx, buffer)));
+        return Promise.all(buffers.map(buffer => parseBuffer(ctx, buffer)));
+    } else {
+        return new Promise(function (resolve, reject) {
+            resolve();
+        });
     }
 }
 
-async function parseBuffer(ctx, bufferInfo) {
-    const uri = bufferInfo.uri;
-    if (!uri) {
-        throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
-    }
-    bufferInfo._buffer = await parseArrayBuffer(ctx, uri);
+function parseBuffer(ctx, bufferInfo) {
+    return new Promise(function (resolve, reject) {
+        const uri = bufferInfo.uri;
+        if (!uri) {
+            reject('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+            return;
+        }
+        parseArrayBuffer(ctx, uri).then((arrayBuffer) => {
+            bufferInfo._buffer = arrayBuffer;
+            resolve(arrayBuffer);
+        }, (errMsg) => {
+            reject(errMsg);
+        })
+    });
 }
 
-async function parseArrayBuffer(ctx, uri) {
-    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
-    const dataUriRegexResult = uri.match(dataUriRegex);
-    if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
-        const isBase64 = !!dataUriRegexResult[2];
-        let data = dataUriRegexResult[3];
-        data = decodeURIComponent(data);
-        if (isBase64) {
-            data = atob2(data);
+function parseArrayBuffer(ctx, uri) {
+    return new Promise(function (resolve, reject) {
+        const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
+        const dataUriRegexResult = uri.match(dataUriRegex);
+        if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
+            const isBase64 = !!dataUriRegexResult[2];
+            let data = dataUriRegexResult[3];
+            data = decodeURIComponent(data);
+            if (isBase64) {
+                data = atob2(data);
+            }
+            const buffer = new ArrayBuffer(data.length);
+            const view = new Uint8Array(buffer);
+            for (let i = 0; i < data.length; i++) {
+                view[i] = data.charCodeAt(i);
+            }
+            resolve(buffer);
+        } else { // Uri is a path to a file
+            ctx.getAttachment(uri).then(
+                (arrayBuffer) => {
+                    resolve(arrayBuffer);
+                },
+                (errMsg) => {
+                    reject(errMsg);
+                });
         }
-        const buffer = new ArrayBuffer(data.length);
-        const view = new Uint8Array(buffer);
-        for (let i = 0; i < data.length; i++) {
-            view[i] = data.charCodeAt(i);
-        }
-        return buffer;
-    } else { // Uri is a path to a file
-        const arraybuffer = await ctx.getAttachment(uri);
-        return arraybuffer;
-    }
+    });
 }
 
 function parseBufferViews(ctx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
@@ -372,8 +406,8 @@ function parseNode(ctx, glTFNode, matrix) {
                         });
 
                         ctx.stats.numGeometries++;
-                        ctx.stats.numVertices += geometryArrays.positions ? geometryArrays.positions.length/3 : 0;
-                        ctx.stats.numTriangles += geometryArrays.indices ? geometryArrays.indices.length/3 : 0;
+                        ctx.stats.numVertices += geometryArrays.positions ? geometryArrays.positions.length / 3 : 0;
+                        ctx.stats.numTriangles += geometryArrays.indices ? geometryArrays.indices.length / 3 : 0;
 
                         ctx.geometryCreated[xktGeometryId] = true;
                     }
