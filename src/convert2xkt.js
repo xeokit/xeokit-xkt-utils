@@ -37,6 +37,7 @@ const DOMParser = require('xmldom').DOMParser;
  * @param {Function}[params.outputXKT] Callback to collect XKT file data.
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object}[stats] Collects statistics.
+ * @param {Function}[params.outputStats] Callback to collect statistics.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if neccessary. Applies to CityJSON and LAS/LAZ models.
  * @param {Function}[params.log] Logging callback.
  * @return {Promise<number>}
@@ -52,6 +53,7 @@ function convert2xkt({
                          outputXKT,
                          outputObjectProperties,
                          stats = {},
+                         outputStats,
                          rotateX,
                          log = (msg) => {
                          }
@@ -233,9 +235,9 @@ function convert2xkt({
             }
         }
 
-        function convert(converterFunc, converterParams) {
+        function convert(parser, converterParams) {
 
-            converterFunc(converterParams).then(() => {
+            parser(converterParams).then(() => {
 
                 xktModel.finalize();
 
@@ -266,6 +268,10 @@ function convert2xkt({
 
                 if (outputXKT) {
                     outputXKT(xktContent);
+                }
+
+                if (outputStats) {
+                    outputStats(stats);
                 }
 
                 resolve();

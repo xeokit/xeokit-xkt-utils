@@ -121,6 +121,30 @@ function convertModels(testStats) {
     });
 }
 
+function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) {
+    const xktDestDir = path.dirname(xktDest);
+    const objectPropsDir = `${xktDestDir}/props/`;
+    if (!fs.existsSync(objectPropsDir)) {
+        fs.mkdirSync(objectPropsDir);
+    }
+    return convert2xkt({
+        source: modelSrc,
+        metaModelSource: metaModelSrc,
+        outputXKTModel: async function (xktModel) {
+        },
+        outputXKT: async function (xktData) {
+            fs.writeFileSync(xktDest, xktData);
+        },
+        outputObjectProperties: async function (id, props) {
+            await fs.writeFileSync(`${objectPropsDir}/${id}.json`, JSON.stringify(props, null, "\t"));
+        },
+        stats,
+        log: (msg) => {
+            console.log(msg)
+        }
+    });
+}
+
 async function testModels(testStats) {
 
     console.log("[perfTests] Begin testing XKT models in xeokit..");
@@ -169,30 +193,6 @@ async function testModels(testStats) {
     server.close();
 
     console.log("[perfTests] Finished testing XKT models in xeokit.");
-}
-
-function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) {
-    const xktDestDir = path.dirname(xktDest);
-    const objectPropsDir = `${xktDestDir}/props/`;
-    if (!fs.existsSync(objectPropsDir)) {
-        fs.mkdirSync(objectPropsDir);
-    }
-    return convert2xkt({
-        source: modelSrc,
-        metaModelSource: metaModelSrc,
-        outputXKTModel: async function (xktModel) {
-        },
-        outputXKT: async function (xktData) {
-            fs.writeFileSync(xktDest, xktData);
-        },
-        outputObjectProperties: async function (id, props) {
-            await fs.writeFileSync(`${objectPropsDir}/${id}.json`, JSON.stringify(props, null, "\t"));
-        },
-        stats,
-        log: (msg) => {
-            console.log(msg)
-        }
-    });
 }
 
 function statsToMarkdown(testStats) {
