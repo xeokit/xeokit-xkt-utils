@@ -4690,10 +4690,10 @@ const kdTreeDimLength = new Float64Array(3);
 /**
  * A document model that represents the contents of an .XKT file.
  *
- * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into regions.
+ * * An XKTModel contains {@link XKTTile}s, which spatially subdivide the model into axis-aligned, box-shaped regions.
  * * Each {@link XKTTile} contains {@link XKTEntity}s, which represent the objects within its region.
  * * Each {@link XKTEntity} has {@link XKTMesh}s, which each have a {@link XKTGeometry}. Each {@link XKTGeometry} can be shared by multiple {@link XKTMesh}s.
- * * Import glTF into an XKTModel using {@link parseGLTFIntoXKTModel}.
+ * * Import models into an XKTModel using {@link parseGLTFIntoXKTModel}, {@link parseIFCIntoXKTModel}, {@link parse3DXMLIntoXKTModel}, {@link parseCityJSONIntoXKTModel} etc.
  * * Build an XKTModel programmatically using {@link XKTModel#createGeometry}, {@link XKTModel#createMesh} and {@link XKTModel#createEntity}.
  * * Serialize an XKTModel to an ArrayBuffer using {@link writeXKTModelToArrayBuffer}.
  *
@@ -13561,13 +13561,16 @@ const tempVec3c = math.vec3();
  *
  *     const xktModel = new XKTModel();
  *
- *     await parseCityJSONIntoXKTModel({
+ *     parseCityJSONIntoXKTModel({
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -13579,62 +13582,71 @@ const tempVec3c = math.vec3();
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parseCityJSONIntoXKTModel({data, xktModel, rotateX=true, outputObjectProperties, stats, log}) {
+function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObjectProperties, stats, log}) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (data.type !== "CityJSON") {
-        throw "Invalid argument: data is not a CityJSON file";
-    }
-
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    const vertices = data.transform // Avoid side effects - don't modify the CityJSON data
-        ? transformVertices(data.vertices, data.transform, rotateX)
-        : data.vertices;
-
-    const ctx = {
-        data,
-        vertices,
-        xktModel,
-        outputObjectProperties,
-        log: (log || function (msg) {
-        }),
-        nextId: 0,
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    ctx.xktModel.schema = data.type + " " + data.version;
+        if (data.type !== "CityJSON") {
+            reject("Invalid argument: data is not a CityJSON file");
+            return;
+        }
 
-    ctx.log("Converting " + ctx.xktModel.schema);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    if (rotateX) {
-        ctx.log("Rotating model about X-axis");
-    }
+        const vertices = data.transform // Avoid side effects - don't modify the CityJSON data
+            ? transformVertices(data.vertices, data.transform, rotateX)
+            : data.vertices;
 
-    await parseCityJSON(ctx);
+        const ctx = {
+            data,
+            vertices,
+            xktModel,
+            outputObjectProperties,
+            log: (log || function (msg) {
+            }),
+            nextId: 0,
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        ctx.xktModel.schema = data.type + " " + data.version;
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+        ctx.log("Converting " + ctx.xktModel.schema);
+
+        if (rotateX) {
+            ctx.log("Rotating model about X-axis");
+        }
+
+        parseCityJSON(ctx);
+
+        ctx.log("Converted objects: " + ctx.stats.numObjects);
+        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+        ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+        if (stats) {
+            stats.numTriangles = ctx.stats.numTriangles;
+            stats.numVertices = ctx.stats.numVertices;
+            stats.numObjects = ctx.stats.numObjects;
+            stats.numGeometries = ctx.stats.numGeometries;
+        }
+
+        resolve();
+    });
 }
 
 function transformVertices(vertices, transform, rotateX) {
@@ -14166,9 +14178,12 @@ const WEBGL_TYPE_SIZES = {
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -14182,93 +14197,124 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.getAttachment] Callback through which to fetch attachments, if the glTF has them.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
+function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    const ctx = {
-        gltf: data,
-        getAttachment: getAttachment || (() => {
-            throw new Error('You must define getAttachment() method to convert glTF with external resources')
-        }),
-        log: (log || function (msg) {
-        }),
-        xktModel: xktModel,
-        autoNormals: autoNormals,
-        geometryCreated: {},
-        nextGeometryId: 0,
-        nextMeshId: 0,
-        nextDefaultEntityId: 0,
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    await parseBuffers(ctx);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    parseBufferViews(ctx);
-    freeBuffers(ctx);
-    parseMaterials(ctx);
-    parseDefaultScene(ctx);
+        const ctx = {
+            gltf: data,
+            getAttachment: getAttachment || (() => {
+                throw new Error('You must define getAttachment() method to convert glTF with external resources')
+            }),
+            log: (log || function (msg) {
+            }),
+            xktModel: xktModel,
+            autoNormals: autoNormals,
+            geometryCreated: {},
+            nextGeometryId: 0,
+            nextMeshId: 0,
+            nextDefaultEntityId: 0,
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        parseBuffers(ctx).then(() => {
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+            parseBufferViews(ctx);
+            freeBuffers(ctx);
+            parseMaterials(ctx);
+            parseDefaultScene(ctx);
+
+            ctx.log("Converted objects: " + ctx.stats.numObjects);
+            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+            ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+            if (stats) {
+                stats.numTriangles = ctx.stats.numTriangles;
+                stats.numVertices = ctx.stats.numVertices;
+                stats.numObjects = ctx.stats.numObjects;
+                stats.numGeometries = ctx.stats.numGeometries;
+            }
+
+            resolve();
+
+        }, (errMsg) => {
+            reject(errMsg);
+        });
+    });
 }
 
-async function parseBuffers(ctx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
+function parseBuffers(ctx) {  // Parses geometry buffers into temporary  "_buffer" Unit8Array properties on the glTF "buffer" elements
     const buffers = ctx.gltf.buffers;
     if (buffers) {
-        await Promise.all(buffers.map(buffer => parseBuffer(ctx, buffer)));
+        return Promise.all(buffers.map(buffer => parseBuffer(ctx, buffer)));
+    } else {
+        return new Promise(function (resolve, reject) {
+            resolve();
+        });
     }
 }
 
-async function parseBuffer(ctx, bufferInfo) {
-    const uri = bufferInfo.uri;
-    if (!uri) {
-        throw new Error('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
-    }
-    bufferInfo._buffer = await parseArrayBuffer(ctx, uri);
+function parseBuffer(ctx, bufferInfo) {
+    return new Promise(function (resolve, reject) {
+        const uri = bufferInfo.uri;
+        if (!uri) {
+            reject('gltf/handleBuffer missing uri in ' + JSON.stringify(bufferInfo));
+            return;
+        }
+        parseArrayBuffer(ctx, uri).then((arrayBuffer) => {
+            bufferInfo._buffer = arrayBuffer;
+            resolve(arrayBuffer);
+        }, (errMsg) => {
+            reject(errMsg);
+        });
+    });
 }
 
-async function parseArrayBuffer(ctx, uri) {
-    const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
-    const dataUriRegexResult = uri.match(dataUriRegex);
-    if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
-        const isBase64 = !!dataUriRegexResult[2];
-        let data = dataUriRegexResult[3];
-        data = decodeURIComponent(data);
-        if (isBase64) {
-            data = atob2(data);
+function parseArrayBuffer(ctx, uri) {
+    return new Promise(function (resolve, reject) {
+        const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/; // Check for data: URI
+        const dataUriRegexResult = uri.match(dataUriRegex);
+        if (dataUriRegexResult) { // Safari can't handle data URIs through XMLHttpRequest
+            const isBase64 = !!dataUriRegexResult[2];
+            let data = dataUriRegexResult[3];
+            data = decodeURIComponent(data);
+            if (isBase64) {
+                data = atob2(data);
+            }
+            const buffer = new ArrayBuffer(data.length);
+            const view = new Uint8Array(buffer);
+            for (let i = 0; i < data.length; i++) {
+                view[i] = data.charCodeAt(i);
+            }
+            resolve(buffer);
+        } else { // Uri is a path to a file
+            ctx.getAttachment(uri).then(
+                (arrayBuffer) => {
+                    resolve(arrayBuffer);
+                },
+                (errMsg) => {
+                    reject(errMsg);
+                });
         }
-        const buffer = new ArrayBuffer(data.length);
-        const view = new Uint8Array(buffer);
-        for (let i = 0; i < data.length; i++) {
-            view[i] = data.charCodeAt(i);
-        }
-        return buffer;
-    } else { // Uri is a path to a file
-        const arraybuffer = await ctx.getAttachment(uri);
-        return arraybuffer;
-    }
+    });
 }
 
 function parseBufferViews(ctx) { // Parses our temporary "_buffer" properties into "_buffer" properties on glTF "bufferView" elements
@@ -14493,8 +14539,8 @@ function parseNode(ctx, glTFNode, matrix) {
                         });
 
                         ctx.stats.numGeometries++;
-                        ctx.stats.numVertices += geometryArrays.positions ? geometryArrays.positions.length/3 : 0;
-                        ctx.stats.numTriangles += geometryArrays.indices ? geometryArrays.indices.length/3 : 0;
+                        ctx.stats.numVertices += geometryArrays.positions ? geometryArrays.positions.length / 3 : 0;
+                        ctx.stats.numTriangles += geometryArrays.indices ? geometryArrays.indices.length / 3 : 0;
 
                         ctx.geometryCreated[xktGeometryId] = true;
                     }
@@ -14666,7 +14712,7 @@ class ZIPArchive {
         this._domParser = domParser;
     }
 
-    async init(blob) {
+    init(blob) {
         return this._zip.loadAsync(blob);
     }
 
@@ -14733,74 +14779,88 @@ const supportedSchemas = ["4.2"];
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals=false, stats={}, log}) {
+function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false, stats = {}, log}) {
 
-    const isBrowser = (typeof window !== 'undefined');
+    return new Promise(function (resolve, reject) {
 
-    if (isBrowser) {
-        domParser = new DOMParser();
-    } else if (!domParser) {
-        throw "Config expected: domParser (needed when running in node.js)";
-    }
+        const isBrowser = (typeof window !== 'undefined');
 
-    if (!data) {
-        throw "Config expected: data";
-    }
+        if (isBrowser) {
+            domParser = new DOMParser();
 
-    if (!xktModel) {
-        throw "Config expected: xktModel";
-    }
-
-    const zipArchive = new ZIPArchive(domParser);
-
-    await zipArchive.init(data);
-
-    const ctx = {
-        zipArchive: zipArchive,
-        edgeThreshold: 10,
-        xktModel: xktModel,
-        autoNormals: autoNormals,
-        info: {
-            references: {}
-        },
-        log: (msg) => {
-            if (log) {
-                log(msg);
-            }
-        },
-        warn: (msg) => {
-            if (log) {
-                log("Warning: " + msg);
-            }
-        },
-        error: (msg) => {
-            if (log) {
-                log("Error: " + msg);
-            }
-        },
-        nextId: 0,
-        materials: {},
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        } else if (!domParser) {
+            reject("Config expected: domParser (needed when running in node.js)");
+            return;
         }
-    };
 
-    await parseDocument(ctx);
+        if (!data) {
+            reject("Config expected: data");
+            return;
+        }
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        if (!xktModel) {
+            reject("Config expected: xktModel");
+            return;
+        }
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+        const zipArchive = new ZIPArchive(domParser);
+
+        zipArchive.init(data).then(() => {
+
+            const ctx = {
+                zipArchive: zipArchive,
+                edgeThreshold: 10,
+                xktModel: xktModel,
+                autoNormals: autoNormals,
+                info: {
+                    references: {}
+                },
+                log: (msg) => {
+                    if (log) {
+                        log(msg);
+                    }
+                },
+                warn: (msg) => {
+                    if (log) {
+                        log("Warning: " + msg);
+                    }
+                },
+                error: (msg) => {
+                    if (log) {
+                        log("Error: " + msg);
+                    }
+                },
+                nextId: 0,
+                materials: {},
+                stats: {
+                    numObjects: 0,
+                    numGeometries: 0,
+                    numTriangles: 0,
+                    numVertices: 0
+                }
+            };
+
+            parseDocument(ctx).then(() => {
+                ctx.log("Converted objects: " + ctx.stats.numObjects);
+                ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+                ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+                ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+                if (stats) {
+                    stats.numTriangles = ctx.stats.numTriangles;
+                    stats.numVertices = ctx.stats.numVertices;
+                    stats.numObjects = ctx.stats.numObjects;
+                    stats.numGeometries = ctx.stats.numGeometries;
+                }
+
+                resolve();
+            });
+
+
+        }, (errMsg) => {
+            reject(errMsg);
+        });
+    });
 }
 
 async function parseDocument(ctx) {
@@ -15263,8 +15323,8 @@ function parse3DRepRep(ctx, node, result) {
         };
 
         ctx.stats.numGeometries++;
-        ctx.stats.numVertices += meshesResult.positions ? meshesResult.positions.length/3 : 0;
-        ctx.stats.numTriangles += meshesResult.indices ? meshesResult.indices.length/3 : 0;
+        ctx.stats.numVertices += meshesResult.positions ? meshesResult.positions.length / 3 : 0;
+        ctx.stats.numTriangles += meshesResult.indices ? meshesResult.indices.length / 3 : 0;
     }
 }
 
@@ -51856,9 +51916,12 @@ var IfcAPI = class {
  *          wasmPath: "../dist/",
  *          autoNormals: true,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -51875,7 +51938,7 @@ var IfcAPI = class {
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseIFCIntoXKTModel({
+function parseIFCIntoXKTModel({
                                         data,
                                         xktModel,
                                         autoNormals = true,
@@ -51885,70 +51948,82 @@ async function parseIFCIntoXKTModel({
                                         log
                                     }) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function(resolve, reject) {
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    if (!wasmPath) {
-        throw "Argument expected: wasmPath";
-    }
-
-    const ifcAPI = new IfcAPI();
-
-    if (wasmPath) {
-        ifcAPI.SetWasmPath(wasmPath);
-    }
-
-    await ifcAPI.Init();
-
-    const dataArray = new Uint8Array(data);
-
-    const modelID = ifcAPI.OpenModel(dataArray);
-
-    const ctx = {
-        modelID,
-        ifcAPI,
-        xktModel,
-        autoNormals,
-        outputObjectProperties,
-        log: (log || function (msg) {
-        }),
-        nextId: 0,
-        stats: {
-            numTriangles: 0,
-            numVertices: 0,
-            numObjects: 0,
-            numGeometries: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, IFCPROJECT);
-    const ifcProjectId = lines.get(0);
-    const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    ctx.xktModel.schema = "";
-    ctx.xktModel.modelId = "" + modelID;
-    ctx.xktModel.projectId = "" + ifcProjectId;
+        if (!wasmPath) {
+            reject("Argument expected: wasmPath");
+            return;
+        }
 
-    parseGeometry(ctx);
+        const ifcAPI = new IfcAPI();
 
-    parseMetadata(ctx);
+        if (wasmPath) {
+            ifcAPI.SetWasmPath(wasmPath);
+        }
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        ifcAPI.Init().then(() => {
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+            const dataArray = new Uint8Array(data);
+
+            const modelID = ifcAPI.OpenModel(dataArray);
+
+            const ctx = {
+                modelID,
+                ifcAPI,
+                xktModel,
+                autoNormals,
+                outputObjectProperties,
+                log: (log || function (msg) {
+                }),
+                nextId: 0,
+                stats: {
+                    numTriangles: 0,
+                    numVertices: 0,
+                    numObjects: 0,
+                    numGeometries: 0
+                }
+            };
+
+            const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, IFCPROJECT);
+            const ifcProjectId = lines.get(0);
+            const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+
+            ctx.xktModel.schema = "";
+            ctx.xktModel.modelId = "" + modelID;
+            ctx.xktModel.projectId = "" + ifcProjectId;
+
+            parseGeometry(ctx);
+            parseMetadata(ctx);
+
+            ctx.log("Converted objects: " + ctx.stats.numObjects);
+            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+            ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+            if (stats) {
+                stats.numTriangles = ctx.stats.numTriangles;
+                stats.numVertices = ctx.stats.numVertices;
+                stats.numObjects = ctx.stats.numObjects;
+                stats.numGeometries = ctx.stats.numGeometries;
+            }
+
+            resolve();
+
+        }).catch((e) => {
+
+            reject(e);
+        });
+    });
 }
 
 function parseGeometry(ctx) {
@@ -76047,9 +76122,12 @@ var LASLoader$1 = _objectSpread$4(_objectSpread$4({}, LASWorkerLoader), {}, {
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -76140,63 +76218,69 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
  * @param {String[]} [params.includeTypes] Types to include in parsing.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excludeTypes, log}) {
 
-    const metaObjects = metaModelData.metaObjects || [];
+    return new Promise(function (resolve, reject) {
 
-    xktModel.modelId = metaModelData.revisionId || ""; // HACK
-    xktModel.projectId = metaModelData.projectId || "";
-    xktModel.revisionId = metaModelData.revisionId || "";
-    xktModel.author = metaModelData.author || "";
-    xktModel.createdAt = metaModelData.createdAt || "";
-    xktModel.creatingApplication = metaModelData.creatingApplication || "";
-    xktModel.schema = metaModelData.schema || "";
+        const metaObjects = metaModelData.metaObjects || [];
 
-    let includeTypesMap;
-    if (includeTypes) {
-        includeTypesMap = {};
-        for (let i = 0, len = includeTypes.length; i < len; i++) {
-            includeTypesMap[includeTypes[i]] = true;
-        }
-    }
+        xktModel.modelId = metaModelData.revisionId || ""; // HACK
+        xktModel.projectId = metaModelData.projectId || "";
+        xktModel.revisionId = metaModelData.revisionId || "";
+        xktModel.author = metaModelData.author || "";
+        xktModel.createdAt = metaModelData.createdAt || "";
+        xktModel.creatingApplication = metaModelData.creatingApplication || "";
+        xktModel.schema = metaModelData.schema || "";
 
-    let excludeTypesMap;
-    if (excludeTypes) {
-        excludeTypesMap = {};
-        for (let i = 0, len = excludeTypes.length; i < len; i++) {
-            excludeTypesMap[excludeTypes[i]] = true;
-        }
-    }
-
-    let countMetaObjects = 0;
-
-    for (let i = 0, len = metaObjects.length; i < len; i++) {
-
-        const metaObject = metaObjects[i];
-        const type = metaObject.type;
-
-        if (excludeTypesMap && excludeTypesMap[type]) {
-            continue;
+        let includeTypesMap;
+        if (includeTypes) {
+            includeTypesMap = {};
+            for (let i = 0, len = includeTypes.length; i < len; i++) {
+                includeTypesMap[includeTypes[i]] = true;
+            }
         }
 
-        if (includeTypesMap && !includeTypesMap[type]) {
-            continue;
+        let excludeTypesMap;
+        if (excludeTypes) {
+            excludeTypesMap = {};
+            for (let i = 0, len = excludeTypes.length; i < len; i++) {
+                excludeTypesMap[excludeTypes[i]] = true;
+            }
         }
 
-        xktModel.createMetaObject({
-            metaObjectId: metaObject.id,
-            metaObjectType: metaObject.type,
-            metaObjectName: metaObject.name,
-            parentMetaObjectId: metaObject.parent
-        });
+        let countMetaObjects = 0;
 
-        countMetaObjects++;
-    }
+        for (let i = 0, len = metaObjects.length; i < len; i++) {
 
-    if (log) {
-        log("Converted meta objects: " + countMetaObjects);
-    }
+            const metaObject = metaObjects[i];
+            const type = metaObject.type;
+
+            if (excludeTypesMap && excludeTypesMap[type]) {
+                continue;
+            }
+
+            if (includeTypesMap && !includeTypesMap[type]) {
+                continue;
+            }
+
+            xktModel.createMetaObject({
+                metaObjectId: metaObject.id,
+                metaObjectType: metaObject.type,
+                metaObjectName: metaObject.name,
+                parentMetaObjectId: metaObject.parent
+            });
+
+            countMetaObjects++;
+        }
+
+        if (log) {
+            log("Converted meta objects: " + countMetaObjects);
+        }
+
+        resolve();
+    });
 }
 
 /**
@@ -76217,9 +76301,12 @@ function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excl
  *          data,
  *          xktModel,
  *          log: (msg) => { console.log(msg); }
+ *     }).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -76229,132 +76316,138 @@ function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excl
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log}) {
 
-    const textData = decodeText(new Uint8Array(data));
+    return new Promise(function(resolve, reject) {
 
-    const header = parseHeader$1(textData);
+        const textData = decodeText(new Uint8Array(data));
 
-    const positions = [];
-    const colors = [];
+        const header = parseHeader$1(textData);
 
-    if (header.data === 'ascii') {
+        const positions = [];
+        const colors = [];
 
-        const offset = header.offset;
-        const data = textData.substr(header.headerLen);
-        const lines = data.split('\n');
+        if (header.data === 'ascii') {
 
-        for (let i = 0, l = lines.length; i < l; i++) {
+            const offset = header.offset;
+            const data = textData.substr(header.headerLen);
+            const lines = data.split('\n');
 
-            if (lines[i] === '') {
-                continue;
-            }
+            for (let i = 0, l = lines.length; i < l; i++) {
 
-            const line = lines[i].split(' ');
+                if (lines[i] === '') {
+                    continue;
+                }
 
-            if (offset.x !== undefined) {
-                positions.push(parseFloat(line[offset.x]));
-                positions.push(parseFloat(line[offset.y]));
-                positions.push(parseFloat(line[offset.z]));
-            }
+                const line = lines[i].split(' ');
 
-            if (offset.rgb !== undefined) {
-                const rgb = parseFloat(line[offset.rgb]);
-                const r = (rgb >> 16) & 0x0000ff;
-                const g = (rgb >> 8) & 0x0000ff;
-                const b = (rgb >> 0) & 0x0000ff;
-                colors.push(r, g, b, 255);
-            } else {
-                colors.push(255);
-                colors.push(255);
-                colors.push(255);
-            }
-        }
-    }
+                if (offset.x !== undefined) {
+                    positions.push(parseFloat(line[offset.x]));
+                    positions.push(parseFloat(line[offset.y]));
+                    positions.push(parseFloat(line[offset.z]));
+                }
 
-    if (header.data === 'binary_compressed') {
-
-        const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
-        const compressedSize = sizes[0];
-        const decompressedSize = sizes[1];
-        const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
-        const dataview = new DataView(decompressed.buffer);
-        const offset = header.offset;
-
-        for (let i = 0; i < header.points; i++) {
-
-            if (offset.x !== undefined) {
-                positions.push(dataview.getFloat32((header.points * offset.x) + header.size[0] * i, littleEndian));
-                positions.push(dataview.getFloat32((header.points * offset.y) + header.size[1] * i, littleEndian));
-                positions.push(dataview.getFloat32((header.points * offset.z) + header.size[2] * i, littleEndian));
-            }
-
-            if (offset.rgb !== undefined) {
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 0));
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 1));
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 2));
-                //    colors.push(255);
-            } else {
-                colors.push(1);
-                colors.push(1);
-                colors.push(1);
+                if (offset.rgb !== undefined) {
+                    const rgb = parseFloat(line[offset.rgb]);
+                    const r = (rgb >> 16) & 0x0000ff;
+                    const g = (rgb >> 8) & 0x0000ff;
+                    const b = (rgb >> 0) & 0x0000ff;
+                    colors.push(r, g, b, 255);
+                } else {
+                    colors.push(255);
+                    colors.push(255);
+                    colors.push(255);
+                }
             }
         }
-    }
 
-    if (header.data === 'binary') {
+        if (header.data === 'binary_compressed') {
 
-        const dataview = new DataView(data, header.headerLen);
-        const offset = header.offset;
+            const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
+            const compressedSize = sizes[0];
+            const decompressedSize = sizes[1];
+            const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
+            const dataview = new DataView(decompressed.buffer);
+            const offset = header.offset;
 
-        for (let i = 0, row = 0; i < header.points; i++, row += header.rowSize) {
-            if (offset.x !== undefined) {
-                positions.push(dataview.getFloat32(row + offset.x, littleEndian));
-                positions.push(dataview.getFloat32(row + offset.y, littleEndian));
-                positions.push(dataview.getFloat32(row + offset.z, littleEndian));
-            }
+            for (let i = 0; i < header.points; i++) {
 
-            if (offset.rgb !== undefined) {
-                colors.push(dataview.getUint8(row + offset.rgb + 2));
-                colors.push(dataview.getUint8(row + offset.rgb + 1));
-                colors.push(dataview.getUint8(row + offset.rgb + 0));
-            } else {
-                colors.push(255);
-                colors.push(255);
-                colors.push(255);
+                if (offset.x !== undefined) {
+                    positions.push(dataview.getFloat32((header.points * offset.x) + header.size[0] * i, littleEndian));
+                    positions.push(dataview.getFloat32((header.points * offset.y) + header.size[1] * i, littleEndian));
+                    positions.push(dataview.getFloat32((header.points * offset.z) + header.size[2] * i, littleEndian));
+                }
+
+                if (offset.rgb !== undefined) {
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 0));
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 1));
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 2));
+                    //    colors.push(255);
+                } else {
+                    colors.push(1);
+                    colors.push(1);
+                    colors.push(1);
+                }
             }
         }
-    }
 
-    xktModel.createGeometry({
-        geometryId: "pointsGeometry",
-        primitiveType: "points",
-        positions: positions,
-        colors: colors && colors.length > 0 ? colors : null
+        if (header.data === 'binary') {
+
+            const dataview = new DataView(data, header.headerLen);
+            const offset = header.offset;
+
+            for (let i = 0, row = 0; i < header.points; i++, row += header.rowSize) {
+                if (offset.x !== undefined) {
+                    positions.push(dataview.getFloat32(row + offset.x, littleEndian));
+                    positions.push(dataview.getFloat32(row + offset.y, littleEndian));
+                    positions.push(dataview.getFloat32(row + offset.z, littleEndian));
+                }
+
+                if (offset.rgb !== undefined) {
+                    colors.push(dataview.getUint8(row + offset.rgb + 2));
+                    colors.push(dataview.getUint8(row + offset.rgb + 1));
+                    colors.push(dataview.getUint8(row + offset.rgb + 0));
+                } else {
+                    colors.push(255);
+                    colors.push(255);
+                    colors.push(255);
+                }
+            }
+        }
+
+        xktModel.createGeometry({
+            geometryId: "pointsGeometry",
+            primitiveType: "points",
+            positions: positions,
+            colors: colors && colors.length > 0 ? colors : null
+        });
+
+        xktModel.createMesh({
+            meshId: "pointsMesh",
+            geometryId: "pointsGeometry"
+        });
+
+        xktModel.createEntity({
+            entityId: "geometries",
+            meshIds: ["pointsMesh"]
+        });
+
+        if (log) {
+            log("Converted objects: 1");
+            log("Converted geometries: 1");
+            log("Converted vertices: " + positions.length / 3);
+        }
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numVertices = positions.length / 3;
+        }
+
+        resolve();
     });
-
-    xktModel.createMesh({
-        meshId: "pointsMesh",
-        geometryId: "pointsGeometry"
-    });
-
-    xktModel.createEntity({
-        entityId: "geometries",
-        meshIds: ["pointsMesh"]
-    });
-
-    if (log) {
-        log("Converted objects: 1");
-        log("Converted geometries: 1");
-        log("Converted vertices: " + positions.length / 3);
-    }
-
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = positions.length / 3;
-    }
 }
 
 function parseHeader$1(data) {
@@ -77266,9 +77359,12 @@ var PLYLoader = _objectSpread$5(_objectSpread$5({}, PLYWorkerLoader), {}, {
  *
  *     const xktModel = new XKTModel();
  *
- *     parsePLYIntoXKTModel({data, xktModel});
- *
- *     xktModel.finalize();
+ *     parsePLYIntoXKTModel({data, xktModel}).then(()=>{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) => {
+ *         console.error(msg);
+ *     });
  * });
  * ````
  *
@@ -77277,65 +77373,71 @@ var PLYLoader = _objectSpread$5(_objectSpread$5({}, PLYWorkerLoader), {}, {
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
+function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
 
-    if (!data) {
-        throw "Argument expected: data";
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
-
-    let parsedData;
-    try {
-        parsedData = await parse(data, PLYLoader);
-    } catch (e) {
-        if (log) {
-            log("[parsePLYIntoXKTModel] " + e);
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-        return;
-    }
 
-    const attributes = parsedData.attributes;
-    const colorsValue = attributes.COLOR_0.value;
-    const colorsCompressed = [];
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    for (let i = 0, len = colorsValue.length; i < len; i += 4) {
-        colorsCompressed.push(colorsValue[i]);
-        colorsCompressed.push(colorsValue[i + 1]);
-        colorsCompressed.push(colorsValue[i + 2]);
-    }
+        let parsedData;
+        try {
+            parsedData = parse(data, PLYLoader);
+        } catch (e) {
+            reject("Parsing error: " + e);
+            return;
+        }
 
-    xktModel.createGeometry({
-        geometryId: "plyGeometry",
-        primitiveType: "triangles",
-        positions: attributes.POSITION.value,
-        colorsCompressed: colorsCompressed
+        const attributes = parsedData.attributes;
+        const colorsValue = attributes.COLOR_0.value;
+        const colorsCompressed = [];
+
+        for (let i = 0, len = colorsValue.length; i < len; i += 4) {
+            colorsCompressed.push(colorsValue[i]);
+            colorsCompressed.push(colorsValue[i + 1]);
+            colorsCompressed.push(colorsValue[i + 2]);
+        }
+
+        xktModel.createGeometry({
+            geometryId: "plyGeometry",
+            primitiveType: "triangles",
+            positions: attributes.POSITION.value,
+            colorsCompressed: colorsCompressed
+        });
+
+        xktModel.createMesh({
+            meshId: "plyMesh",
+            geometryId: "plyGeometry"
+        });
+
+        xktModel.createEntity({
+            entityId: "ply",
+            meshIds: ["plyMesh"]
+        });
+
+        if (log) {
+            log("Converted objects: 1");
+            log("Converted geometries: 1");
+            log("Converted vertices: " + positions.length / 3);
+        }
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numVertices = attributes.POSITION.value.length / 3;
+        }
+
+        resolve();
     });
-
-    xktModel.createMesh({
-        meshId: "plyMesh",
-        geometryId: "plyGeometry"
-    });
-
-    xktModel.createEntity({
-        entityId: "ply",
-        meshIds: ["plyMesh"]
-    });
-
-    if (log) {
-        log("Converted objects: 1");
-        log("Converted geometries: 1");
-        log("Converted vertices: " + positions.length / 3);
-    }
-
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = attributes.POSITION.value.length / 3;
-    }
 }
 
 /**
@@ -77481,6 +77583,7 @@ function faceToVertexNormals(positions, normals, options = {}) {
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 async function parseSTLIntoXKTModel({
                                         data,
@@ -77492,51 +77595,59 @@ async function parseSTLIntoXKTModel({
                                         stats,
                                         log
                                     }) {
-    if (!data) {
-        throw "Argument expected: data";
-    }
 
-    if (!xktModel) {
-        throw "Argument expected: xktModel";
-    }
+    return new Promise(function(resolve, reject) {
 
-    const ctx = {
-        data,
-        splitMeshes,
-        autoNormals,
-        smoothNormals,
-        smoothNormalsAngleThreshold,
-        xktModel,
-        nextId: 0,
-        log: (log || function (msg) {
-        }),
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject("Argument expected: data");
+            return;
         }
-    };
 
-    const binData = ensureBinary(data);
+        if (!xktModel) {
+            reject("Argument expected: xktModel");
+            return;
+        }
 
-    if (isBinary(binData)) {
-        parseBinary$1(ctx, binData);
-    } else {
-        parseASCII$2(ctx, ensureString(data));
-    }
+        const ctx = {
+            data,
+            splitMeshes,
+            autoNormals,
+            smoothNormals,
+            smoothNormalsAngleThreshold,
+            xktModel,
+            nextId: 0,
+            log: (log || function (msg) {
+            }),
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log("Converted objects: " + ctx.stats.numObjects);
-    ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-    ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-    ctx.log("Converted vertices: " + ctx.stats.numVertices);
+        const binData = ensureBinary(data);
 
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-    }
+        if (isBinary(binData)) {
+            parseBinary$1(ctx, binData);
+        } else {
+            parseASCII$2(ctx, ensureString(data));
+        }
+
+        ctx.log("Converted objects: " + ctx.stats.numObjects);
+        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
+        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
+        ctx.log("Converted vertices: " + ctx.stats.numVertices);
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numTriangles = ctx.stats.numTriangles;
+            stats.numVertices = ctx.stats.numVertices;
+        }
+
+        resolve();
+    });
 }
 
 function isBinary(data) {
