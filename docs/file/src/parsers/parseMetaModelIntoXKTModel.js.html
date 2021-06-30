@@ -67,63 +67,69 @@
  * @param {String[]} [params.includeTypes] Types to include in parsing.
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 function parseMetaModelIntoXKTModel({metaModelData, xktModel, includeTypes, excludeTypes, log}) {
 
-    const metaObjects = metaModelData.metaObjects || [];
+    return new Promise(function (resolve, reject) {
 
-    xktModel.modelId = metaModelData.revisionId || &quot;&quot;; // HACK
-    xktModel.projectId = metaModelData.projectId || &quot;&quot;;
-    xktModel.revisionId = metaModelData.revisionId || &quot;&quot;;
-    xktModel.author = metaModelData.author || &quot;&quot;;
-    xktModel.createdAt = metaModelData.createdAt || &quot;&quot;;
-    xktModel.creatingApplication = metaModelData.creatingApplication || &quot;&quot;;
-    xktModel.schema = metaModelData.schema || &quot;&quot;;
+        const metaObjects = metaModelData.metaObjects || [];
 
-    let includeTypesMap;
-    if (includeTypes) {
-        includeTypesMap = {};
-        for (let i = 0, len = includeTypes.length; i &lt; len; i++) {
-            includeTypesMap[includeTypes[i]] = true;
-        }
-    }
+        xktModel.modelId = metaModelData.revisionId || &quot;&quot;; // HACK
+        xktModel.projectId = metaModelData.projectId || &quot;&quot;;
+        xktModel.revisionId = metaModelData.revisionId || &quot;&quot;;
+        xktModel.author = metaModelData.author || &quot;&quot;;
+        xktModel.createdAt = metaModelData.createdAt || &quot;&quot;;
+        xktModel.creatingApplication = metaModelData.creatingApplication || &quot;&quot;;
+        xktModel.schema = metaModelData.schema || &quot;&quot;;
 
-    let excludeTypesMap;
-    if (excludeTypes) {
-        excludeTypesMap = {};
-        for (let i = 0, len = excludeTypes.length; i &lt; len; i++) {
-            excludeTypesMap[excludeTypes[i]] = true;
-        }
-    }
-
-    let countMetaObjects = 0;
-
-    for (let i = 0, len = metaObjects.length; i &lt; len; i++) {
-
-        const metaObject = metaObjects[i];
-        const type = metaObject.type;
-
-        if (excludeTypesMap &amp;&amp; excludeTypesMap[type]) {
-            continue;
+        let includeTypesMap;
+        if (includeTypes) {
+            includeTypesMap = {};
+            for (let i = 0, len = includeTypes.length; i &lt; len; i++) {
+                includeTypesMap[includeTypes[i]] = true;
+            }
         }
 
-        if (includeTypesMap &amp;&amp; !includeTypesMap[type]) {
-            continue;
+        let excludeTypesMap;
+        if (excludeTypes) {
+            excludeTypesMap = {};
+            for (let i = 0, len = excludeTypes.length; i &lt; len; i++) {
+                excludeTypesMap[excludeTypes[i]] = true;
+            }
         }
 
-        xktModel.createMetaObject({
-            metaObjectId: metaObject.id,
-            metaObjectType: metaObject.type,
-            metaObjectName: metaObject.name,
-            parentMetaObjectId: metaObject.parent
-        });
+        let countMetaObjects = 0;
 
-        countMetaObjects++;
-    }
+        for (let i = 0, len = metaObjects.length; i &lt; len; i++) {
 
-    if (log) {
-        log(&quot;Converted meta objects: &quot; + countMetaObjects);
-    }
+            const metaObject = metaObjects[i];
+            const type = metaObject.type;
+
+            if (excludeTypesMap &amp;&amp; excludeTypesMap[type]) {
+                continue;
+            }
+
+            if (includeTypesMap &amp;&amp; !includeTypesMap[type]) {
+                continue;
+            }
+
+            xktModel.createMetaObject({
+                metaObjectId: metaObject.id,
+                metaObjectType: metaObject.type,
+                metaObjectName: metaObject.name,
+                parentMetaObjectId: metaObject.parent
+            });
+
+            countMetaObjects++;
+        }
+
+        if (log) {
+            log(&quot;Converted meta objects: &quot; + countMetaObjects);
+        }
+
+        resolve();
+    });
 }
 
 export {parseMetaModelIntoXKTModel};

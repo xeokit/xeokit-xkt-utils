@@ -76,9 +76,12 @@
  *          data,
  *          xktModel,
  *          log: (msg) =&gt; { console.log(msg); }
+ *     }).then(()=&gt;{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) =&gt; {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -88,133 +91,139 @@
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log}) {
 
-    const textData = decodeText(new Uint8Array(data));
+    return new Promise(function(resolve, reject) {
 
-    const header = parseHeader(textData);
+        const textData = decodeText(new Uint8Array(data));
 
-    const positions = [];
-    const normals = [];
-    const colors = [];
+        const header = parseHeader(textData);
 
-    if (header.data === &apos;ascii&apos;) {
+        const positions = [];
+        const normals = [];
+        const colors = [];
 
-        const offset = header.offset;
-        const data = textData.substr(header.headerLen);
-        const lines = data.split(&apos;\n&apos;);
+        if (header.data === &apos;ascii&apos;) {
 
-        for (let i = 0, l = lines.length; i &lt; l; i++) {
+            const offset = header.offset;
+            const data = textData.substr(header.headerLen);
+            const lines = data.split(&apos;\n&apos;);
 
-            if (lines[i] === &apos;&apos;) {
-                continue;
-            }
+            for (let i = 0, l = lines.length; i &lt; l; i++) {
 
-            const line = lines[i].split(&apos; &apos;);
+                if (lines[i] === &apos;&apos;) {
+                    continue;
+                }
 
-            if (offset.x !== undefined) {
-                positions.push(parseFloat(line[offset.x]));
-                positions.push(parseFloat(line[offset.y]));
-                positions.push(parseFloat(line[offset.z]));
-            }
+                const line = lines[i].split(&apos; &apos;);
 
-            if (offset.rgb !== undefined) {
-                const rgb = parseFloat(line[offset.rgb]);
-                const r = (rgb &gt;&gt; 16) &amp; 0x0000ff;
-                const g = (rgb &gt;&gt; 8) &amp; 0x0000ff;
-                const b = (rgb &gt;&gt; 0) &amp; 0x0000ff;
-                colors.push(r, g, b, 255);
-            } else {
-                colors.push(255);
-                colors.push(255);
-                colors.push(255);
-            }
-        }
-    }
+                if (offset.x !== undefined) {
+                    positions.push(parseFloat(line[offset.x]));
+                    positions.push(parseFloat(line[offset.y]));
+                    positions.push(parseFloat(line[offset.z]));
+                }
 
-    if (header.data === &apos;binary_compressed&apos;) {
-
-        const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
-        const compressedSize = sizes[0];
-        const decompressedSize = sizes[1];
-        const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
-        const dataview = new DataView(decompressed.buffer);
-        const offset = header.offset;
-
-        for (let i = 0; i &lt; header.points; i++) {
-
-            if (offset.x !== undefined) {
-                positions.push(dataview.getFloat32((header.points * offset.x) + header.size[0] * i, littleEndian));
-                positions.push(dataview.getFloat32((header.points * offset.y) + header.size[1] * i, littleEndian));
-                positions.push(dataview.getFloat32((header.points * offset.z) + header.size[2] * i, littleEndian));
-            }
-
-            if (offset.rgb !== undefined) {
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 0));
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 1));
-                colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 2));
-                //    colors.push(255);
-            } else {
-                colors.push(1);
-                colors.push(1);
-                colors.push(1);
+                if (offset.rgb !== undefined) {
+                    const rgb = parseFloat(line[offset.rgb]);
+                    const r = (rgb &gt;&gt; 16) &amp; 0x0000ff;
+                    const g = (rgb &gt;&gt; 8) &amp; 0x0000ff;
+                    const b = (rgb &gt;&gt; 0) &amp; 0x0000ff;
+                    colors.push(r, g, b, 255);
+                } else {
+                    colors.push(255);
+                    colors.push(255);
+                    colors.push(255);
+                }
             }
         }
-    }
 
-    if (header.data === &apos;binary&apos;) {
+        if (header.data === &apos;binary_compressed&apos;) {
 
-        const dataview = new DataView(data, header.headerLen);
-        const offset = header.offset;
+            const sizes = new Uint32Array(data.slice(header.headerLen, header.headerLen + 8));
+            const compressedSize = sizes[0];
+            const decompressedSize = sizes[1];
+            const decompressed = decompressLZF(new Uint8Array(data, header.headerLen + 8, compressedSize), decompressedSize);
+            const dataview = new DataView(decompressed.buffer);
+            const offset = header.offset;
 
-        for (let i = 0, row = 0; i &lt; header.points; i++, row += header.rowSize) {
-            if (offset.x !== undefined) {
-                positions.push(dataview.getFloat32(row + offset.x, littleEndian));
-                positions.push(dataview.getFloat32(row + offset.y, littleEndian));
-                positions.push(dataview.getFloat32(row + offset.z, littleEndian));
-            }
+            for (let i = 0; i &lt; header.points; i++) {
 
-            if (offset.rgb !== undefined) {
-                colors.push(dataview.getUint8(row + offset.rgb + 2));
-                colors.push(dataview.getUint8(row + offset.rgb + 1));
-                colors.push(dataview.getUint8(row + offset.rgb + 0));
-            } else {
-                colors.push(255);
-                colors.push(255);
-                colors.push(255);
+                if (offset.x !== undefined) {
+                    positions.push(dataview.getFloat32((header.points * offset.x) + header.size[0] * i, littleEndian));
+                    positions.push(dataview.getFloat32((header.points * offset.y) + header.size[1] * i, littleEndian));
+                    positions.push(dataview.getFloat32((header.points * offset.z) + header.size[2] * i, littleEndian));
+                }
+
+                if (offset.rgb !== undefined) {
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 0));
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 1));
+                    colors.push(dataview.getUint8((header.points * offset.rgb) + header.size[3] * i + 2));
+                    //    colors.push(255);
+                } else {
+                    colors.push(1);
+                    colors.push(1);
+                    colors.push(1);
+                }
             }
         }
-    }
 
-    xktModel.createGeometry({
-        geometryId: &quot;pointsGeometry&quot;,
-        primitiveType: &quot;points&quot;,
-        positions: positions,
-        colors: colors &amp;&amp; colors.length &gt; 0 ? colors : null
+        if (header.data === &apos;binary&apos;) {
+
+            const dataview = new DataView(data, header.headerLen);
+            const offset = header.offset;
+
+            for (let i = 0, row = 0; i &lt; header.points; i++, row += header.rowSize) {
+                if (offset.x !== undefined) {
+                    positions.push(dataview.getFloat32(row + offset.x, littleEndian));
+                    positions.push(dataview.getFloat32(row + offset.y, littleEndian));
+                    positions.push(dataview.getFloat32(row + offset.z, littleEndian));
+                }
+
+                if (offset.rgb !== undefined) {
+                    colors.push(dataview.getUint8(row + offset.rgb + 2));
+                    colors.push(dataview.getUint8(row + offset.rgb + 1));
+                    colors.push(dataview.getUint8(row + offset.rgb + 0));
+                } else {
+                    colors.push(255);
+                    colors.push(255);
+                    colors.push(255);
+                }
+            }
+        }
+
+        xktModel.createGeometry({
+            geometryId: &quot;pointsGeometry&quot;,
+            primitiveType: &quot;points&quot;,
+            positions: positions,
+            colors: colors &amp;&amp; colors.length &gt; 0 ? colors : null
+        });
+
+        xktModel.createMesh({
+            meshId: &quot;pointsMesh&quot;,
+            geometryId: &quot;pointsGeometry&quot;
+        });
+
+        xktModel.createEntity({
+            entityId: &quot;geometries&quot;,
+            meshIds: [&quot;pointsMesh&quot;]
+        });
+
+        if (log) {
+            log(&quot;Converted objects: 1&quot;);
+            log(&quot;Converted geometries: 1&quot;);
+            log(&quot;Converted vertices: &quot; + positions.length / 3);
+        }
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numVertices = positions.length / 3;
+        }
+
+        resolve();
     });
-
-    xktModel.createMesh({
-        meshId: &quot;pointsMesh&quot;,
-        geometryId: &quot;pointsGeometry&quot;
-    });
-
-    xktModel.createEntity({
-        entityId: &quot;geometries&quot;,
-        meshIds: [&quot;pointsMesh&quot;]
-    });
-
-    if (log) {
-        log(&quot;Converted objects: 1&quot;);
-        log(&quot;Converted geometries: 1&quot;);
-        log(&quot;Converted vertices: &quot; + positions.length / 3);
-    }
-
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = positions.length / 3;
-    }
 }
 
 function parseHeader(data) {

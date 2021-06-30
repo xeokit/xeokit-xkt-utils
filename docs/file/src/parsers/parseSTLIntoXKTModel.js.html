@@ -58,7 +58,7 @@
 </nav>
 
 <div class="content" data-ice="content"><h1 data-ice="title">src/parsers/parseSTLIntoXKTModel.js</h1>
-<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {math} from &quot;../lib/math.js&quot;;
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">
 import {faceToVertexNormals} from &quot;../lib/faceToVertexNormals.js&quot;;
 
 /**
@@ -103,6 +103,7 @@ import {faceToVertexNormals} from &quot;../lib/faceToVertexNormals.js&quot;;
  * @param {XKTModel} [params.xktModel] XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
 async function parseSTLIntoXKTModel({
                                         data,
@@ -114,51 +115,59 @@ async function parseSTLIntoXKTModel({
                                         stats,
                                         log
                                     }) {
-    if (!data) {
-        throw &quot;Argument expected: data&quot;;
-    }
 
-    if (!xktModel) {
-        throw &quot;Argument expected: xktModel&quot;;
-    }
+    return new Promise(function(resolve, reject) {
 
-    const ctx = {
-        data,
-        splitMeshes,
-        autoNormals,
-        smoothNormals,
-        smoothNormalsAngleThreshold,
-        xktModel,
-        nextId: 0,
-        log: (log || function (msg) {
-        }),
-        stats: {
-            numObjects: 0,
-            numGeometries: 0,
-            numTriangles: 0,
-            numVertices: 0
+        if (!data) {
+            reject(&quot;Argument expected: data&quot;);
+            return;
         }
-    };
 
-    const binData = ensureBinary(data);
+        if (!xktModel) {
+            reject(&quot;Argument expected: xktModel&quot;);
+            return;
+        }
 
-    if (isBinary(binData)) {
-        parseBinary(ctx, binData);
-    } else {
-        parseASCII(ctx, ensureString(data));
-    }
+        const ctx = {
+            data,
+            splitMeshes,
+            autoNormals,
+            smoothNormals,
+            smoothNormalsAngleThreshold,
+            xktModel,
+            nextId: 0,
+            log: (log || function (msg) {
+            }),
+            stats: {
+                numObjects: 0,
+                numGeometries: 0,
+                numTriangles: 0,
+                numVertices: 0
+            }
+        };
 
-    ctx.log(&quot;Converted objects: &quot; + ctx.stats.numObjects);
-    ctx.log(&quot;Converted geometries: &quot; + ctx.stats.numGeometries);
-    ctx.log(&quot;Converted triangles: &quot; + ctx.stats.numTriangles);
-    ctx.log(&quot;Converted vertices: &quot; + ctx.stats.numVertices);
+        const binData = ensureBinary(data);
 
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-    }
+        if (isBinary(binData)) {
+            parseBinary(ctx, binData);
+        } else {
+            parseASCII(ctx, ensureString(data));
+        }
+
+        ctx.log(&quot;Converted objects: &quot; + ctx.stats.numObjects);
+        ctx.log(&quot;Converted geometries: &quot; + ctx.stats.numGeometries);
+        ctx.log(&quot;Converted triangles: &quot; + ctx.stats.numTriangles);
+        ctx.log(&quot;Converted vertices: &quot; + ctx.stats.numVertices);
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numTriangles = ctx.stats.numTriangles;
+            stats.numVertices = ctx.stats.numVertices;
+        }
+
+        resolve();
+    });
 }
 
 function isBinary(data) {

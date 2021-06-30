@@ -61,6 +61,7 @@
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {parse} from &apos;@loaders.gl/core&apos;;
 import {LASLoader} from &apos;@loaders.gl/las&apos;;
 
+
 /**
  * @desc Parses LAS and LAZ point cloud data into an {@link XKTModel}.
  *
@@ -81,9 +82,12 @@ import {LASLoader} from &apos;@loaders.gl/las&apos;;
  *          data,
  *          xktModel,
  *          log: (msg) =&gt; { console.log(msg); }
+ *     }).then(()=&gt;{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) =&gt; {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *

@@ -75,9 +75,12 @@ import {PLYLoader} from &apos;@loaders.gl/ply&apos;;
  *
  *     const xktModel = new XKTModel();
  *
- *     parsePLYIntoXKTModel({data, xktModel});
- *
- *     xktModel.finalize();
+ *     parsePLYIntoXKTModel({data, xktModel}).then(()=&gt;{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) =&gt; {
+ *         console.error(msg);
+ *     });
  * });
  * ````
  *
@@ -86,65 +89,71 @@ import {PLYLoader} from &apos;@loaders.gl/ply&apos;;
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
+ * @returns {Promise}
  */
-async function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
+function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
 
-    if (!data) {
-        throw &quot;Argument expected: data&quot;;
-    }
+    return new Promise(function (resolve, reject) {
 
-    if (!xktModel) {
-        throw &quot;Argument expected: xktModel&quot;;
-    }
-
-    let parsedData;
-    try {
-        parsedData = await parse(data, PLYLoader);
-    } catch (e) {
-        if (log) {
-            log(&quot;[parsePLYIntoXKTModel] &quot; + e);
+        if (!data) {
+            reject(&quot;Argument expected: data&quot;);
+            return;
         }
-        return;
-    }
 
-    const attributes = parsedData.attributes;
-    const colorsValue = attributes.COLOR_0.value;
-    const colorsCompressed = [];
+        if (!xktModel) {
+            reject(&quot;Argument expected: xktModel&quot;);
+            return;
+        }
 
-    for (let i = 0, len = colorsValue.length; i &lt; len; i += 4) {
-        colorsCompressed.push(colorsValue[i]);
-        colorsCompressed.push(colorsValue[i + 1]);
-        colorsCompressed.push(colorsValue[i + 2]);
-    }
+        let parsedData;
+        try {
+            parsedData = parse(data, PLYLoader);
+        } catch (e) {
+            reject(&quot;Parsing error: &quot; + e);
+            return;
+        }
 
-    xktModel.createGeometry({
-        geometryId: &quot;plyGeometry&quot;,
-        primitiveType: &quot;triangles&quot;,
-        positions: attributes.POSITION.value,
-        colorsCompressed: colorsCompressed
+        const attributes = parsedData.attributes;
+        const colorsValue = attributes.COLOR_0.value;
+        const colorsCompressed = [];
+
+        for (let i = 0, len = colorsValue.length; i &lt; len; i += 4) {
+            colorsCompressed.push(colorsValue[i]);
+            colorsCompressed.push(colorsValue[i + 1]);
+            colorsCompressed.push(colorsValue[i + 2]);
+        }
+
+        xktModel.createGeometry({
+            geometryId: &quot;plyGeometry&quot;,
+            primitiveType: &quot;triangles&quot;,
+            positions: attributes.POSITION.value,
+            colorsCompressed: colorsCompressed
+        });
+
+        xktModel.createMesh({
+            meshId: &quot;plyMesh&quot;,
+            geometryId: &quot;plyGeometry&quot;
+        });
+
+        xktModel.createEntity({
+            entityId: &quot;ply&quot;,
+            meshIds: [&quot;plyMesh&quot;]
+        });
+
+        if (log) {
+            log(&quot;Converted objects: 1&quot;);
+            log(&quot;Converted geometries: 1&quot;);
+            log(&quot;Converted vertices: &quot; + positions.length / 3);
+        }
+
+        if (stats) {
+            stats.numObjects = 1;
+            stats.numGeometries = 1;
+            stats.numVertices = attributes.POSITION.value.length / 3;
+        }
+
+        resolve();
     });
-
-    xktModel.createMesh({
-        meshId: &quot;plyMesh&quot;,
-        geometryId: &quot;plyGeometry&quot;
-    });
-
-    xktModel.createEntity({
-        entityId: &quot;ply&quot;,
-        meshIds: [&quot;plyMesh&quot;]
-    });
-
-    if (log) {
-        log(&quot;Converted objects: 1&quot;);
-        log(&quot;Converted geometries: 1&quot;);
-        log(&quot;Converted vertices: &quot; + positions.length / 3);
-    }
-
-    if (stats) {
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = attributes.POSITION.value.length / 3;
-    }
 }
 
 export {parsePLYIntoXKTModel};

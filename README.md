@@ -13,24 +13,24 @@
 - [Acknowledgements](#acknowledgements)
 - [Links](#links)
 - [Features](#features)
-- [Components of ````xeokit-xkt-utils````](#components-of-----xeokit-xkt-utils----)
-- [Benchmarks for ````convert2xkt````](#benchmarks-for-----convert2xkt----)
-- [Usage](#usage)
-    * [Using ````convert2xkt````](#using-----convert2xkt----)
-        + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
-        + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
-        + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
-        + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
-    * [Using ````XKTModel````](#using-----xktmodel----)
-        + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
-        + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
-        + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
-        + [Loading IFC into an XKTModel](#loading-ifc-into-an-xktmodel)
-        + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
-        + [Loading STL into an XKTModel](#loading-stl-into-an-xktmodel)
-    * [Building](#building)
-        + [Building Binaries](#building-binaries)
-        + [Building Tests](#building-tests)
+- [Components](#components)
+- [Benchmarks](#benchmarks)
+- [Installing](#installing)
+- [Using ````convert2xkt````](#using-----convert2xkt----)
+    + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
+    + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
+    + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
+    + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
+- [Using ````XKTModel````](#using-----xktmodel----)
+    + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
+    + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
+    + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
+    + [Loading IFC into an XKTModel](#loading-ifc-into-an-xktmodel)
+    + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
+    + [Loading STL into an XKTModel](#loading-stl-into-an-xktmodel)
+- [Building](#building)
+    + [Building Binaries](#building-binaries)
+    + [Building Tests](#building-tests)
 
 # Acknowledgements
 
@@ -44,32 +44,32 @@ TODO
 
 # Features
 
-* A Node-based CLI tool to convert various file formats to XKT.
+* A Node-based CLI tool to convert various 3D model formats to XKT files.
 * A JavaScript toolkit of components for loading, generating and saving XKT files.
 
-# Components of ````xeokit-xkt-utils````
+# Components 
 
 The table below lists the components provided by ````xeokit-xkt-utils````.
 
 At the center of the toolkit, we've got the converter tool, provided as both a Node.js function and CLI executable.
 
-Bundled with the converter, we've got the XKT document model, a bunch of loaders for different formats, and a function to
-serialize the document model to a BLOB. We use these components within the converter tool, and also provide them as part
-of the public API for extensibility.
+Bundled with the converter, we've got the XKT document model, a bunch of loaders for different formats, and a function
+to serialize the document model to a BLOB. We use these components within the converter tool, and also provide them as
+part of the public API for extensibility.
 
 | Component | Description |
 | --- | --- |
-| [convert2xkt]() | A Node.js-based JavaScript function and CLI tool that converts various AEC model formats into xeokit's native, super-fast-loading XKT format. Supported formats include: IFC (2x3 and 4), CityJSON, glTF, 3DXML, LAZ, LAS, STL and PCL. |
-| [XKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) | A JavaScript document model that represents the contents of an XKT file in memory. Using this, we can programmatically build a document model in JavaScript, adding geometries, materials, objects etc, then serialize it to an XKT file. |
-| [parseIFCIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel) | Parses IFC data into an ````XKTModel```` |
-| [parseGLTFIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel) |  Parses glTF into an ````XKTModel```` |
-| [parse3DXMLIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parse3DXMLIntoXKTModel) |  Parses 3DXML into an ````XKTModel```` |
-| [parseCityJSONIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseJSONIntoXKTModel) |  Parses CityJSON into an ````XKTModel```` |
-| [parseLASIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseLASIntoXKTModel) | Parses LAS and LAZ into an ````XKTModel```` |
-| [parseSTLIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel) | Parses STL into an ````XKTModel```` |
-| [writeXKTModelToArrayBuffer**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) | Serializes an ````XKTModel```` to an XKT file |
+| [**convert2xkt**]() | A Node.js-based JavaScript function and CLI tool that converts various AEC model formats into xeokit's native, super-fast-loading XKT format. Supported formats include: IFC (2x3 and 4), CityJSON, glTF, 3DXML, LAZ, LAS, STL and PCL. |
+| [**XKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) | A JavaScript document model that represents the contents of an XKT file in memory. Using this, we can programmatically build a document model in JavaScript, adding geometries, materials, objects etc, then serialize it to an XKT file. |
+| [**parseIFCIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel) | Parses IFC data into an ````XKTModel```` |
+| [**parseGLTFIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel) |  Parses glTF into an ````XKTModel```` |
+| [**parse3DXMLIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parse3DXMLIntoXKTModel) |  Parses 3DXML into an ````XKTModel```` |
+| [**parseCityJSONIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseJSONIntoXKTModel) |  Parses CityJSON into an ````XKTModel```` |
+| [**parseLASIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseLASIntoXKTModel) | Parses LAS and LAZ into an ````XKTModel```` |
+| [**parseSTLIntoXKTModel**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel) | Parses STL into an ````XKTModel```` |
+| [**writeXKTModelToArrayBuffer**](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) | Serializes an ````XKTModel```` to an XKT file |
 
-# Benchmarks for ````convert2xkt````
+# Benchmarks
 
 Shown below are results from our automated performance tests for ````convert2xkt````, showing conversion times, file
 sizes, loading times and rendering performance for XKT files converted from various BIM and GIS model formats.
@@ -101,9 +101,14 @@ Click the thumbnails to view the models with xeokit.
 | [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/gltf_duplex/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_duplex/model.xkt) | [gltf_duplex](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_duplex/model.xkt) | 0.26 | 0.30 | 60 | 291 | 15874 | 25262 | 1433.53 | 126.22 | 11.36 |
 | [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/gltf_map/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_map/model.xkt) | [gltf_map](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_map/model.xkt) | 2.81 | 0.52 | 60 | 1986 | 181108 | 354632 | 15785.04 | 1605.40 | 9.83 |
 
-# Usage
 
-## Using ````convert2xkt````
+# Installing 
+
+````bash
+npm i @xeokit/xeokit-xkt-utils
+````
+
+# Using ````convert2xkt````
 
 The ````convert2xkt```` tool converts various model formats into xeokit's native XKT format, which is designed to load
 super fast over the Web into a xeokit viewer. This tool can be used both as a CLI executable and as a function within
@@ -129,29 +134,36 @@ Conversion time: 74.31 s
 ### Converting an IFC file into an XKT file in Node.js
 
 ````javascript
-const convert2xkt = require('./dist/convert2xkt.cjs.js');
+const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
 
-const result = await convert2xkt({
+convert2xkt({
     source: "rme_advanced_sample_project.ifc",
     output: "rme_advanced_sample_project.ifc.xkt",
     log: (msg) => {
         console.log(msg)
     }
+}).then(() => {
+    console.log("Converted.");
+}, (errMsg) => {
+    console.error("Conversion failed: " + errMsg)
 });
-
-if (result < 0) {
-    console.error("Conversion failed - see log for details")
-}
 ````
 
 ### Converting IFC file data into XKT data in Node.js
 
 ````javascript
-await convert2xkt({
-    sourceData: ifcData, // ArrayBuffer
-    outputXKT: (xktData) => { // ArrayBuffer
-        //..
+const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
+const fs = require('fs');
+
+convert2xkt({
+    sourceData: fs.readFileSync("rme_advanced_sample_project.ifc"),
+    outputXKT: (xktData) => {
+        fs.writeFileSync("rme_advanced_sample_project.ifc.xkt")
     }
+}).then(() => {
+    console.log("Converted.");
+}, (errMsg) => {
+    console.error("Conversion failed: " + errMsg)
 });
 ````
 
@@ -161,14 +173,19 @@ We'll convert our IFC file as before, but this time we'll supply a ````outputObj
 collect each IFC element's property set. Via that callback, we'll save each property set to a JSON file.
 
 ````javascript
+const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
 const fs = require('fs');
 
-await convert2xkt({
+convert2xkt({
     source: "rme_advanced_sample_project.ifc",
     output: "rme_advanced_sample_project.ifc.xkt",
     outputObjectProperties: async function (objectId, props) {
-        await fs.promises.writeFile(`${objectId}.json`, JSON.stringify(props, null, "\t"));
+        await fs.writeFileSync(`${objectPropsDir}/${id}.json`, JSON.stringify(props, null, "\t"));
     }
+}).then(() => {
+    console.log("Converted.");
+}, (errMsg) => {
+    console.error("Conversion failed: " + errMsg)
 });
 ````
 
@@ -204,7 +221,7 @@ await convert2xkt({
 });
 ````
 
-## Using ````XKTModel````
+# Using ````XKTModel````
 
 ````XKTModel```` is a JavaScript class that represents the contents of an XKT file in memory.
 
@@ -566,7 +583,7 @@ utils.loadJSON("./models/stl/binary/spurGear.stl", (json) => {
     });
 ````
 
-## Building
+# Building
 
 ### Building Binaries
 
@@ -590,8 +607,9 @@ npm run docs
 
 ### Building Tests
 
-Building the tests in TODO 
+Building the tests in TODO
 
 ````bash
 npm built-tests
 ````
+

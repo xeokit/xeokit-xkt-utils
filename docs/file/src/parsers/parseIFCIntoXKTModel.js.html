@@ -85,9 +85,12 @@
  *          wasmPath: &quot;../dist/&quot;,
  *          autoNormals: true,
  *          log: (msg) =&gt; { console.log(msg); }
+ *     }).then(()=&gt;{
+ *        xktModel.finalize();
+ *     },
+ *     (msg) =&gt; {
+ *         console.error(msg);
  *     });
- *
- *     xktModel.finalize();
  * });
  * ````
  *
@@ -104,7 +107,7 @@
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
-async function parseIFCIntoXKTModel({
+function parseIFCIntoXKTModel({
                                         data,
                                         xktModel,
                                         autoNormals = true,
@@ -114,70 +117,82 @@ async function parseIFCIntoXKTModel({
                                         log
                                     }) {
 
-    if (!data) {
-        throw &quot;Argument expected: data&quot;;
-    }
+    return new Promise(function(resolve, reject) {
 
-    if (!xktModel) {
-        throw &quot;Argument expected: xktModel&quot;;
-    }
-
-    if (!wasmPath) {
-        throw &quot;Argument expected: wasmPath&quot;;
-    }
-
-    const ifcAPI = new WebIFC.IfcAPI();
-
-    if (wasmPath) {
-        ifcAPI.SetWasmPath(wasmPath);
-    }
-
-    await ifcAPI.Init();
-
-    const dataArray = new Uint8Array(data);
-
-    const modelID = ifcAPI.OpenModel(dataArray);
-
-    const ctx = {
-        modelID,
-        ifcAPI,
-        xktModel,
-        autoNormals,
-        outputObjectProperties,
-        log: (log || function (msg) {
-        }),
-        nextId: 0,
-        stats: {
-            numTriangles: 0,
-            numVertices: 0,
-            numObjects: 0,
-            numGeometries: 0
+        if (!data) {
+            reject(&quot;Argument expected: data&quot;);
+            return;
         }
-    };
 
-    const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
-    const ifcProjectId = lines.get(0);
-    const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+        if (!xktModel) {
+            reject(&quot;Argument expected: xktModel&quot;);
+            return;
+        }
 
-    ctx.xktModel.schema = &quot;&quot;;
-    ctx.xktModel.modelId = &quot;&quot; + modelID;
-    ctx.xktModel.projectId = &quot;&quot; + ifcProjectId;
+        if (!wasmPath) {
+            reject(&quot;Argument expected: wasmPath&quot;);
+            return;
+        }
 
-    parseGeometry(ctx);
+        const ifcAPI = new WebIFC.IfcAPI();
 
-    parseMetadata(ctx);
+        if (wasmPath) {
+            ifcAPI.SetWasmPath(wasmPath);
+        }
 
-    ctx.log(&quot;Converted objects: &quot; + ctx.stats.numObjects);
-    ctx.log(&quot;Converted geometries: &quot; + ctx.stats.numGeometries);
-    ctx.log(&quot;Converted triangles: &quot; + ctx.stats.numTriangles);
-    ctx.log(&quot;Converted vertices: &quot; + ctx.stats.numVertices);
+        ifcAPI.Init().then(() =&gt; {
 
-    if (stats) {
-        stats.numTriangles = ctx.stats.numTriangles;
-        stats.numVertices = ctx.stats.numVertices;
-        stats.numObjects = ctx.stats.numObjects;
-        stats.numGeometries = ctx.stats.numGeometries;
-    }
+            const dataArray = new Uint8Array(data);
+
+            const modelID = ifcAPI.OpenModel(dataArray);
+
+            const ctx = {
+                modelID,
+                ifcAPI,
+                xktModel,
+                autoNormals,
+                outputObjectProperties,
+                log: (log || function (msg) {
+                }),
+                nextId: 0,
+                stats: {
+                    numTriangles: 0,
+                    numVertices: 0,
+                    numObjects: 0,
+                    numGeometries: 0
+                }
+            };
+
+            const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
+            const ifcProjectId = lines.get(0);
+            const ifcProject = ctx.ifcAPI.GetLine(modelID, ifcProjectId);
+
+            ctx.xktModel.schema = &quot;&quot;;
+            ctx.xktModel.modelId = &quot;&quot; + modelID;
+            ctx.xktModel.projectId = &quot;&quot; + ifcProjectId;
+
+            parseGeometry(ctx);
+            parseMetadata(ctx);
+
+            ctx.log(&quot;Converted objects: &quot; + ctx.stats.numObjects);
+            ctx.log(&quot;Converted geometries: &quot; + ctx.stats.numGeometries);
+            ctx.log(&quot;Converted triangles: &quot; + ctx.stats.numTriangles);
+            ctx.log(&quot;Converted vertices: &quot; + ctx.stats.numVertices);
+
+            if (stats) {
+                stats.numTriangles = ctx.stats.numTriangles;
+                stats.numVertices = ctx.stats.numVertices;
+                stats.numObjects = ctx.stats.numObjects;
+                stats.numGeometries = ctx.stats.numGeometries;
+            }
+
+            resolve();
+
+        }).catch((e) =&gt; {
+
+            reject(e);
+        })
+    });
 }
 
 function parseGeometry(ctx) {
