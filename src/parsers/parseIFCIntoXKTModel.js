@@ -53,7 +53,7 @@ function parseIFCIntoXKTModel({
                                         autoNormals = true,
                                         wasmPath,
                                         outputObjectProperties,
-                                        stats,
+                                        stats={},
                                         log
                                     }) {
 
@@ -86,6 +86,16 @@ function parseIFCIntoXKTModel({
 
             const modelID = ifcAPI.OpenModel(dataArray);
 
+            stats.sourceFormat = "IFC";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
+            stats.numTriangles = 0;
+            stats.numVertices = 0;
+            stats.numObjects = 0;
+            stats.numGeometries = 0;
+
             const ctx = {
                 modelID,
                 ifcAPI,
@@ -95,12 +105,7 @@ function parseIFCIntoXKTModel({
                 log: (log || function (msg) {
                 }),
                 nextId: 0,
-                stats: {
-                    numTriangles: 0,
-                    numVertices: 0,
-                    numObjects: 0,
-                    numGeometries: 0
-                }
+                stats
             };
 
             const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
@@ -114,17 +119,10 @@ function parseIFCIntoXKTModel({
             parseGeometry(ctx);
             parseMetadata(ctx);
 
-            ctx.log("Converted objects: " + ctx.stats.numObjects);
-            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-            ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
-            if (stats) {
-                stats.numTriangles = ctx.stats.numTriangles;
-                stats.numVertices = ctx.stats.numVertices;
-                stats.numObjects = ctx.stats.numObjects;
-                stats.numGeometries = ctx.stats.numGeometries;
-            }
+            ctx.log("Converted objects: " + stats.numObjects);
+            ctx.log("Converted geometries: " + stats.numGeometries);
+            ctx.log("Converted triangles: " + stats.numTriangles);
+            ctx.log("Converted vertices: " + stats.numVertices);
 
             resolve();
 

@@ -64,7 +64,7 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.log] Logging callback.
  * @returns {Promise}
  */
-function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
+function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats={}, log}) {
 
     return new Promise(function (resolve, reject) {
 
@@ -77,6 +77,16 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             reject("Argument expected: xktModel");
             return;
         }
+
+        stats.sourceFormat = "glTF";
+        stats.schemaVersion = "2.0";
+        stats.title = "";
+        stats.author = "";
+        stats.created = "";
+        stats.numTriangles = 0;
+        stats.numVertices = 0;
+        stats.numObjects = 0;
+        stats.numGeometries = 0;
 
         const ctx = {
             gltf: data,
@@ -91,12 +101,7 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             nextGeometryId: 0,
             nextMeshId: 0,
             nextDefaultEntityId: 0,
-            stats: {
-                numObjects: 0,
-                numGeometries: 0,
-                numTriangles: 0,
-                numVertices: 0
-            }
+            stats
         };
 
         parseBuffers(ctx).then(() => {
@@ -106,17 +111,10 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             parseMaterials(ctx);
             parseDefaultScene(ctx);
 
-            ctx.log("Converted objects: " + ctx.stats.numObjects);
-            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-            ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
-            if (stats) {
-                stats.numTriangles = ctx.stats.numTriangles;
-                stats.numVertices = ctx.stats.numVertices;
-                stats.numObjects = ctx.stats.numObjects;
-                stats.numGeometries = ctx.stats.numGeometries;
-            }
+            ctx.log("Converted objects: " + stats.numObjects);
+            ctx.log("Converted geometries: " + stats.numGeometries);
+            ctx.log("Converted triangles: " + stats.numTriangles);
+            ctx.log("Converted vertices: " + stats.numVertices);
 
             resolve();
 

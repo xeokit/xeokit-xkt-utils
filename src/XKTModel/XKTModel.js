@@ -214,13 +214,22 @@ class XKTModel {
         this.entitiesList = [];
 
         /**
-         * {@link XKTTile}s within this Model.
+         * {@link XKTTile}s within this XKTModel.
          *
          * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTTile[]}
          */
         this.tilesList = [];
+
+        /**
+         * The axis-aligned 3D World-space boundary of this XKTModel.
+         *
+         * Created by {@link XKTModel#finalize}.
+         *
+         * @type {Float64Array}
+         */
+        this.aabb = math.AABB3();
 
         /**
          * Indicates if this XKTModel has been finalized.
@@ -644,6 +653,8 @@ class XKTModel {
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
+
+        this.aabb.set(rootKDNode.aabb);
 
         this.finalized = true;
     }

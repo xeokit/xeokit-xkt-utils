@@ -157,6 +157,11 @@ function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log})
         }
 
         if (stats) {
+            stats.sourceFormat = "PCD";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numVertices = positions.length / 3;

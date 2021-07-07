@@ -100,6 +100,11 @@ async function parseSTLIntoXKTModel({
         ctx.log("Converted vertices: " + ctx.stats.numVertices);
 
         if (stats) {
+            stats.sourceFormat = "STL";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numTriangles = ctx.stats.numTriangles;

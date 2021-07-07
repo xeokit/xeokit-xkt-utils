@@ -77,7 +77,13 @@ function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false,
                     numObjects: 0,
                     numGeometries: 0,
                     numTriangles: 0,
-                    numVertices: 0
+                    numVertices: 0,
+
+                    sourceFormat: "3DXML",
+                    schemaVersion: "",
+                    title: "",
+                    author: "",
+                    created: ""
                 }
             };
 
@@ -170,21 +176,21 @@ function parseHeader(ctx, node) {
         const child = children[i];
         switch (child.type) {
             case "SchemaVersion":
-                metaData.schemaVersion = child.children[0];
-                if (!isSchemaVersionSupported(ctx, metaData.schemaVersion)) {
-                    ctx.error("3DXML schema version not supported: " + metaData.schemaVersion + " - supported versions are: " + supportedSchemas.join(","));
+                ctx.stats.schemaVersion = child.children[0];
+                if (!isSchemaVersionSupported(ctx, ctx.stats.schemaVersion)) {
+                    ctx.error("3DXML schema version not supported: " + ctx.stats.schemaVersion + " - supported versions are: " + supportedSchemas.join(","));
                 } else {
-                    ctx.log("Parsing 3DXML schema version: " + metaData.schemaVersion);
+                    ctx.log("Parsing 3DXML schema version: " + ctx.stats.schemaVersion);
                 }
                 break;
             case "Title":
-                metaData.title = child.children[0];
+                ctx.stats.title = child.children[0];
                 break;
             case "Author":
-                metaData.author = child.children[0];
+                ctx.stats.author = child.children[0];
                 break;
             case "Created":
-                metaData.created = child.children[0];
+                ctx.stats.created = child.children[0];
                 break;
         }
     }

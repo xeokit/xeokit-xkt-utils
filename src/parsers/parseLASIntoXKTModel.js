@@ -103,6 +103,11 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
     }
 
     if (stats) {
+        stats.sourceFormat = "LAS";
+        stats.schemaVersion = "";
+        stats.title = "";
+        stats.author = "";
+        stats.created = "";
         stats.numObjects = 1;
         stats.numGeometries = 1;
         stats.numVertices = positionsValue.length / 3;

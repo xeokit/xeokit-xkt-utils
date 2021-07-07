@@ -230,7 +230,7 @@ function convert2xkt({
                     break;
 
                 default:
-                    reject('Error: unsupported source format.');
+                    reject('Error: unsupported source format: "${ext}".');
                     return;
             }
         }
@@ -246,11 +246,11 @@ function convert2xkt({
 
                 const targetFileSizeBytes = xktArrayBuffer.byteLength;
 
-                stats.sourceFormat = ext;
                 stats.sourceSize = (sourceFileSizeBytes / 1000).toFixed(2);
                 stats.xktSize = (targetFileSizeBytes / 1000).toFixed(2);
                 stats.compressionRatio = (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2);
                 stats.conversionTime = ((new Date() - startTime) / 1000.0).toFixed(2);
+                stats.aabb = xktModel.aabb;
 
                 log("Converted to: XKT v9");
                 log("XKT size: " + stats.xktSize + " kB");

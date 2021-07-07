@@ -13,7 +13,7 @@ class KDNode {
         /**
          * The axis-aligned 3D World-space boundary of this KDNode.
          *
-         * @type {Float32Array}
+         * @type {Float64Array}
          */
         this.aabb = aabb;
 
