@@ -123,9 +123,11 @@ function convertModels(testStats) {
 
 function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) {
     const xktDestDir = path.dirname(xktDest);
-    const objectPropsDir = `${xktDestDir}/props/`;
-    if (!fs.existsSync(objectPropsDir)) {
-        fs.mkdirSync(objectPropsDir);
+    if (config.enableOutputObjectProperties) {
+        const objectPropsDir = `${xktDestDir}/props/`;
+        if (!fs.existsSync(objectPropsDir)) {
+            fs.mkdirSync(objectPropsDir);
+        }
     }
     return convert2xkt({
         source: modelSrc,
@@ -135,9 +137,9 @@ function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) {
         outputXKT: async function (xktData) {
             fs.writeFileSync(xktDest, xktData);
         },
-        outputObjectProperties: async function (id, props) {
+        outputObjectProperties: config.enableOutputObjectProperties ? async function (id, props) {
             await fs.writeFileSync(`${objectPropsDir}/${id}.json`, JSON.stringify(props, null, "\t"));
-        },
+        } : null,
         stats,
         log: (msg) => {
             console.log(msg)
