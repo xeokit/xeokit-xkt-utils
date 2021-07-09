@@ -4537,7 +4537,7 @@ class KDNode {
         /**
          * The axis-aligned 3D World-space boundary of this KDNode.
          *
-         * @type {Float32Array}
+         * @type {Float64Array}
          */
         this.aabb = aabb;
 
@@ -4880,13 +4880,22 @@ class XKTModel {
         this.entitiesList = [];
 
         /**
-         * {@link XKTTile}s within this Model.
+         * {@link XKTTile}s within this XKTModel.
          *
          * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTTile[]}
          */
         this.tilesList = [];
+
+        /**
+         * The axis-aligned 3D World-space boundary of this XKTModel.
+         *
+         * Created by {@link XKTModel#finalize}.
+         *
+         * @type {Float64Array}
+         */
+        this.aabb = math.AABB3();
 
         /**
          * Indicates if this XKTModel has been finalized.
@@ -5308,6 +5317,8 @@ class XKTModel {
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
+
+        this.aabb.set(rootKDNode.aabb);
 
         this.finalized = true;
     }
@@ -13584,7 +13595,7 @@ const tempVec3c = math.vec3();
  * @param {function} [params.log] Logging callback.
  * @returns {Promise}
  */
-function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObjectProperties, stats, log}) {
+function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObjectProperties, stats = {}, log}) {
 
     return new Promise(function (resolve, reject) {
 
@@ -13607,6 +13618,16 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
             ? transformVertices(data.vertices, data.transform, rotateX)
             : data.vertices;
 
+        stats.sourceFormat = data.type || "";
+        stats.schemaVersion = data.version || "";
+        stats.title = "";
+        stats.author = "";
+        stats.created = "";
+        stats.numTriangles = 0;
+        stats.numVertices = 0;
+        stats.numObjects = 0;
+        stats.numGeometries = 0;
+
         const ctx = {
             data,
             vertices,
@@ -13615,12 +13636,7 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
             log: (log || function (msg) {
             }),
             nextId: 0,
-            stats: {
-                numObjects: 0,
-                numGeometries: 0,
-                numTriangles: 0,
-                numVertices: 0
-            }
+            stats
         };
 
         ctx.xktModel.schema = data.type + " " + data.version;
@@ -13633,17 +13649,10 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
 
         parseCityJSON(ctx);
 
-        ctx.log("Converted objects: " + ctx.stats.numObjects);
-        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-        ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
-        if (stats) {
-            stats.numTriangles = ctx.stats.numTriangles;
-            stats.numVertices = ctx.stats.numVertices;
-            stats.numObjects = ctx.stats.numObjects;
-            stats.numGeometries = ctx.stats.numGeometries;
-        }
+        ctx.log("Converted objects: " + stats.numObjects);
+        ctx.log("Converted geometries: " + stats.numGeometries);
+        ctx.log("Converted triangles: " + stats.numTriangles);
+        ctx.log("Converted vertices: " + stats.numVertices);
 
         resolve();
     });
@@ -14199,7 +14208,7 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.log] Logging callback.
  * @returns {Promise}
  */
-function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
+function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats={}, log}) {
 
     return new Promise(function (resolve, reject) {
 
@@ -14212,6 +14221,16 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             reject("Argument expected: xktModel");
             return;
         }
+
+        stats.sourceFormat = "glTF";
+        stats.schemaVersion = "2.0";
+        stats.title = "";
+        stats.author = "";
+        stats.created = "";
+        stats.numTriangles = 0;
+        stats.numVertices = 0;
+        stats.numObjects = 0;
+        stats.numGeometries = 0;
 
         const ctx = {
             gltf: data,
@@ -14226,12 +14245,7 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             nextGeometryId: 0,
             nextMeshId: 0,
             nextDefaultEntityId: 0,
-            stats: {
-                numObjects: 0,
-                numGeometries: 0,
-                numTriangles: 0,
-                numVertices: 0
-            }
+            stats
         };
 
         parseBuffers(ctx).then(() => {
@@ -14241,17 +14255,10 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             parseMaterials(ctx);
             parseDefaultScene(ctx);
 
-            ctx.log("Converted objects: " + ctx.stats.numObjects);
-            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-            ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
-            if (stats) {
-                stats.numTriangles = ctx.stats.numTriangles;
-                stats.numVertices = ctx.stats.numVertices;
-                stats.numObjects = ctx.stats.numObjects;
-                stats.numGeometries = ctx.stats.numGeometries;
-            }
+            ctx.log("Converted objects: " + stats.numObjects);
+            ctx.log("Converted geometries: " + stats.numGeometries);
+            ctx.log("Converted triangles: " + stats.numTriangles);
+            ctx.log("Converted vertices: " + stats.numVertices);
 
             resolve();
 
@@ -14836,7 +14843,13 @@ function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false,
                     numObjects: 0,
                     numGeometries: 0,
                     numTriangles: 0,
-                    numVertices: 0
+                    numVertices: 0,
+
+                    sourceFormat: "3DXML",
+                    schemaVersion: "",
+                    title: "",
+                    author: "",
+                    created: ""
                 }
             };
 
@@ -14924,26 +14937,25 @@ async function parseModel(ctx, node) {
 
 function parseHeader(ctx, node) {
     const children = node.children;
-    const metaData = {};
     for (let i = 0, len = children.length; i < len; i++) {
         const child = children[i];
         switch (child.type) {
             case "SchemaVersion":
-                metaData.schemaVersion = child.children[0];
-                if (!isSchemaVersionSupported(ctx, metaData.schemaVersion)) {
-                    ctx.error("3DXML schema version not supported: " + metaData.schemaVersion + " - supported versions are: " + supportedSchemas.join(","));
+                ctx.stats.schemaVersion = child.children[0];
+                if (!isSchemaVersionSupported(ctx, ctx.stats.schemaVersion)) {
+                    ctx.error("3DXML schema version not supported: " + ctx.stats.schemaVersion + " - supported versions are: " + supportedSchemas.join(","));
                 } else {
-                    ctx.log("Parsing 3DXML schema version: " + metaData.schemaVersion);
+                    ctx.log("Parsing 3DXML schema version: " + ctx.stats.schemaVersion);
                 }
                 break;
             case "Title":
-                metaData.title = child.children[0];
+                ctx.stats.title = child.children[0];
                 break;
             case "Author":
-                metaData.author = child.children[0];
+                ctx.stats.author = child.children[0];
                 break;
             case "Created":
-                metaData.created = child.children[0];
+                ctx.stats.created = child.children[0];
                 break;
         }
     }
@@ -51944,7 +51956,7 @@ function parseIFCIntoXKTModel({
                                         autoNormals = true,
                                         wasmPath,
                                         outputObjectProperties,
-                                        stats,
+                                        stats={},
                                         log
                                     }) {
 
@@ -51977,6 +51989,16 @@ function parseIFCIntoXKTModel({
 
             const modelID = ifcAPI.OpenModel(dataArray);
 
+            stats.sourceFormat = "IFC";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
+            stats.numTriangles = 0;
+            stats.numVertices = 0;
+            stats.numObjects = 0;
+            stats.numGeometries = 0;
+
             const ctx = {
                 modelID,
                 ifcAPI,
@@ -51986,12 +52008,7 @@ function parseIFCIntoXKTModel({
                 log: (log || function (msg) {
                 }),
                 nextId: 0,
-                stats: {
-                    numTriangles: 0,
-                    numVertices: 0,
-                    numObjects: 0,
-                    numGeometries: 0
-                }
+                stats
             };
 
             const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, IFCPROJECT);
@@ -52005,17 +52022,10 @@ function parseIFCIntoXKTModel({
             parseGeometry(ctx);
             parseMetadata(ctx);
 
-            ctx.log("Converted objects: " + ctx.stats.numObjects);
-            ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-            ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-            ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
-            if (stats) {
-                stats.numTriangles = ctx.stats.numTriangles;
-                stats.numVertices = ctx.stats.numVertices;
-                stats.numObjects = ctx.stats.numObjects;
-                stats.numGeometries = ctx.stats.numGeometries;
-            }
+            ctx.log("Converted objects: " + stats.numObjects);
+            ctx.log("Converted geometries: " + stats.numGeometries);
+            ctx.log("Converted triangles: " + stats.numTriangles);
+            ctx.log("Converted vertices: " + stats.numVertices);
 
             resolve();
 
@@ -76203,6 +76213,11 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
     }
 
     if (stats) {
+        stats.sourceFormat = "LAS";
+        stats.schemaVersion = "";
+        stats.title = "";
+        stats.author = "";
+        stats.created = "";
         stats.numObjects = 1;
         stats.numGeometries = 1;
         stats.numVertices = positionsValue.length / 3;
@@ -76441,6 +76456,11 @@ function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log})
         }
 
         if (stats) {
+            stats.sourceFormat = "PCD";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numVertices = positions.length / 3;
@@ -77431,6 +77451,11 @@ function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
         }
 
         if (stats) {
+            stats.sourceFormat = "PLY";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numVertices = attributes.POSITION.value.length / 3;
@@ -77640,6 +77665,11 @@ async function parseSTLIntoXKTModel({
         ctx.log("Converted vertices: " + ctx.stats.numVertices);
 
         if (stats) {
+            stats.sourceFormat = "STL";
+            stats.schemaVersion = "";
+            stats.title = "";
+            stats.author = "";
+            stats.created = "";
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numTriangles = ctx.stats.numTriangles;
