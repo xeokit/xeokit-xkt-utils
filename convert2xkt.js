@@ -46,7 +46,7 @@ async function main() {
     const result = await convert2xkt({
         source: program.source,
         format: program.format,
-        metamodel: program.metamodel,
+        metaModelSource: program.metamodel,
         output: program.output,
         log});
 
