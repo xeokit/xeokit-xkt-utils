@@ -1,5 +1,6 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import copy from 'rollup-plugin-copy'
 
 export default {
     input: './index.dist.js',
@@ -22,6 +23,14 @@ export default {
             browser: true,
             preferBuiltins: false
         }),
-        commonjs()
+        commonjs(),
+        copy({
+            targets: [
+                {
+                    src: './node_modules/web-ifc/web-ifc.wasm',
+                    dest: 'dist'
+                }
+            ]
+        })
     ]
 }
