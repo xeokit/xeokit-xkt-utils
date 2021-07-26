@@ -91,9 +91,17 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
         geometryId: "pointsGeometry"
     });
 
+    const entityId = "lasPointCloud";
+
     xktModel.createEntity({
-        entityId: "geometries",
+        entityId: entityId,
         meshIds: ["pointsMesh"]
+    });
+
+    xktModel.createMetaObject({
+        metaObjectId: entityId,
+        metaObjectType: "PointCloud",
+        metaObjectName: "PointCloud"
     });
 
     if (log) {
