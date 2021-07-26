@@ -391,6 +391,7 @@ function parseNode(ctx, glTFNode, matrix) {
                                 colorsCompressed.push(colors[j + 0]);
                                 colorsCompressed.push(colors[j + 1]);
                                 colorsCompressed.push(colors[j + 2]);
+                                colorsCompressed.push(255);
                             }
                         }
 
