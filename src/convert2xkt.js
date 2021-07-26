@@ -13,7 +13,6 @@ import {XKTModel} from "./XKTModel/XKTModel.js";
 const fs = require('fs');
 const DOMParser = require('xmldom').DOMParser;
 
-
 /**
  * Converts model files into xeokit's native XKT format.
  *
@@ -30,8 +29,9 @@ const DOMParser = require('xmldom').DOMParser;
  * @param {String}[params.source] Path to source file. Alternative to ````sourceData````.
  * @param {ArrayBuffer|JSON}[params.sourceData] Source file data. Alternative to ````source````.
  * @param {String}[params.sourceFormat] Format of source file/data. Always needed with ````sourceData````, but not normally needed with ````source````, because convert2xkt will determine the format automatically from the file extension of ````source````.
- * @param {String}[params.metaModelSource] Path to source metaModel file. Alternative to ````metaModelData````.
- * @param {ArrayBuffer|JSON}[params.metaModelData] Source file data. Alternative to ````metaModelSource````.
+ * @param {ArrayBuffer|JSON}[params.metaModelData] Source file data. Overrides metadata from ````metaModelSource````, ````sourceData```` and ````source````.
+ * @param {String}[params.metaModelSource] Path to source metaModel file. Overrides metadata from ````sourceData```` and ````source````. Overridden by ````metaModelData````.
+ * @param {Boolean}[params.autoMetaModel=true] Whether to automatically generate a default metamodel in the XKT when no metamodel is given, or parsed in the source.
  * @param {String}[params.output] Path to destination XKT file.
  * @param {Function}[params.outputXKTModel] Callback to collect the ````XKTModel```` that is internally build by this method.
  * @param {Function}[params.outputXKT] Callback to collect XKT file data.
@@ -48,6 +48,7 @@ function convert2xkt({
                          sourceFormat,
                          metaModelSource,
                          metaModelData,
+                         autoMetaModel,
                          output,
                          outputXKTModel,
                          outputXKT,
@@ -238,6 +239,10 @@ function convert2xkt({
         function convert(parser, converterParams) {
 
             parser(converterParams).then(() => {
+
+                if (autoMetaModel !== false) {
+                    xktModel.createDefaultMetaObjects();
+                }
 
                 xktModel.finalize();
 
