@@ -14533,6 +14533,7 @@ function parseNode(ctx, glTFNode, matrix) {
                                 colorsCompressed.push(colors[j + 0]);
                                 colorsCompressed.push(colors[j + 1]);
                                 colorsCompressed.push(colors[j + 2]);
+                                colorsCompressed.push(255);
                             }
                         }
 
@@ -76301,9 +76302,17 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
         geometryId: "pointsGeometry"
     });
 
+    const entityId = "lasPointCloud";
+
     xktModel.createEntity({
-        entityId: "geometries",
+        entityId: entityId,
         meshIds: ["pointsMesh"]
+    });
+
+    xktModel.createMetaObject({
+        metaObjectId: entityId,
+        metaObjectType: "PointCloud",
+        metaObjectName: "PointCloud"
     });
 
     if (log) {
