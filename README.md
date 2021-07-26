@@ -609,6 +609,6 @@ npm run docs
 Building the tests in TODO
 
 ````bash
-npm built-tests
+npm build-tests
 ````
 
