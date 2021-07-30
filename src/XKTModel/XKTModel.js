@@ -588,8 +588,6 @@ class XKTModel {
      */
     createDefaultMetaObjects() {
 
-        let rootMetaObject = null;
-
         for (let i = 0, len = this.entitiesList.length; i < len; i++) {
 
             const entity = this.entitiesList[i];
