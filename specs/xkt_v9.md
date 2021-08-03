@@ -1,11 +1,9 @@
 ## XKT Format Specification v9
 
-3 August 2021
+* 3 August 2021
 
----
 This document provides an overview of the ````.xkt```` v9 file format. The ````.xkt```` format is xeokit's native binary
 format, which is designed to rapidly load large, double-precision models into a xeokit viewer running in the browser.
----
 
 ## Contents
 
