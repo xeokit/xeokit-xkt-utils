@@ -9,23 +9,10 @@ format, which is designed to rapidly load large, double-precision models into a 
 
 - [Objectives](#overview)
 - [zlib Deflation](#zlib-deflation)
-- [Geometry Arrays](#geometry-arrays)
-- [Implicit Mesh Order](#implicit-mesh-order)
-- [Indices](#indices)
-- [Primitives](#primitives)
-- [Entity IDs](#entity-ids)
-- [Terminology](#terminology)
-    + [Mesh](#mesh)
-    + [Entity](#entity)
-    + [World Space](#world-space)
-    + [Model Space](#model-space)
-    + [Decoding](#decoding)
-    + [Quantization](#quantization)
-    + [Oct-Encoding](#oct-encoding)
 
 ## Where we use XKT
 
-The XKT format is used by at least three packages within xeokit, which are:
+The XKT format is used by these three packages within xeokit:
 
 | Library | Description |
 |---|---|
@@ -146,8 +133,7 @@ Section | Type | Description | zlib Deflated? |
 | ````each_mesh_material```` | Uint8[] | For each mesh, an RGBA integer color of format ````[0..255, 0..255, 0..255, 0..255]````, and PBR metallic and roughness factors, of format ````[0..255, 0..255]````. | Deflated |
 | ````each_entity_id```` | String | An ID for each entity. This is a string-encoded JSON array of strings. | Deflated |
 | ````each_entity_meshes_portion```` | Uint32[] | For each entity, the base index of the entity's portion of the ````each_mesh*```` arrays. | Deflated |
-|  ````each_tile_aabb```` | Float64[] | A World-space, axis-aligned bounding box (AABB) for each tile. Each AABB has six full-precision values that indicate the min and max extents of the box on each axis: *
-xmin*, *ymin*, *zmin*, *xmax*, *ymax* and *zmax*.| Deflated |
+|  ````each_tile_aabb```` | Float64[] | A World-space, axis-aligned bounding box (AABB) for each tile. Each AABB has six full-precision values that indicate the min and max extents of the box on each axis: *xmin*, *ymin*, *zmin*, *xmax*, *ymax* and *zmax*.| Deflated |
 | ````each_tile_entities_portion```` | Uint32[] | For each tile, an index to the first element of tile's portion of the ````each_entity_*```` arrays. | Deflated |
 
 ## zlib Deflation
@@ -160,3 +146,8 @@ plugin both use
 
 When loading ````.xkt````, ````XKTLoaderPlugin```` inflates those elements before parsing them.
 
+## Metadata JSON
+
+----------------
+TODO
+----------------
