@@ -1,5 +1,6 @@
 import {parse} from '@loaders.gl/core';
 import {LASLoader} from '@loaders.gl/las';
+import {math} from "../lib/math.js";
 
 
 /**
@@ -91,17 +92,26 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
         geometryId: "pointsGeometry"
     });
 
-    const entityId = "lasPointCloud";
+    const entityId = math.createUUID();
 
     xktModel.createEntity({
         entityId: entityId,
         meshIds: ["pointsMesh"]
     });
 
+    const rootMetaObjectId = math.createUUID();
+
+    xktModel.createMetaObject({
+        metaObjectId: rootMetaObjectId,
+        metaObjectType: "Model",
+        metaObjectName: "Model"
+    });
+
     xktModel.createMetaObject({
         metaObjectId: entityId,
         metaObjectType: "PointCloud",
-        metaObjectName: "PointCloud"
+        metaObjectName: "PointCloud (LAZ)",
+        parentMetaObjectId: rootMetaObjectId
     });
 
     if (log) {
