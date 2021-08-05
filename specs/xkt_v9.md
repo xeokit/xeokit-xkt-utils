@@ -16,9 +16,9 @@ The ````xkt```` format is used by these three packages within xeokit:
 
 | Library | Description |
 |---|---|
-| [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) |  JavaScript library providing tools to generate ````.xkt```` files, and to convert various source formats into XKT. |
-| [xeokit-sdk](https://github.com/xeokit/xeokit-sdk) | The core xeokit SDK, providing JavaScript components for building custom viewers that load XKT files.  |
-| [xeokit-bim-viewer](https://github.com/xeokit/xeokit-bim-viewer) | xeokit's bundled BIM viewer, built from components provided in ````xeokit-sdk````. Loads models from XKT files.  |
+| [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) |  JavaScript library providing tools to generate ````.xkt```` files, and to convert various source formats into ````xkt````. |
+| [xeokit-sdk](https://github.com/xeokit/xeokit-sdk) | The core xeokit SDK, providing JavaScript components for building custom viewers that load ````xkt```` files.  |
+| [xeokit-bim-viewer](https://github.com/xeokit/xeokit-bim-viewer) | xeokit's bundled BIM viewer, built from components provided in ````xeokit-sdk````. Loads models from ````xkt```` files.  |
 
 The [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) package implements an
 in-memory [document model](https://github.com/xeokit/xeokit-xkt-utils/tree/master/src/XKTModel) that represents the
