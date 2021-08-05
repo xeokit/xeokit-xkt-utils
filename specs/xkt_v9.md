@@ -12,7 +12,7 @@ format, which is designed to rapidly load large, double-precision models into a 
 
 ## Where we use XKT
 
-The XKT format is used by these three packages within xeokit:
+The ````xkt```` format is used by these three packages within xeokit:
 
 | Library | Description |
 |---|---|
@@ -22,14 +22,14 @@ The XKT format is used by these three packages within xeokit:
 
 The [xeokit-xkt-utils](https://github.com/xeokit/xeokit-xkt-utils) package implements an
 in-memory [document model](https://github.com/xeokit/xeokit-xkt-utils/tree/master/src/XKTModel) that represents the
-contents of an XKT file. We designed the classes that comprise the document model to align closely with the XKT format,
+contents of an ````xkt```` file. We designed the classes that comprise the document model to align closely with the ````xkt```` format,
 so that they may be used to help understand the format.
 
 The [xeokit-xkt](https://github.com/xeokit/xeokit-xkt) package provides a
 viewer [plugin](https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html)
-that loads XKT. The plugin has a parser for each XKT version,
+that loads ````xkt````. The plugin has a parser for each ````xkt```` version,
 including [a parser](https://github.com/xeokit/xeokit-sdk/blob/master/src/plugins/XKTLoaderPlugin/parsers/ParserV9.js)
-for XKT v9. The implementation of that parser is also useful for understanding the XKT format.
+for ````xkt```` v9. The implementation of that parser is also useful for understanding the ````xkt```` format.
 
 The [xeokit-bim-viewer](https://github.com/xeokit/xeokit-bim-vewer) package implements a BIM viewer, using components
 from ````xeokit-sdk````.
@@ -72,7 +72,7 @@ xeokit renderer.
 
 #### Inline Metadata
 
-We embed model metadata as a chunk of JSON within the XKT v9 file. TODO: format
+We embed model metadata as a chunk of JSON within the ````xkt```` v9 file. TODO: format
 
 ## File Elements
 
@@ -124,9 +124,9 @@ Section | Type | Description | zlib Deflated? |
 | ````reused_geometries_decode_matrix```` | Float32[] | A singular dequantization matrix for ````positions```` belonging to geometries that are shared by multiple entities. Has sixteen elements. | Deflated |
 | ````each_geometry_primitive_type```` | Uint8 | Primitive type for each geometry (0=solid triangle mesh, 1=open triangle mesh surface, 2=points, 3=lines). | Deflated |
 | ````each_geometry_positions_portion```` | Uint32[] | For each geometry, base index of a portion in ````positions````. This is provided for all geometry primitive types. | Deflated |
-| ````each_geometry_normals_portion```` | Uint32[] | For each triangles geometry that needs vertex normals, base index of a portion in ````normals````. This is only used by triangles geometry primitive types, and is optional. When no normals are provided for a geometry, this will have the same value as for the previous geometry, or ````0```` if this is the first geometry in the XKT file. | Deflated |
-| ````each_geometry_colors_portion```` | Uint32[] | For each geometry that needs vertex colors, base index of a portion in ````colors````. This is only used by geometries that need vertex colors, and is optional. When no vertex colors are provided for a geometry, this will have the same value as for the previous geometry, or ````0```` if this is the first geometry in the XKT file. | Deflated |
-| ````each_geometry_indices_portion```` | Uint32[] | For each triangle and line geometry, base index of a portion in ````indices````. This is only used by geometries that need vertex colors, and is optional. When no vertex colors are provided for a geometry, this will have the same value as for the previous geometry, or ````0```` if this is the first geometry in the XKT file.| Deflated |
+| ````each_geometry_normals_portion```` | Uint32[] | For each triangles geometry that needs vertex normals, base index of a portion in ````normals````. This is only used by triangles geometry primitive types, and is optional. When no normals are provided for a geometry, this will have the same value as for the previous geometry, or ````0```` if this is the first geometry in the ````xkt```` file. | Deflated |
+| ````each_geometry_colors_portion```` | Uint32[] | For each geometry that needs vertex colors, base index of a portion in ````colors````. This is only used by geometries that need vertex colors, and is optional. When no vertex colors are provided for a geometry, this will have the same value as for the previous geometry, or ````0```` if this is the first geometry in the ````xkt```` file. | Deflated |
+| ````each_geometry_indices_portion```` | Uint32[] | For each triangle and line geometry, base index of a portion in ````indices````. This is only used by geometries that need vertex colors, and is optional. When no vertex colors are provided for a geometry, this will have the same value as for the previous geometry, or ````0```` if this is the first geometry in the ````xkt```` file.| Deflated |
 | ````each_geometry_edge_indices_portion```` | Uint32[] | For each geometry that represents a triangle mesh, base index of a portion in ````edge_indices````. | Deflated |
 | ````each_mesh_geometries_portion```` | Uint32[] | For each mesh, an index into the ````each_geometry*```` arrays. | Deflated |
 | ````each_mesh_matrices_portion```` | Uint32[] | For each mesh that shares its geometry, an index to its first element in ````matrices````, to indicate the modeling matrix that transforms the shared geometry's Local-space vertex positions. This is ignored for meshes that don't share geometry, because the vertex positions of non-shared geometries are pre-transformed into World-space. | Deflated |
