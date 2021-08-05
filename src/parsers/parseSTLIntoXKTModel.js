@@ -1,5 +1,6 @@
 
 import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
+import {math} from "../lib/math.js";
 
 /**
  * @desc Parses STL file data into an {@link XKTModel}.
@@ -68,6 +69,14 @@ async function parseSTLIntoXKTModel({
             return;
         }
 
+        const rootMetaObjectId = math.createUUID();
+
+        const rootMetaObject = xktModel.createMetaObject({
+            metaObjectId: rootMetaObjectId,
+            metaObjectType: "Model",
+            metaObjectName: "Model"
+        });
+
         const ctx = {
             data,
             splitMeshes,
@@ -75,6 +84,7 @@ async function parseSTLIntoXKTModel({
             smoothNormals,
             smoothNormalsAngleThreshold,
             xktModel,
+            rootMetaObject,
             nextId: 0,
             log: (log || function (msg) {
             }),
@@ -299,6 +309,13 @@ function addMesh(ctx, positions, normals, colors) {
     ctx.xktModel.createEntity({
         entityId: entityId,
         meshIds: [meshId]
+    });
+
+    ctx.xktModel.createMetaObject({
+        metaObjectId: entityId,
+        metaObjectType: "Default",
+        metaObjectName: "STL Mesh",
+        parentMetaObjectId: ctx.rootMetaObject.metaObjectId
     });
 
     ctx.stats.numGeometries++;
