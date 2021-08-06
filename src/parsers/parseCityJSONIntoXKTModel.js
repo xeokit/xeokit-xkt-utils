@@ -88,10 +88,28 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
         stats.numObjects = 0;
         stats.numGeometries = 0;
 
+        const rootMetaObjectId = math.createUUID();
+
+        xktModel.createMetaObject({
+            metaObjectId: rootMetaObjectId,
+            metaObjectType: "Model",
+            metaObjectName: "Model"
+        });
+
+        const modelMetaObjectId = math.createUUID();
+
+        xktModel.createMetaObject({
+            metaObjectId: modelMetaObjectId,
+            metaObjectType: "CityJSON",
+            metaObjectName: "CityJSON",
+            parentMetaObjectId: rootMetaObjectId
+        });
+
         const ctx = {
             data,
             vertices,
             xktModel,
+            rootMetaObjectId: modelMetaObjectId,
             outputObjectProperties,
             log: (log || function (msg) {
             }),
@@ -137,15 +155,8 @@ function transformVertices(vertices, transform, rotateX) {
 
 function parseCityJSON(ctx) {
 
-    const xktModel = ctx.xktModel;
     const data = ctx.data;
     const cityObjects = data.CityObjects;
-
-    ctx.rootMetaObject = xktModel.createMetaObject({
-        metaObjectId: "myModel",
-        metaObjectName: "CityJSON",
-        metaObjectType: "CityJSON"
-    });
 
     for (const objectId in cityObjects) {
         if (cityObjects.hasOwnProperty(objectId)) {
@@ -157,15 +168,14 @@ function parseCityJSON(ctx) {
 
 function parseCityObject(ctx, cityObject, objectId) {
 
+    const xktModel = ctx.xktModel;
     const data = ctx.data;
-
     const metaObjectId = objectId;
     const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
     const metaObjectType = cityObject.type;
     const metaObjectName = metaObjectType + " : " + objectId;
-    const parentMetaObjectId = cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObject.metaObjectId;
 
-    const xktModel = ctx.xktModel;
+    const parentMetaObjectId = cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObjectId;
 
     xktModel.createMetaObject({
         metaObjectId,
@@ -174,11 +184,6 @@ function parseCityObject(ctx, cityObject, objectId) {
         metaObjectType,
         parentMetaObjectId
     });
-
-    if (ctx.outputObjectProperties) {
-        const json = {};
-        ctx.outputObjectProperties(propertySetId, json);
-    }
 
     if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
         return;
@@ -230,10 +235,17 @@ function parseCityObject(ctx, cityObject, objectId) {
     }
 
     if (meshIds.length > 0) {
+
+        if (ctx.outputObjectProperties) {
+            const json = {};
+            ctx.outputObjectProperties(propertySetId, json);
+        }
+
         xktModel.createEntity({
             entityId: objectId,
             meshIds: meshIds
         });
+
         ctx.stats.numObjects++;
     }
 }
