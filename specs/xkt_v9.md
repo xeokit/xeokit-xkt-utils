@@ -1,4 +1,4 @@
-## XKT Format Specification v9
+# XKT Format Specification v9
 
 * 3 August 2021
 
