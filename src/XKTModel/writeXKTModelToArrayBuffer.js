@@ -260,10 +260,6 @@ function getModelData(xktModel) {
             const entityMeshes = entity.meshes;
             const numEntityMeshes = entityMeshes.length;
 
-            if (numEntityMeshes === 0) {
-                continue;
-            }
-
             for (let k = 0; k < numEntityMeshes; k++) {
 
                 const mesh = entityMeshes[k];
