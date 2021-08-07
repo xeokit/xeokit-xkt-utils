@@ -4581,10 +4581,28 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
         stats.numObjects = 0;
         stats.numGeometries = 0;
 
+        const rootMetaObjectId = math.createUUID();
+
+        xktModel.createMetaObject({
+            metaObjectId: rootMetaObjectId,
+            metaObjectType: "Model",
+            metaObjectName: "Model"
+        });
+
+        const modelMetaObjectId = math.createUUID();
+
+        xktModel.createMetaObject({
+            metaObjectId: modelMetaObjectId,
+            metaObjectType: "CityJSON",
+            metaObjectName: "CityJSON",
+            parentMetaObjectId: rootMetaObjectId
+        });
+
         const ctx = {
             data,
             vertices,
             xktModel,
+            rootMetaObjectId: modelMetaObjectId,
             outputObjectProperties,
             log: (log || function (msg) {
             }),
@@ -4630,15 +4648,8 @@ function transformVertices(vertices, transform, rotateX) {
 
 function parseCityJSON(ctx) {
 
-    const xktModel = ctx.xktModel;
     const data = ctx.data;
     const cityObjects = data.CityObjects;
-
-    ctx.rootMetaObject = xktModel.createMetaObject({
-        metaObjectId: "myModel",
-        metaObjectName: "CityJSON",
-        metaObjectType: "CityJSON"
-    });
 
     for (const objectId in cityObjects) {
         if (cityObjects.hasOwnProperty(objectId)) {
@@ -4650,15 +4661,14 @@ function parseCityJSON(ctx) {
 
 function parseCityObject(ctx, cityObject, objectId) {
 
+    const xktModel = ctx.xktModel;
     const data = ctx.data;
-
     const metaObjectId = objectId;
     const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
     const metaObjectType = cityObject.type;
     const metaObjectName = metaObjectType + " : " + objectId;
-    const parentMetaObjectId = cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObject.metaObjectId;
 
-    const xktModel = ctx.xktModel;
+    const parentMetaObjectId = cityObject.parents ? cityObject.parents[0] : ctx.rootMetaObjectId;
 
     xktModel.createMetaObject({
         metaObjectId,
@@ -4667,11 +4677,6 @@ function parseCityObject(ctx, cityObject, objectId) {
         metaObjectType,
         parentMetaObjectId
     });
-
-    if (ctx.outputObjectProperties) {
-        const json = {};
-        ctx.outputObjectProperties(propertySetId, json);
-    }
 
     if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
         return;
@@ -4723,10 +4728,17 @@ function parseCityObject(ctx, cityObject, objectId) {
     }
 
     if (meshIds.length > 0) {
+
+        if (ctx.outputObjectProperties) {
+            const json = {};
+            ctx.outputObjectProperties(propertySetId, json);
+        }
+
         xktModel.createEntity({
             entityId: objectId,
             meshIds: meshIds
         });
+
         ctx.stats.numObjects++;
     }
 }
@@ -6184,7 +6196,7 @@ var require_web_ifc = __commonJS({
         function isFileURI(filename) {
           return hasPrefix(filename, fileURIPrefix);
         }
-        var wasmBinaryFile = WasmPath + "web-ifc.wasm";
+        var wasmBinaryFile = "web-ifc.wasm";
         if (!isDataURI(wasmBinaryFile)) {
           wasmBinaryFile = locateFile(wasmBinaryFile);
         }
@@ -10366,7 +10378,7 @@ var require_web_ifc = __commonJS({
         __ATINIT__.push({ func: function() {
           ___wasm_call_ctors();
         } });
-        var asmLibraryArg = { "x": ___assert_fail, "A": ___sys_fcntl64, "P": ___sys_ioctl, "Q": ___sys_open, "U": __embind_finalize_value_array, "s": __embind_finalize_value_object, "S": __embind_register_bool, "v": __embind_register_class, "u": __embind_register_class_constructor, "d": __embind_register_class_function, "R": __embind_register_emval, "C": __embind_register_float, "h": __embind_register_function, "m": __embind_register_integer, "k": __embind_register_memory_view, "D": __embind_register_std_string, "w": __embind_register_std_wstring, "V": __embind_register_value_array, "g": __embind_register_value_array_element, "t": __embind_register_value_object, "j": __embind_register_value_object_field, "T": __embind_register_void, "q": __emval_as, "W": __emval_call, "b": __emval_decref, "F": __emval_get_global, "n": __emval_get_property, "l": __emval_incref, "N": __emval_instanceof, "E": __emval_is_number, "y": __emval_new_array, "f": __emval_new_cstring, "r": __emval_new_object, "p": __emval_run_destructors, "i": __emval_set_property, "e": __emval_take_value, "c": _abort, "M": _clock_gettime, "I": _emscripten_memcpy_big, "o": _emscripten_resize_heap, "K": _environ_get, "L": _environ_sizes_get, "B": _fd_close, "O": _fd_read, "G": _fd_seek, "z": _fd_write, "a": wasmMemory, "H": _setTempRet0, "J": _strftime_l };
+        var asmLibraryArg = { "x": ___assert_fail, "A": ___sys_fcntl64, "P": ___sys_ioctl, "Q": ___sys_open, "U": __embind_finalize_value_array, "s": __embind_finalize_value_object, "S": __embind_register_bool, "v": __embind_register_class, "u": __embind_register_class_constructor, "d": __embind_register_class_function, "R": __embind_register_emval, "C": __embind_register_float, "g": __embind_register_function, "m": __embind_register_integer, "k": __embind_register_memory_view, "D": __embind_register_std_string, "w": __embind_register_std_wstring, "V": __embind_register_value_array, "h": __embind_register_value_array_element, "t": __embind_register_value_object, "j": __embind_register_value_object_field, "T": __embind_register_void, "q": __emval_as, "W": __emval_call, "b": __emval_decref, "F": __emval_get_global, "n": __emval_get_property, "l": __emval_incref, "N": __emval_instanceof, "E": __emval_is_number, "y": __emval_new_array, "f": __emval_new_cstring, "r": __emval_new_object, "p": __emval_run_destructors, "i": __emval_set_property, "e": __emval_take_value, "c": _abort, "M": _clock_gettime, "I": _emscripten_memcpy_big, "o": _emscripten_resize_heap, "K": _environ_get, "L": _environ_sizes_get, "B": _fd_close, "O": _fd_read, "G": _fd_seek, "z": _fd_write, "a": wasmMemory, "H": _setTempRet0, "J": _strftime_l };
         var asm = createWasm();
         var ___wasm_call_ctors = Module["___wasm_call_ctors"] = function() {
           return (___wasm_call_ctors = Module["___wasm_call_ctors"] = Module["asm"]["Y"]).apply(null, arguments);
@@ -41905,6 +41917,9 @@ var IfcAPI = class {
     }
     this.wasmModule.SetGeometryTransformation(modelID, transformationMatrix);
   }
+  GetCoordinationMatrix(modelID) {
+    return this.wasmModule.GetCoordinationMatrix(modelID);
+  }
   GetVertexArray(ptr, size) {
     return this.getSubArray(this.wasmModule.HEAPF32, ptr, size);
   }
@@ -41930,12 +41945,8 @@ var IfcAPI = class {
     return this.wasmModule.GetFlatMesh(modelID, expressID);
   }
   SetWasmPath(path) {
-    WasmPath = path;
   }
 };
-
-
- var WasmPath = "";
 
 /**
  * @desc Parses IFC STEP file data into an {@link XKTModel}.
@@ -42154,10 +42165,6 @@ function parseGeometry(ctx) {
 }
 
 function parseMetadata(ctx) {
-
-    // Parses element properties within the IFC, creates a hierarchy of XKTMetaObject
-    // components within the XKTModel. Each leaf XKTMetaObject should correspond to an
-    // XKTEntity created with parseGeometry().
 
     const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, IFCPROJECT);
     const ifcProjectId = lines.get(0);
@@ -66243,17 +66250,26 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
         geometryId: "pointsGeometry"
     });
 
-    const entityId = "lasPointCloud";
+    const entityId = math.createUUID();
 
     xktModel.createEntity({
         entityId: entityId,
         meshIds: ["pointsMesh"]
     });
 
+    const rootMetaObjectId = math.createUUID();
+
+    xktModel.createMetaObject({
+        metaObjectId: rootMetaObjectId,
+        metaObjectType: "Model",
+        metaObjectName: "Model"
+    });
+
     xktModel.createMetaObject({
         metaObjectId: entityId,
         metaObjectType: "PointCloud",
-        metaObjectName: "PointCloud"
+        metaObjectName: "PointCloud (LAZ)",
+        parentMetaObjectId: rootMetaObjectId
     });
 
     if (log) {
@@ -67420,6 +67436,7 @@ function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
             meshIds: ["plyMesh"]
         });
 
+
         if (log) {
             log("Converted objects: 1");
             log("Converted geometries: 1");
@@ -67609,6 +67626,14 @@ async function parseSTLIntoXKTModel({
             return;
         }
 
+        const rootMetaObjectId = math.createUUID();
+
+        const rootMetaObject = xktModel.createMetaObject({
+            metaObjectId: rootMetaObjectId,
+            metaObjectType: "Model",
+            metaObjectName: "Model"
+        });
+
         const ctx = {
             data,
             splitMeshes,
@@ -67616,6 +67641,7 @@ async function parseSTLIntoXKTModel({
             smoothNormals,
             smoothNormalsAngleThreshold,
             xktModel,
+            rootMetaObject,
             nextId: 0,
             log: (log || function (msg) {
             }),
@@ -67842,6 +67868,13 @@ function addMesh(ctx, positions, normals, colors) {
         meshIds: [meshId]
     });
 
+    ctx.xktModel.createMetaObject({
+        metaObjectId: entityId,
+        metaObjectType: "Default",
+        metaObjectName: "STL Mesh",
+        parentMetaObjectId: ctx.rootMetaObject.metaObjectId
+    });
+
     ctx.stats.numGeometries++;
     ctx.stats.numObjects++;
     ctx.stats.numVertices += positions.length / 3;
@@ -67999,7 +68032,25 @@ function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false,
 
         zipArchive.init(data).then(() => {
 
+            const rootMetaObjectId = math.createUUID();
+
+            xktModel.createMetaObject({
+                metaObjectId: rootMetaObjectId,
+                metaObjectType: "Model",
+                metaObjectName: "Model"
+            });
+
+            const modelMetaObjectId = math.createUUID();
+
+            xktModel.createMetaObject({
+                metaObjectId: modelMetaObjectId,
+                metaObjectType: "3DXML",
+                metaObjectName: "3DXML",
+                parentMetaObjectId: rootMetaObjectId
+            });
+
             const ctx = {
+                rootMetaObjectId: modelMetaObjectId,
                 zipArchive: zipArchive,
                 edgeThreshold: 10,
                 xktModel: xktModel,
@@ -68280,10 +68331,12 @@ async function parseProductStructure(ctx, productStructureNode) {
 
     // Find the root Reference3D
 
+    const parentMatrix = math.identityMat4();
+
     for (let id in reference3Ds) {
         const reference3D = reference3Ds[id];
         if (!reference3D.instance3D) {
-            parseReference3D(ctx, reference3D, null); // HACK: Assuming that root has id == "1"
+            parseReference3D(ctx, reference3D, ctx.rootMetaObjectId, parentMatrix);
             return;
         }
     }
@@ -68292,47 +68345,63 @@ async function parseProductStructure(ctx, productStructureNode) {
 
 }
 
-function parseInstance3D(ctx, instance3D, matrix) {
+function parseInstance3D(ctx, instance3D, parentMetaObjectId, parentMatrix) {
 
     const objectId = ctx.nextId++;
-    let matrix2 = math.mat4(matrix);
+
+    const rotationMatrix = math.identityMat4();
+    const translationMatrix = math.identityMat4();
+    const localMatrix = math.identityMat4();
+    const worldMatrix = math.identityMat4();
 
     if (instance3D.relativeMatrix) {
 
-        const matrix = parseFloatArray(instance3D.relativeMatrix, 12);
-        const translationMatrix = math.translationMat4c(matrix[9], matrix[10], matrix[11], math.identityMat4());
+        const relativeMatrix = parseFloatArray(instance3D.relativeMatrix, 12);
 
-        const mat3 = matrix.slice(0, 9); // Rotation matrix
-        const rotationMatrix = math.mat3ToMat4(mat3, math.identityMat4()); // Convert rotation matrix to 4x4
+        const translate = [relativeMatrix[9], relativeMatrix[10], relativeMatrix[11]];
 
-        matrix2 = math.mulMat4(translationMatrix, rotationMatrix, matrix2);
+        math.translationMat4v(translate, translationMatrix);
+        math.mat3ToMat4(relativeMatrix.slice(0, 9), rotationMatrix);
+        math.mulMat4(rotationMatrix, translationMatrix, localMatrix);
 
-        // if (ctx.metaModelData) {
-        //     ctx.metaModelData.metaObjects.push({
-        //         id: childGroup.id,
-        //         type: "Default",
-        //         name: instance3D.name,
-        //         parent: group ? group.id : ctx.modelNode.id
-        //     });
-        // }
+        math.mulMat4(parentMatrix, localMatrix, worldMatrix);
 
-    }
+        ctx.xktModel.createMetaObject({
+            metaObjectId: objectId,
+            metaObjectType: "Default",
+            metaObjectName: instance3D.name,
+            parentMetaObjectId: parentMetaObjectId
+        });
 
-    for (let id in instance3D.reference3Ds) {
-        parseReference3D(ctx, instance3D.reference3Ds[id], matrix2);
+        for (let id in instance3D.reference3Ds) {
+            parseReference3D(ctx, instance3D.reference3Ds[id], objectId, worldMatrix);
+        }
+
+    } else {
+
+        ctx.xktModel.createMetaObject({
+            metaObjectId: objectId,
+            metaObjectType: "Default",
+            metaObjectName: instance3D.name,
+            parentMetaObjectId: parentMetaObjectId
+        });
+
+        for (let id in instance3D.reference3Ds) {
+            parseReference3D(ctx, instance3D.reference3Ds[id], objectId, parentMatrix);
+        }
     }
 }
 
-function parseReference3D(ctx, reference3D, matrix) {
+function parseReference3D(ctx, reference3D, parentMetaObjectId, parentMatrix) {
     for (let id in reference3D.instance3Ds) {
-        parseInstance3D(ctx, reference3D.instance3Ds[id], matrix);
+        parseInstance3D(ctx, reference3D.instance3Ds[id], parentMetaObjectId, parentMatrix);
     }
     for (let id in reference3D.instanceReps) {
-        parseInstanceRep(ctx, reference3D.instanceReps[id], matrix);
+        parseInstanceRep(ctx, reference3D.instanceReps[id], parentMetaObjectId, parentMatrix);
     }
 }
 
-function parseInstanceRep(ctx, instanceRep, matrix) {
+function parseInstanceRep(ctx, instanceRep, parentMetaObjectId, parentMatrix) {
 
     if (instanceRep.referenceReps) {
 
@@ -68353,7 +68422,7 @@ function parseInstanceRep(ctx, instanceRep, matrix) {
                 ctx.xktModel.createMesh({
                     meshId: meshId,
                     geometryId: meshCfg.geometryId,
-                    matrix: matrix,
+                    matrix: parentMatrix,
                     color: colorize
                 });
 
@@ -68364,19 +68433,12 @@ function parseInstanceRep(ctx, instanceRep, matrix) {
 
                 ctx.stats.numObjects++;
 
-                // ctx.xktModel.createMetaObject({
-                //     metaObjectId: entityId,
-                //     metaObjectType: "Default",
-                //     metaObjectName: instanceRep.name,
-                //     parentMetaObjectId: ctx.xktModel.modelId
-                // });
-
-                // ctx.metaModelData.metaObjects.push({
-                //     id: mesh.id,
-                //     type: "Default",
-                //     name: instanceRep.name,
-                //     parent: group ? group.id : ctx.modelNode.id
-                // });
+                ctx.xktModel.createMetaObject({
+                    metaObjectId: entityId,
+                    metaObjectType: "Default",
+                    metaObjectName: instanceRep.name,
+                    parentMetaObjectId: parentMetaObjectId
+                });
             }
         }
     }
@@ -68630,7 +68692,7 @@ function parseIntArrays(str) {
 
 function parseFloatArray(str, numElems) {
     str = str.split(",");
-    const arr = new Float32Array(str.length * numElems);
+    const arr = new Float64Array(str.length * numElems);
     let arrIdx = 0;
     for (let i = 0, len = str.length; i < len; i++) {
         const value = str[i].split(" ");
@@ -68780,7 +68842,6 @@ async function parseCATMaterialRef(ctx, node) {
         }
     }
 }
-
 
 function parseMaterialDefDocument(ctx, node) {
     const children = node.children;
@@ -75963,10 +76024,6 @@ function getModelData(xktModel) {
             const entity = tileEntities[j];
             const entityMeshes = entity.meshes;
             const numEntityMeshes = entityMeshes.length;
-
-            if (numEntityMeshes === 0) {
-                continue;
-            }
 
             for (let k = 0; k < numEntityMeshes; k++) {
 
