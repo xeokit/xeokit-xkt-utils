@@ -218,10 +218,6 @@ function parseGeometry(ctx) {
 
 function parseMetadata(ctx) {
 
-    // Parses element properties within the IFC, creates a hierarchy of XKTMetaObject
-    // components within the XKTModel. Each leaf XKTMetaObject should correspond to an
-    // XKTEntity created with parseGeometry().
-
     const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, WebIFC.IFCPROJECT);
     const ifcProjectId = lines.get(0);
     const ifcProject = ctx.ifcAPI.GetLine(ctx.modelID, ifcProjectId);
