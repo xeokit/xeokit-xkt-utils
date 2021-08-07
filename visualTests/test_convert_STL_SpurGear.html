@@ -30,23 +30,115 @@
             background: lightblue;
         }
 
+        #treeViewContainer {
+            pointer-events: all;
+            height: 100%;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: black;
+            top: 80px;
+            z-index: 200000;
+            float: left;
+            left: 0;
+            padding-left: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 15px;
+            user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            width: 350px;
+        }
+
+        #treeViewContainer ul {
+            list-style: none;
+            padding-left: 1.75em;
+            pointer-events: none;
+        }
+
+        #treeViewContainer ul li {
+            position: relative;
+            width: 500px;
+            pointer-events: none;
+            padding-top: 3px;
+            padding-bottom: 3px;
+            vertical-align: middle;
+        }
+
+        #treeViewContainer ul li a {
+            background-color: #eee;
+            border-radius: 50%;
+            color: #000;
+            display: inline-block;
+            height: 1.5em;
+            left: -1.5em;
+            position: absolute;
+            text-align: center;
+            text-decoration: none;
+            width: 1.5em;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li a.plus {
+            background-color: #ded;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li a.minus {
+            background-color: #eee;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li a:active {
+            top: 1px;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li span:hover {
+            color: white;
+            cursor: pointer;
+            background: black;
+            padding-left: 2px;
+            pointer-events: all;
+        }
+
+        #treeViewContainer ul li span {
+            display: inline-block;
+            width: calc(100% - 50px);
+            padding-left: 2px;
+            pointer-events: all;
+            height: 23px;
+        }
+
+        #treeViewContainer .highlighted-node { /* Appearance of node highlighted with TreeViewPlugin#showNode() */
+            border: black solid 1px;
+            background: yellow;
+            color: black;
+            padding-left: 1px;
+            padding-right: 5px;
+            pointer-events: all;
+        }
+
     </style>
 </head>
 <body>
 <canvas id="myCanvas"></canvas>
+<div id="treeViewContainer"></div>
 </body>
 <script type="module">
 
     import {
-        ReflectionMap,
         utils,
         Viewer,
-        XKTLoaderPlugin
+        XKTLoaderPlugin,
+        TreeViewPlugin
     } from "../assets/lib/xeokit-sdk.es.js";
 
     import {
         XKTModel,
-        parseSTLIntoXKTModel,
+        parseCityJSONIntoXKTModel,
         writeXKTModelToArrayBuffer
     } from "../dist/xeokit-xkt-utils.es.js";
 
@@ -55,76 +147,58 @@
     const viewer = new Viewer({
         canvasId: "myCanvas",
         transparent: true,
-        pbrEnabled: true
+        saoEnabled: true,
+        edges: true
     });
 
-    viewer.scene.camera.eye = [18.31692165660765, -60.243345613570355, -55.5908912857729];
-    viewer.scene.camera.look = [10.90522289276123, 10.905222892761202, 7.999999999999979];
-    viewer.scene.camera.up = [0.08605796073164425, 0.6688934392083067, -0.7383600709537279];
+    viewer.scene.camera.eye = [15.843945885131395, 11.178365963264165, 15.335366124584503];
+    viewer.scene.camera.look = [7.966524811730224, 1.7646620314077617, 8.469692299970651];
+    viewer.scene.camera.up = [-0.5045771807575089, 0.7429691949294307, -0.43977112688842773];
 
-    viewer.scene.pointsMaterial.pointSize = 1;
-    viewer.scene.pointsMaterial.perspectivePoints = false;
+    viewer.camera.perspective.far = 10000000;
 
-    new ReflectionMap(viewer.scene, {
-        src: [
-            "../assets/textures/reflect/desertRoad/px.png",
-            "../assets/textures/reflect/desertRoad/nx.png",
-            "../assets/textures/reflect/desertRoad/py.png",
-            "../assets/textures/reflect/desertRoad/ny.png",
-            "../assets/textures/reflect/desertRoad/pz.png",
-            "../assets/textures/reflect/desertRoad/nz.png"
-        ],
-        encoding: "sRGB"
+    const treeView = new TreeViewPlugin(viewer, {
+        containerElement: document.getElementById("treeViewContainer"),
+        autoExpandDepth: 3, // Initially expand tree three storeys deep
+        hierarchy: "containment",
+        pruneEmptyNodes: false
     });
 
     const xktLoader = new XKTLoaderPlugin(viewer);
 
-    let nextId = 0;
+    const xktModel = new XKTModel();
 
-    function loaddata({data, pos, autoNormals, smoothNormals, pbrEnabled}) {
+    utils.loadJSON("../assets/models/cityjson/3-20-DELFSHAVEN.json", async (data) => {
 
-        new Promise(function (resolve) {
+        parseCityJSONIntoXKTModel({
+            data,
+            xktModel,
+            log: function (msg) {
+                console.log(msg);
+            }
+        }).then(() => {
 
-            const xktModel = new XKTModel();
+            xktModel.finalize();
 
-            parseSTLIntoXKTModel({
-                data,
-                autoNormals,
-                smoothNormals,
-                xktModel
-            }).then(() => {
+            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
-                xktModel.finalize();
+            const model = xktLoader.load({
+                id: "myModel",
+                xkt: xktArrayBuffer,
+                edges: false,
+                saoEnabled: true
+            });
 
-                const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+            model.on("loaded", () => {
 
-                const model = xktLoader.load({
-                    id: "myModel" + nextId++,
-                    xkt: xktArrayBuffer,
-                    edges: true,
-                    position: pos,
-                    pbrEnabled
-                });
+                viewer.cameraFlight.jumpTo(model);
 
-                model.on("loaded", () => {
-                    resolve();
-                });
+                signalTestComplete();
             });
         });
-    }
-
-    utils.loadArraybuffer("./../assets/models/stl/binary/spurGear.stl", async (data) => {
-
-        await loaddata({data, pos: [-35, 0, 0], autoNormals: false, smoothNormals: false, pbrEnabled: false});
-        await loaddata({data, pos: [0, 0, 0], autoNormals: true, smoothNormals: false, pbrEnabled: false});
-        await loaddata({data, pos: [35, 0, 0], autoNormals: false, smoothNormals: true, pbrEnabled: false});
-
-        await loaddata({data, pos: [-35, 35, 0], autoNormals: false, smoothNormals: false, pbrEnabled: true});
-        await loaddata({data, pos: [0, 35, 0], autoNormals: true, smoothNormals: false, pbrEnabled: true});
-        await loaddata({data, pos: [35, 35, 0], autoNormals: false, smoothNormals: true, pbrEnabled: true});
-
-        signalTestComplete();
     });
+
+    window.viewer = viewer;
 
 </script>
 </html>

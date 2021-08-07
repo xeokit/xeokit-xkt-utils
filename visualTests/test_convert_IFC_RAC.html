@@ -138,7 +138,7 @@
 
     import {
         XKTModel,
-        parseCityJSONIntoXKTModel,
+        parseIFCIntoXKTModel,
         writeXKTModelToArrayBuffer
     } from "../dist/xeokit-xkt-utils.es.js";
 
@@ -151,11 +151,9 @@
         edges: true
     });
 
-    viewer.scene.camera.eye = [15.843945885131395, 11.178365963264165, 15.335366124584503];
-    viewer.scene.camera.look = [7.966524811730224, 1.7646620314077617, 8.469692299970651];
-    viewer.scene.camera.up = [-0.5045771807575089, 0.7429691949294307, -0.43977112688842773];
-
-    viewer.camera.perspective.far = 10000000;
+    viewer.camera.eye = [-3.933, 2.855, 27.018];
+    viewer.camera.look = [4.400, 3.724, 8.899];
+    viewer.camera.up = [-0.018, 0.999, 0.039];
 
     const treeView = new TreeViewPlugin(viewer, {
         containerElement: document.getElementById("treeViewContainer"),
@@ -168,37 +166,32 @@
 
     const xktModel = new XKTModel();
 
-    utils.loadJSON("../assets/models/cityjson/LoD3_Railway.json", async (data) => {
+    utils.loadArraybuffer("../assets/models/ifc/rme_advanced_sample_project.ifc", async (data) => {
 
-        parseCityJSONIntoXKTModel({
-            data,
-            xktModel,
-            log: function (msg) {
-                console.log(msg);
-            }
-        }).then(() => {
+        parseIFCIntoXKTModel({data, xktModel, wasmPath: "./"})
+            .then(() => {
 
-            xktModel.finalize();
+                xktModel.finalize();
 
-            const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+                const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
 
-            const model = xktLoader.load({
-                id: "myModel",
-                xkt: xktArrayBuffer,
-                edges: false,
-                saoEnabled: true
+                const model = xktLoader.load({
+                    id: "myModel",
+                    xkt: xktArrayBuffer,
+                    edges: false,
+                    saoEnabled: true
+                });
+
+                model.on("loaded", () => {
+
+                    viewer.cameraFlight.jumpTo(model);
+
+                    signalTestComplete();
+                });
             });
-
-            model.on("loaded", () => {
-
-                viewer.cameraFlight.jumpTo(model);
-
-                signalTestComplete();
-            });
-        });
     });
 
-window.viewer = viewer;
+    window.viewer = viewer;
 
 </script>
 </html>
