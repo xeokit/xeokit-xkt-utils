@@ -48,7 +48,25 @@ function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false,
 
         zipArchive.init(data).then(() => {
 
+            const rootMetaObjectId = math.createUUID();
+
+            xktModel.createMetaObject({
+                metaObjectId: rootMetaObjectId,
+                metaObjectType: "Model",
+                metaObjectName: "Model"
+            });
+
+            const modelMetaObjectId = math.createUUID();
+
+            xktModel.createMetaObject({
+                metaObjectId: modelMetaObjectId,
+                metaObjectType: "3DXML",
+                metaObjectName: "3DXML",
+                parentMetaObjectId: rootMetaObjectId
+            });
+
             const ctx = {
+                rootMetaObjectId: modelMetaObjectId,
                 zipArchive: zipArchive,
                 edgeThreshold: 10,
                 xktModel: xktModel,
@@ -331,10 +349,12 @@ async function parseProductStructure(ctx, productStructureNode) {
 
     // Find the root Reference3D
 
+    const parentMatrix = math.identityMat4();
+
     for (let id in reference3Ds) {
         const reference3D = reference3Ds[id];
         if (!reference3D.instance3D) {
-            parseReference3D(ctx, reference3D, null); // HACK: Assuming that root has id == "1"
+            parseReference3D(ctx, reference3D, ctx.rootMetaObjectId, parentMatrix);
             return;
         }
     }
@@ -343,56 +363,63 @@ async function parseProductStructure(ctx, productStructureNode) {
 
 }
 
-function parseInstance3D(ctx, instance3D, matrix) {
+function parseInstance3D(ctx, instance3D, parentMetaObjectId, parentMatrix) {
 
     const objectId = ctx.nextId++;
-    let matrix2 = math.mat4(matrix);
+
+    const rotationMatrix = math.identityMat4();
+    const translationMatrix = math.identityMat4();
+    const localMatrix = math.identityMat4();
+    const worldMatrix = math.identityMat4();
 
     if (instance3D.relativeMatrix) {
 
-        const matrix = parseFloatArray(instance3D.relativeMatrix, 12);
-        const translationMatrix = math.translationMat4c(matrix[9], matrix[10], matrix[11], math.identityMat4())
+        const relativeMatrix = parseFloatArray(instance3D.relativeMatrix, 12);
 
-        const mat3 = matrix.slice(0, 9); // Rotation matrix
-        const rotationMatrix = math.mat3ToMat4(mat3, math.identityMat4()); // Convert rotation matrix to 4x4
+        const translate = [relativeMatrix[9], relativeMatrix[10], relativeMatrix[11]];
 
-        matrix2 = math.mulMat4(translationMatrix, rotationMatrix, matrix2);
+        math.translationMat4v(translate, translationMatrix)
+        math.mat3ToMat4(relativeMatrix.slice(0, 9), rotationMatrix);
+        math.mulMat4(rotationMatrix, translationMatrix, localMatrix);
 
-        // if (ctx.metaModelData) {
-        //     ctx.metaModelData.metaObjects.push({
-        //         id: childGroup.id,
-        //         type: "Default",
-        //         name: instance3D.name,
-        //         parent: group ? group.id : ctx.modelNode.id
-        //     });
-        // }
+        math.mulMat4(parentMatrix, localMatrix, worldMatrix);
+
+        ctx.xktModel.createMetaObject({
+            metaObjectId: objectId,
+            metaObjectType: "Default",
+            metaObjectName: instance3D.name,
+            parentMetaObjectId: parentMetaObjectId
+        });
+
+        for (let id in instance3D.reference3Ds) {
+            parseReference3D(ctx, instance3D.reference3Ds[id], objectId, worldMatrix);
+        }
 
     } else {
 
-        // ctx.xktModel.createMetaObject({
-        //     metaObjectId: objectId,
-        //     metaObjectType: "default",
-        //     metaObjectName: instance3D.name,
-        //     parentMetaObjectId: group ? group.id : ctx.modelNode.id
-        // });
+        ctx.xktModel.createMetaObject({
+            metaObjectId: objectId,
+            metaObjectType: "Default",
+            metaObjectName: instance3D.name,
+            parentMetaObjectId: parentMetaObjectId
+        });
 
-    }
-
-    for (let id in instance3D.reference3Ds) {
-        parseReference3D(ctx, instance3D.reference3Ds[id], matrix2);
+        for (let id in instance3D.reference3Ds) {
+            parseReference3D(ctx, instance3D.reference3Ds[id], objectId, parentMatrix);
+        }
     }
 }
 
-function parseReference3D(ctx, reference3D, matrix) {
+function parseReference3D(ctx, reference3D, parentMetaObjectId, parentMatrix) {
     for (let id in reference3D.instance3Ds) {
-        parseInstance3D(ctx, reference3D.instance3Ds[id], matrix);
+        parseInstance3D(ctx, reference3D.instance3Ds[id], parentMetaObjectId, parentMatrix);
     }
     for (let id in reference3D.instanceReps) {
-        parseInstanceRep(ctx, reference3D.instanceReps[id], matrix);
+        parseInstanceRep(ctx, reference3D.instanceReps[id], parentMetaObjectId, parentMatrix);
     }
 }
 
-function parseInstanceRep(ctx, instanceRep, matrix) {
+function parseInstanceRep(ctx, instanceRep, parentMetaObjectId, parentMatrix) {
 
     if (instanceRep.referenceReps) {
 
@@ -413,7 +440,7 @@ function parseInstanceRep(ctx, instanceRep, matrix) {
                 ctx.xktModel.createMesh({
                     meshId: meshId,
                     geometryId: meshCfg.geometryId,
-                    matrix: matrix,
+                    matrix: parentMatrix,
                     color: colorize
                 });
 
@@ -424,19 +451,12 @@ function parseInstanceRep(ctx, instanceRep, matrix) {
 
                 ctx.stats.numObjects++;
 
-                // ctx.xktModel.createMetaObject({
-                //     metaObjectId: entityId,
-                //     metaObjectType: "Default",
-                //     metaObjectName: instanceRep.name,
-                //     parentMetaObjectId: ctx.xktModel.modelId
-                // });
-
-                // ctx.metaModelData.metaObjects.push({
-                //     id: mesh.id,
-                //     type: "Default",
-                //     name: instanceRep.name,
-                //     parent: group ? group.id : ctx.modelNode.id
-                // });
+                ctx.xktModel.createMetaObject({
+                    metaObjectId: entityId,
+                    metaObjectType: "Default",
+                    metaObjectName: instanceRep.name,
+                    parentMetaObjectId: parentMetaObjectId
+                });
             }
         }
     }
@@ -711,7 +731,7 @@ function parseIntArrays(str) {
 
 function parseFloatArray(str, numElems) {
     str = str.split(",");
-    const arr = new Float32Array(str.length * numElems);
+    const arr = new Float64Array(str.length * numElems);
     let arrIdx = 0;
     for (let i = 0, len = str.length; i < len; i++) {
         const value = str[i].split(" ");
@@ -861,7 +881,6 @@ async function parseCATMaterialRef(ctx, node) {
         }
     }
 }
-
 
 function parseMaterialDefDocument(ctx, node) {
     const children = node.children;

@@ -207,10 +207,10 @@ function parseGeometry(ctx) {
             meshIds.push(meshId);
         }
 
-        ctx.xktModel.createEntity({
-            entityId: entityId,
-            meshIds: meshIds
-        });
+            ctx.xktModel.createEntity({
+                entityId: entityId,
+                meshIds: meshIds
+            });
 
         ctx.stats.numObjects++;
     }
