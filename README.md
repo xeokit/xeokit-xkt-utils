@@ -4,7 +4,10 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-**xeokit-xkt-utils** provides tools for creating XKT model files, which can be loaded into xeokit.
+Use **xeokit-xkt-utils** to:  
+
+* convert your 3D BIM and AEC model files for fast loading and viewing in the browser using xeokit, and/or 
+* programmatically generate 3D model files for xeokit in JavaScript.
 
 ![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)
 
