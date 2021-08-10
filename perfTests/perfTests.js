@@ -174,12 +174,13 @@ async function testModels(testStats) {
             fs.mkdirSync(screenshotDir);
         }
 
-        const browser = await puppeteer.launch(chromeOptions);
+        //const browser = await puppeteer.launch(chromeOptions);
+        const browser = await puppeteer.launch(firefoxOptions);
         const page = await browser.newPage();
         if (!testStats.browserVersion) {
             testStats.browserVersion = await page.browser().version();
         }
-        await page.setDefaultNavigationTimeout(3000000);
+        await page.setDefaultNavigationTimeout(30000000);
         await page.goto(`http://localhost:${config.serverPort}/perfTests/perfTestXKT.html?xktSrc=../${xktDest}`);
         await page.waitForSelector('#percyLoaded')
         const element = await page.$('#percyLoaded')
@@ -210,6 +211,7 @@ function statsToMarkdown(testStats) {
     rows.push(`* convert2xkt ${testStats.convert2xkt}`);
     rows.push(`* xeokit-sdk ${testStats.xeokit}`);
     rows.push(`* ${testStats.browserVersion}`);
+    rows.push("* Positive value for compression ratio is good, negative value not so good.");
     rows.push("* Click thumbnails to view models with xeokit.");
     rows.push("\n");
     rows.push("## Results");
