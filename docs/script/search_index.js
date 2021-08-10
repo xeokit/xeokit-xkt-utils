@@ -96,9 +96,21 @@ window.esdocSearchIndex = [
     "function"
   ],
   [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsedxfintoxktmodel.js~parsedxfintoxktmodel",
+    "function/index.html#static-function-parseDXFIntoXKTModel",
+    "<span>parseDXFIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseDXFIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
     "@xeokit/xeokit-xkt-utils/src/parsers/parsegltfintoxktmodel.js~parsegltfintoxktmodel",
     "function/index.html#static-function-parseGLTFIntoXKTModel",
     "<span>parseGLTFIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseGLTFIntoXKTModel.js</span>",
+    "function"
+  ],
+  [
+    "@xeokit/xeokit-xkt-utils/src/parsers/parsegeojsonintoxktmodel.js~parsegeojsonintoxktmodel",
+    "function/index.html#static-function-parseGeoJSONIntoXKTModel",
+    "<span>parseGeoJSONIntoXKTModel</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/parsers/parseGeoJSONIntoXKTModel.js</span>",
     "function"
   ],
   [
@@ -666,6 +678,12 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "src/xktmodel/xktmodel.js~xktmodel#aabb",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-aabb",
+    "src/XKTModel/XKTModel.js~XKTModel#aabb",
+    "member"
+  ],
+  [
     "src/xktmodel/xktmodel.js~xktmodel#author",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-author",
     "src/XKTModel/XKTModel.js~XKTModel#author",
@@ -1014,9 +1032,21 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
+    "src/parsers/parsedxfintoxktmodel.js",
+    "file/src/parsers/parseDXFIntoXKTModel.js.html",
+    "src/parsers/parseDXFIntoXKTModel.js",
+    "file"
+  ],
+  [
     "src/parsers/parsegltfintoxktmodel.js",
     "file/src/parsers/parseGLTFIntoXKTModel.js.html",
     "src/parsers/parseGLTFIntoXKTModel.js",
+    "file"
+  ],
+  [
+    "src/parsers/parsegeojsonintoxktmodel.js",
+    "file/src/parsers/parseGeoJSONIntoXKTModel.js.html",
+    "src/parsers/parseGeoJSONIntoXKTModel.js",
     "file"
   ],
   [

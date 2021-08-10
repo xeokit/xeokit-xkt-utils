@@ -46,7 +46,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseDXFIntoXKTModel">parseDXFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGeoJSONIntoXKTModel">parseGeoJSONIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
@@ -113,7 +115,7 @@ function parseIFCIntoXKTModel({
                                         autoNormals = true,
                                         wasmPath,
                                         outputObjectProperties,
-                                        stats,
+                                        stats={},
                                         log
                                     }) {
 
@@ -146,6 +148,16 @@ function parseIFCIntoXKTModel({
 
             const modelID = ifcAPI.OpenModel(dataArray);
 
+            stats.sourceFormat = &quot;IFC&quot;;
+            stats.schemaVersion = &quot;&quot;;
+            stats.title = &quot;&quot;;
+            stats.author = &quot;&quot;;
+            stats.created = &quot;&quot;;
+            stats.numTriangles = 0;
+            stats.numVertices = 0;
+            stats.numObjects = 0;
+            stats.numGeometries = 0;
+
             const ctx = {
                 modelID,
                 ifcAPI,
@@ -155,12 +167,7 @@ function parseIFCIntoXKTModel({
                 log: (log || function (msg) {
                 }),
                 nextId: 0,
-                stats: {
-                    numTriangles: 0,
-                    numVertices: 0,
-                    numObjects: 0,
-                    numGeometries: 0
-                }
+                stats
             };
 
             const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
@@ -174,17 +181,10 @@ function parseIFCIntoXKTModel({
             parseGeometry(ctx);
             parseMetadata(ctx);
 
-            ctx.log(&quot;Converted objects: &quot; + ctx.stats.numObjects);
-            ctx.log(&quot;Converted geometries: &quot; + ctx.stats.numGeometries);
-            ctx.log(&quot;Converted triangles: &quot; + ctx.stats.numTriangles);
-            ctx.log(&quot;Converted vertices: &quot; + ctx.stats.numVertices);
-
-            if (stats) {
-                stats.numTriangles = ctx.stats.numTriangles;
-                stats.numVertices = ctx.stats.numVertices;
-                stats.numObjects = ctx.stats.numObjects;
-                stats.numGeometries = ctx.stats.numGeometries;
-            }
+            ctx.log(&quot;Converted objects: &quot; + stats.numObjects);
+            ctx.log(&quot;Converted geometries: &quot; + stats.numGeometries);
+            ctx.log(&quot;Converted triangles: &quot; + stats.numTriangles);
+            ctx.log(&quot;Converted vertices: &quot; + stats.numVertices);
 
             resolve();
 
@@ -269,20 +269,16 @@ function parseGeometry(ctx) {
             meshIds.push(meshId);
         }
 
-        ctx.xktModel.createEntity({
-            entityId: entityId,
-            meshIds: meshIds
-        });
+            ctx.xktModel.createEntity({
+                entityId: entityId,
+                meshIds: meshIds
+            });
 
         ctx.stats.numObjects++;
     }
 }
 
 function parseMetadata(ctx) {
-
-    // Parses element properties within the IFC, creates a hierarchy of XKTMetaObject
-    // components within the XKTModel. Each leaf XKTMetaObject should correspond to an
-    // XKTEntity created with parseGeometry().
 
     const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, WebIFC.IFCPROJECT);
     const ifcProjectId = lines.get(0);

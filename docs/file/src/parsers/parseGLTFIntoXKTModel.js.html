@@ -46,7 +46,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseDXFIntoXKTModel">parseDXFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGeoJSONIntoXKTModel">parseGeoJSONIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
@@ -124,7 +126,7 @@ const WEBGL_TYPE_SIZES = {
  * @param {function} [params.log] Logging callback.
  * @returns {Promise}
  */
-function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats, log}) {
+function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stats={}, log}) {
 
     return new Promise(function (resolve, reject) {
 
@@ -137,6 +139,16 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             reject(&quot;Argument expected: xktModel&quot;);
             return;
         }
+
+        stats.sourceFormat = &quot;glTF&quot;;
+        stats.schemaVersion = &quot;2.0&quot;;
+        stats.title = &quot;&quot;;
+        stats.author = &quot;&quot;;
+        stats.created = &quot;&quot;;
+        stats.numTriangles = 0;
+        stats.numVertices = 0;
+        stats.numObjects = 0;
+        stats.numGeometries = 0;
 
         const ctx = {
             gltf: data,
@@ -151,12 +163,7 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             nextGeometryId: 0,
             nextMeshId: 0,
             nextDefaultEntityId: 0,
-            stats: {
-                numObjects: 0,
-                numGeometries: 0,
-                numTriangles: 0,
-                numVertices: 0
-            }
+            stats
         };
 
         parseBuffers(ctx).then(() =&gt; {
@@ -166,17 +173,10 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             parseMaterials(ctx);
             parseDefaultScene(ctx);
 
-            ctx.log(&quot;Converted objects: &quot; + ctx.stats.numObjects);
-            ctx.log(&quot;Converted geometries: &quot; + ctx.stats.numGeometries);
-            ctx.log(&quot;Converted triangles: &quot; + ctx.stats.numTriangles);
-            ctx.log(&quot;Converted vertices: &quot; + ctx.stats.numVertices);
-
-            if (stats) {
-                stats.numTriangles = ctx.stats.numTriangles;
-                stats.numVertices = ctx.stats.numVertices;
-                stats.numObjects = ctx.stats.numObjects;
-                stats.numGeometries = ctx.stats.numGeometries;
-            }
+            ctx.log(&quot;Converted objects: &quot; + stats.numObjects);
+            ctx.log(&quot;Converted geometries: &quot; + stats.numGeometries);
+            ctx.log(&quot;Converted triangles: &quot; + stats.numTriangles);
+            ctx.log(&quot;Converted vertices: &quot; + stats.numVertices);
 
             resolve();
 
@@ -453,6 +453,7 @@ function parseNode(ctx, glTFNode, matrix) {
                                 colorsCompressed.push(colors[j + 0]);
                                 colorsCompressed.push(colors[j + 1]);
                                 colorsCompressed.push(colors[j + 2]);
+                                colorsCompressed.push(255);
                             }
                         }
 

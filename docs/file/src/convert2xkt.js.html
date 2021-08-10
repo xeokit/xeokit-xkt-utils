@@ -46,7 +46,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseDXFIntoXKTModel">parseDXFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGeoJSONIntoXKTModel">parseGeoJSONIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
@@ -73,7 +75,6 @@ import {XKTModel} from &quot;./XKTModel/XKTModel.js&quot;;
 const fs = require(&apos;fs&apos;);
 const DOMParser = require(&apos;xmldom&apos;).DOMParser;
 
-
 /**
  * Converts model files into xeokit&apos;s native XKT format.
  *
@@ -90,13 +91,15 @@ const DOMParser = require(&apos;xmldom&apos;).DOMParser;
  * @param {String}[params.source] Path to source file. Alternative to ````sourceData````.
  * @param {ArrayBuffer|JSON}[params.sourceData] Source file data. Alternative to ````source````.
  * @param {String}[params.sourceFormat] Format of source file/data. Always needed with ````sourceData````, but not normally needed with ````source````, because convert2xkt will determine the format automatically from the file extension of ````source````.
- * @param {String}[params.metaModelSource] Path to source metaModel file. Alternative to ````metaModelData````.
- * @param {ArrayBuffer|JSON}[params.metaModelData] Source file data. Alternative to ````metaModelSource````.
+ * @param {ArrayBuffer|JSON}[params.metaModelData] Source file data. Overrides metadata from ````metaModelSource````, ````sourceData```` and ````source````.
+ * @param {String}[params.metaModelSource] Path to source metaModel file. Overrides metadata from ````sourceData```` and ````source````. Overridden by ````metaModelData````.
+ * @param {Boolean}[params.autoMetaModel=true] Whether to automatically generate a default metamodel in the XKT when no metamodel is given, or parsed in the source.
  * @param {String}[params.output] Path to destination XKT file.
  * @param {Function}[params.outputXKTModel] Callback to collect the ````XKTModel```` that is internally build by this method.
  * @param {Function}[params.outputXKT] Callback to collect XKT file data.
  * @param {Function}[params.outputObjectProperties] Callback to collect each object&apos;s property set.
  * @param {Object}[stats] Collects statistics.
+ * @param {Function}[params.outputStats] Callback to collect statistics.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis &quot;up&quot;, if neccessary. Applies to CityJSON and LAS/LAZ models.
  * @param {Function}[params.log] Logging callback.
  * @return {Promise&lt;number&gt;}
@@ -107,11 +110,13 @@ function convert2xkt({
                          sourceFormat,
                          metaModelSource,
                          metaModelData,
+                         autoMetaModel,
                          output,
                          outputXKTModel,
                          outputXKT,
                          outputObjectProperties,
                          stats = {},
+                         outputStats,
                          rotateX,
                          log = (msg) =&gt; {
                          }
@@ -288,7 +293,7 @@ function convert2xkt({
                     break;
 
                 default:
-                    reject(&apos;Error: unsupported source format.&apos;);
+                    reject(&apos;Error: unsupported source format: &quot;${ext}&quot;.&apos;);
                     return;
             }
         }
@@ -297,6 +302,10 @@ function convert2xkt({
 
             parser(converterParams).then(() =&gt; {
 
+                if (autoMetaModel !== false) {
+                    xktModel.createDefaultMetaObjects();
+                }
+
                 xktModel.finalize();
 
                 const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
@@ -304,11 +313,11 @@ function convert2xkt({
 
                 const targetFileSizeBytes = xktArrayBuffer.byteLength;
 
-                stats.sourceFormat = ext;
                 stats.sourceSize = (sourceFileSizeBytes / 1000).toFixed(2);
                 stats.xktSize = (targetFileSizeBytes / 1000).toFixed(2);
                 stats.compressionRatio = (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2);
                 stats.conversionTime = ((new Date() - startTime) / 1000.0).toFixed(2);
+                stats.aabb = xktModel.aabb;
 
                 log(&quot;Converted to: XKT v9&quot;);
                 log(&quot;XKT size: &quot; + stats.xktSize + &quot; kB&quot;);
@@ -326,6 +335,10 @@ function convert2xkt({
 
                 if (outputXKT) {
                     outputXKT(xktContent);
+                }
+
+                if (outputStats) {
+                    outputStats(stats);
                 }
 
                 resolve();

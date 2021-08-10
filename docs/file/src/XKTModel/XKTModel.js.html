@@ -46,7 +46,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseDXFIntoXKTModel">parseDXFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGeoJSONIntoXKTModel">parseGeoJSONIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
@@ -274,13 +276,22 @@ class XKTModel {
         this.entitiesList = [];
 
         /**
-         * {@link XKTTile}s within this Model.
+         * {@link XKTTile}s within this XKTModel.
          *
          * Created by {@link XKTModel#finalize}.
          *
          * @type {XKTTile[]}
          */
         this.tilesList = [];
+
+        /**
+         * The axis-aligned 3D World-space boundary of this XKTModel.
+         *
+         * Created by {@link XKTModel#finalize}.
+         *
+         * @type {Float64Array}
+         */
+        this.aabb = math.AABB3();
 
         /**
          * Indicates if this XKTModel has been finalized.
@@ -594,6 +605,11 @@ class XKTModel {
             return;
         }
 
+        if (params.meshIds.length === 0) {
+            console.warn(&quot;XKTEntity has no meshes - won&apos;t create: &quot; + params.entityId);
+            return;
+        }
+
         if (this.entities[params.entityId]) {
             console.error(&quot;XKTEntity already exists with this ID: &quot; + params.entityId);
             return;
@@ -638,8 +654,6 @@ class XKTModel {
      * Creates a default {@link XKTMetaObject} for each {@link XKTEntity} that does not already have one.
      */
     createDefaultMetaObjects() {
-
-        let rootMetaObject = null;
 
         for (let i = 0, len = this.entitiesList.length; i &lt; len; i++) {
 
@@ -704,6 +718,8 @@ class XKTModel {
         this._createReusedGeometriesDecodeMatrix();
 
         this._flagSolidGeometries();
+
+        this.aabb.set(rootKDNode.aabb);
 
         this.finalized = true;
     }

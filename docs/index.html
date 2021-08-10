@@ -46,7 +46,9 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseDXFIntoXKTModel">parseDXFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGeoJSONIntoXKTModel">parseGeoJSONIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
@@ -115,39 +117,39 @@ part of the public API for extensibility.</p>
 </thead>
 <tbody>
 <tr>
-<td><a href><strong>convert2xkt</strong></a></td>
+<td><a href>convert2xkt</a></td>
 <td>A Node.js-based JavaScript function and CLI tool that converts various AEC model formats into xeokit&apos;s native, super-fast-loading XKT format. Supported formats include: IFC (2x3 and 4), CityJSON, glTF, 3DXML, LAZ, LAS, STL and PCL.</td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><strong>XKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></td>
 <td>A JavaScript document model that represents the contents of an XKT file in memory. Using this, we can programmatically build a document model in JavaScript, adding geometries, materials, objects etc, then serialize it to an XKT file.</td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel"><strong>parseIFCIntoXKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></td>
 <td>Parses IFC data into an <code>XKTModel</code></td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel"><strong>parseGLTFIntoXKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></td>
 <td>Parses glTF into an <code>XKTModel</code></td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parse3DXMLIntoXKTModel"><strong>parse3DXMLIntoXKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></td>
 <td>Parses 3DXML into an <code>XKTModel</code></td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseJSONIntoXKTModel"><strong>parseCityJSONIntoXKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></td>
 <td>Parses CityJSON into an <code>XKTModel</code></td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseLASIntoXKTModel"><strong>parseLASIntoXKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></td>
 <td>Parses LAS and LAZ into an <code>XKTModel</code></td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel"><strong>parseSTLIntoXKTModel</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel">parseSTLIntoXKTModel</a></td>
 <td>Parses STL into an <code>XKTModel</code></td>
 </tr>
 <tr>
-<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer"><strong>writeXKTModelToArrayBuffer</strong></a></td>
+<td><a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></td>
 <td>Serializes an <code>XKTModel</code> to an XKT file</td>
 </tr>
 </tbody>
@@ -175,287 +177,287 @@ sizes, loading times and rendering performance for XKT files converted from vari
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/3dxml_widget/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/3dxml_widget/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/3dxml_widget/model.xkt">3dxml_widget</a></td>
-<td>0.34</td>
-<td>0.13</td>
-<td>60</td>
+<td>0.63 secs</td>
+<td>0.13 secs</td>
+<td>60 FPS</td>
 <td>306</td>
 <td>10464</td>
 <td>13686</td>
-<td>123.78</td>
-<td>61.65</td>
-<td>2.01</td>
+<td>123.78 Kb</td>
+<td>62.78 Kb</td>
+<td>1.97</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_csol/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_csol/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_csol/model.xkt">cityjson_csol</a></td>
-<td>0.01</td>
-<td>0.08</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.04 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>24</td>
 <td>12</td>
-<td>5.26</td>
-<td>0.66</td>
-<td>8.00</td>
+<td>5.26 Kb</td>
+<td>0.73 Kb</td>
+<td>7.19</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msol/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_msol/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msol/model.xkt">cityjson_msol</a></td>
-<td>0.01</td>
-<td>0.04</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.04 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>24</td>
 <td>16</td>
-<td>5.54</td>
-<td>0.66</td>
-<td>8.43</td>
+<td>5.54 Kb</td>
+<td>0.73 Kb</td>
+<td>7.58</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msurface/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_msurface/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msurface/model.xkt">cityjson_msurface</a></td>
-<td>0.01</td>
-<td>0.04</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.03 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>10</td>
 <td>8</td>
-<td>2.46</td>
-<td>0.59</td>
-<td>4.14</td>
+<td>2.46 Kb</td>
+<td>0.67 Kb</td>
+<td>3.69</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_twocube/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_twocube/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_twocube/model.xkt">cityjson_twocube</a></td>
-<td>0.01</td>
-<td>0.03</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.04 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>24</td>
 <td>16</td>
-<td>4.90</td>
-<td>0.63</td>
-<td>7.81</td>
+<td>4.90 Kb</td>
+<td>0.70 Kb</td>
+<td>6.99</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_cube/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_cube/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_cube/model.xkt">cityjson_cube</a></td>
-<td>0.00</td>
-<td>0.03</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.05 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>12</td>
 <td>8</td>
-<td>1.76</td>
-<td>0.60</td>
-<td>2.94</td>
+<td>1.76 Kb</td>
+<td>0.67 Kb</td>
+<td>2.62</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_tetra/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_tetra/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_tetra/model.xkt">cityjson_tetra</a></td>
-<td>0.00</td>
-<td>0.04</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.04 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>4</td>
 <td>4</td>
-<td>1.69</td>
-<td>0.54</td>
-<td>3.13</td>
+<td>1.69 Kb</td>
+<td>0.61 Kb</td>
+<td>2.75</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_torus/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_torus/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_torus/model.xkt">cityjson_torus</a></td>
-<td>0.01</td>
-<td>0.04</td>
-<td>60</td>
+<td>0.01 secs</td>
+<td>0.06 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>18</td>
 <td>14</td>
-<td>4.35</td>
-<td>0.65</td>
-<td>6.75</td>
+<td>4.35 Kb</td>
+<td>0.72 Kb</td>
+<td>6.06</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_denhaag/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_denhaag/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_denhaag/model.xkt">cityjson_denhaag</a></td>
-<td>1.08</td>
-<td>0.48</td>
-<td>60</td>
+<td>2.08 secs</td>
+<td>0.72 secs</td>
+<td>60 FPS</td>
 <td>1991</td>
 <td>41197</td>
 <td>71069</td>
-<td>3153.55</td>
-<td>399.34</td>
-<td>7.90</td>
+<td>3153.55 Kb</td>
+<td>399.53 Kb</td>
+<td>7.89</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_railway/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_railway/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_railway/model.xkt">cityjson_railway</a></td>
-<td>3.14</td>
-<td>0.54</td>
-<td>60</td>
+<td>4.73 secs</td>
+<td>1.01 secs</td>
+<td>60 FPS</td>
 <td>120</td>
 <td>113537</td>
 <td>170281</td>
-<td>4521.41</td>
-<td>878.91</td>
+<td>4521.41 Kb</td>
+<td>878.98 Kb</td>
 <td>5.14</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_conferencecenter/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_conferencecenter/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_conferencecenter/model.xkt">ifc_conferencecenter</a></td>
-<td>49.74</td>
-<td>1.13</td>
-<td>26</td>
-<td>6087</td>
-<td>511459</td>
-<td>1268451</td>
-<td>71700.42</td>
-<td>2698.16</td>
-<td>26.57</td>
+<td>69.48 secs</td>
+<td>1.28 secs</td>
+<td>13 FPS</td>
+<td>6088</td>
+<td>509818</td>
+<td>1262794</td>
+<td>71700.42 Kb</td>
+<td>2718.26 Kb</td>
+<td>26.38</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_duplex/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_duplex/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_duplex/model.xkt">ifc_duplex</a></td>
-<td>0.85</td>
-<td>0.17</td>
-<td>60</td>
-<td>208</td>
-<td>20194</td>
-<td>49504</td>
-<td>2366.05</td>
-<td>88.94</td>
-<td>26.60</td>
+<td>0.93 secs</td>
+<td>0.15 secs</td>
+<td>60 FPS</td>
+<td>209</td>
+<td>18642</td>
+<td>45372</td>
+<td>2366.05 Kb</td>
+<td>78.50 Kb</td>
+<td>30.14</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse2x3/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_openhouse2x3/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse2x3/model.xkt">ifc_openhouse2x3</a></td>
-<td>0.32</td>
-<td>0.09</td>
-<td>60</td>
-<td>40</td>
-<td>613</td>
-<td>1801</td>
-<td>112.76</td>
-<td>6.43</td>
-<td>17.54</td>
+<td>0.31 secs</td>
+<td>0.07 secs</td>
+<td>60 FPS</td>
+<td>41</td>
+<td>395</td>
+<td>1147</td>
+<td>112.76 Kb</td>
+<td>4.83 Kb</td>
+<td>23.32</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse4/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_openhouse4/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse4/model.xkt">ifc_openhouse4</a></td>
-<td>0.24</td>
-<td>0.06</td>
-<td>60</td>
-<td>40</td>
-<td>613</td>
-<td>1801</td>
-<td>113.26</td>
-<td>6.43</td>
-<td>17.63</td>
+<td>0.28 secs</td>
+<td>0.06 secs</td>
+<td>60 FPS</td>
+<td>41</td>
+<td>395</td>
+<td>1147</td>
+<td>113.26 Kb</td>
+<td>4.83 Kb</td>
+<td>23.44</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_map/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_map/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_map/model.xkt">ifc_map</a></td>
-<td>9.62</td>
-<td>0.47</td>
-<td>60</td>
-<td>1774</td>
-<td>172268</td>
-<td>431922</td>
-<td>28779.42</td>
-<td>939.71</td>
-<td>30.63</td>
+<td>10.31 secs</td>
+<td>0.88 secs</td>
+<td>29 FPS</td>
+<td>1775</td>
+<td>169464</td>
+<td>423072</td>
+<td>28779.42 Kb</td>
+<td>922.46 Kb</td>
+<td>31.20</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rac_advanced_sample_project/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_rac_advanced_sample_project/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rac_advanced_sample_project/model.xkt">ifc_rac_advanced_sample_project</a></td>
-<td>44.71</td>
-<td>0.84</td>
-<td>28</td>
-<td>5561</td>
-<td>283616</td>
-<td>745100</td>
-<td>45316.70</td>
-<td>1776.91</td>
+<td>52.77 secs</td>
+<td>0.99 secs</td>
+<td>19 FPS</td>
+<td>5563</td>
+<td>283238</td>
+<td>743996</td>
+<td>45316.70 Kb</td>
+<td>1776.94 Kb</td>
 <td>25.50</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rme_advanced_sample_project/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_rme_advanced_sample_project/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rme_advanced_sample_project/model.xkt">ifc_rme_advanced_sample_project</a></td>
-<td>80.10</td>
-<td>0.92</td>
-<td>34</td>
-<td>6442</td>
-<td>345539</td>
-<td>823082</td>
-<td>35309.94</td>
-<td>1632.98</td>
-<td>21.62</td>
+<td>69.80 secs</td>
+<td>0.88 secs</td>
+<td>19 FPS</td>
+<td>6443</td>
+<td>317875</td>
+<td>739186</td>
+<td>35309.94 Kb</td>
+<td>1481.48 Kb</td>
+<td>23.83</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_autzen/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/laz_autzen/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_autzen/model.xkt">laz_autzen</a></td>
-<td>27.58</td>
-<td>5.37</td>
-<td>26</td>
+<td>26.43 secs</td>
+<td>18.95 secs</td>
+<td>21 FPS</td>
 <td>1</td>
 <td>undefined</td>
 <td>10653336</td>
-<td>56350.99</td>
-<td>71525.80</td>
+<td>56350.99 Kb</td>
+<td>71525.94 Kb</td>
 <td>0.79</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_indoor_scan/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/laz_indoor_scan/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_indoor_scan/model.xkt">laz_indoor_scan</a></td>
-<td>1.27</td>
-<td>0.53</td>
-<td>60</td>
+<td>1.73 secs</td>
+<td>0.92 secs</td>
+<td>60 FPS</td>
 <td>1</td>
 <td>undefined</td>
 <td>808042</td>
-<td>1644.72</td>
-<td>3402.97</td>
+<td>1644.72 Kb</td>
+<td>3403.11 Kb</td>
 <td>0.48</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/undefined/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/undefined/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/undefined/model.xkt">undefined</a></td>
-<td>2.69</td>
-<td>0.56</td>
-<td>60</td>
+<td>3.29 secs</td>
+<td>0.82 secs</td>
+<td>60 FPS</td>
 <td>3504</td>
 <td>230246</td>
 <td>367934</td>
-<td>23075.65</td>
-<td>1662.27</td>
+<td>23075.65 Kb</td>
+<td>1662.27 Kb</td>
 <td>13.88</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_duplex/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/gltf_duplex/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_duplex/model.xkt">gltf_duplex</a></td>
-<td>0.26</td>
-<td>0.30</td>
-<td>60</td>
+<td>0.30 secs</td>
+<td>0.23 secs</td>
+<td>57 FPS</td>
 <td>291</td>
 <td>15874</td>
 <td>25262</td>
-<td>1433.53</td>
-<td>126.22</td>
-<td>11.36</td>
+<td>1433.53 Kb</td>
+<td>126.70 Kb</td>
+<td>11.31</td>
 </tr>
 <tr>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_map/model.xkt"><img src="https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/gltf_map/screenshot/screenshot.png" alt></a></td>
 <td><a href="https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_map/model.xkt">gltf_map</a></td>
-<td>2.81</td>
-<td>0.52</td>
-<td>60</td>
+<td>2.37 secs</td>
+<td>0.60 secs</td>
+<td>49 FPS</td>
 <td>1986</td>
 <td>181108</td>
 <td>354632</td>
-<td>15785.04</td>
-<td>1605.40</td>
+<td>15785.04 Kb</td>
+<td>1605.40 Kb</td>
 <td>9.83</td>
 </tr>
 </tbody>
@@ -568,11 +570,8 @@ using <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoa
 in <a href="./dist/xeokit-xkt-utils.es.js">xeokit-xkt-utils.es.js</a>. We could also code it to run on node, using the CommonJS
 module in <a href="./dist/xeokit-xkt-utils.cjs.js">xeokit-xkt-utils.cjs.js</a>.</p>
 <p><img src="http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png" alt="XKTModel Example"></p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">
-import {XKTModel, writeXKTModelToArrayBuffer} from &quot;./dist/xeokit-xkt-utils.es.js&quot;;
-
-// Or in node:
-// const {XKTModel, parseGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require(&quot;./xeokit-xkt-utils.cjs.js&quot;);
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const {XKTModel, parseGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require(&quot;@xeokit/xeokit-xkt-utils/dist/xeokit-xkt-utils.cjs.js&quot;);
+const fs = require(&apos;fs&apos;);
 
 const xktModel = new XKTModel();
 
@@ -735,7 +734,9 @@ use  <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html
 to serialize
 our <a href="https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html"><code>XKTModel</code></a> to
 an <code>ArrayBuffer</code>.</p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);</code>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const xktArrayBuffer = writeXKTModelToArrayBuffer(xktModel);
+
+fs.writeFileSync(&quot;./myModel.xkt&quot;, xktArrayBuffer);</code>
 </code></pre>
 <h3 id="loading-the-arraybuffer-into-a-viewer">Loading the ArrayBuffer into a Viewer</h3><p>Let&apos;s now create a <a href="https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html"><code>Viewer</code></a>,
 then load the <code>ArrayBuffer</code> into it using
@@ -749,7 +750,7 @@ const xktLoader = new XKTLoaderPlugin(viewer);
 
 const model = xktLoader.load({
     id: &quot;myModel&quot;,
-    xkt: xktArrayBuffer
+    src: &quot;./myModel.xkt&quot;
 });</code>
 </code></pre>
 <p>Note that the <code>XKTLoaderPlugin</code> could also load our <code>ArrayBuffer</code> from a URL.</p>
@@ -875,7 +876,7 @@ npm run build</code>
 <pre><code class="lang-bash"><code class="source-code prettyprint">npm run docs</code>
 </code></pre>
 <h3 id="building-tests">Building Tests</h3><p>Building the tests in TODO</p>
-<pre><code class="lang-bash"><code class="source-code prettyprint">npm built-tests</code>
+<pre><code class="lang-bash"><code class="source-code prettyprint">npm build-tests</code>
 </code></pre>
 </div>
 </div>
