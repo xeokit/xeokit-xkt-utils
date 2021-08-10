@@ -42155,10 +42155,12 @@ function parseGeometry(ctx) {
             meshIds.push(meshId);
         }
 
-        ctx.xktModel.createEntity({
-            entityId: entityId,
-            meshIds: meshIds
-        });
+    //    if (meshIds.length > 0) {
+            ctx.xktModel.createEntity({
+                entityId: entityId,
+                meshIds: meshIds
+            });
+       // }
 
         ctx.stats.numObjects++;
     }
@@ -77619,6 +77621,11 @@ class XKTModel {
 
         if (this.finalized) {
             console.error("XKTModel has been finalized, can't add more entities");
+            return;
+        }
+
+        if (params.meshIds.length === 0) {
+            console.warn("XKTEntity has no meshes - won't create: " + params.entityId);
             return;
         }
 

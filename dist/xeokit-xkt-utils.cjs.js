@@ -5213,6 +5213,11 @@ class XKTModel {
             return;
         }
 
+        if (params.meshIds.length === 0) {
+            console.warn("XKTEntity has no meshes - won't create: " + params.entityId);
+            return;
+        }
+
         if (this.entities[params.entityId]) {
             console.error("XKTEntity already exists with this ID: " + params.entityId);
             return;
@@ -52250,10 +52255,12 @@ function parseGeometry(ctx) {
             meshIds.push(meshId);
         }
 
-        ctx.xktModel.createEntity({
-            entityId: entityId,
-            meshIds: meshIds
-        });
+    //    if (meshIds.length > 0) {
+            ctx.xktModel.createEntity({
+                entityId: entityId,
+                meshIds: meshIds
+            });
+       // }
 
         ctx.stats.numObjects++;
     }
