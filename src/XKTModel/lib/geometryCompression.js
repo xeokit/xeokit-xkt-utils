@@ -11,11 +11,11 @@ var quantizePositions = function (positions, lenPositions, aabb, quantizedPositi
     const xMultiplier = maxInt / xwid;
     const yMultiplier = maxInt / ywid;
     const zMultiplier = maxInt / zwid;
-    let i;
-    for (i = 0; i < lenPositions; i += 3) {
-        quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
-        quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
-        quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
+    const verify = (num) => num >= 0 ? num : 0;
+    for (let i = 0; i < lenPositions; i += 3) {
+        quantizedPositions[i + 0] = Math.floor(verify(positions[i + 0] - xmin) * xMultiplier);
+        quantizedPositions[i + 1] = Math.floor(verify(positions[i + 1] - ymin) * yMultiplier);
+        quantizedPositions[i + 2] = Math.floor(verify(positions[i + 2] - zmin) * zMultiplier);
     }
 };
 
