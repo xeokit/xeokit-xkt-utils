@@ -111,8 +111,9 @@ part of the public API for extensibility.
 # Using ````convert2xkt````
 
 The ````convert2xkt```` tool converts various model formats into xeokit's native XKT format, which is designed to load
-super fast over the Web into a xeokit viewer. We provide this tool as both a [CLI script]() and as a [function](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt) to use within
-our own Node scripts.
+super fast over the Web into a xeokit viewer. We provide this tool as both a [CLI script]() and as
+a [function](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt) to use
+within our own Node scripts.
 
 ````bash
 node convert2xkt.js -h
@@ -133,6 +134,9 @@ Options:
 
 ### Converting an IFC file into an XKT file on the command line
 
+Let's use the [convert2xkt](https://github.com/xeokit/xeokit-xkt-utils/blob/master/convert2xkt.js) Node script to
+convert an IFC file to XKT on the command line.
+
 ````bash
 node convert2xkt.js -s rme_advanced_sample_project.ifc -o rme_advanced_sample_project.ifc.xkt -l
 
@@ -149,6 +153,11 @@ Conversion time: 54.41 s
 ````
 
 ### Viewing the XKT file with xeokit
+
+Now that we've got an XKT file, we can now view it in the browser using a
+xeokit [Viewer](https://xeokit.github.io/xeokit-sdk/docs/class/src/viewer/Viewer.js~Viewer.html) configured with
+an [XKTLoaderPlugin](https://xeokit.github.io/xeokit-sdk/docs/class/src/plugins/XKTLoaderPlugin/XKTLoaderPlugin.js~XKTLoaderPlugin.html)
+.
 
 ````javascript
 import {Viewer, XKTLoaderPlugin} from
@@ -168,8 +177,12 @@ const modelNode = xktLoader.load({
 
 ### Converting an IFC file into an XKT file in Node.js
 
-We can use the [convert2xkt](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt) function from within our Nodejs scripts, to programmatically convert files to XKT.
-This is awesome for automated model conversion, and our [performance test suite](https://github.com/xeokit/xeokit-xkt-utils/tree/master/perfTests).
+We can use
+the [convert2xkt](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt)
+function from within our Nodejs scripts to programmatically convert files to XKT.
+
+This is awesome for automated model conversion, and
+our [performance test suite](https://github.com/xeokit/xeokit-xkt-utils/tree/master/perfTests).
 
 ````javascript
 const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
@@ -189,8 +202,11 @@ convert2xkt({
 
 ### Converting IFC file data into XKT data in Node.js
 
-When using ````convert2xkt```` in a Node script, we can manage all file data in memory. This is great for when we want more
-control over where we read and write the files.
+When using
+the [convert2xkt](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt)
+function in our Node scripts, we can manage all file data in memory.
+
+This is great for when we want more control over where we read and write the files.
 
 ````javascript
 const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
@@ -211,7 +227,11 @@ convert2xkt({
 ### Converting an IFC file into an XKT file, with all element properties
 
 We'll convert our IFC file as before, but this time we'll supply a ````outputObjectProperties```` callback, which will
-collect each IFC element's property set. Via that callback, we'll save each property set to a JSON file.
+collect each IFC element's property set.
+
+Via that callback, we'll save each property set to a JSON file.
+
+We could use this feature to store property sets in our own data store.
 
 ````javascript
 const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
@@ -234,6 +254,7 @@ The output files would be something like:
 
 ````bash
 rme_advanced_sample_project.ifc.xkt
+
 06uoIsbYr35x9JXU7VZ77u.json
 09g7Eo3WDEihdnsYS1YDoI.json
 0BTBFw6f90Nfh9rP1dl_39.json
@@ -241,7 +262,7 @@ rme_advanced_sample_project.ifc.xkt
 ...
 ````
 
-Each IFC element's property set file would look like:
+Each IFC element's property set file would look something like:
 
 ````json
 {
