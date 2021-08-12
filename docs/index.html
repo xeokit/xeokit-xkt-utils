@@ -29,7 +29,8 @@
 <nav class="navigation" data-ice="nav"><div>
   <ul>
     
-  <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+  <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convert2xkt">convert2xkt</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
@@ -101,26 +102,31 @@
 </li>
 </ul>
 <hr>
-<h1 id="introduction">Introduction</h1><p><a href="https://github.com/xeokit/xeokit-xkt-utils"><code>xeokit-xkt-utils</code></a> provides the means to convert 3D BIM and AEC models into
-XKT files for super fast loading into <a href="https://xeokit.io">xeokit</a>, along with programming tools to generate XKT files
-with JavaScript on Node.js.</p>
+<h1 id="introduction">Introduction</h1><p><a href="https://github.com/xeokit/xeokit-xkt-utils"><code>xeokit-xkt-utils</code></a> provides the means to convert 3D BIM and AEC
+models into XKT files for super fast loading into <a href="https://xeokit.io">xeokit</a>, along with programming tools to generate
+XKT files with JavaScript on Node.js.</p>
 <p>The <a href="https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs">XKT format</a> compresses large double-precision models
-to a compact payload that loads quickly over the Web into a xeokit viewer running in the browser. We can use 
-xeokit-xkt-utils to convert several source formats into XKT, such as IFC, glTF, 3DXML and CityJSON. </p>
-<h1 id="acknowledgements">Acknowledgements</h1><p>Our thanks to the authors of these open source libraries, which we use internally within <code>xeokit-xkt-utils</code>:  </p>
+to a compact payload that loads quickly over the Web into a xeokit viewer running in the browser. We can use
+xeokit-xkt-utils to convert several source formats into XKT, such as IFC, glTF, 3DXML and CityJSON.</p>
+<h1 id="acknowledgements">Acknowledgements</h1><p>Our thanks to the authors of these open source libraries, which we use internally within <code>xeokit-xkt-utils</code>:</p>
 <ul>
-<li><a href="https://loaders.gl">loaders.gl</a> - Copyright (C) 2015 Uber Technologies, Inc. (<a href="http://www.opensource.org/licenses/mit-license.php">MIT License</a>)</li>
-<li><a href="https://github.com/nodeca/pako">Pako</a> - Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn (<a href="http://www.opensource.org/licenses/mit-license.php">MIT License</a>)</li>
-<li><a href="https://github.com/gildas-lormeau/zip.js">zip.js</a> - Copyright (C) 2021 Gildas Lormeau (<a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause License</a>)</li>
-<li><a href="https://github.com/mapbox/earcut">earcut</a> - Copyright (C) 2016, Mapbox (<a href="https://opensource.org/licenses/ISC">ISC License</a>)</li>
-<li><a href="https://github.com/tomvandig/web-ifc">web-ifc</a> - Copyright (C) 2020-2021 web-ifc contributors (Mozilla Public License Version 2.0)</li>
+<li><a href="https://loaders.gl">loaders.gl</a> - Copyright (C) 2015 Uber Technologies,
+Inc. (<a href="http://www.opensource.org/licenses/mit-license.php">MIT License</a>)</li>
+<li><a href="https://github.com/nodeca/pako">Pako</a> - Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei
+Tuputcyn (<a href="http://www.opensource.org/licenses/mit-license.php">MIT License</a>)</li>
+<li><a href="https://github.com/gildas-lormeau/zip.js">zip.js</a> - Copyright (C) 2021 Gildas
+Lormeau (<a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause License</a>)</li>
+<li><a href="https://github.com/mapbox/earcut">earcut</a> - Copyright (C) 2016,
+Mapbox (<a href="https://opensource.org/licenses/ISC">ISC License</a>)</li>
+<li><a href="https://github.com/tomvandig/web-ifc">web-ifc</a> - Copyright (C) 2020-2021 web-ifc contributors (Mozilla Public License
+Version 2.0)</li>
 </ul>
 <h1 id="resources">Resources</h1><ul>
 <li><a href="https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils">npm</a></li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/docs">API Docs</a></li>
 <li><a href="https://github.com/xeokit/xeokit-xkt-utils">Source Code</a></li>
 <li><a href="https://xeokit.github.io/xeokit-xkt-utils/perfTests">Performance Benchmarks</a></li>
-<li><a href="https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs">XKT Specifications</a> </li>
+<li><a href="https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/index.md">XKT Specifications</a></li>
 </ul>
 <h1 id="features">Features</h1><ul>
 <li>A Node-based CLI tool to convert various 3D model formats to XKT files.</li>
@@ -208,9 +214,25 @@ Writing XKT file: rme_advanced_sample_project.ifc.xkt
 XKT version: 9
 XKT size: 1632.98 kB
 Compression ratio: 21.62
-Conversion time: 74.31 s</code>
+Conversion time: 54.41 s</code>
 </code></pre>
-<h3 id="converting-an-ifc-file-into-an-xkt-file-in-node-js">Converting an IFC file into an XKT file in Node.js</h3><pre><code class="lang-javascript"><code class="source-code prettyprint">const convert2xkt = require(&quot;@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js&quot;);
+<h3 id="viewing-the-xkt-file-with-xeokit">Viewing the XKT file with xeokit</h3><pre><code class="lang-javascript"><code class="source-code prettyprint">import {Viewer, XKTLoaderPlugin} from
+        &quot;https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk@1/dist/xeokit-sdk.es.min.js&quot;;
+
+const viewer = new Viewer({
+    canvasId: &quot;myCanvas&quot;
+});
+
+const xktLoader = new XKTLoaderPlugin(viewer);
+
+const modelNode = xktLoader.load({
+    id: &quot;myModel&quot;,
+    src: &quot;./rme_sample_project.ifc.xkt&quot;
+});</code>
+</code></pre>
+<h3 id="converting-an-ifc-file-into-an-xkt-file-in-node-js">Converting an IFC file into an XKT file in Node.js</h3><p>We can use the <code>convert2xkt</code> function from within our Nodejs scripts, to programmatically convert files to XKT.
+This is awesome for automated model conversion, and our <a href="https://github.com/xeokit/xeokit-xkt-utils/tree/master/perfTests">performance test suite</a>.</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const convert2xkt = require(&quot;@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js&quot;);
 
 convert2xkt({
     source: &quot;rme_advanced_sample_project.ifc&quot;,
@@ -224,7 +246,9 @@ convert2xkt({
     console.error(&quot;Conversion failed: &quot; + errMsg)
 });</code>
 </code></pre>
-<h3 id="converting-ifc-file-data-into-xkt-data-in-node-js">Converting IFC file data into XKT data in Node.js</h3><pre><code class="lang-javascript"><code class="source-code prettyprint">const convert2xkt = require(&quot;@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js&quot;);
+<h3 id="converting-ifc-file-data-into-xkt-data-in-node-js">Converting IFC file data into XKT data in Node.js</h3><p>When using <code>convert2xkt</code> in a Node script, we can manage all file data in memory. This is great for when we want more
+control over where we read and write the files.</p>
+<pre><code class="lang-javascript"><code class="source-code prettyprint">const convert2xkt = require(&quot;@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js&quot;);
 const fs = require(&apos;fs&apos;);
 
 convert2xkt({
@@ -271,7 +295,9 @@ convert2xkt({
     &quot;parent&quot;: &quot;1xS3BCk291UvhgP2dvNsgp&quot;
 }</code>
 </code></pre>
-<p>Converting a glTF file and IFC JSON metadata file into an XKT file</p>
+<h3 id="converting-a-gltf-file-and-ifc-json-metadata-file-into-an-xkt-file">Converting a glTF file and IFC JSON metadata file into an XKT file</h3><p>If we have a glTF file and IFC JSON file that were created using
+our <a href="https://www.notion.so/xeokit/Viewing-an-IFC-Model-c373e48bc4094ff5b6e5c5700ff580ee">standard open source tools</a>,
+then we can use <code>convert2xkt</code> to convert those into an XKT file:</p>
 <pre><code class="lang-javascript"><code class="source-code prettyprint">await convert2xkt({
     source: &quot;duplex.gltf&quot;,
     metaModelSource: &quot;metamodel.json&quot;,

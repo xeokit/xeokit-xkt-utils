@@ -29,7 +29,8 @@
 <nav class="navigation" data-ice="nav"><div>
   <ul>
     
-  <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
+  <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-convert2xkt">convert2xkt</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#xktmodel">XKTModel</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
@@ -319,14 +320,16 @@ function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
 
     if (ctx.outputObjectProperties) {
 
-        // const typeId = getAllRelatedItemsOfType(
-        //     modelID,
-        //     elementID,
-        //     IFCRELDEFINESBYTYPE,
-        //     &apos;RelatedObjects&apos;,
-        //     &apos;RelatingType&apos;
-        // );
-        // return typeId.map((id) =&gt; this.state.api.GetLine(modelID, id, recursive));
+        const typeId = ctx.ifcAPI.GetAllRelatedItemsOfType(
+            ctx.modelID,
+            ifcElement.expressID,
+            WebIFC.IFCRELDEFINESBYTYPE,
+            &apos;RelatedObjects&apos;,
+            &apos;RelatingType&apos;
+        );
+        const props =  typeId.map((id) =&gt; ctx.ifcAPI.GetLine(ctx.modelID, id, true));
+
+        console.log(props);
 
         const json = {
             id: metaObjectId,
@@ -340,6 +343,27 @@ function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
 
         ctx.outputObjectProperties(propertySetId, json);
     }
+}
+
+function parsePropertySet(ctx, lineNum) {
+
+    // this returns a propertyset object at line number 244
+    let propertySetFlattened = ctx.ifcAPI.GetLine(modelID, 244, true);
+
+    // check some relevant fields of ifcpropertyset
+    const expressId = propertySetFlattened.expressID;
+    const type = propertySetFlattened.type;
+    const guid =  propertySetFlattened.GlobalId.value;
+    Equals(&quot;Description&quot;, propertySetFlattened.Description, null);
+    Equals(&quot;Name&quot;, propertySetFlattened.Name.value, &quot;Pset_ColumnCommon&quot;);
+
+    // look at the properties inside
+    let props = propertySetFlattened.HasProperties;
+    ///Equals(&quot;Num props&quot;, props.length, 3);
+
+    // check the value of the first property, should be an identifier of 300x300
+    Equals(&quot;Prop 0 label&quot;, props[0].NominalValue.label, &quot;IFCIDENTIFIER&quot;);
+    Equals(&quot;Prop 0 value&quot;, props[0].NominalValue.value, &quot;300x300&quot;);
 }
 
 function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {
