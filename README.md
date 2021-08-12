@@ -4,53 +4,84 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-Use **xeokit-xkt-utils** to:  
+Use **xeokit-xkt-utils** to:
 
-* convert your 3D BIM and AEC model files for fast loading and viewing in the browser using xeokit, and/or 
-* programmatically generate 3D model files for xeokit in JavaScript.
+* Convert 3D BIM and AEC models into XKT files for super fast loading into [xeokit](https://xeokit.io)
+* Generate XKT files with JavaScript
+  <BR><BR>
 
-![Spatial partitioning](https://xeokit.github.io/xeokit-xkt-utils/images/geometryGeneration.png)
+[![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)
+
+* [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)]
+
+---
 
 # Contents
 
+- [Introduction](#introduction)
 - [Acknowledgements](#acknowledgements)
-- [Links](#links)
+- [Resources](#resources)
 - [Features](#features)
-- [Components](#components)
-- [Benchmarks](#benchmarks)
 - [Installing](#installing)
+- [Components](#components)
 - [Using ````convert2xkt````](#using-----convert2xkt----)
-    + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
-    + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
-    + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
-    + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
+  + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
+  + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
+  + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
+  + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
 - [Using ````XKTModel````](#using-----xktmodel----)
-    + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
-    + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
-    + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
-    + [Loading IFC into an XKTModel](#loading-ifc-into-an-xktmodel)
-    + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
-    + [Loading STL into an XKTModel](#loading-stl-into-an-xktmodel)
+  + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
+  + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
+  + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
+  + [Loading IFC into an XKTModel](#loading-ifc-into-an-xktmodel)
+  + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
+  + [Loading STL into an XKTModel](#loading-stl-into-an-xktmodel)
 - [Building](#building)
-    + [Building Binaries](#building-binaries)
-    + [Building Tests](#building-tests)
+  + [Building Binaries](#building-binaries)
+  + [Building Tests](#building-tests)
+
+---
+
+# Introduction
+
+[````xeokit-xkt-utils````](https://github.com/xeokit/xeokit-xkt-utils) provides the means to convert 3D BIM and AEC models into
+XKT files for super fast loading into [xeokit](https://xeokit.io), along with programming tools to generate XKT files
+with JavaScript on Node.js.
+
+The [XKT format](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs) compresses large double-precision models
+to a compact payload that loads quickly over the Web into a xeokit viewer running in the browser. We can use 
+xeokit-xkt-utils to convert several source formats into XKT, such as IFC, glTF, 3DXML and CityJSON. 
 
 # Acknowledgements
 
-TODO
+Our thanks to the authors of these open source libraries, which we use internally within ````xeokit-xkt-utils````:  
 
-# Links
+* [loaders.gl](https://loaders.gl) - Copyright (C) 2015 Uber Technologies, Inc. ([MIT License](http://www.opensource.org/licenses/mit-license.php))
+* [Pako](https://github.com/nodeca/pako) - Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn ([MIT License](http://www.opensource.org/licenses/mit-license.php))
+* [zip.js](https://github.com/gildas-lormeau/zip.js) - Copyright (C) 2021 Gildas Lormeau ([BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause))
+* [earcut](https://github.com/mapbox/earcut) - Copyright (C) 2016, Mapbox ([ISC License](https://opensource.org/licenses/ISC))
+* [web-ifc](https://github.com/tomvandig/web-ifc) - Copyright (C) 2020-2021 web-ifc contributors (Mozilla Public License Version 2.0)
+
+# Resources
 
 * [npm](https://www.npmjs.com/package/@xeokit/xeokit-xkt-utils)
 * [API Docs](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
+* [Performance Benchmarks](https://xeokit.github.io/xeokit-xkt-utils/perfTests)
+* [XKT Specifications](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs) 
 
 # Features
 
 * A Node-based CLI tool to convert various 3D model formats to XKT files.
 * A JavaScript toolkit of components for loading, generating and saving XKT files.
 
-# Components 
+# Installing
+
+````bash
+npm i @xeokit/xeokit-xkt-utils
+````
+
+# Components
 
 The table below lists the components provided by ````xeokit-xkt-utils````.
 
@@ -72,55 +103,33 @@ part of the public API for extensibility.
 | [parseSTLIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseSTLIntoXKTModel) | Parses STL into an ````XKTModel```` |
 | [writeXKTModelToArrayBuffer](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-writeXKTModelToArrayBuffer) | Serializes an ````XKTModel```` to an XKT file |
 
-# Benchmarks
-
-Shown below are results from our automated performance tests for ````convert2xkt````, showing conversion times, file
-sizes, loading times and rendering performance for XKT files converted from various BIM and GIS model formats.
-
-Click the thumbnails to view the models with xeokit.
-
-| Screenshot | Source | Convert Secs | Load Secs | FPS | Objects | Triangles | Vertices | Source kB | XKT kB | Compression |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/3dxml_widget/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/3dxml_widget/model.xkt) | [3dxml_widget](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/3dxml_widget/model.xkt) | 0.63 secs | 0.13 secs | 60 FPS | 306 | 10464 | 13686 | 123.78 Kb | 62.78 Kb | 1.97 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_csol/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_csol/model.xkt) | [cityjson_csol](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_csol/model.xkt) | 0.01 secs | 0.04 secs | 60 FPS | 1 | 24 | 12 | 5.26 Kb | 0.73 Kb | 7.19 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_msol/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msol/model.xkt) | [cityjson_msol](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msol/model.xkt) | 0.01 secs | 0.04 secs | 60 FPS | 1 | 24 | 16 | 5.54 Kb | 0.73 Kb | 7.58 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_msurface/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msurface/model.xkt) | [cityjson_msurface](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_msurface/model.xkt) | 0.01 secs | 0.03 secs | 60 FPS | 1 | 10 | 8 | 2.46 Kb | 0.67 Kb | 3.69 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_twocube/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_twocube/model.xkt) | [cityjson_twocube](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_twocube/model.xkt) | 0.01 secs | 0.04 secs | 60 FPS | 1 | 24 | 16 | 4.90 Kb | 0.70 Kb | 6.99 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_cube/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_cube/model.xkt) | [cityjson_cube](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_cube/model.xkt) | 0.01 secs | 0.05 secs | 60 FPS | 1 | 12 | 8 | 1.76 Kb | 0.67 Kb | 2.62 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_tetra/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_tetra/model.xkt) | [cityjson_tetra](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_tetra/model.xkt) | 0.01 secs | 0.04 secs | 60 FPS | 1 | 4 | 4 | 1.69 Kb | 0.61 Kb | 2.75 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_torus/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_torus/model.xkt) | [cityjson_torus](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_torus/model.xkt) | 0.01 secs | 0.06 secs | 60 FPS | 1 | 18 | 14 | 4.35 Kb | 0.72 Kb | 6.06 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_denhaag/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_denhaag/model.xkt) | [cityjson_denhaag](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_denhaag/model.xkt) | 2.08 secs | 0.72 secs | 60 FPS | 1991 | 41197 | 71069 | 3153.55 Kb | 399.53 Kb | 7.89 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/cityjson_railway/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_railway/model.xkt) | [cityjson_railway](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/cityjson_railway/model.xkt) | 4.73 secs | 1.01 secs | 60 FPS | 120 | 113537 | 170281 | 4521.41 Kb | 878.98 Kb | 5.14 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_conferencecenter/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_conferencecenter/model.xkt) | [ifc_conferencecenter](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_conferencecenter/model.xkt) | 69.48 secs | 1.28 secs | 13 FPS | 6088 | 509818 | 1262794 | 71700.42 Kb | 2718.26 Kb | 26.38 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_duplex/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_duplex/model.xkt) | [ifc_duplex](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_duplex/model.xkt) | 0.93 secs | 0.15 secs | 60 FPS | 209 | 18642 | 45372 | 2366.05 Kb | 78.50 Kb | 30.14 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_openhouse2x3/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse2x3/model.xkt) | [ifc_openhouse2x3](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse2x3/model.xkt) | 0.31 secs | 0.07 secs | 60 FPS | 41 | 395 | 1147 | 112.76 Kb | 4.83 Kb | 23.32 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_openhouse4/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse4/model.xkt) | [ifc_openhouse4](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_openhouse4/model.xkt) | 0.28 secs | 0.06 secs | 60 FPS | 41 | 395 | 1147 | 113.26 Kb | 4.83 Kb | 23.44 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_map/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_map/model.xkt) | [ifc_map](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_map/model.xkt) | 10.31 secs | 0.88 secs | 29 FPS | 1775 | 169464 | 423072 | 28779.42 Kb | 922.46 Kb | 31.20 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_rac_advanced_sample_project/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rac_advanced_sample_project/model.xkt) | [ifc_rac_advanced_sample_project](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rac_advanced_sample_project/model.xkt) | 52.77 secs | 0.99 secs | 19 FPS | 5563 | 283238 | 743996 | 45316.70 Kb | 1776.94 Kb | 25.50 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/ifc_rme_advanced_sample_project/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rme_advanced_sample_project/model.xkt) | [ifc_rme_advanced_sample_project](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/ifc_rme_advanced_sample_project/model.xkt) | 69.80 secs | 0.88 secs | 19 FPS | 6443 | 317875 | 739186 | 35309.94 Kb | 1481.48 Kb | 23.83 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/laz_autzen/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_autzen/model.xkt) | [laz_autzen](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_autzen/model.xkt) | 26.43 secs | 18.95 secs | 21 FPS | 1 | undefined | 10653336 | 56350.99 Kb | 71525.94 Kb | 0.79 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/laz_indoor_scan/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_indoor_scan/model.xkt) | [laz_indoor_scan](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/laz_indoor_scan/model.xkt) | 1.73 secs | 0.92 secs | 60 FPS | 1 | undefined | 808042 | 1644.72 Kb | 3403.11 Kb | 0.48 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/undefined/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/undefined/model.xkt) | [undefined](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/undefined/model.xkt) | 3.29 secs | 0.82 secs | 60 FPS | 3504 | 230246 | 367934 | 23075.65 Kb | 1662.27 Kb | 13.88 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/gltf_duplex/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_duplex/model.xkt) | [gltf_duplex](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_duplex/model.xkt) | 0.30 secs | 0.23 secs | 57 FPS | 291 | 15874 | 25262 | 1433.53 Kb | 126.70 Kb | 11.31 |
-| [![](https://xeokit.github.io/xeokit-xkt-utils/assets/models/xkt/gltf_map/screenshot/screenshot.png)](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_map/model.xkt) | [gltf_map](https://xeokit.github.io/xeokit-xkt-utils/demos/demoXKT.html?xktSrc=.././assets/models/xkt/gltf_map/model.xkt) | 2.37 secs | 0.60 secs | 49 FPS | 1986 | 181108 | 354632 | 15785.04 Kb | 1605.40 Kb | 9.83 |
-
-
-# Installing 
-
-````bash
-npm i @xeokit/xeokit-xkt-utils
-````
-
 # Using ````convert2xkt````
 
 The ````convert2xkt```` tool converts various model formats into xeokit's native XKT format, which is designed to load
 super fast over the Web into a xeokit viewer. This tool can be used both as a CLI executable and as a function within
 Node.js.
 
+````bash
+node convert2xkt.js -h
+
+Usage: convert2xkt [options]
+
+Options:
+
+    -v, --version            output the version number
+    -s, --source [file]      path to source file
+    -f, --format [string]    source file format (optional); supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson
+    -m, --metamodel [file]   path to source metamodel JSON file (optional)
+    -o, --output [file]      path to target .xkt file; creates directories on path automatically if not existing
+    -p, --properties [file]  path to target directory for object property files; creates directories on path automatically if not existing
+    -l, --log                enable logging
+    -h, --help               output usage information
+````
+
 ### Converting an IFC file into an XKT file on the command line
 
 ````bash
-convert2xkt.js -s rme_advanced_sample_project.ifc -o rme_advanced_sample_project.ifc.xkt -l
+node convert2xkt.js -s rme_advanced_sample_project.ifc -o rme_advanced_sample_project.ifc.xkt -l
 
 Reading input file: rme_advanced_sample_project.ifc
 Input file size: 35309.94 kB
@@ -183,7 +192,7 @@ convert2xkt({
     source: "rme_advanced_sample_project.ifc",
     output: "rme_advanced_sample_project.ifc.xkt",
     outputObjectProperties: async function (objectId, props) {
-        await fs.writeFileSync(`${objectPropsDir}/${id}.json`, JSON.stringify(props, null, "\t"));
+        await fs.writeFileSync(`${objectId}.json`, JSON.stringify(props, null, "\t"));
     }
 }).then(() => {
     console.log("Converted.");
@@ -256,7 +265,11 @@ module in [xeokit-xkt-utils.cjs.js](./dist/xeokit-xkt-utils.cjs.js).
 ![XKTModel Example](http://xeokit.io/img/docs/PerformanceModel/PerformanceModel.png)
 
 ````javascript
-const {XKTModel, parseGLTFIntoXKTModel, writeXKTModelToArrayBuffer} = require("@xeokit/xeokit-xkt-utils/dist/xeokit-xkt-utils.cjs.js");
+const {
+    XKTModel,
+    parseGLTFIntoXKTModel,
+    writeXKTModelToArrayBuffer
+} = require("@xeokit/xeokit-xkt-utils/dist/xeokit-xkt-utils.cjs.js");
 const fs = require('fs');
 
 const xktModel = new XKTModel();
