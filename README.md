@@ -68,7 +68,7 @@ Our thanks to the authors of these open source libraries, which we use internall
 * [API Docs](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
 * [Performance Benchmarks](https://xeokit.github.io/xeokit-xkt-utils/perfTests)
-* [XKT Specifications](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs) 
+* [XKT Specifications](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/index.md) 
 
 # Features
 
