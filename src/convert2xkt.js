@@ -32,13 +32,13 @@ const DOMParser = require('xmldom').DOMParser;
  * @param {ArrayBuffer|JSON}[params.metaModelData] Source file data. Overrides metadata from ````metaModelSource````, ````sourceData```` and ````source````.
  * @param {String}[params.metaModelSource] Path to source metaModel file. Overrides metadata from ````sourceData```` and ````source````. Overridden by ````metaModelData````.
  * @param {Boolean}[params.autoMetaModel=true] Whether to automatically generate a default metamodel in the XKT when no metamodel is given, or parsed in the source.
- * @param {String}[params.output] Path to destination XKT file.
+ * @param {String}[params.output] Path to destination XKT file. Directories on this path are automatically created if not existing.
  * @param {Function}[params.outputXKTModel] Callback to collect the ````XKTModel```` that is internally build by this method.
  * @param {Function}[params.outputXKT] Callback to collect XKT file data.
  * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object}[stats] Collects statistics.
  * @param {Function}[params.outputStats] Callback to collect statistics.
- * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if neccessary. Applies to CityJSON and LAS/LAZ models.
+ * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if necessary. Applies to CityJSON and LAS/LAZ models.
  * @param {Function}[params.log] Logging callback.
  * @return {Promise<number>}
  */
@@ -263,6 +263,10 @@ function convert2xkt({
                 log("Conversion time: " + stats.conversionTime + " s");
 
                 if (output) {
+                    const outputDir = getBasePath(output).trim();
+                    if (outputDir !== "" && !fs.existsSync(outputDir)){
+                        fs.mkdirSync(outputDir, { recursive: true });
+                    }
                     log('Writing XKT file: ' + output);
                     fs.writeFileSync(output, xktContent);
                 }
@@ -288,11 +292,9 @@ function convert2xkt({
     });
 }
 
-
 function getBasePath(src) {
     const i = src.lastIndexOf("/");
     return (i !== 0) ? src.substring(0, i + 1) : "";
 }
-
 
 export default convert2xkt;
