@@ -46,9 +46,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildVectorTextGeometry">buildVectorTextGeometry</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#parsers">parsers</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parse3DXMLIntoXKTModel">parse3DXMLIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseCityJSONIntoXKTModel">parseCityJSONIntoXKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseDXFIntoXKTModel">parseDXFIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGLTFIntoXKTModel">parseGLTFIntoXKTModel</a></span></span></li>
-<li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseGeoJSONIntoXKTModel">parseGeoJSONIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseIFCIntoXKTModel">parseIFCIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseLASIntoXKTModel">parseLASIntoXKTModel</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-parseMetaModelIntoXKTModel">parseMetaModelIntoXKTModel</a></span></span></li>
@@ -62,7 +60,7 @@
 <div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/lib/geometryCompression.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {math} from &quot;../../lib/math.js&quot;;
 
-var quantizePositions = function (positions, lenPositions, aabb, quantizedPositions) {
+function quantizePositions (positions, lenPositions, aabb, quantizedPositions) {
     const xmin = aabb[0];
     const ymin = aabb[1];
     const zmin = aabb[2];
@@ -73,13 +71,13 @@ var quantizePositions = function (positions, lenPositions, aabb, quantizedPositi
     const xMultiplier = maxInt / xwid;
     const yMultiplier = maxInt / ywid;
     const zMultiplier = maxInt / zwid;
-    let i;
-    for (i = 0; i &lt; lenPositions; i += 3) {
-        quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
-        quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
-        quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
+    const verify = (num) =&gt; num &gt;= 0 ? num : 0;
+    for (let i = 0; i &lt; lenPositions; i += 3) {
+        quantizedPositions[i + 0] = Math.floor(verify(positions[i + 0] - xmin) * xMultiplier);
+        quantizedPositions[i + 1] = Math.floor(verify(positions[i + 1] - ymin) * yMultiplier);
+        quantizedPositions[i + 2] = Math.floor(verify(positions[i + 2] - zmin) * zMultiplier);
     }
-};
+}
 
 var createPositionsDecodeMatrix = (function () {
     const translate = math.mat4();
