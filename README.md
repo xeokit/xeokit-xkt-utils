@@ -25,42 +25,47 @@ Use **xeokit-xkt-utils** to:
 - [Installing](#installing)
 - [Components](#components)
 - [Using ````convert2xkt````](#using-----convert2xkt----)
-  + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
-  + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
-  + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
-  + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
+    + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
+    + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
+    + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
+    + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
 - [Using ````XKTModel````](#using-----xktmodel----)
-  + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
-  + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
-  + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
-  + [Loading IFC into an XKTModel](#loading-ifc-into-an-xktmodel)
-  + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
-  + [Loading STL into an XKTModel](#loading-stl-into-an-xktmodel)
+    + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
+    + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
+    + [Loading the ArrayBuffer into a Viewer](#loading-the-arraybuffer-into-a-viewer)
+    + [Loading IFC into an XKTModel](#loading-ifc-into-an-xktmodel)
+    + [Loading glTF into an XKTModel](#loading-gltf-into-an-xktmodel)
+    + [Loading STL into an XKTModel](#loading-stl-into-an-xktmodel)
 - [Building](#building)
-  + [Building Binaries](#building-binaries)
-  + [Building Tests](#building-tests)
+    + [Building Binaries](#building-binaries)
+    + [Building Tests](#building-tests)
 
 ---
 
 # Introduction
 
-[````xeokit-xkt-utils````](https://github.com/xeokit/xeokit-xkt-utils) provides the means to convert 3D BIM and AEC models into
-XKT files for super fast loading into [xeokit](https://xeokit.io), along with programming tools to generate XKT files
-with JavaScript on Node.js.
+[````xeokit-xkt-utils````](https://github.com/xeokit/xeokit-xkt-utils) provides the means to convert 3D BIM and AEC
+models into XKT files for super fast loading into [xeokit](https://xeokit.io), along with programming tools to generate
+XKT files with JavaScript on Node.js.
 
 The [XKT format](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs) compresses large double-precision models
-to a compact payload that loads quickly over the Web into a xeokit viewer running in the browser. We can use 
-xeokit-xkt-utils to convert several source formats into XKT, such as IFC, glTF, 3DXML and CityJSON. 
+to a compact payload that loads quickly over the Web into a xeokit viewer running in the browser. We can use
+xeokit-xkt-utils to convert several source formats into XKT, such as IFC, glTF, 3DXML and CityJSON.
 
 # Acknowledgements
 
-Our thanks to the authors of these open source libraries, which we use internally within ````xeokit-xkt-utils````:  
+Our thanks to the authors of these open source libraries, which we use internally within ````xeokit-xkt-utils````:
 
-* [loaders.gl](https://loaders.gl) - Copyright (C) 2015 Uber Technologies, Inc. ([MIT License](http://www.opensource.org/licenses/mit-license.php))
-* [Pako](https://github.com/nodeca/pako) - Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn ([MIT License](http://www.opensource.org/licenses/mit-license.php))
-* [zip.js](https://github.com/gildas-lormeau/zip.js) - Copyright (C) 2021 Gildas Lormeau ([BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause))
-* [earcut](https://github.com/mapbox/earcut) - Copyright (C) 2016, Mapbox ([ISC License](https://opensource.org/licenses/ISC))
-* [web-ifc](https://github.com/tomvandig/web-ifc) - Copyright (C) 2020-2021 web-ifc contributors (Mozilla Public License Version 2.0)
+* [loaders.gl](https://loaders.gl) - Copyright (C) 2015 Uber Technologies,
+  Inc. ([MIT License](http://www.opensource.org/licenses/mit-license.php))
+* [Pako](https://github.com/nodeca/pako) - Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei
+  Tuputcyn ([MIT License](http://www.opensource.org/licenses/mit-license.php))
+* [zip.js](https://github.com/gildas-lormeau/zip.js) - Copyright (C) 2021 Gildas
+  Lormeau ([BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause))
+* [earcut](https://github.com/mapbox/earcut) - Copyright (C) 2016,
+  Mapbox ([ISC License](https://opensource.org/licenses/ISC))
+* [web-ifc](https://github.com/tomvandig/web-ifc) - Copyright (C) 2020-2021 web-ifc contributors (Mozilla Public License
+  Version 2.0)
 
 # Resources
 
@@ -68,7 +73,7 @@ Our thanks to the authors of these open source libraries, which we use internall
 * [API Docs](https://xeokit.github.io/xeokit-xkt-utils/docs)
 * [Source Code](https://github.com/xeokit/xeokit-xkt-utils)
 * [Performance Benchmarks](https://xeokit.github.io/xeokit-xkt-utils/perfTests)
-* [XKT Specifications](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/index.md) 
+* [XKT Specifications](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/index.md)
 
 # Features
 
@@ -93,7 +98,7 @@ part of the public API for extensibility.
 
 | Component | Description |
 | --- | --- |
-| [convert2xkt]() | A Node.js-based JavaScript function and CLI tool that converts various AEC model formats into xeokit's native, super-fast-loading XKT format. Supported formats include: IFC (2x3 and 4), CityJSON, glTF, 3DXML, LAZ, LAS, STL and PCL. |
+| [convert2xkt](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt) (function)<br> [convert2xkt](https://github.com/xeokit/xeokit-xkt-utils/blob/master/convert2xkt.js) (Node script)| A Node-based JavaScript function and CLI tool that converts various AEC model formats into xeokit's native, super-fast-loading XKT format. |
 | [XKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/class/src/XKTModel/XKTModel.js~XKTModel.html) | A JavaScript document model that represents the contents of an XKT file in memory. Using this, we can programmatically build a document model in JavaScript, adding geometries, materials, objects etc, then serialize it to an XKT file. |
 | [parseIFCIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseIFCIntoXKTModel) | Parses IFC data into an ````XKTModel```` |
 | [parseGLTFIntoXKTModel](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-parseGLTFIntoXKTModel) |  Parses glTF into an ````XKTModel```` |
@@ -106,8 +111,8 @@ part of the public API for extensibility.
 # Using ````convert2xkt````
 
 The ````convert2xkt```` tool converts various model formats into xeokit's native XKT format, which is designed to load
-super fast over the Web into a xeokit viewer. This tool can be used both as a CLI executable and as a function within
-Node.js.
+super fast over the Web into a xeokit viewer. We provide this tool as both a [CLI script]() and as a [function](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt) to use within
+our own Node scripts.
 
 ````bash
 node convert2xkt.js -h
@@ -140,10 +145,31 @@ Writing XKT file: rme_advanced_sample_project.ifc.xkt
 XKT version: 9
 XKT size: 1632.98 kB
 Compression ratio: 21.62
-Conversion time: 74.31 s
+Conversion time: 54.41 s
+````
+
+### Viewing the XKT file with xeokit
+
+````javascript
+import {Viewer, XKTLoaderPlugin} from
+        "https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk@1/dist/xeokit-sdk.es.min.js";
+
+const viewer = new Viewer({
+    canvasId: "myCanvas"
+});
+
+const xktLoader = new XKTLoaderPlugin(viewer);
+
+const modelNode = xktLoader.load({
+    id: "myModel",
+    src: "./rme_sample_project.ifc.xkt"
+});
 ````
 
 ### Converting an IFC file into an XKT file in Node.js
+
+We can use the [convert2xkt](https://xeokit.github.io/xeokit-xkt-utils/docs/function/index.html#static-function-convert2xkt) function from within our Nodejs scripts, to programmatically convert files to XKT.
+This is awesome for automated model conversion, and our [performance test suite](https://github.com/xeokit/xeokit-xkt-utils/tree/master/perfTests).
 
 ````javascript
 const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
@@ -162,6 +188,9 @@ convert2xkt({
 ````
 
 ### Converting IFC file data into XKT data in Node.js
+
+When using ````convert2xkt```` in a Node script, we can manage all file data in memory. This is great for when we want more
+control over where we read and write the files.
 
 ````javascript
 const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
@@ -223,7 +252,11 @@ Each IFC element's property set file would look like:
 }
 ````
 
-Converting a glTF file and IFC JSON metadata file into an XKT file
+### Converting a glTF file and IFC JSON metadata file into an XKT file
+
+If we have a glTF file and IFC JSON file that were created using
+our [standard open source tools](https://www.notion.so/xeokit/Viewing-an-IFC-Model-c373e48bc4094ff5b6e5c5700ff580ee),
+then we can use ````convert2xkt```` to convert those into an XKT file:
 
 ````javascript
 await convert2xkt({
