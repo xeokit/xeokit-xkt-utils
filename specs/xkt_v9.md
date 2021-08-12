@@ -10,7 +10,7 @@ format, which is designed to rapidly load large, double-precision models into a 
 - [Objectives](#overview)
 - [zlib Deflation](#zlib-deflation)
 
-## Where we use XKT****
+## Where we use XKT
 
 The ````xkt```` format is used by these three packages within xeokit:
 
