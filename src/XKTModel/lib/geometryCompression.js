@@ -1,6 +1,6 @@
 import {math} from "../../lib/math.js";
 
-var quantizePositions = function (positions, lenPositions, aabb, quantizedPositions) {
+function quantizePositions (positions, lenPositions, aabb, quantizedPositions) {
     const xmin = aabb[0];
     const ymin = aabb[1];
     const zmin = aabb[2];
@@ -17,7 +17,7 @@ var quantizePositions = function (positions, lenPositions, aabb, quantizedPositi
         quantizedPositions[i + 1] = Math.floor(verify(positions[i + 1] - ymin) * yMultiplier);
         quantizedPositions[i + 2] = Math.floor(verify(positions[i + 2] - zmin) * zMultiplier);
     }
-};
+}
 
 var createPositionsDecodeMatrix = (function () {
     const translate = math.mat4();
