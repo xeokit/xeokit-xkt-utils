@@ -50,12 +50,11 @@ const tempVec3c = math.vec3();
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y
  * axis "up", if neccessary.
- * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  * @returns {Promise}
  */
-function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObjectProperties, stats = {}, log}) {
+function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, stats = {}, log}) {
 
     return new Promise(function (resolve, reject) {
 
@@ -83,6 +82,8 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
         stats.title = "";
         stats.author = "";
         stats.created = "";
+        stats.numMetaObjects = 0;
+        stats.numPropertySets = 0;
         stats.numTriangles = 0;
         stats.numVertices = 0;
         stats.numObjects = 0;
@@ -96,6 +97,8 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
             metaObjectName: "Model"
         });
 
+        stats.numMetaObjects++;
+
         const modelMetaObjectId = math.createUUID();
 
         xktModel.createMetaObject({
@@ -105,12 +108,13 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
             parentMetaObjectId: rootMetaObjectId
         });
 
+        stats.numMetaObjects++;
+
         const ctx = {
             data,
             vertices,
             xktModel,
             rootMetaObjectId: modelMetaObjectId,
-            outputObjectProperties,
             log: (log || function (msg) {
             }),
             nextId: 0,
@@ -126,11 +130,6 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
         }
 
         parseCityJSON(ctx);
-
-        ctx.log("Converted objects: " + stats.numObjects);
-        ctx.log("Converted geometries: " + stats.numGeometries);
-        ctx.log("Converted triangles: " + stats.numTriangles);
-        ctx.log("Converted vertices: " + stats.numVertices);
 
         resolve();
     });
@@ -171,7 +170,6 @@ function parseCityObject(ctx, cityObject, objectId) {
     const xktModel = ctx.xktModel;
     const data = ctx.data;
     const metaObjectId = objectId;
-    const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
     const metaObjectType = cityObject.type;
     const metaObjectName = metaObjectType + " : " + objectId;
 
@@ -179,11 +177,12 @@ function parseCityObject(ctx, cityObject, objectId) {
 
     xktModel.createMetaObject({
         metaObjectId,
-        propertySetId,
         metaObjectName,
         metaObjectType,
         parentMetaObjectId
     });
+
+    ctx.stats.numMetaObjects++;
 
     if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
         return;
@@ -235,12 +234,6 @@ function parseCityObject(ctx, cityObject, objectId) {
     }
 
     if (meshIds.length > 0) {
-
-        if (ctx.outputObjectProperties) {
-            const json = {};
-            ctx.outputObjectProperties(propertySetId, json);
-        }
-
         xktModel.createEntity({
             entityId: objectId,
             meshIds: meshIds

@@ -13,8 +13,9 @@ program
     .option('-s, --source [file]', 'path to source file')
     .option('-f, --format [string]', 'source file format (optional); supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson')
     .option('-m, --metamodel [file]', 'path to source metamodel JSON file (optional)')
+    .option('-i, --include [types]', 'only convert these types (optional)')
+    .option('-x, --exclude [types]', 'never convert these types (optional)')
     .option('-o, --output [file]', 'path to target .xkt file; creates directories on path automatically if not existing')
-    .option('-p, --properties [file]', 'path to target directory for object property files; creates directories on path automatically if not existing')
     .option('-l, --log', 'enable logging');
 
 program.on('--help', () => {
@@ -47,15 +48,8 @@ async function main() {
 
     if (program.output) {
         const outputDir = getBasePath(program.output).trim();
-        if (outputDir !== "" && !fs.existsSync(outputDir)){
-            fs.mkdirSync(outputDir, { recursive: true });
-        }
-    }
-
-    if (program.properties) {
-        const outputPropertiesDir = getBasePath(program.properties).trim();
-        if (outputPropertiesDir !== "" && !fs.existsSync(outputPropertiesDir)){
-            fs.mkdirSync(outputPropertiesDir, { recursive: true });
+        if (outputDir !== "" && !fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, {recursive: true});
         }
     }
 
@@ -64,9 +58,8 @@ async function main() {
         format: program.format,
         metaModelSource: program.metamodel,
         output: program.output,
-        outputObjectProperties: program.properties ? async function (objectId, props) {
-            await fs.writeFileSync(`${program.properties}/${objectId}.json`, JSON.stringify(props, null, "\t"));
-        } : null,
+        includeTypes: program.include ? program.include.slice(",") : null,
+        excludeTypes: program.exclude ? program.exclude.slice(",") : null,
         log
     });
 

@@ -114,18 +114,14 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
         parentMetaObjectId: rootMetaObjectId
     });
 
-    if (log) {
-        log("Converted objects: 1");
-        log("Converted geometries: 1");
-        log("Converted points: " + (positionsValue.length / 3));
-    }
-
     if (stats) {
         stats.sourceFormat = "LAS";
         stats.schemaVersion = "";
         stats.title = "";
         stats.author = "";
         stats.created = "";
+        stats.numMetaObjects = 2;
+        stats.numPropertySets = 0;
         stats.numObjects = 1;
         stats.numGeometries = 1;
         stats.numVertices = positionsValue.length / 3;

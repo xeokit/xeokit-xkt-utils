@@ -111,11 +111,6 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             parseMaterials(ctx);
             parseDefaultScene(ctx);
 
-            ctx.log("Converted objects: " + stats.numObjects);
-            ctx.log("Converted geometries: " + stats.numGeometries);
-            ctx.log("Converted triangles: " + stats.numTriangles);
-            ctx.log("Converted vertices: " + stats.numVertices);
-
             resolve();
 
         }, (errMsg) => {

@@ -106,7 +106,7 @@ function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false,
             };
 
             parseDocument(ctx).then(() => {
-                ctx.log("Converted objects: " + ctx.stats.numObjects);
+                ctx.log("Converted drawable objects: " + ctx.stats.numObjects);
                 ctx.log("Converted geometries: " + ctx.stats.numGeometries);
                 ctx.log("Converted triangles: " + ctx.stats.numTriangles);
                 ctx.log("Converted vertices: " + ctx.stats.numVertices);

@@ -1,4 +1,3 @@
-
 import {faceToVertexNormals} from "../lib/faceToVertexNormals.js";
 import {math} from "../lib/math.js";
 
@@ -57,7 +56,7 @@ async function parseSTLIntoXKTModel({
                                         log
                                     }) {
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
 
         if (!data) {
             reject("Argument expected: data");
@@ -104,17 +103,14 @@ async function parseSTLIntoXKTModel({
             parseASCII(ctx, ensureString(data));
         }
 
-        ctx.log("Converted objects: " + ctx.stats.numObjects);
-        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-        ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
         if (stats) {
             stats.sourceFormat = "STL";
             stats.schemaVersion = "";
             stats.title = "";
             stats.author = "";
             stats.created = "";
+            stats.numMetaObjects = 2;
+            stats.numPropertySets = 0;
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numTriangles = ctx.stats.numTriangles;

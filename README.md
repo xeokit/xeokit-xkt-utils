@@ -6,7 +6,7 @@
 
 Use **xeokit-xkt-utils** to:
 
-* Convert 3D BIM and AEC models into XKT files for super fast loading into [xeokit](https://xeokit.io)
+* Convert BIM and AEC models into XKT files for super fast loading into [xeokit](https://xeokit.io)
 * Generate XKT files with JavaScript
   <BR><BR>
 
@@ -28,7 +28,6 @@ Use **xeokit-xkt-utils** to:
     + [Converting an IFC file into an XKT file on the command line](#converting-an-ifc-file-into-an-xkt-file-on-the-command-line)
     + [Converting an IFC file into an XKT file in Node.js](#converting-an-ifc-file-into-an-xkt-file-in-nodejs)
     + [Converting IFC file data into XKT data in Node.js](#converting-ifc-file-data-into-xkt-data-in-nodejs)
-    + [Converting an IFC file into an XKT file, with all element properties](#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties)
 - [Using ````XKTModel````](#using-----xktmodel----)
     + [Programmatically Building an XKT File](#programmatically-building-an-xkt-file)
     + [Serializing the XKTModel to an ArrayBuffer](#serializing-the-xktmodel-to-an-arraybuffer)
@@ -127,7 +126,6 @@ Options:
     -f, --format [string]    source file format (optional); supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson
     -m, --metamodel [file]   path to source metamodel JSON file (optional)
     -o, --output [file]      path to target .xkt file; creates directories on path automatically if not existing
-    -p, --properties [file]  path to target directory for object property files; creates directories on path automatically if not existing
     -l, --log                enable logging
     -h, --help               output usage information
 ````
@@ -224,69 +222,6 @@ convert2xkt({
 });
 ````
 
-### Converting an IFC file into an XKT file, with all element properties
-
-We'll convert our IFC file as before, but this time we'll supply a ````outputObjectProperties```` callback, which will
-collect each IFC element's property set.
-
-Via that callback, we'll save each property set to a JSON file.
-
-We could use this feature to store property sets in our own data store.
-
-````javascript
-const convert2xkt = require("@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js");
-const fs = require('fs');
-
-convert2xkt({
-    source: "rme_advanced_sample_project.ifc",
-    output: "rme_advanced_sample_project.ifc.xkt",
-    outputObjectProperties: async function (objectId, props) {
-        await fs.writeFileSync(`${objectId}.json`, JSON.stringify(props, null, "\t"));
-    }
-}).then(() => {
-    console.log("Converted.");
-}, (errMsg) => {
-    console.error("Conversion failed: " + errMsg)
-});
-````
-
-The output files would be something like:
-
-````bash
-rme_advanced_sample_project.ifc.xkt
-
-06uoIsbYr35x9JXU7VZ77u.json
-09g7Eo3WDEihdnsYS1YDoI.json
-0BTBFw6f90Nfh9rP1dl_39.json
-0BTBFw6f90Nfh9rP1dl_3A.json
-...
-````
-
-Each IFC element's property set file would look something like:
-
-````json
-{
-    "id": "0kF45Qs8L9PAM9kmb1lT2Z",
-    "type": "IfcFooting",
-    "name": "Wall Foundation:Bearing Footing - 900 x 300:186656",
-    "parent": "1xS3BCk291UvhgP2dvNsgp"
-}
-````
-
-### Converting a glTF file and IFC JSON metadata file into an XKT file
-
-If we have a glTF file and IFC JSON file that were created using
-our [standard open source tools](https://www.notion.so/xeokit/Viewing-an-IFC-Model-c373e48bc4094ff5b6e5c5700ff580ee),
-then we can use ````convert2xkt```` to convert those into an XKT file:
-
-````javascript
-await convert2xkt({
-    source: "duplex.gltf",
-    metaModelSource: "metamodel.json",
-    output: "duplex.xkt"
-});
-````
-
 # Using ````XKTModel````
 
 ````XKTModel```` is a JavaScript class that represents the contents of an XKT file in memory.
@@ -330,6 +265,50 @@ const xktModel = new XKTModel();
 
 // Create metamodel - this part is optional
 
+// Create property sets to hold info about the model
+
+xktModel.createPropertySet({
+    propertySetId: "tableTopPropSet",
+    propertySetType: "Default",
+    propertySetName: "Table Top",
+    properties: [
+        {
+            id: "tableTopMaterial",
+            type: "Default",
+            name: "Table top material",
+            value: "Marble"
+        },
+        {
+            id: "tableTopDimensions",
+            type: "Default",
+            name: "Table top dimensions",
+            value: "90x90x3 cm"
+        }
+    ]
+});
+
+xktModel.createPropertySet({
+    propertySetId: "tableLegPropSet",
+    propertySetType: "Default",
+    propertySetName: "Table Leg",
+    properties: [
+        {
+            id: "tableLegMaterial",
+            type: "Default",
+            name: "Table leg material",
+            value: "Pine"
+        },
+        {
+            id: "tableLegDimensions",
+            type: "Default",
+            name: "Table leg dimensions",
+            value: "5x5x50 cm"
+        }
+    ]
+});
+
+// Create a hierarchy of metaobjects to describe the structure of the model
+
 xktModel.createMetaObject({ // Root XKTMetaObject, has no XKTEntity
     metaObjectId: "table",
     metaObjectName: "The Table",
@@ -340,35 +319,40 @@ xktModel.createMetaObject({
     metaObjectId: "redLeg",
     metaObjectName: "Red Table Leg",
     metaObjectType: "furniturePart",
-    parentMetaObjectId: "table"
+    parentMetaObjectId: "table",
+    propertySetId: "tableLegPropSet"
 });
 
 xktModel.createMetaObject({
     metaObjectId: "greenLeg",
     metaObjectName: "Green Table Leg",
     metaObjectType: "furniturePart",
-    parentMetaObjectId: "table"
+    parentMetaObjectId: "table",
+    propertySetId: "tableLegPropSet"
 });
 
 xktModel.createMetaObject({
     metaObjectId: "blueLeg",
     metaObjectName: "Blue Table Leg",
     metaObjectType: "furniturePart",
-    parentMetaObjectId: "table"
+    parentMetaObjectId: "table",
+    propertySetId: "tableLegPropSet"
 });
 
 xktModel.createMetaObject({
     metaObjectId: "yellowLeg",
     metaObjectName: "Yellow Table Leg",
     metaObjectType: "furniturePart",
-    parentMetaObjectId: "table"
+    parentMetaObjectId: "table",
+    propertySetId: "tableLegPropSet"
 });
 
 xktModel.createMetaObject({
     metaObjectId: "pinkTop",
     metaObjectName: "The Pink Table Top",
     metaObjectType: "furniturePart",
-    parentMetaObjectId: "table"
+    parentMetaObjectId: "table",
+    propertySetId: "tableTopPropSet"
 });
 
 // Create an XKTGeometry that defines a box shape, as a triangle mesh 

@@ -24,11 +24,11 @@ const DOMParser = require('xmldom').DOMParser;
  * @param {String} [params.sourceFormat] Format of source file/data. Always needed with ````sourceData````, but not normally needed with ````source````, because convert2xkt will determine the format automatically from the file extension of ````source````.
  * @param {ArrayBuffer|JSON} [params.metaModelData] Source file data. Overrides metadata from ````metaModelSource````, ````sourceData```` and ````source````.
  * @param {String} [params.metaModelSource] Path to source metaModel file. Overrides metadata from ````sourceData```` and ````source````. Overridden by ````metaModelData````.
- * @param {Boolean} [params.autoMetaModel=true] Whether to automatically generate a default metamodel in the XKT when no metamodel is given, or parsed in the source.
  * @param {String} [params.output] Path to destination XKT file. Directories on this path are automatically created if not existing.
  * @param {Function} [params.outputXKTModel] Callback to collect the ````XKTModel```` that is internally build by this method.
  * @param {Function} [params.outputXKT] Callback to collect XKT file data.
- * @param {Function} [params.outputObjectProperties] Callback to collect each object's property set.
+ * @param {String[]} [params.includeTypes] Option to only convert objects of these types.
+ * @param {String[]} [params.excludeTypes] Option to never convert objects of these types.
  * @param {Object} [stats] Collects conversion statistics. Statistics are attached to this object if provided.
  * @param {Function} [params.outputStats] Callback to collect statistics.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis "up", if necessary. Applies to CityJSON and LAS/LAZ models.
@@ -41,17 +41,34 @@ function convert2xkt({
                          sourceFormat,
                          metaModelSource,
                          metaModelData,
-                         autoMetaModel,
                          output,
                          outputXKTModel,
                          outputXKT,
-                         outputObjectProperties,
+                         includeTypes,
+                         excludeTypes,
                          stats = {},
                          outputStats,
                          rotateX,
                          log = (msg) => {
                          }
                      }) {
+
+    stats.sourceFormat = "";
+    stats.schemaVersion = "";
+    stats.title = "";
+    stats.author = "";
+    stats.created = "";
+    stats.numMetaObjects = 0;
+    stats.numPropertySets = 0;
+    stats.numTriangles = 0;
+    stats.numVertices = 0;
+    stats.numObjects = 0;
+    stats.numGeometries = 0;
+    stats.sourceSize = 0;
+    stats.xktSize = 0;
+    stats.compressionRatio = 0;
+    stats.conversionTime = 0;
+    stats.aabb = null;
 
     return new Promise(function (resolve, reject) {
 
@@ -82,10 +99,6 @@ function convert2xkt({
         const startTime = new Date();
 
         const ext = sourceFormat || source.split('.').pop();
-
-        if (ext === "ifc") {
-            log("Warning: Here be dragons; IFC conversion is very alpha!");
-        }
 
         if (!sourceData) {
             try {
@@ -134,7 +147,6 @@ function convert2xkt({
                     convert(parseCityJSONIntoXKTModel, {
                         data: JSON.parse(sourceData),
                         xktModel,
-                        outputObjectProperties,
                         stats,
                         rotateX,
                         log
@@ -159,7 +171,8 @@ function convert2xkt({
                         data: sourceData,
                         xktModel,
                         wasmPath: "./",
-                        outputObjectProperties,
+                        includeTypes,
+                        excludeTypes,
                         stats,
                         log
                     });
@@ -217,7 +230,6 @@ function convert2xkt({
                         data: sourceData,
                         domParser,
                         xktModel,
-                        outputObjectProperties,
                         stats,
                         log
                     });
@@ -233,9 +245,7 @@ function convert2xkt({
 
             parser(converterParams).then(() => {
 
-                if (autoMetaModel !== false) {
-                    xktModel.createDefaultMetaObjects();
-                }
+                xktModel.createDefaultMetaObjects();
 
                 xktModel.finalize();
 
@@ -249,16 +259,27 @@ function convert2xkt({
                 stats.compressionRatio = (sourceFileSizeBytes / targetFileSizeBytes).toFixed(2);
                 stats.conversionTime = ((new Date() - startTime) / 1000.0).toFixed(2);
                 stats.aabb = xktModel.aabb;
-
                 log("Converted to: XKT v9");
+                if (includeTypes) {
+                    log("Include types: " + (includeTypes ? includeTypes : "(include all)"));
+                }
+                if (excludeTypes) {
+                    log("Exclude types: " + (excludeTypes ? excludeTypes : "(exclude none)"));
+                }
                 log("XKT size: " + stats.xktSize + " kB");
                 log("Compression ratio: " + stats.compressionRatio);
                 log("Conversion time: " + stats.conversionTime + " s");
+                log("Converted metaobjects: " + stats.numMetaObjects);
+                log("Converted property sets: " + stats.numPropertySets);
+                log("Converted drawable objects: " + stats.numObjects);
+                log("Converted geometries: " + stats.numGeometries);
+                log("Converted triangles: " + stats.numTriangles);
+                log("Converted vertices: " + stats.numVertices);
 
                 if (output) {
                     const outputDir = getBasePath(output).trim();
-                    if (outputDir !== "" && !fs.existsSync(outputDir)){
-                        fs.mkdirSync(outputDir, { recursive: true });
+                    if (outputDir !== "" && !fs.existsSync(outputDir)) {
+                        fs.mkdirSync(outputDir, {recursive: true});
                     }
                     log('Writing XKT file: ' + output);
                     fs.writeFileSync(output, xktContent);

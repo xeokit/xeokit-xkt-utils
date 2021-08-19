@@ -151,7 +151,7 @@ function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log})
         });
 
         if (log) {
-            log("Converted objects: 1");
+            log("Converted drawable objects: 1");
             log("Converted geometries: 1");
             log("Converted vertices: " + positions.length / 3);
         }

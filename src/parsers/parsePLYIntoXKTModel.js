@@ -80,18 +80,14 @@ function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
             meshIds: ["plyMesh"]
         });
 
-        if (log) {
-            log("Converted objects: 1");
-            log("Converted geometries: 1");
-            log("Converted vertices: " + positions.length / 3);
-        }
-
         if (stats) {
             stats.sourceFormat = "PLY";
             stats.schemaVersion = "";
             stats.title = "";
             stats.author = "";
             stats.created = "";
+            stats.numMetaObjects = 2;
+            stats.numPropertySets = 0;
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numVertices = attributes.POSITION.value.length / 3;
