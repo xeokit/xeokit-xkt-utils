@@ -166,7 +166,7 @@ function getModelData(xktModel) {
 
         data.metadata.propertySets.push(propertySetJSON);
     }
-    
+
     for (let metaObjectsIndex = 0; metaObjectsIndex < numMetaObjects; metaObjectsIndex++) {
 
         const metaObject = metaObjectsList[metaObjectsIndex];
@@ -181,14 +181,14 @@ function getModelData(xktModel) {
             metaObjectJSON.parent = "" + metaObject.parentMetaObjectId;
         }
 
-        if (metaObject.propertySetId !== undefined && metaObject.propertySetId !== null && metaObject.propertySetId !== "") {
-            metaObjectJSON.propertySetId = "" + metaObject.propertySetId;
+        if (metaObject.propertySetIds && metaObject.propertySetIds.length > 0) {
+            metaObjectJSON.propertySetIds = metaObject.propertySetIds;
         }
 
         data.metadata.metaObjects.push(metaObjectJSON);
     }
 
-   // console.log(JSON.stringify(data.metadata, null, "\t"))
+    // console.log(JSON.stringify(data.metadata, null, "\t"))
 
     // Geometries
 
