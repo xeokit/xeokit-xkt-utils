@@ -194,7 +194,7 @@ function parsePropertySets(ctx) {
                     const nominalValue = prop.NominalValue;
                     if (nominalValue) {
                         properties.push({
-                            label: nominalValue.label,
+                            name: nominalValue.label,
                             value: nominalValue.value,
                             type: nominalValue.type
                         });
