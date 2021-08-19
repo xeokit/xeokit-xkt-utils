@@ -123,7 +123,7 @@ function convertModels(testStats) {
 
 function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) {
     const xktDestDir = path.dirname(xktDest);
-    if (config.enableOutputObjectProperties) {
+    if (config.enableoutputPropertySets) {
         const objectPropsDir = `${xktDestDir}/props/`;
         if (!fs.existsSync(objectPropsDir)) {
             fs.mkdirSync(objectPropsDir);
@@ -137,7 +137,7 @@ function convert(modelSrc, metaModelSrc, xktDest, objectPropsDest, stats) {
         outputXKT: async function (xktData) {
             fs.writeFileSync(xktDest, xktData);
         },
-        outputObjectProperties: config.enableOutputObjectProperties ? async function (id, props) {
+        outputPropertySets: config.enableoutputPropertySets ? async function (id, props) {
             await fs.writeFileSync(`${objectPropsDir}/${id}.json`, JSON.stringify(props, null, "\t"));
         } : null,
         stats,
@@ -180,7 +180,7 @@ async function testModels(testStats) {
         if (!testStats.browserVersion) {
             testStats.browserVersion = await page.browser().version();
         }
-        await page.setDefaultNavigationTimeout(30000000);
+        await page.setDefaultNavigationTimeout(60000000);
         await page.goto(`http://localhost:${config.serverPort}/perfTests/perfTestXKT.html?xktSrc=../${xktDest}`);
         await page.waitForSelector('#percyLoaded')
         const element = await page.$('#percyLoaded')
