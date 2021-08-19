@@ -3737,7 +3737,7 @@ const math = {
     }
 };
 
-var quantizePositions = function (positions, lenPositions, aabb, quantizedPositions) {
+function quantizePositions (positions, lenPositions, aabb, quantizedPositions) {
     const xmin = aabb[0];
     const ymin = aabb[1];
     const zmin = aabb[2];
@@ -3748,13 +3748,13 @@ var quantizePositions = function (positions, lenPositions, aabb, quantizedPositi
     const xMultiplier = maxInt / xwid;
     const yMultiplier = maxInt / ywid;
     const zMultiplier = maxInt / zwid;
-    let i;
-    for (i = 0; i < lenPositions; i += 3) {
-        quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
-        quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
-        quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
+    const verify = (num) => num >= 0 ? num : 0;
+    for (let i = 0; i < lenPositions; i += 3) {
+        quantizedPositions[i + 0] = Math.floor(verify(positions[i + 0] - xmin) * xMultiplier);
+        quantizedPositions[i + 1] = Math.floor(verify(positions[i + 1] - ymin) * yMultiplier);
+        quantizedPositions[i + 2] = Math.floor(verify(positions[i + 2] - zmin) * zMultiplier);
     }
-};
+}
 
 var createPositionsDecodeMatrix = (function () {
     const translate = math.mat4();
@@ -4584,10 +4584,9 @@ class XKTMetaObject {
      * @param propertySetId
      * @param metaObjectType
      * @param metaObjectName
-     * @param metaObjectIndex
      * @param parentMetaObjectId
      */
-    constructor(metaObjectId, propertySetId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId) {
+    constructor(metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId) {
 
         /**
          * Unique ID of this ````XKTMetaObject```` in {@link XKTModel#metaObjects}.
@@ -4603,14 +4602,13 @@ class XKTMetaObject {
         this.metaObjectId = metaObjectId;
 
         /**
-         * Unique ID of an external property set for this ````XKTMetaObject````.
-         *
-         * We only store basic structural metadata in the XKT, and store object property sets externally,
-         * because they tend to be large and application-specific and would bloat the XKT file.
+         * Unique ID of a property set that contains additional metadata about this
+         * {@link XKTMetaObject}. The property can be stored in an external system, or
+         * within the {@link XKTModel}, as a {@link XKTPropertySet} within {@link XKTModel#propertySets}.
          *
          * @type {String}
          */
-        this.propertySetId = null;
+        this.propertySetId = propertySetId;
 
         /**
          * Indicates the XKTMetaObject meta object type.
@@ -4631,13 +4629,6 @@ class XKTMetaObject {
         this.metaObjectName = metaObjectName;
 
         /**
-         * Index of this ````XKTMetaObject```` in {@link XKTModel#metaObjectsList}.
-         *
-         * @type {Number}
-         */
-        this.metaObjectIndex = metaObjectIndex;
-
-        /**
          * The parent XKTMetaObject, if any.
          *
          * Will be null if there is no parent.
@@ -4645,6 +4636,58 @@ class XKTMetaObject {
          * @type {String}
          */
         this.parentMetaObjectId = parentMetaObjectId;
+    }
+}
+
+/**
+ * A property set within an {@link XKTModel}.
+ *
+ * These are shared among {@link XKTMetaObject}s.
+ *
+ * * Created by {@link XKTModel#createPropertySet}
+ * * Stored in {@link XKTModel#propertySets} and {@link XKTModel#propertySetsList}
+ * * Has an ID, a type, and a human-readable name
+ *
+ * @class XKTPropertySet
+ */
+class XKTPropertySet {
+
+    /**
+     * @private
+     */
+    constructor(propertySetId, propertySetType, propertySetName, properties) {
+
+        /**
+         * Unique ID of this ````XKTPropertySet```` in {@link XKTModel#propertySets}.
+         *
+         * @type {String}
+         */
+        this.propertySetId = propertySetId;
+
+        /**
+         * Indicates the ````XKTPropertySet````'s type.
+         *
+         * This defaults to "default".
+         *
+         * @type {string}
+         */
+        this.propertySetType = propertySetType;
+
+        /**
+         * Indicates the XKTPropertySet meta object name.
+         *
+         * This defaults to {@link XKTPropertySet#propertySetId}.
+         *
+         * @type {string}
+         */
+        this.propertySetName = propertySetName;
+
+        /**
+         * The properties within this ````XKTPropertySet````.
+         *
+         * @type {*[]}
+         */
+        this.properties = properties;
     }
 }
 
@@ -4789,6 +4832,26 @@ class XKTModel {
         this.edgeThreshold = cfg.edgeThreshold || 10;
 
         /**
+         * Map of {@link XKTPropertySet}s within this XKTModel, each mapped to {@link XKTPropertySet#propertySetId}.
+         *
+         * Created by {@link XKTModel#createPropertySet}.
+         *
+         * @type {{String:XKTPropertySet}}
+         */
+        this.propertySets = {};
+
+        /**
+         * {@link XKTPropertySet}s within this XKTModel.
+         *
+         * Each XKTPropertySet holds its position in this list in {@link XKTPropertySet#propertySetIndex}.
+         *
+         * Created by {@link XKTModel#finalize}.
+         *
+         * @type {XKTPropertySet[]}
+         */
+        this.propertySetsList = [];
+
+        /**
          * Map of {@link XKTMetaObject}s within this XKTModel, each mapped to {@link XKTMetaObject#metaObjectId}.
          *
          * Created by {@link XKTModel#createMetaObject}.
@@ -4908,15 +4971,64 @@ class XKTModel {
     }
 
     /**
+     * Creates an {@link XKTPropertySet} within this XKTModel.
+     *
+     * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
+     *
+     * @param {*} params Method parameters.
+     * @param {String} params.propertySetId Unique ID for the {@link XKTPropertySet}.
+     * @param {String} [params.propertySetType="default"] A meta type for the {@link XKTPropertySet}.
+     * @param {String} [params.propertySetName] Human-readable name for the {@link XKTPropertySet}. Defaults to the ````propertySetId```` parameter.
+     * @param {String[]} params.properties Properties for the {@link XKTPropertySet}.
+     * @returns {XKTPropertySet} The new {@link XKTPropertySet}.
+     */
+    createPropertySet(params) {
+
+        if (!params) {
+            throw "Parameters expected: params";
+        }
+
+        if (params.propertySetId === null || params.propertySetId === undefined) {
+            throw "Parameter expected: params.propertySetId";
+        }
+
+        if (params.properties === null || params.properties === undefined) {
+            throw "Parameter expected: params.properties";
+        }
+
+        if (this.finalized) {
+            console.error("XKTModel has been finalized, can't add more property sets");
+            return;
+        }
+
+        if (this.propertySets[params.propertySetId]) {
+            //          console.error("XKTPropertySet already exists with this ID: " + params.propertySetId);
+            return;
+        }
+
+        const propertySetId = params.propertySetId;
+        const propertySetType = params.propertySetType || "Default";
+        const propertySetName = params.propertySetName || params.propertySetId;
+        const properties = params.properties || [];
+
+        const propertySet = new XKTPropertySet(propertySetId, propertySetType, propertySetName, properties);
+
+        this.propertySets[propertySetId] = propertySet;
+        this.propertySetsList.push(propertySet);
+
+        return propertySet;
+    }
+
+    /**
      * Creates an {@link XKTMetaObject} within this XKTModel.
      *
      * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
      *
      * @param {*} params Method parameters.
      * @param {String} params.metaObjectId Unique ID for the {@link XKTMetaObject}.
-     * @param {String} params.propertySetId ID of externally-stored property set data. We only store basic structural
-     * metadata in the XKT, and store object property sets externally, because they tend to be large and
-     * application-specific and would bloat the XKT file.
+     * @param {String} params.propertySetId ID of a property set that contains additional metadata about
+     * this {@link XKTMetaObject}. The property set could be stored externally (ie not managed at all by the XKT file),
+     * or could be a {@link XKTPropertySet} within {@link XKTModel#propertySets}.
      * @param {String} [params.metaObjectType="default"] A meta type for the {@link XKTMetaObject}. Can be anything,
      * but is usually an IFC type, such as "IfcSite" or "IfcWall".
      * @param {String} [params.metaObjectName] Human-readable name for the {@link XKTMetaObject}. Defaults to the ````metaObjectId```` parameter.
@@ -4947,10 +5059,9 @@ class XKTModel {
         const propertySetId = params.propertySetId;
         const metaObjectType = params.metaObjectType || "Default";
         const metaObjectName = params.metaObjectName || params.metaObjectId;
-        const metaObjectIndex = this.metaObjectsList.length;
         const parentMetaObjectId = params.parentMetaObjectId;
 
-        const metaObject = new XKTMetaObject(metaObjectId, propertySetId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
+        const metaObject = new XKTMetaObject(metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId);
 
         this.metaObjects[metaObjectId] = metaObject;
         this.metaObjectsList.push(metaObject);
@@ -12511,12 +12622,14 @@ function getModelData(xktModel) {
     // Allocate data
     //------------------------------------------------------------------------------------------------------------------
 
+    const propertySetsList = xktModel.propertySetsList;
     const metaObjectsList = xktModel.metaObjectsList;
     const geometriesList = xktModel.geometriesList;
     const meshesList = xktModel.meshesList;
     const entitiesList = xktModel.entitiesList;
     const tilesList = xktModel.tilesList;
 
+    const numPropertySets = propertySetsList.length;
     const numMetaObjects = metaObjectsList.length;
     const numGeometries = geometriesList.length;
     const numMeshes = meshesList.length;
@@ -12628,9 +12741,24 @@ function getModelData(xktModel) {
         creatingApplication: xktModel.creatingApplication,
         schema: xktModel.schema,
 
+        propertySets: [],
         metaObjects: []
     };
 
+    for (let propertySetsIndex = 0; propertySetsIndex < numPropertySets; propertySetsIndex++) {
+
+        const propertySet = propertySetsList[propertySetsIndex];
+
+        const propertySetJSON = {
+            id: "" + propertySet.propertySetId,
+            name: propertySet.propertySetName,
+            type: propertySet.propertySetType,
+            properties: propertySet.properties
+        };
+
+        data.metadata.propertySets.push(propertySetJSON);
+    }
+    
     for (let metaObjectsIndex = 0; metaObjectsIndex < numMetaObjects; metaObjectsIndex++) {
 
         const metaObject = metaObjectsList[metaObjectsIndex];
@@ -12643,6 +12771,10 @@ function getModelData(xktModel) {
 
         if (metaObject.parentMetaObjectId !== undefined && metaObject.parentMetaObjectId !== null) {
             metaObjectJSON.parent = "" + metaObject.parentMetaObjectId;
+        }
+
+        if (metaObject.propertySetId !== undefined && metaObject.propertySetId !== null && metaObject.propertySetId !== "") {
+            metaObjectJSON.propertySetId = "" + metaObject.propertySetId;
         }
 
         data.metadata.metaObjects.push(metaObjectJSON);
@@ -13591,12 +13723,11 @@ const tempVec3c = math.vec3();
  * @param {XKTModel} params.xktModel XKTModel to parse into.
  * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y
  * axis "up", if neccessary.
- * @param {Function}[params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  * @returns {Promise}
  */
-function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObjectProperties, stats = {}, log}) {
+function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, stats = {}, log}) {
 
     return new Promise(function (resolve, reject) {
 
@@ -13624,6 +13755,8 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
         stats.title = "";
         stats.author = "";
         stats.created = "";
+        stats.numMetaObjects = 0;
+        stats.numPropertySets = 0;
         stats.numTriangles = 0;
         stats.numVertices = 0;
         stats.numObjects = 0;
@@ -13637,6 +13770,8 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
             metaObjectName: "Model"
         });
 
+        stats.numMetaObjects++;
+
         const modelMetaObjectId = math.createUUID();
 
         xktModel.createMetaObject({
@@ -13646,12 +13781,13 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
             parentMetaObjectId: rootMetaObjectId
         });
 
+        stats.numMetaObjects++;
+
         const ctx = {
             data,
             vertices,
             xktModel,
             rootMetaObjectId: modelMetaObjectId,
-            outputObjectProperties,
             log: (log || function (msg) {
             }),
             nextId: 0,
@@ -13667,11 +13803,6 @@ function parseCityJSONIntoXKTModel({data, xktModel, rotateX = true, outputObject
         }
 
         parseCityJSON(ctx);
-
-        ctx.log("Converted objects: " + stats.numObjects);
-        ctx.log("Converted geometries: " + stats.numGeometries);
-        ctx.log("Converted triangles: " + stats.numTriangles);
-        ctx.log("Converted vertices: " + stats.numVertices);
 
         resolve();
     });
@@ -13712,7 +13843,6 @@ function parseCityObject(ctx, cityObject, objectId) {
     const xktModel = ctx.xktModel;
     const data = ctx.data;
     const metaObjectId = objectId;
-    const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
     const metaObjectType = cityObject.type;
     const metaObjectName = metaObjectType + " : " + objectId;
 
@@ -13720,11 +13850,12 @@ function parseCityObject(ctx, cityObject, objectId) {
 
     xktModel.createMetaObject({
         metaObjectId,
-        propertySetId,
         metaObjectName,
         metaObjectType,
         parentMetaObjectId
     });
+
+    ctx.stats.numMetaObjects++;
 
     if (!(cityObject.geometry && cityObject.geometry.length > 0)) {
         return;
@@ -13776,12 +13907,6 @@ function parseCityObject(ctx, cityObject, objectId) {
     }
 
     if (meshIds.length > 0) {
-
-        if (ctx.outputObjectProperties) {
-            const json = {};
-            ctx.outputObjectProperties(propertySetId, json);
-        }
-
         xktModel.createEntity({
             entityId: objectId,
             meshIds: meshIds
@@ -14267,11 +14392,6 @@ function parseGLTFIntoXKTModel({data, xktModel, autoNormals, getAttachment, stat
             freeBuffers(ctx);
             parseMaterials(ctx);
             parseDefaultScene(ctx);
-
-            ctx.log("Converted objects: " + stats.numObjects);
-            ctx.log("Converted geometries: " + stats.numGeometries);
-            ctx.log("Converted triangles: " + stats.numTriangles);
-            ctx.log("Converted vertices: " + stats.numVertices);
 
             resolve();
 
@@ -14886,7 +15006,7 @@ function parse3DXMLIntoXKTModel({data, domParser, xktModel, autoNormals = false,
             };
 
             parseDocument(ctx).then(() => {
-                ctx.log("Converted objects: " + ctx.stats.numObjects);
+                ctx.log("Converted drawable objects: " + ctx.stats.numObjects);
                 ctx.log("Converted geometries: " + ctx.stats.numGeometries);
                 ctx.log("Converted triangles: " + ctx.stats.numTriangles);
                 ctx.log("Converted vertices: " + ctx.stats.numVertices);
@@ -52087,21 +52207,21 @@ var IfcAPI = class {
  * of the IFC model. This is ````true```` by default, because IFC models tend to look acceptable with flat-shading,
  * and we always want to minimize IFC model size wherever possible.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
- * @param {Function} [params.outputObjectProperties] Callback to collect each object's property set.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 function parseIFCIntoXKTModel({
-                                        data,
-                                        xktModel,
-                                        autoNormals = true,
-                                        wasmPath,
-                                        outputObjectProperties,
-                                        stats={},
-                                        log
-                                    }) {
+                                  data,
+                                  xktModel,
+                                  autoNormals = true,
+                                  includeTypes,
+                                  excludeTypes,
+                                  wasmPath,
+                                  stats = {},
+                                  log
+                              }) {
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
 
         if (!data) {
             reject("Argument expected: data");
@@ -52135,22 +52255,37 @@ function parseIFCIntoXKTModel({
             stats.title = "";
             stats.author = "";
             stats.created = "";
-            stats.numTriangles = 0;
-            stats.numVertices = 0;
+            stats.numMetaObjects = 0;
+            stats.numPropertySets = 0;
             stats.numObjects = 0;
             stats.numGeometries = 0;
+            stats.numTriangles = 0;
+            stats.numVertices = 0;
 
             const ctx = {
                 modelID,
                 ifcAPI,
                 xktModel,
                 autoNormals,
-                outputObjectProperties,
                 log: (log || function (msg) {
                 }),
                 nextId: 0,
                 stats
             };
+
+            if (includeTypes) {
+                ctx.includeTypes = {};
+                for (let i = 0, len = includeTypes.length; i < len; i++) {
+                    ctx.includeTypes[includeTypes[i]] = true;
+                }
+            }
+
+            if (excludeTypes) {
+                ctx.excludeTypes = {};
+                for (let i = 0, len = excludeTypes.length; i < len; i++) {
+                    ctx.excludeTypes[excludeTypes[i]] = true;
+                }
+            }
 
             const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, IFCPROJECT);
             const ifcProjectId = lines.get(0);
@@ -52160,13 +52295,9 @@ function parseIFCIntoXKTModel({
             ctx.xktModel.modelId = "" + modelID;
             ctx.xktModel.projectId = "" + ifcProjectId;
 
-            parseGeometry(ctx);
             parseMetadata(ctx);
-
-            ctx.log("Converted objects: " + stats.numObjects);
-            ctx.log("Converted geometries: " + stats.numGeometries);
-            ctx.log("Converted triangles: " + stats.numTriangles);
-            ctx.log("Converted vertices: " + stats.numVertices);
+            parseGeometry(ctx);
+            parsePropertySets(ctx);
 
             resolve();
 
@@ -52175,6 +52306,165 @@ function parseIFCIntoXKTModel({
             reject(e);
         });
     });
+}
+
+function parsePropertySets(ctx) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, IFCRELDEFINESBYPROPERTIES);
+
+    for (let i = 0; i < lines.size(); i++) {
+
+        let relID = lines.get(i);
+
+        let rel = ctx.ifcAPI.GetLine(ctx.modelID, relID, true);
+
+        if (rel) {
+
+            const relatedObjects = rel.RelatedObjects;
+            if (!relatedObjects || relatedObjects.length === 0) {
+                continue;
+            }
+
+            const relatingPropertyDefinition = rel.RelatingPropertyDefinition;
+            if (!relatingPropertyDefinition) {
+                continue;
+            }
+
+            const propertySetId = relatingPropertyDefinition.GlobalId.value;
+
+            let usedByAnyMetaObjects = false;
+
+            for (let i = 0, len = relatedObjects.length; i < len; i++) {
+                const relatedObject = relatedObjects[i];
+                const metaObjectId = relatedObject.GlobalId.value;
+                const metaObject = ctx.xktModel.metaObjects[metaObjectId];
+                if (metaObject) {
+                    metaObject.propertySetId = propertySetId;
+                    usedByAnyMetaObjects = true;
+                }
+            }
+
+            if (!usedByAnyMetaObjects) {
+                continue;
+            }
+
+            const props = relatingPropertyDefinition.HasProperties;
+            if (props && props.length > 0) {
+                const propertySetType = "Default";
+                const propertySetName = relatingPropertyDefinition.Name.value;
+                const properties = [];
+                for (let i = 0, len = props.length; i < len; i++) {
+                    const prop = props[i];
+                    const nominalValue = prop.NominalValue;
+                    if (nominalValue) {
+                        properties.push({
+                            label: nominalValue.label,
+                            value: nominalValue.value,
+                            type: nominalValue.type
+                        });
+                    }
+                }
+                ctx.xktModel.createPropertySet({propertySetId, propertySetType, propertySetName, properties});
+                ctx.stats.numPropertySets++;
+            }
+        }
+    }
+}
+
+function parseMetadata(ctx) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, IFCPROJECT);
+    const ifcProjectId = lines.get(0);
+    const ifcProject = ctx.ifcAPI.GetLine(ctx.modelID, ifcProjectId);
+
+    parseSpatialChildren(ctx, ifcProject);
+}
+
+function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
+
+    const metaObjectType = ifcElement.__proto__.constructor.name;
+
+    if (ctx.includeTypes && (!ctx.includeTypes[metaObjectType])) {
+        return;
+    }
+
+    if (ctx.excludeTypes && ctx.excludeTypes[metaObjectType]) {
+        return;
+    }
+
+    createMetaObject(ctx, ifcElement, parentMetaObjectId);
+
+    const metaObjectId = ifcElement.GlobalId.value;
+
+    parseRelatedItemsOfType(
+        ctx,
+        ifcElement.expressID,
+        'RelatingObject',
+        'RelatedObjects',
+        IFCRELAGGREGATES,
+        metaObjectId);
+
+    parseRelatedItemsOfType(
+        ctx,
+        ifcElement.expressID,
+        'RelatingStructure',
+        'RelatedElements',
+        IFCRELCONTAINEDINSPATIALSTRUCTURE,
+        metaObjectId);
+}
+
+function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
+
+    const metaObjectId = ifcElement.GlobalId.value;
+    const propertySetId = null;
+    const metaObjectType = ifcElement.__proto__.constructor.name;
+    const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
+
+    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
+    ctx.stats.numMetaObjects++;
+}
+
+function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, type);
+
+    for (let i = 0; i < lines.size(); i++) {
+
+        const relID = lines.get(i);
+        const rel = ctx.ifcAPI.GetLine(ctx.modelID, relID);
+        const relatedItems = rel[relation];
+
+        let foundElement = false;
+
+        if (Array.isArray(relatedItems)) {
+            const values = relatedItems.map((item) => item.value);
+            foundElement = values.includes(id);
+
+        } else {
+            foundElement = (relatedItems.value === id);
+        }
+
+        if (foundElement) {
+
+            const element = rel[related];
+
+            if (!Array.isArray(element)) {
+
+                const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element.value);
+
+                parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
+
+            } else {
+
+                element.forEach((element2) => {
+
+                    const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element2.value);
+
+                    parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
+                });
+            }
+        }
+    }
 }
 
 function parseGeometry(ctx) {
@@ -52194,6 +52484,18 @@ function parseGeometry(ctx) {
 
         const properties = ctx.ifcAPI.GetLine(ctx.modelID, flatMeshExpressID);
         const entityId = properties.GlobalId.value;
+
+        const metaObjectId = entityId;
+        const metaObject = ctx.xktModel.metaObjects[metaObjectId];
+
+        if (ctx.includeTypes && (!metaObject || (!ctx.includeTypes[metaObject.metaObjectType]))) {
+            return;
+        }
+
+        if (ctx.excludeTypes && (!metaObject || ctx.excludeTypes[metaObject.metaObjectType])) {
+            console.log("excluding: " + metaObjectId);
+            return;
+        }
 
         for (let j = 0, lenj = placedGeometries.size(); j < lenj; j++) {
 
@@ -52251,123 +52553,12 @@ function parseGeometry(ctx) {
             meshIds.push(meshId);
         }
 
-    //    if (meshIds.length > 0) {
-            ctx.xktModel.createEntity({
-                entityId: entityId,
-                meshIds: meshIds
-            });
-       // }
+        ctx.xktModel.createEntity({
+            entityId: entityId,
+            meshIds: meshIds
+        });
 
         ctx.stats.numObjects++;
-    }
-}
-
-function parseMetadata(ctx) {
-
-    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, IFCPROJECT);
-    const ifcProjectId = lines.get(0);
-    const ifcProject = ctx.ifcAPI.GetLine(ctx.modelID, ifcProjectId);
-
-    parseSpatialChildren(ctx, ifcProject);
-}
-
-function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
-
-    createMetaObject(ctx, ifcElement, parentMetaObjectId);
-
-    const metaObjectId = ifcElement.GlobalId.value;
-
-    parseRelatedItemsOfType(
-        ctx,
-        ifcElement.expressID,
-        'RelatingObject',
-        'RelatedObjects',
-        IFCRELAGGREGATES,
-        metaObjectId);
-
-    parseRelatedItemsOfType(
-        ctx,
-        ifcElement.expressID,
-        'RelatingStructure',
-        'RelatedElements',
-        IFCRELCONTAINEDINSPATIALSTRUCTURE,
-        metaObjectId);
-}
-
-function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
-
-    const metaObjectId = ifcElement.GlobalId.value;
-    const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
-    const metaObjectType = ifcElement.__proto__.constructor.name;
-    const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
-
-    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
-
-    if (ctx.outputObjectProperties) {
-
-        // const typeId = getAllRelatedItemsOfType(
-        //     modelID,
-        //     elementID,
-        //     IFCRELDEFINESBYTYPE,
-        //     'RelatedObjects',
-        //     'RelatingType'
-        // );
-        // return typeId.map((id) => this.state.api.GetLine(modelID, id, recursive));
-
-        const json = {
-            id: metaObjectId,
-            type: metaObjectType,
-            name: metaObjectName
-        };
-
-        if (parentMetaObjectId) {
-            json.parent = parentMetaObjectId;
-        }
-
-        ctx.outputObjectProperties(propertySetId, json);
-    }
-}
-
-function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {
-
-    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, type);
-
-    for (let i = 0; i < lines.size(); i++) {
-
-        const relID = lines.get(i);
-        const rel = ctx.ifcAPI.GetLine(ctx.modelID, relID);
-        const relatedItems = rel[relation];
-
-        let foundElement = false;
-
-        if (Array.isArray(relatedItems)) {
-            const values = relatedItems.map((item) => item.value);
-            foundElement = values.includes(id);
-
-        } else {
-            foundElement = (relatedItems.value === id);
-        }
-
-        if (foundElement) {
-
-            const element = rel[related];
-
-            if (!Array.isArray(element)) {
-
-                const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element.value);
-
-                parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
-
-            } else {
-
-                element.forEach((element2) => {
-
-                    const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element2.value);
-
-                    parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
-                });
-            }
-        }
     }
 }
 
@@ -76362,18 +76553,14 @@ async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}
         parentMetaObjectId: rootMetaObjectId
     });
 
-    if (log) {
-        log("Converted objects: 1");
-        log("Converted geometries: 1");
-        log("Converted points: " + (positionsValue.length / 3));
-    }
-
     if (stats) {
         stats.sourceFormat = "LAS";
         stats.schemaVersion = "";
         stats.title = "";
         stats.author = "";
         stats.created = "";
+        stats.numMetaObjects = 2;
+        stats.numPropertySets = 0;
         stats.numObjects = 1;
         stats.numGeometries = 1;
         stats.numVertices = positionsValue.length / 3;
@@ -76606,7 +76793,7 @@ function parsePCDIntoXKTModel({data, xktModel, littleEndian = true, stats, log})
         });
 
         if (log) {
-            log("Converted objects: 1");
+            log("Converted drawable objects: 1");
             log("Converted geometries: 1");
             log("Converted vertices: " + positions.length / 3);
         }
@@ -77600,19 +77787,14 @@ function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
             meshIds: ["plyMesh"]
         });
 
-
-        if (log) {
-            log("Converted objects: 1");
-            log("Converted geometries: 1");
-            log("Converted vertices: " + positions.length / 3);
-        }
-
         if (stats) {
             stats.sourceFormat = "PLY";
             stats.schemaVersion = "";
             stats.title = "";
             stats.author = "";
             stats.created = "";
+            stats.numMetaObjects = 2;
+            stats.numPropertySets = 0;
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numVertices = attributes.POSITION.value.length / 3;
@@ -77778,7 +77960,7 @@ async function parseSTLIntoXKTModel({
                                         log
                                     }) {
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
 
         if (!data) {
             reject("Argument expected: data");
@@ -77825,17 +78007,14 @@ async function parseSTLIntoXKTModel({
             parseASCII$2(ctx, ensureString(data));
         }
 
-        ctx.log("Converted objects: " + ctx.stats.numObjects);
-        ctx.log("Converted geometries: " + ctx.stats.numGeometries);
-        ctx.log("Converted triangles: " + ctx.stats.numTriangles);
-        ctx.log("Converted vertices: " + ctx.stats.numVertices);
-
         if (stats) {
             stats.sourceFormat = "STL";
             stats.schemaVersion = "";
             stats.title = "";
             stats.author = "";
             stats.created = "";
+            stats.numMetaObjects = 2;
+            stats.numPropertySets = 0;
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numTriangles = ctx.stats.numTriangles;
