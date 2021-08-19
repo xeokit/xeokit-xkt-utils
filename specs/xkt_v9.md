@@ -76,7 +76,7 @@ We embed model metadata as a chunk of JSON within the ````xkt```` v9 file. TODO:
 
 ## File Elements
 
-* A ***model*** represents a single model, which is spatially partitioned into tiles.
+* A ***model*** represents a single model, which is spatially partitioned into tiles.   
 * A ***tile*** represents a spatial, box-shaped region within a model. A tile contains one or more entities, along with
   a World-space axis-aligned bounding box (AABB) that encloses them.
 * A ***geometry*** represents a geometry mesh, which has vertex positions, vertex normals, triangle indices, edge
@@ -84,6 +84,9 @@ We embed model metadata as a chunk of JSON within the ````xkt```` v9 file. TODO:
 * A ***mesh*** represents the use of a geometry by an entity, with surface material properties applied (color, roughness
   and metal-ness).
 * An ***entity*** represents a 3D object, which has a unique ID, and at least one mesh.
+* The ***metadata*** is an optional chunk of embedded JSON that classifies all the objects in the model, describing their structural hierarchy. It contains:
+  * ***property sets*** - optional sets of arbitrary properties that are shared among metaobjects.
+  * ***metaobjects*** - metadata on each object, connected into a structural hierarchy. Each metaobject can be associated with a property set.
 
 ## File Layout
 
@@ -115,6 +118,7 @@ Section | Type | Description | zlib Deflated? |
 | ````size_each_entity_meshes_portion```` | Uint32 | Byte size of deflated ````each_entity_meshes_portion````. | |
 | ````size_each_tile_aabb```` | Uint32 | Byte size of deflated ````each_tile_aabb````. | |
 | ````size_each_tile_entities_portion```` | Uint32 | Byte size of deflated ````each_tile_entities_portion````. | |
+| ````metadata```` | JSON | Metadata - see schema: [xkt_v9_metadata_schema.md](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/xkt_v9_metadata_schema.md). | Deflated |
 | ````positions````  | Uint16[] | [Quantized](#quantization) vertex positions shared by types of geometries. Each primitive can have a portion of this array. Portions for geometries that are only used by one entity are in [World Space](#world-space) coordinates. Portions for geometries that are used by multiple entities are in [Model Space](#Model-space) coordinates. | Deflated |
 | ````normals```` | Uint8[] | [Oct-encoded](#oct-encoding) vertex normals shared by geometries that represent triangle meshes. Each primitive can have a portion of this array. | Deflated |
 | ````colors```` | Uint8[] | Vertex colors shared by geometries. Each primitive can have a portion of this array. | Deflated |
@@ -135,6 +139,12 @@ Section | Type | Description | zlib Deflated? |
 | ````each_entity_meshes_portion```` | Uint32[] | For each entity, the base index of the entity's portion of the ````each_mesh*```` arrays. | Deflated |
 |  ````each_tile_aabb```` | Float64[] | A World-space, axis-aligned bounding box (AABB) for each tile. Each AABB has six full-precision values that indicate the min and max extents of the box on each axis: *xmin*, *ymin*, *zmin*, *xmax*, *ymax* and *zmax*.| Deflated |
 | ````each_tile_entities_portion```` | Uint32[] | For each tile, an index to the first element of tile's portion of the ````each_entity_*```` arrays. | Deflated |
+
+## Metadata
+
+````javascript
+
+````
 
 ## zlib Deflation
 

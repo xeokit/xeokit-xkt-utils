@@ -10,7 +10,7 @@ XKT versions, but it's a good idea to always migrate our data to the latest vers
 
 | XKT Version | Features | Specification |
 | --- | --- | --- |
-| v9 | Triangles, lines and points<br>Geometry reuse<br>Quantized geometry<br>Per-instance geometry colors<br>Double-precision geometry<br>Vertex colors<br>Improved meta objects<br>PBR materials<br>Vertex normals optional<br>Vertex colors alpha channel| [xkt_v9.md](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/xkt_v9.md) |
+| v9 | Triangles, lines and points<br>Geometry reuse<br>Quantized geometry<br>Per-instance geometry colors<br>Double-precision geometry<br>Vertex colors<br>Improved meta objects<br>PBR materials<br>Vertex normals optional<br>Vertex colors alpha channel| [xkt_v9.md](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/xkt_v9.md) <br>[xkt_v9_metadata_schema.md](https://github.com/xeokit/xeokit-xkt-utils/tree/master/specs/xkt_v9_metadata_schema.md) |
 | v8 | Triangles, lines and points<br>Geometry reuse<br>Quantized geometry<br>Per-instance geometry colors<br>Double-precision geometry<br>Vertex colors<br>Meta-objects<br>PBR materials | |
 | v7 | Triangles lines and points<br>Geometry reuse<br>Quantized geometry<br>Per-instance geometry colors<br>Double-precision geometry<br>Vertex colors| |
 | v6 | Triangles<br>Geometry reuse<br>Quantized geometry<br>Per-instance geometry colors<br>Double-precision geometry| |
