@@ -175,7 +175,10 @@ function parsePropertySets(ctx) {
                 const metaObjectId = relatedObject.GlobalId.value;
                 const metaObject = ctx.xktModel.metaObjects[metaObjectId];
                 if (metaObject) {
-                    metaObject.propertySetId = propertySetId;
+                    if (!metaObject.propertySetIds) {
+                        metaObject.propertySetIds = [];
+                    }
+                    metaObject.propertySetIds.push(propertySetId);
                     usedByAnyMetaObjects = true;
                 }
             }
@@ -195,8 +198,9 @@ function parsePropertySets(ctx) {
                     if (nominalValue) {
                         properties.push({
                             name: nominalValue.label,
+                            type: nominalValue.type,
                             value: nominalValue.value,
-                            type: nominalValue.type
+                            valueType: nominalValue.valueType
                         });
                     }
                 }
@@ -252,11 +256,11 @@ function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
 function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
 
     const metaObjectId = ifcElement.GlobalId.value;
-    const propertySetId = null;
+    const propertySetIds = null;
     const metaObjectType = ifcElement.__proto__.constructor.name;
     const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
 
-    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
+    ctx.xktModel.createMetaObject({metaObjectId, propertySetIds, metaObjectType, metaObjectName, parentMetaObjectId});
     ctx.stats.numMetaObjects++;
 }
 
