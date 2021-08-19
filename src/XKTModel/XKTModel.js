@@ -9,6 +9,7 @@ import {XKTEntity} from './XKTEntity.js';
 import {XKTTile} from './XKTTile.js';
 import {KDNode} from "./KDNode.js";
 import {XKTMetaObject} from "./XKTMetaObject.js";
+import {XKTPropertySet} from "./XKTPropertySet.js";
 import {mergeVertices} from "../lib/mergeVertices.js";
 
 const tempVec4a = math.vec4([0, 0, 0, 1]);
@@ -121,6 +122,26 @@ class XKTModel {
          * @type {Number|number}
          */
         this.edgeThreshold = cfg.edgeThreshold || 10;
+
+        /**
+         * Map of {@link XKTPropertySet}s within this XKTModel, each mapped to {@link XKTPropertySet#propertySetId}.
+         *
+         * Created by {@link XKTModel#createPropertySet}.
+         *
+         * @type {{String:XKTPropertySet}}
+         */
+        this.propertySets = {};
+
+        /**
+         * {@link XKTPropertySet}s within this XKTModel.
+         *
+         * Each XKTPropertySet holds its position in this list in {@link XKTPropertySet#propertySetIndex}.
+         *
+         * Created by {@link XKTModel#finalize}.
+         *
+         * @type {XKTPropertySet[]}
+         */
+        this.propertySetsList = [];
 
         /**
          * Map of {@link XKTMetaObject}s within this XKTModel, each mapped to {@link XKTMetaObject#metaObjectId}.
@@ -242,15 +263,64 @@ class XKTModel {
     }
 
     /**
+     * Creates an {@link XKTPropertySet} within this XKTModel.
+     *
+     * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
+     *
+     * @param {*} params Method parameters.
+     * @param {String} params.propertySetId Unique ID for the {@link XKTPropertySet}.
+     * @param {String} [params.propertySetType="default"] A meta type for the {@link XKTPropertySet}.
+     * @param {String} [params.propertySetName] Human-readable name for the {@link XKTPropertySet}. Defaults to the ````propertySetId```` parameter.
+     * @param {String[]} params.properties Properties for the {@link XKTPropertySet}.
+     * @returns {XKTPropertySet} The new {@link XKTPropertySet}.
+     */
+    createPropertySet(params) {
+
+        if (!params) {
+            throw "Parameters expected: params";
+        }
+
+        if (params.propertySetId === null || params.propertySetId === undefined) {
+            throw "Parameter expected: params.propertySetId";
+        }
+
+        if (params.properties === null || params.properties === undefined) {
+            throw "Parameter expected: params.properties";
+        }
+
+        if (this.finalized) {
+            console.error("XKTModel has been finalized, can't add more property sets");
+            return;
+        }
+
+        if (this.propertySets[params.propertySetId]) {
+            //          console.error("XKTPropertySet already exists with this ID: " + params.propertySetId);
+            return;
+        }
+
+        const propertySetId = params.propertySetId;
+        const propertySetType = params.propertySetType || "Default";
+        const propertySetName = params.propertySetName || params.propertySetId;
+        const properties = params.properties || [];
+
+        const propertySet = new XKTPropertySet(propertySetId, propertySetType, propertySetName, properties);
+
+        this.propertySets[propertySetId] = propertySet;
+        this.propertySetsList.push(propertySet);
+
+        return propertySet;
+    }
+
+    /**
      * Creates an {@link XKTMetaObject} within this XKTModel.
      *
      * Logs error and does nothing if this XKTModel has been finalized (see {@link XKTModel#finalized}).
      *
      * @param {*} params Method parameters.
      * @param {String} params.metaObjectId Unique ID for the {@link XKTMetaObject}.
-     * @param {String} params.propertySetId ID of externally-stored property set data. We only store basic structural
-     * metadata in the XKT, and store object property sets externally, because they tend to be large and
-     * application-specific and would bloat the XKT file.
+     * @param {String} params.propertySetId ID of a property set that contains additional metadata about
+     * this {@link XKTMetaObject}. The property set could be stored externally (ie not managed at all by the XKT file),
+     * or could be a {@link XKTPropertySet} within {@link XKTModel#propertySets}.
      * @param {String} [params.metaObjectType="default"] A meta type for the {@link XKTMetaObject}. Can be anything,
      * but is usually an IFC type, such as "IfcSite" or "IfcWall".
      * @param {String} [params.metaObjectName] Human-readable name for the {@link XKTMetaObject}. Defaults to the ````metaObjectId```` parameter.
@@ -281,10 +351,9 @@ class XKTModel {
         const propertySetId = params.propertySetId;
         const metaObjectType = params.metaObjectType || "Default";
         const metaObjectName = params.metaObjectName || params.metaObjectId;
-        const metaObjectIndex = this.metaObjectsList.length;
         const parentMetaObjectId = params.parentMetaObjectId;
 
-        const metaObject = new XKTMetaObject(metaObjectId, propertySetId, metaObjectType, metaObjectName, metaObjectIndex, parentMetaObjectId);
+        const metaObject = new XKTMetaObject(metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId);
 
         this.metaObjects[metaObjectId] = metaObject;
         this.metaObjectsList.push(metaObject);

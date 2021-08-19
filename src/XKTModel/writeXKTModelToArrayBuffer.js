@@ -30,12 +30,14 @@ function getModelData(xktModel) {
     // Allocate data
     //------------------------------------------------------------------------------------------------------------------
 
+    const propertySetsList = xktModel.propertySetsList;
     const metaObjectsList = xktModel.metaObjectsList;
     const geometriesList = xktModel.geometriesList;
     const meshesList = xktModel.meshesList;
     const entitiesList = xktModel.entitiesList;
     const tilesList = xktModel.tilesList;
 
+    const numPropertySets = propertySetsList.length;
     const numMetaObjects = metaObjectsList.length;
     const numGeometries = geometriesList.length;
     const numMeshes = meshesList.length;
@@ -147,9 +149,24 @@ function getModelData(xktModel) {
         creatingApplication: xktModel.creatingApplication,
         schema: xktModel.schema,
 
+        propertySets: [],
         metaObjects: []
     };
 
+    for (let propertySetsIndex = 0; propertySetsIndex < numPropertySets; propertySetsIndex++) {
+
+        const propertySet = propertySetsList[propertySetsIndex];
+
+        const propertySetJSON = {
+            id: "" + propertySet.propertySetId,
+            name: propertySet.propertySetName,
+            type: propertySet.propertySetType,
+            properties: propertySet.properties
+        };
+
+        data.metadata.propertySets.push(propertySetJSON);
+    }
+    
     for (let metaObjectsIndex = 0; metaObjectsIndex < numMetaObjects; metaObjectsIndex++) {
 
         const metaObject = metaObjectsList[metaObjectsIndex];
@@ -162,6 +179,10 @@ function getModelData(xktModel) {
 
         if (metaObject.parentMetaObjectId !== undefined && metaObject.parentMetaObjectId !== null) {
             metaObjectJSON.parent = "" + metaObject.parentMetaObjectId;
+        }
+
+        if (metaObject.propertySetId !== undefined && metaObject.propertySetId !== null && metaObject.propertySetId !== "") {
+            metaObjectJSON.propertySetId = "" + metaObject.propertySetId;
         }
 
         data.metadata.metaObjects.push(metaObjectJSON);
