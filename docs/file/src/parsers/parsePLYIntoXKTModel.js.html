@@ -35,6 +35,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html">XKTPropertySet</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
@@ -141,18 +142,14 @@ function parsePLYIntoXKTModel({data, xktModel, stats, log}) {
             meshIds: [&quot;plyMesh&quot;]
         });
 
-        if (log) {
-            log(&quot;Converted objects: 1&quot;);
-            log(&quot;Converted geometries: 1&quot;);
-            log(&quot;Converted vertices: &quot; + positions.length / 3);
-        }
-
         if (stats) {
             stats.sourceFormat = &quot;PLY&quot;;
             stats.schemaVersion = &quot;&quot;;
             stats.title = &quot;&quot;;
             stats.author = &quot;&quot;;
             stats.created = &quot;&quot;;
+            stats.numMetaObjects = 2;
+            stats.numPropertySets = 0;
             stats.numObjects = 1;
             stats.numGeometries = 1;
             stats.numVertices = attributes.POSITION.value.length / 3;

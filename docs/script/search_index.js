@@ -30,6 +30,12 @@ window.esdocSearchIndex = [
     "class"
   ],
   [
+    "@xeokit/xeokit-xkt-utils/src/xktmodel/xktpropertyset.js~xktpropertyset",
+    "class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html",
+    "<span>XKTPropertySet</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTPropertySet.js</span>",
+    "class"
+  ],
+  [
     "@xeokit/xeokit-xkt-utils/src/xktmodel/xkttile.js~xkttile",
     "class/src/XKTModel/XKTTile.js~XKTTile.html",
     "<span>XKTTile</span> <span class=\"search-result-import-path\">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTTile.js</span>",
@@ -636,12 +642,6 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "src/xktmodel/xktmetaobject.js~xktmetaobject#metaobjectindex",
-    "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectIndex",
-    "src/XKTModel/XKTMetaObject.js~XKTMetaObject#metaObjectIndex",
-    "member"
-  ],
-  [
     "src/xktmodel/xktmetaobject.js~xktmetaobject#metaobjectname",
     "class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectName",
     "src/XKTModel/XKTMetaObject.js~XKTMetaObject#metaObjectName",
@@ -717,6 +717,12 @@ window.esdocSearchIndex = [
     "src/xktmodel/xktmodel.js~xktmodel#createmetaobject",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMetaObject",
     "src/XKTModel/XKTModel.js~XKTModel#createMetaObject",
+    "method"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#createpropertyset",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createPropertySet",
+    "src/XKTModel/XKTModel.js~XKTModel#createPropertySet",
     "method"
   ],
   [
@@ -810,6 +816,18 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/xktmodel/xktmodel.js~xktmodel#propertysets",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-propertySets",
+    "src/XKTModel/XKTModel.js~XKTModel#propertySets",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktmodel.js~xktmodel#propertysetslist",
+    "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-propertySetsList",
+    "src/XKTModel/XKTModel.js~XKTModel#propertySetsList",
+    "member"
+  ],
+  [
     "src/xktmodel/xktmodel.js~xktmodel#reusedgeometriesdecodematrix",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-reusedGeometriesDecodeMatrix",
     "src/XKTModel/XKTModel.js~XKTModel#reusedGeometriesDecodeMatrix",
@@ -831,6 +849,36 @@ window.esdocSearchIndex = [
     "src/xktmodel/xktmodel.js~xktmodel#tileslist",
     "class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-tilesList",
     "src/XKTModel/XKTModel.js~XKTModel#tilesList",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktpropertyset.js",
+    "file/src/XKTModel/XKTPropertySet.js.html",
+    "src/XKTModel/XKTPropertySet.js",
+    "file"
+  ],
+  [
+    "src/xktmodel/xktpropertyset.js~xktpropertyset#properties",
+    "class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-properties",
+    "src/XKTModel/XKTPropertySet.js~XKTPropertySet#properties",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktpropertyset.js~xktpropertyset#propertysetid",
+    "class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetId",
+    "src/XKTModel/XKTPropertySet.js~XKTPropertySet#propertySetId",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktpropertyset.js~xktpropertyset#propertysetname",
+    "class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetName",
+    "src/XKTModel/XKTPropertySet.js~XKTPropertySet#propertySetName",
+    "member"
+  ],
+  [
+    "src/xktmodel/xktpropertyset.js~xktpropertyset#propertysettype",
+    "class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetType",
+    "src/XKTModel/XKTPropertySet.js~XKTPropertySet#propertySetType",
     "member"
   ],
   [

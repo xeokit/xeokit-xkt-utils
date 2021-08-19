@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../../">
-  <title data-ice="title">XKTEntity | xeokit-xkt-utils</title>
+  <title data-ice="title">XKTPropertySet | xeokit-xkt-utils</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -60,17 +60,17 @@
 </nav>
 
 <div class="content" data-ice="content"><div class="header-notice">
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {XKTEntity} from &apos;<span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber12">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTEntity.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {XKTPropertySet} from &apos;<span><a href="file/src/XKTModel/XKTPropertySet.js.html#lineNumber12">@xeokit/xeokit-xkt-utils/src/XKTModel/XKTPropertySet.js</a></span>&apos;</code></pre></div>
   <span data-ice="access">public</span>
   <span data-ice="kind">class</span>
   
   
   
-  <span data-ice="source">| <span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber12">source</a></span></span>
+  <span data-ice="source">| <span><a href="file/src/XKTModel/XKTPropertySet.js.html#lineNumber12">source</a></span></span>
 </div>
 
 <div class="self-detail detail">
-  <h1 data-ice="name">XKTEntity</h1>
+  <h1 data-ice="name">XKTPropertySet</h1>
 
   
 
@@ -86,11 +86,12 @@
 
   
   
-  <div class="description" data-ice="description"><p>An object within an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
+  <div class="description" data-ice="description"><p>A property set within an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
+<p>These are shared among <span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span>s.</p>
 <ul>
-<li>Created by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createEntity">XKTModel#createEntity</a></span></li>
-<li>Stored in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entities">XKTModel#entities</a></span> and <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entitiesList">XKTModel#entitiesList</a></span></li>
-<li>Has one or more <span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span>s, each having an <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span></li>
+<li>Created by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createPropertySet">XKTModel#createPropertySet</a></span></li>
+<li>Stored in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-propertySets">XKTModel#propertySets</a></span> and <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-propertySetsList">XKTModel#propertySetsList</a></span></li>
+<li>Has an ID, a type, and a human-readable name</li>
 </ul>
 </div>
   
@@ -125,14 +126,13 @@
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-aabb">aabb</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array">Float32Array</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-properties">properties</a></span></span><span class="code" data-ice="signature">: <span><span>*</span><span>[]</span></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>World-space axis-aligned bounding box (AABB) that encloses the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positions">XKTGeometry#positions</a></span> of
-the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span>s that are used by this <code>XKTEntity</code>.</p>
+        <div data-ice="description"><p>The properties within this <code>XKTPropertySet</code>.</p>
 </div>
       </div>
     </td>
@@ -155,13 +155,13 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-entityId">entityId</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetId">propertySetId</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Unique ID of this <code>XKTEntity</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entities">XKTModel#entities</a></span>.</p>
+        <div data-ice="description"><p>Unique ID of this <code>XKTPropertySet</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-propertySets">XKTModel#propertySets</a></span>.</p>
 </div>
       </div>
     </td>
@@ -184,13 +184,13 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-entityIndex">entityIndex</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetName">propertySetName</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Index of this <code>XKTEntity</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entitiesList">XKTModel#entitiesList</a></span>.</p>
+        <div data-ice="description"><p>Indicates the XKTPropertySet meta object name.</p>
 </div>
       </div>
     </td>
@@ -213,45 +213,14 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-hasReusedGeometries">hasReusedGeometries</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetType">propertySetType</a></span></span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></span>
         </p>
       </div>
       <div>
         
         
-        <div data-ice="description"><p>Indicates if this <code>XKTEntity</code> shares <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span>s with other <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>&apos;s.</p>
-<p>Set by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
-<p>Note that when an <code>XKTEntity</code> shares <code>XKTGeometrys</code>, it shares <strong>all</strong> of its <code>XKTGeometrys</code>. An <code>XKTEntity</code>
-never shares only some of its <code>XKTGeometrys</code> - it always shares either the whole set or none at all.</p>
-</div>
-      </div>
-    </td>
-    <td>
-      
-      
-    </td>
-  </tr>
-<tr data-ice="target">
-    <td>
-      <span class="access" data-ice="access">public</span>
-      
-      
-      
-      <span class="override" data-ice="override"></span>
-    </td>
-    <td>
-      <div>
-        <p>
-          
-          
-          
-          <span class="code" data-ice="name"><span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-meshes">meshes</a></span></span><span class="code" data-ice="signature">: <span><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span><span>[]</span></span></span>
-        </p>
-      </div>
-      <div>
-        
-        
-        <div data-ice="description"><p>A list of <span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span>s that indicate which <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span>s are used by this Entity.</p>
+        <div data-ice="description"><p>Indicates the <code>XKTPropertySet</code>&apos;s type.</p>
+<p>This defaults to &quot;default&quot;.</p>
 </div>
       </div>
     </td>
@@ -273,27 +242,25 @@ never shares only some of its <code>XKTGeometrys</code> - it always shares eithe
 <div data-ice="memberDetails"><h2 data-ice="title">Public Members</h2>
 
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-aabb">
+  <h3 data-ice="anchor" id="instance-member-properties">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">aabb</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array">Float32Array</a></span></span>
+    <span class="code" data-ice="name">properties</span><span class="code" data-ice="signature">: <span><span>*</span><span>[]</span></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber58">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPropertySet.js.html#lineNumber49">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>World-space axis-aligned bounding box (AABB) that encloses the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html#instance-member-positions">XKTGeometry#positions</a></span> of
-the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span>s that are used by this <code>XKTEntity</code>.</p>
-<p>Set by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
+  <div data-ice="description"><p>The properties within this <code>XKTPropertySet</code>.</p>
 </div>
 
   
@@ -319,29 +286,25 @@ the <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeomet
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-entityId">
+  <h3 data-ice="anchor" id="instance-member-propertySetId">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">entityId</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></span>
+    <span class="code" data-ice="name">propertySetId</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber32">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPropertySet.js.html#lineNumber24">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Unique ID of this <code>XKTEntity</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entities">XKTModel#entities</a></span>.</p>
-<p>For a BIM model, this will be an IFC product ID.</p>
-<p>We can also use <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-createMetaObject">XKTModel#createMetaObject</a></span> to create an <span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span> to specify metadata for
-this <code>XKTEntity</code>. To associate the <span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span> with our <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>, we give
-<span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html#instance-member-metaObjectId">XKTMetaObject#metaObjectId</a></span> the same value as <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html#instance-member-entityId">XKTEntity#entityId</a></span>.</p>
+  <div data-ice="description"><p>Unique ID of this <code>XKTPropertySet</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-propertySets">XKTModel#propertySets</a></span>.</p>
 </div>
 
   
@@ -367,26 +330,26 @@ this <code>XKTEntity</code>. To associate the <span><a href="class/src/XKTModel/
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-entityIndex">
+  <h3 data-ice="anchor" id="instance-member-propertySetName">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">entityIndex</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></span></span>
+    <span class="code" data-ice="name">propertySetName</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber41">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPropertySet.js.html#lineNumber42">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Index of this <code>XKTEntity</code> in <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-member-entitiesList">XKTModel#entitiesList</a></span>.</p>
-<p>Set by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
+  <div data-ice="description"><p>Indicates the XKTPropertySet meta object name.</p>
+<p>This defaults to <span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html#instance-member-propertySetId">XKTPropertySet#propertySetId</a></span>.</p>
 </div>
 
   
@@ -412,72 +375,26 @@ this <code>XKTEntity</code>. To associate the <span><a href="class/src/XKTModel/
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-hasReusedGeometries">
+  <h3 data-ice="anchor" id="instance-member-propertySetType">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">hasReusedGeometries</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></span>
+    <span class="code" data-ice="name">propertySetType</span><span class="code" data-ice="signature">: <span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber70">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/XKTModel/XKTPropertySet.js.html#lineNumber33">source</a></span></span>
     </span>
   </h3>
 
   
   
   
-  <div data-ice="description"><p>Indicates if this <code>XKTEntity</code> shares <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span>s with other <span><a href="class/src/XKTModel/XKTEntity.js~XKTEntity.html">XKTEntity</a></span>&apos;s.</p>
-<p>Set by <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html#instance-method-finalize">XKTModel#finalize</a></span>.</p>
-<p>Note that when an <code>XKTEntity</code> shares <code>XKTGeometrys</code>, it shares <strong>all</strong> of its <code>XKTGeometrys</code>. An <code>XKTEntity</code>
-never shares only some of its <code>XKTGeometrys</code> - it always shares either the whole set or none at all.</p>
-</div>
-
-  
-
-  <div data-ice="properties">
-</div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
-<div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-meshes">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">meshes</span><span class="code" data-ice="signature">: <span><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span><span>[]</span></span></span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/src/XKTModel/XKTEntity.js.html#lineNumber48">source</a></span></span>
-    </span>
-  </h3>
-
-  
-  
-  
-  <div data-ice="description"><p>A list of <span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span>s that indicate which <span><a href="class/src/XKTModel/XKTGeometry.js~XKTGeometry.html">XKTGeometry</a></span>s are used by this Entity.</p>
+  <div data-ice="description"><p>Indicates the <code>XKTPropertySet</code>&apos;s type.</p>
+<p>This defaults to &quot;default&quot;.</p>
 </div>
 
   

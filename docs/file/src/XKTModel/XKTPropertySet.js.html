@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../../">
-  <title data-ice="title">src/parsers/parseLASIntoXKTModel.js | xeokit-xkt-utils</title>
+  <title data-ice="title">src/XKTModel/XKTPropertySet.js | xeokit-xkt-utils</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -59,138 +59,60 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1 data-ice="title">src/parsers/parseLASIntoXKTModel.js</h1>
-<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import {parse} from &apos;@loaders.gl/core&apos;;
-import {LASLoader} from &apos;@loaders.gl/las&apos;;
-import {math} from &quot;../lib/math.js&quot;;
-
-
-/**
- * @desc Parses LAS and LAZ point cloud data into an {@link XKTModel}.
+<div class="content" data-ice="content"><h1 data-ice="title">src/XKTModel/XKTPropertySet.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/**
+ * A property set within an {@link XKTModel}.
  *
- * This parser handles both the LASER file format (LAS) and its compressed version (LAZ),
- * a public format for the interchange of 3-dimensional point cloud data data, developed
- * for LIDAR mapping purposes.
+ * These are shared among {@link XKTMetaObject}s.
  *
- * ## Usage
+ * * Created by {@link XKTModel#createPropertySet}
+ * * Stored in {@link XKTModel#propertySets} and {@link XKTModel#propertySetsList}
+ * * Has an ID, a type, and a human-readable name
  *
- * In the example below we&apos;ll create an {@link XKTModel}, then load an LAZ point cloud model into it.
- *
- * ````javascript
- * utils.loadArraybuffer(&quot;./models/laz/autzen.laz&quot;, async (data) =&gt; {
- *
- *     const xktModel = new XKTModel();
- *
- *     await parseLASIntoXKTModel({
- *          data,
- *          xktModel,
- *          log: (msg) =&gt; { console.log(msg); }
- *     }).then(()=&gt;{
- *        xktModel.finalize();
- *     },
- *     (msg) =&gt; {
- *         console.error(msg);
- *     });
- * });
- * ````
- *
- * @param {Object} params Parsing params.
- * @param {ArrayBuffer} params.data LAS/LAZ file data.
- * @param {XKTModel} params.xktModel XKTModel to parse into.
- * @param {Boolean} [params.rotateX=true] Whether to rotate the model 90 degrees about the X axis to make the Y axis &quot;up&quot;, if necessary.
- * @param {Object} [params.stats] Collects statistics.
- * @param {function} [params.log] Logging callback.
+ * @class XKTPropertySet
  */
-async function parseLASIntoXKTModel({data, xktModel, rotateX = true, stats, log}) {
+class XKTPropertySet {
 
-    if (!data) {
-        throw &quot;Argument expected: data&quot;;
-    }
+    /**
+     * @private
+     */
+    constructor(propertySetId, propertySetType, propertySetName, properties) {
 
-    if (!xktModel) {
-        throw &quot;Argument expected: xktModel&quot;;
-    }
+        /**
+         * Unique ID of this ````XKTPropertySet```` in {@link XKTModel#propertySets}.
+         *
+         * @type {String}
+         */
+        this.propertySetId = propertySetId;
 
-    if (log) {
-        log(&quot;Converting LAZ/LAS&quot;);
-    }
+        /**
+         * Indicates the ````XKTPropertySet````&apos;s type.
+         *
+         * This defaults to &quot;default&quot;.
+         *
+         * @type {string}
+         */
+        this.propertySetType = propertySetType;
 
-    let parsedData;
-    try {
-        parsedData = await parse(data, LASLoader);
-    } catch (e) {
-        if (log) {
-            log(&quot;Error: &quot; + e);
-        }
-        return;
-    }
+        /**
+         * Indicates the XKTPropertySet meta object name.
+         *
+         * This defaults to {@link XKTPropertySet#propertySetId}.
+         *
+         * @type {string}
+         */
+        this.propertySetName = propertySetName;
 
-    const attributes = parsedData.attributes;
-    const positionsValue = attributes.POSITION.value;
-    const colorsValue = attributes.COLOR_0.value;
-
-    if (rotateX) {
-        if (log) {
-            log(&quot;Rotating model about X-axis&quot;);
-        }
-        if (positionsValue) {
-            for (let i = 0, len = positionsValue.length; i &lt; len; i += 3) {
-                const temp = positionsValue[i + 1];
-                positionsValue[i + 1] = positionsValue[i + 2];
-                positionsValue[i + 2] = temp;
-            }
-        }
-    }
-
-    xktModel.createGeometry({
-        geometryId: &quot;pointsGeometry&quot;,
-        primitiveType: &quot;points&quot;,
-        positions: positionsValue,
-        colorsCompressed: colorsValue
-    });
-
-    xktModel.createMesh({
-        meshId: &quot;pointsMesh&quot;,
-        geometryId: &quot;pointsGeometry&quot;
-    });
-
-    const entityId = math.createUUID();
-
-    xktModel.createEntity({
-        entityId: entityId,
-        meshIds: [&quot;pointsMesh&quot;]
-    });
-
-    const rootMetaObjectId = math.createUUID();
-
-    xktModel.createMetaObject({
-        metaObjectId: rootMetaObjectId,
-        metaObjectType: &quot;Model&quot;,
-        metaObjectName: &quot;Model&quot;
-    });
-
-    xktModel.createMetaObject({
-        metaObjectId: entityId,
-        metaObjectType: &quot;PointCloud&quot;,
-        metaObjectName: &quot;PointCloud (LAZ)&quot;,
-        parentMetaObjectId: rootMetaObjectId
-    });
-
-    if (stats) {
-        stats.sourceFormat = &quot;LAS&quot;;
-        stats.schemaVersion = &quot;&quot;;
-        stats.title = &quot;&quot;;
-        stats.author = &quot;&quot;;
-        stats.created = &quot;&quot;;
-        stats.numMetaObjects = 2;
-        stats.numPropertySets = 0;
-        stats.numObjects = 1;
-        stats.numGeometries = 1;
-        stats.numVertices = positionsValue.length / 3;
+        /**
+         * The properties within this ````XKTPropertySet````.
+         *
+         * @type {*[]}
+         */
+        this.properties = properties;
     }
 }
 
-export {parseLASIntoXKTModel};</code></pre>
+export {XKTPropertySet};</code></pre>
 
 </div>
 

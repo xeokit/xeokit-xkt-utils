@@ -35,6 +35,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html">XKTPropertySet</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
@@ -1857,14 +1858,6 @@ xktModel.finalize();</code>
 </td>
     </tr>
 <tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">params.autoMetaModel</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></span></td>
-      <td data-ice="appendix"><ul><li>optional</li>
-<li>default: true</li></ul></td>
-      <td data-ice="description"><p>Whether to automatically generate a default metamodel in the XKT when no metamodel is given, or parsed in the source.</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
       <td data-ice="name" class="code" data-depth="1">params.output</td>
       <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></td>
       <td data-ice="appendix"><ul><li>optional</li></ul></td>
@@ -1886,10 +1879,17 @@ xktModel.finalize();</code>
 </td>
     </tr>
 <tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">params.outputObjectProperties</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">Function</a></span></td>
+      <td data-ice="name" class="code" data-depth="1">params.includeTypes</td>
+      <td data-ice="type" class="code"><span><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span><span>[]</span></span></td>
       <td data-ice="appendix"><ul><li>optional</li></ul></td>
-      <td data-ice="description"><p>Callback to collect each object&apos;s property set.</p>
+      <td data-ice="description"><p>Option to only convert objects of these types.</p>
+</td>
+    </tr>
+<tr data-ice="property" data-depth="1">
+      <td data-ice="name" class="code" data-depth="1">params.excludeTypes</td>
+      <td data-ice="type" class="code"><span><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span><span>[]</span></span></td>
+      <td data-ice="appendix"><ul><li>optional</li></ul></td>
+      <td data-ice="description"><p>Option to never convert objects of these types.</p>
 </td>
     </tr>
 <tr data-ice="property" data-depth="0">
@@ -2088,11 +2088,11 @@ of the 3DXML model. This is <code>false</code> by default because CAD models ten
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/parsers/parseCityJSONIntoXKTModel.js.html#lineNumber58">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/parsers/parseCityJSONIntoXKTModel.js.html#lineNumber57">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {parseCityJSONIntoXKTModel} from &apos;<span><a href="file/src/parsers/parseCityJSONIntoXKTModel.js.html#lineNumber58">@xeokit/xeokit-xkt-utils/src/parsers/parseCityJSONIntoXKTModel.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {parseCityJSONIntoXKTModel} from &apos;<span><a href="file/src/parsers/parseCityJSONIntoXKTModel.js.html#lineNumber57">@xeokit/xeokit-xkt-utils/src/parsers/parseCityJSONIntoXKTModel.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Parses a CityJSON model into an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
@@ -2165,13 +2165,6 @@ with the following limitations:</p>
 <li>default: true</li></ul></td>
       <td data-ice="description"><p>Whether to rotate the model 90 degrees about the X axis to make the Y
 axis &quot;up&quot;, if neccessary.</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">{Function}[params.outputObjectProperties]</td>
-      <td data-ice="type" class="code"><span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"><p>Callback to collect each object&apos;s property set.</p>
 </td>
     </tr>
 <tr data-ice="property" data-depth="1">
@@ -2375,11 +2368,11 @@ of the glTF.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/parsers/parseIFCIntoXKTModel.js.html#lineNumber50">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/parsers/parseIFCIntoXKTModel.js.html#lineNumber49">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {parseIFCIntoXKTModel} from &apos;<span><a href="file/src/parsers/parseIFCIntoXKTModel.js.html#lineNumber50">@xeokit/xeokit-xkt-utils/src/parsers/parseIFCIntoXKTModel.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {parseIFCIntoXKTModel} from &apos;<span><a href="file/src/parsers/parseIFCIntoXKTModel.js.html#lineNumber49">@xeokit/xeokit-xkt-utils/src/parsers/parseIFCIntoXKTModel.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Parses IFC STEP file data into an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>
@@ -2456,13 +2449,6 @@ and we always want to minimize IFC model size wherever possible.</p>
       <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></span></td>
       <td data-ice="appendix"></td>
       <td data-ice="description"><p>Path to <code>web-ifc.wasm</code>, required by this function.</p>
-</td>
-    </tr>
-<tr data-ice="property" data-depth="1">
-      <td data-ice="name" class="code" data-depth="1">params.outputObjectProperties</td>
-      <td data-ice="type" class="code"><span><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function">Function</a></span></td>
-      <td data-ice="appendix"><ul><li>optional</li></ul></td>
-      <td data-ice="description"><p>Callback to collect each object&apos;s property set.</p>
 </td>
     </tr>
 <tr data-ice="property" data-depth="1">
@@ -2992,11 +2978,11 @@ for LIDAR mapping purposes.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/parsers/parseSTLIntoXKTModel.js.html#lineNumber49">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/parsers/parseSTLIntoXKTModel.js.html#lineNumber48">source</a></span></span>
     </span>
   </h3>
 
-  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {parseSTLIntoXKTModel} from &apos;<span><a href="file/src/parsers/parseSTLIntoXKTModel.js.html#lineNumber49">@xeokit/xeokit-xkt-utils/src/parsers/parseSTLIntoXKTModel.js</a></span>&apos;</code></pre></div>
+  <div data-ice="importPath" class="import-path"><pre class="prettyprint"><code data-ice="importPathCode">import {parseSTLIntoXKTModel} from &apos;<span><a href="file/src/parsers/parseSTLIntoXKTModel.js.html#lineNumber48">@xeokit/xeokit-xkt-utils/src/parsers/parseSTLIntoXKTModel.js</a></span>&apos;</code></pre></div>
   
   
   <div data-ice="description"><p>Parses STL file data into an <span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span>.</p>

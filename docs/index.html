@@ -35,6 +35,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html">XKTPropertySet</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
@@ -63,7 +64,7 @@
 <a href="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils"><img src="https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg" alt="npm version"></a></p>
 <p>Use <strong>xeokit-xkt-utils</strong> to:</p>
 <ul>
-<li>Convert 3D BIM and AEC models into XKT files for super fast loading into <a href="https://xeokit.io">xeokit</a></li>
+<li>Convert BIM and AEC models into XKT files for super fast loading into <a href="https://xeokit.io">xeokit</a></li>
 <li>Generate XKT files with JavaScript
 &lt;BR&gt;&lt;BR&gt;</li>
 </ul>
@@ -83,7 +84,6 @@
 <li><a href="#converting-an-ifc-file-into-an-xkt-file-on-the-command-line">Converting an IFC file into an XKT file on the command line</a></li>
 <li><a href="#converting-an-ifc-file-into-an-xkt-file-in-nodejs">Converting an IFC file into an XKT file in Node.js</a></li>
 <li><a href="#converting-ifc-file-data-into-xkt-data-in-nodejs">Converting IFC file data into XKT data in Node.js</a></li>
-<li><a href="#converting-an-ifc-file-into-an-xkt-file--with-all-element-properties">Converting an IFC file into an XKT file, with all element properties</a></li>
 </ul>
 </li>
 <li><a href="#using-----xktmodel----">Using <code>XKTModel</code></a><ul>
@@ -200,7 +200,6 @@ Options:
     -f, --format [string]    source file format (optional); supported formats are gltf, ifc, laz, las, pcd, ply, stl and cityjson
     -m, --metamodel [file]   path to source metamodel JSON file (optional)
     -o, --output [file]      path to target .xkt file; creates directories on path automatically if not existing
-    -p, --properties [file]  path to target directory for object property files; creates directories on path automatically if not existing
     -l, --log                enable logging
     -h, --help               output usage information</code>
 </code></pre>
@@ -274,51 +273,6 @@ convert2xkt({
     console.error(&quot;Conversion failed: &quot; + errMsg)
 });</code>
 </code></pre>
-<h3 id="converting-an-ifc-file-into-an-xkt-file--with-all-element-properties">Converting an IFC file into an XKT file, with all element properties</h3><p>We&apos;ll convert our IFC file as before, but this time we&apos;ll supply a <code>outputObjectProperties</code> callback, which will
-collect each IFC element&apos;s property set.</p>
-<p>Via that callback, we&apos;ll save each property set to a JSON file.</p>
-<p>We could use this feature to store property sets in our own data store.</p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">const convert2xkt = require(&quot;@xeokit/xeokit-xkt-utils/dist/convert2xkt.cjs.js&quot;);
-const fs = require(&apos;fs&apos;);
-
-convert2xkt({
-    source: &quot;rme_advanced_sample_project.ifc&quot;,
-    output: &quot;rme_advanced_sample_project.ifc.xkt&quot;,
-    outputObjectProperties: async function (objectId, props) {
-        await fs.writeFileSync(`${objectId}.json`, JSON.stringify(props, null, &quot;\t&quot;));
-    }
-}).then(() =&gt; {
-    console.log(&quot;Converted.&quot;);
-}, (errMsg) =&gt; {
-    console.error(&quot;Conversion failed: &quot; + errMsg)
-});</code>
-</code></pre>
-<p>The output files would be something like:</p>
-<pre><code class="lang-bash"><code class="source-code prettyprint">rme_advanced_sample_project.ifc.xkt
-
-06uoIsbYr35x9JXU7VZ77u.json
-09g7Eo3WDEihdnsYS1YDoI.json
-0BTBFw6f90Nfh9rP1dl_39.json
-0BTBFw6f90Nfh9rP1dl_3A.json
-...</code>
-</code></pre>
-<p>Each IFC element&apos;s property set file would look something like:</p>
-<pre><code class="lang-json"><code class="source-code prettyprint">{
-    &quot;id&quot;: &quot;0kF45Qs8L9PAM9kmb1lT2Z&quot;,
-    &quot;type&quot;: &quot;IfcFooting&quot;,
-    &quot;name&quot;: &quot;Wall Foundation:Bearing Footing - 900 x 300:186656&quot;,
-    &quot;parent&quot;: &quot;1xS3BCk291UvhgP2dvNsgp&quot;
-}</code>
-</code></pre>
-<h3 id="converting-a-gltf-file-and-ifc-json-metadata-file-into-an-xkt-file">Converting a glTF file and IFC JSON metadata file into an XKT file</h3><p>If we have a glTF file and IFC JSON file that were created using
-our <a href="https://www.notion.so/xeokit/Viewing-an-IFC-Model-c373e48bc4094ff5b6e5c5700ff580ee">standard open source tools</a>,
-then we can use <code>convert2xkt</code> to convert those into an XKT file:</p>
-<pre><code class="lang-javascript"><code class="source-code prettyprint">await convert2xkt({
-    source: &quot;duplex.gltf&quot;,
-    metaModelSource: &quot;metamodel.json&quot;,
-    output: &quot;duplex.xkt&quot;
-});</code>
-</code></pre>
 <h1 id="using--code-xktmodel--code-">Using <code>XKTModel</code></h1><p><code>XKTModel</code> is a JavaScript class that represents the contents of an XKT file in memory.</p>
 <p>It&apos;s a sort of <em>XKT document model</em>, with methods to build 3D objects within it, functions to import various model
 formats, and a function to serialize it to an XKT file.</p>
@@ -352,6 +306,50 @@ const xktModel = new XKTModel();
 
 // Create metamodel - this part is optional
 
+// Create property sets to hold info about the model
+
+xktModel.createPropertySet({
+    propertySetId: &quot;tableTopPropSet&quot;,
+    propertySetType: &quot;Default&quot;,
+    propertySetName: &quot;Table Top&quot;,
+    properties: [
+        {
+            id: &quot;tableTopMaterial&quot;,
+            type: &quot;Default&quot;,
+            name: &quot;Table top material&quot;,
+            value: &quot;Marble&quot;
+        },
+        {
+            id: &quot;tableTopDimensions&quot;,
+            type: &quot;Default&quot;,
+            name: &quot;Table top dimensions&quot;,
+            value: &quot;90x90x3 cm&quot;
+        }
+    ]
+});
+
+xktModel.createPropertySet({
+    propertySetId: &quot;tableLegPropSet&quot;,
+    propertySetType: &quot;Default&quot;,
+    propertySetName: &quot;Table Leg&quot;,
+    properties: [
+        {
+            id: &quot;tableLegMaterial&quot;,
+            type: &quot;Default&quot;,
+            name: &quot;Table leg material&quot;,
+            value: &quot;Pine&quot;
+        },
+        {
+            id: &quot;tableLegDimensions&quot;,
+            type: &quot;Default&quot;,
+            name: &quot;Table leg dimensions&quot;,
+            value: &quot;5x5x50 cm&quot;
+        }
+    ]
+});
+
+// Create a hierarchy of metaobjects to describe the structure of the model
+
 xktModel.createMetaObject({ // Root XKTMetaObject, has no XKTEntity
     metaObjectId: &quot;table&quot;,
     metaObjectName: &quot;The Table&quot;,
@@ -362,35 +360,40 @@ xktModel.createMetaObject({
     metaObjectId: &quot;redLeg&quot;,
     metaObjectName: &quot;Red Table Leg&quot;,
     metaObjectType: &quot;furniturePart&quot;,
-    parentMetaObjectId: &quot;table&quot;
+    parentMetaObjectId: &quot;table&quot;,
+    propertySetId: &quot;tableLegPropSet&quot;
 });
 
 xktModel.createMetaObject({
     metaObjectId: &quot;greenLeg&quot;,
     metaObjectName: &quot;Green Table Leg&quot;,
     metaObjectType: &quot;furniturePart&quot;,
-    parentMetaObjectId: &quot;table&quot;
+    parentMetaObjectId: &quot;table&quot;,
+    propertySetId: &quot;tableLegPropSet&quot;
 });
 
 xktModel.createMetaObject({
     metaObjectId: &quot;blueLeg&quot;,
     metaObjectName: &quot;Blue Table Leg&quot;,
     metaObjectType: &quot;furniturePart&quot;,
-    parentMetaObjectId: &quot;table&quot;
+    parentMetaObjectId: &quot;table&quot;,
+    propertySetId: &quot;tableLegPropSet&quot;
 });
 
 xktModel.createMetaObject({
     metaObjectId: &quot;yellowLeg&quot;,
     metaObjectName: &quot;Yellow Table Leg&quot;,
     metaObjectType: &quot;furniturePart&quot;,
-    parentMetaObjectId: &quot;table&quot;
+    parentMetaObjectId: &quot;table&quot;,
+    propertySetId: &quot;tableLegPropSet&quot;
 });
 
 xktModel.createMetaObject({
     metaObjectId: &quot;pinkTop&quot;,
     metaObjectName: &quot;The Pink Table Top&quot;,
     metaObjectType: &quot;furniturePart&quot;,
-    parentMetaObjectId: &quot;table&quot;
+    parentMetaObjectId: &quot;table&quot;,
+    propertySetId: &quot;tableTopPropSet&quot;
 });
 
 // Create an XKTGeometry that defines a box shape, as a triangle mesh 

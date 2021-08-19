@@ -35,6 +35,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMesh.js~XKTMesh.html">XKTMesh</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTMetaObject.js~XKTMetaObject.html">XKTMetaObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTModel.js~XKTModel.html">XKTModel</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTPropertySet.js~XKTPropertySet.html">XKTPropertySet</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/XKTModel/XKTTile.js~XKTTile.html">XKTTile</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-writeXKTModelToArrayBuffer">writeXKTModelToArrayBuffer</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#geometrybuilders">geometryBuilders</a><span data-ice="kind" class="kind-function">F</span><span data-ice="name"><span><a href="function/index.html#static-function-buildBoxGeometry">buildBoxGeometry</a></span></span></li>
@@ -104,21 +105,21 @@
  * of the IFC model. This is ````true```` by default, because IFC models tend to look acceptable with flat-shading,
  * and we always want to minimize IFC model size wherever possible.
  * @param {String} params.wasmPath Path to ````web-ifc.wasm````, required by this function.
- * @param {Function} [params.outputObjectProperties] Callback to collect each object&apos;s property set.
  * @param {Object} [params.stats] Collects statistics.
  * @param {function} [params.log] Logging callback.
  */
 function parseIFCIntoXKTModel({
-                                        data,
-                                        xktModel,
-                                        autoNormals = true,
-                                        wasmPath,
-                                        outputObjectProperties,
-                                        stats={},
-                                        log
-                                    }) {
+                                  data,
+                                  xktModel,
+                                  autoNormals = true,
+                                  includeTypes,
+                                  excludeTypes,
+                                  wasmPath,
+                                  stats = {},
+                                  log
+                              }) {
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
 
         if (!data) {
             reject(&quot;Argument expected: data&quot;);
@@ -152,22 +153,37 @@ function parseIFCIntoXKTModel({
             stats.title = &quot;&quot;;
             stats.author = &quot;&quot;;
             stats.created = &quot;&quot;;
-            stats.numTriangles = 0;
-            stats.numVertices = 0;
+            stats.numMetaObjects = 0;
+            stats.numPropertySets = 0;
             stats.numObjects = 0;
             stats.numGeometries = 0;
+            stats.numTriangles = 0;
+            stats.numVertices = 0;
 
             const ctx = {
                 modelID,
                 ifcAPI,
                 xktModel,
                 autoNormals,
-                outputObjectProperties,
                 log: (log || function (msg) {
                 }),
                 nextId: 0,
                 stats
             };
+
+            if (includeTypes) {
+                ctx.includeTypes = {};
+                for (let i = 0, len = includeTypes.length; i &lt; len; i++) {
+                    ctx.includeTypes[includeTypes[i]] = true;
+                }
+            }
+
+            if (excludeTypes) {
+                ctx.excludeTypes = {};
+                for (let i = 0, len = excludeTypes.length; i &lt; len; i++) {
+                    ctx.excludeTypes[excludeTypes[i]] = true;
+                }
+            }
 
             const lines = ctx.ifcAPI.GetLineIDsWithType(modelID, WebIFC.IFCPROJECT);
             const ifcProjectId = lines.get(0);
@@ -177,13 +193,9 @@ function parseIFCIntoXKTModel({
             ctx.xktModel.modelId = &quot;&quot; + modelID;
             ctx.xktModel.projectId = &quot;&quot; + ifcProjectId;
 
-            parseGeometry(ctx);
             parseMetadata(ctx);
-
-            ctx.log(&quot;Converted objects: &quot; + stats.numObjects);
-            ctx.log(&quot;Converted geometries: &quot; + stats.numGeometries);
-            ctx.log(&quot;Converted triangles: &quot; + stats.numTriangles);
-            ctx.log(&quot;Converted vertices: &quot; + stats.numVertices);
+            parseGeometry(ctx);
+            parsePropertySets(ctx);
 
             resolve();
 
@@ -192,6 +204,165 @@ function parseIFCIntoXKTModel({
             reject(e);
         })
     });
+}
+
+function parsePropertySets(ctx) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, WebIFC.IFCRELDEFINESBYPROPERTIES);
+
+    for (let i = 0; i &lt; lines.size(); i++) {
+
+        let relID = lines.get(i);
+
+        let rel = ctx.ifcAPI.GetLine(ctx.modelID, relID, true);
+
+        if (rel) {
+
+            const relatedObjects = rel.RelatedObjects;
+            if (!relatedObjects || relatedObjects.length === 0) {
+                continue;
+            }
+
+            const relatingPropertyDefinition = rel.RelatingPropertyDefinition;
+            if (!relatingPropertyDefinition) {
+                continue;
+            }
+
+            const propertySetId = relatingPropertyDefinition.GlobalId.value;
+
+            let usedByAnyMetaObjects = false;
+
+            for (let i = 0, len = relatedObjects.length; i &lt; len; i++) {
+                const relatedObject = relatedObjects[i];
+                const metaObjectId = relatedObject.GlobalId.value;
+                const metaObject = ctx.xktModel.metaObjects[metaObjectId];
+                if (metaObject) {
+                    metaObject.propertySetId = propertySetId;
+                    usedByAnyMetaObjects = true;
+                }
+            }
+
+            if (!usedByAnyMetaObjects) {
+                continue;
+            }
+
+            const props = relatingPropertyDefinition.HasProperties;
+            if (props &amp;&amp; props.length &gt; 0) {
+                const propertySetType = &quot;Default&quot;;
+                const propertySetName = relatingPropertyDefinition.Name.value;
+                const properties = [];
+                for (let i = 0, len = props.length; i &lt; len; i++) {
+                    const prop = props[i];
+                    const nominalValue = prop.NominalValue;
+                    if (nominalValue) {
+                        properties.push({
+                            label: nominalValue.label,
+                            value: nominalValue.value,
+                            type: nominalValue.type
+                        });
+                    }
+                }
+                ctx.xktModel.createPropertySet({propertySetId, propertySetType, propertySetName, properties});
+                ctx.stats.numPropertySets++;
+            }
+        }
+    }
+}
+
+function parseMetadata(ctx) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, WebIFC.IFCPROJECT);
+    const ifcProjectId = lines.get(0);
+    const ifcProject = ctx.ifcAPI.GetLine(ctx.modelID, ifcProjectId);
+
+    parseSpatialChildren(ctx, ifcProject);
+}
+
+function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
+
+    const metaObjectType = ifcElement.__proto__.constructor.name;
+
+    if (ctx.includeTypes &amp;&amp; (!ctx.includeTypes[metaObjectType])) {
+        return;
+    }
+
+    if (ctx.excludeTypes &amp;&amp; ctx.excludeTypes[metaObjectType]) {
+        return;
+    }
+
+    createMetaObject(ctx, ifcElement, parentMetaObjectId);
+
+    const metaObjectId = ifcElement.GlobalId.value;
+
+    parseRelatedItemsOfType(
+        ctx,
+        ifcElement.expressID,
+        &apos;RelatingObject&apos;,
+        &apos;RelatedObjects&apos;,
+        WebIFC.IFCRELAGGREGATES,
+        metaObjectId);
+
+    parseRelatedItemsOfType(
+        ctx,
+        ifcElement.expressID,
+        &apos;RelatingStructure&apos;,
+        &apos;RelatedElements&apos;,
+        WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE,
+        metaObjectId);
+}
+
+function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
+
+    const metaObjectId = ifcElement.GlobalId.value;
+    const propertySetId = null;
+    const metaObjectType = ifcElement.__proto__.constructor.name;
+    const metaObjectName = (ifcElement.Name &amp;&amp; ifcElement.Name.value !== &quot;&quot;) ? ifcElement.Name.value : metaObjectType;
+
+    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
+    ctx.stats.numMetaObjects++;
+}
+
+function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {
+
+    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, type);
+
+    for (let i = 0; i &lt; lines.size(); i++) {
+
+        const relID = lines.get(i);
+        const rel = ctx.ifcAPI.GetLine(ctx.modelID, relID);
+        const relatedItems = rel[relation];
+
+        let foundElement = false;
+
+        if (Array.isArray(relatedItems)) {
+            const values = relatedItems.map((item) =&gt; item.value);
+            foundElement = values.includes(id);
+
+        } else {
+            foundElement = (relatedItems.value === id);
+        }
+
+        if (foundElement) {
+
+            const element = rel[related];
+
+            if (!Array.isArray(element)) {
+
+                const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element.value);
+
+                parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
+
+            } else {
+
+                element.forEach((element2) =&gt; {
+
+                    const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element2.value);
+
+                    parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
+                });
+            }
+        }
+    }
 }
 
 function parseGeometry(ctx) {
@@ -211,6 +382,18 @@ function parseGeometry(ctx) {
 
         const properties = ctx.ifcAPI.GetLine(ctx.modelID, flatMeshExpressID);
         const entityId = properties.GlobalId.value;
+
+        const metaObjectId = entityId;
+        const metaObject = ctx.xktModel.metaObjects[metaObjectId];
+
+        if (ctx.includeTypes &amp;&amp; (!metaObject || (!ctx.includeTypes[metaObject.metaObjectType]))) {
+            return;
+        }
+
+        if (ctx.excludeTypes &amp;&amp; (!metaObject || ctx.excludeTypes[metaObject.metaObjectType])) {
+            console.log(&quot;excluding: &quot; + metaObjectId)
+            return;
+        }
 
         for (let j = 0, lenj = placedGeometries.size(); j &lt; lenj; j++) {
 
@@ -268,144 +451,12 @@ function parseGeometry(ctx) {
             meshIds.push(meshId);
         }
 
-            ctx.xktModel.createEntity({
-                entityId: entityId,
-                meshIds: meshIds
-            });
+        ctx.xktModel.createEntity({
+            entityId: entityId,
+            meshIds: meshIds
+        });
 
         ctx.stats.numObjects++;
-    }
-}
-
-function parseMetadata(ctx) {
-
-    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, WebIFC.IFCPROJECT);
-    const ifcProjectId = lines.get(0);
-    const ifcProject = ctx.ifcAPI.GetLine(ctx.modelID, ifcProjectId);
-
-    parseSpatialChildren(ctx, ifcProject);
-}
-
-function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
-
-    createMetaObject(ctx, ifcElement, parentMetaObjectId);
-
-    const metaObjectId = ifcElement.GlobalId.value;
-
-    parseRelatedItemsOfType(
-        ctx,
-        ifcElement.expressID,
-        &apos;RelatingObject&apos;,
-        &apos;RelatedObjects&apos;,
-        WebIFC.IFCRELAGGREGATES,
-        metaObjectId);
-
-    parseRelatedItemsOfType(
-        ctx,
-        ifcElement.expressID,
-        &apos;RelatingStructure&apos;,
-        &apos;RelatedElements&apos;,
-        WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE,
-        metaObjectId);
-}
-
-function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
-
-    const metaObjectId = ifcElement.GlobalId.value;
-    const propertySetId = ctx.outputObjectProperties ? metaObjectId : null;
-    const metaObjectType = ifcElement.__proto__.constructor.name;
-    const metaObjectName = (ifcElement.Name &amp;&amp; ifcElement.Name.value !== &quot;&quot;) ? ifcElement.Name.value : metaObjectType;
-
-    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
-
-    if (ctx.outputObjectProperties) {
-
-        const typeId = ctx.ifcAPI.GetAllRelatedItemsOfType(
-            ctx.modelID,
-            ifcElement.expressID,
-            WebIFC.IFCRELDEFINESBYTYPE,
-            &apos;RelatedObjects&apos;,
-            &apos;RelatingType&apos;
-        );
-        const props =  typeId.map((id) =&gt; ctx.ifcAPI.GetLine(ctx.modelID, id, true));
-
-        console.log(props);
-
-        const json = {
-            id: metaObjectId,
-            type: metaObjectType,
-            name: metaObjectName
-        };
-
-        if (parentMetaObjectId) {
-            json.parent = parentMetaObjectId;
-        }
-
-        ctx.outputObjectProperties(propertySetId, json);
-    }
-}
-
-function parsePropertySet(ctx, lineNum) {
-
-    // this returns a propertyset object at line number 244
-    let propertySetFlattened = ctx.ifcAPI.GetLine(modelID, 244, true);
-
-    // check some relevant fields of ifcpropertyset
-    const expressId = propertySetFlattened.expressID;
-    const type = propertySetFlattened.type;
-    const guid =  propertySetFlattened.GlobalId.value;
-    Equals(&quot;Description&quot;, propertySetFlattened.Description, null);
-    Equals(&quot;Name&quot;, propertySetFlattened.Name.value, &quot;Pset_ColumnCommon&quot;);
-
-    // look at the properties inside
-    let props = propertySetFlattened.HasProperties;
-    ///Equals(&quot;Num props&quot;, props.length, 3);
-
-    // check the value of the first property, should be an identifier of 300x300
-    Equals(&quot;Prop 0 label&quot;, props[0].NominalValue.label, &quot;IFCIDENTIFIER&quot;);
-    Equals(&quot;Prop 0 value&quot;, props[0].NominalValue.value, &quot;300x300&quot;);
-}
-
-function parseRelatedItemsOfType(ctx, id, relation, related, type, parentMetaObjectId) {
-
-    const lines = ctx.ifcAPI.GetLineIDsWithType(ctx.modelID, type);
-
-    for (let i = 0; i &lt; lines.size(); i++) {
-
-        const relID = lines.get(i);
-        const rel = ctx.ifcAPI.GetLine(ctx.modelID, relID);
-        const relatedItems = rel[relation];
-
-        let foundElement = false;
-
-        if (Array.isArray(relatedItems)) {
-            const values = relatedItems.map((item) =&gt; item.value);
-            foundElement = values.includes(id);
-
-        } else {
-            foundElement = (relatedItems.value === id);
-        }
-
-        if (foundElement) {
-
-            const element = rel[related];
-
-            if (!Array.isArray(element)) {
-
-                const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element.value);
-
-                parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
-
-            } else {
-
-                element.forEach((element2) =&gt; {
-
-                    const ifcElement = ctx.ifcAPI.GetLine(ctx.modelID, element2.value);
-
-                    parseSpatialChildren(ctx, ifcElement, parentMetaObjectId);
-                });
-            }
-        }
     }
 }
 
