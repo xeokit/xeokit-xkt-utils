@@ -320,7 +320,7 @@ xktModel.createMetaObject({
     metaObjectName: "Red Table Leg",
     metaObjectType: "furniturePart",
     parentMetaObjectId: "table",
-    propertySetId: "tableLegPropSet"
+    propertySetIds: ["tableLegPropSet"]
 });
 
 xktModel.createMetaObject({
@@ -328,7 +328,7 @@ xktModel.createMetaObject({
     metaObjectName: "Green Table Leg",
     metaObjectType: "furniturePart",
     parentMetaObjectId: "table",
-    propertySetId: "tableLegPropSet"
+    propertySetIds: ["tableLegPropSet"]
 });
 
 xktModel.createMetaObject({
@@ -336,7 +336,7 @@ xktModel.createMetaObject({
     metaObjectName: "Blue Table Leg",
     metaObjectType: "furniturePart",
     parentMetaObjectId: "table",
-    propertySetId: "tableLegPropSet"
+    propertySetIds: ["tableLegPropSet"]
 });
 
 xktModel.createMetaObject({
@@ -344,7 +344,7 @@ xktModel.createMetaObject({
     metaObjectName: "Yellow Table Leg",
     metaObjectType: "furniturePart",
     parentMetaObjectId: "table",
-    propertySetId: "tableLegPropSet"
+    propertySetIds: ["tableLegPropSet"]
 });
 
 xktModel.createMetaObject({
@@ -352,7 +352,7 @@ xktModel.createMetaObject({
     metaObjectName: "The Pink Table Top",
     metaObjectType: "furniturePart",
     parentMetaObjectId: "table",
-    propertySetId: "tableTopPropSet"
+    propertySetIds: ["tableTopPropSet"]
 });
 
 // Create an XKTGeometry that defines a box shape, as a triangle mesh 

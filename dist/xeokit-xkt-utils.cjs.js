@@ -4585,12 +4585,12 @@ class XKTMetaObject {
     /**
      * @private
      * @param metaObjectId
-     * @param propertySetId
+     * @param propertySetIds
      * @param metaObjectType
      * @param metaObjectName
      * @param parentMetaObjectId
      */
-    constructor(metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId) {
+    constructor(metaObjectId, propertySetIds, metaObjectType, metaObjectName, parentMetaObjectId) {
 
         /**
          * Unique ID of this ````XKTMetaObject```` in {@link XKTModel#metaObjects}.
@@ -4606,13 +4606,13 @@ class XKTMetaObject {
         this.metaObjectId = metaObjectId;
 
         /**
-         * Unique ID of a property set that contains additional metadata about this
-         * {@link XKTMetaObject}. The property can be stored in an external system, or
-         * within the {@link XKTModel}, as a {@link XKTPropertySet} within {@link XKTModel#propertySets}.
+         * Unique ID of one or more property sets that contains additional metadata about this
+         * {@link XKTMetaObject}. The property sets can be stored in an external system, or
+         * within the {@link XKTModel}, as {@link XKTPropertySet}s within {@link XKTModel#propertySets}.
          *
-         * @type {String}
+         * @type {String[]}
          */
-        this.propertySetId = propertySetId;
+        this.propertySetIds = propertySetIds;
 
         /**
          * Indicates the XKTMetaObject meta object type.
@@ -5030,9 +5030,9 @@ class XKTModel {
      *
      * @param {*} params Method parameters.
      * @param {String} params.metaObjectId Unique ID for the {@link XKTMetaObject}.
-     * @param {String} params.propertySetId ID of a property set that contains additional metadata about
-     * this {@link XKTMetaObject}. The property set could be stored externally (ie not managed at all by the XKT file),
-     * or could be a {@link XKTPropertySet} within {@link XKTModel#propertySets}.
+     * @param {String} params.propertySetIds ID of one or more property sets that contains additional metadata about
+     * this {@link XKTMetaObject}. The property sets could be stored externally (ie not managed at all by the XKT file),
+     * or could be {@link XKTPropertySet}s within {@link XKTModel#propertySets}.
      * @param {String} [params.metaObjectType="default"] A meta type for the {@link XKTMetaObject}. Can be anything,
      * but is usually an IFC type, such as "IfcSite" or "IfcWall".
      * @param {String} [params.metaObjectName] Human-readable name for the {@link XKTMetaObject}. Defaults to the ````metaObjectId```` parameter.
@@ -5060,12 +5060,12 @@ class XKTModel {
         }
 
         const metaObjectId = params.metaObjectId;
-        const propertySetId = params.propertySetId;
+        const propertySetIds = params.propertySetIds;
         const metaObjectType = params.metaObjectType || "Default";
         const metaObjectName = params.metaObjectName || params.metaObjectId;
         const parentMetaObjectId = params.parentMetaObjectId;
 
-        const metaObject = new XKTMetaObject(metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId);
+        const metaObject = new XKTMetaObject(metaObjectId, propertySetIds, metaObjectType, metaObjectName, parentMetaObjectId);
 
         this.metaObjects[metaObjectId] = metaObject;
         this.metaObjectsList.push(metaObject);
@@ -12762,7 +12762,7 @@ function getModelData(xktModel) {
 
         data.metadata.propertySets.push(propertySetJSON);
     }
-    
+
     for (let metaObjectsIndex = 0; metaObjectsIndex < numMetaObjects; metaObjectsIndex++) {
 
         const metaObject = metaObjectsList[metaObjectsIndex];
@@ -12777,14 +12777,14 @@ function getModelData(xktModel) {
             metaObjectJSON.parent = "" + metaObject.parentMetaObjectId;
         }
 
-        if (metaObject.propertySetId !== undefined && metaObject.propertySetId !== null && metaObject.propertySetId !== "") {
-            metaObjectJSON.propertySetId = "" + metaObject.propertySetId;
+        if (metaObject.propertySetIds && metaObject.propertySetIds.length > 0) {
+            metaObjectJSON.propertySetIds = metaObject.propertySetIds;
         }
 
         data.metadata.metaObjects.push(metaObjectJSON);
     }
 
-   // console.log(JSON.stringify(data.metadata, null, "\t"))
+    // console.log(JSON.stringify(data.metadata, null, "\t"))
 
     // Geometries
 
@@ -52343,7 +52343,10 @@ function parsePropertySets(ctx) {
                 const metaObjectId = relatedObject.GlobalId.value;
                 const metaObject = ctx.xktModel.metaObjects[metaObjectId];
                 if (metaObject) {
-                    metaObject.propertySetId = propertySetId;
+                    if (!metaObject.propertySetIds) {
+                        metaObject.propertySetIds = [];
+                    }
+                    metaObject.propertySetIds.push(propertySetId);
                     usedByAnyMetaObjects = true;
                 }
             }
@@ -52362,9 +52365,10 @@ function parsePropertySets(ctx) {
                     const nominalValue = prop.NominalValue;
                     if (nominalValue) {
                         properties.push({
-                            label: nominalValue.label,
+                            name: nominalValue.label,
+                            type: nominalValue.type,
                             value: nominalValue.value,
-                            type: nominalValue.type
+                            valueType: nominalValue.valueType
                         });
                     }
                 }
@@ -52420,11 +52424,11 @@ function parseSpatialChildren(ctx, ifcElement, parentMetaObjectId) {
 function createMetaObject(ctx, ifcElement, parentMetaObjectId) {
 
     const metaObjectId = ifcElement.GlobalId.value;
-    const propertySetId = null;
+    const propertySetIds = null;
     const metaObjectType = ifcElement.__proto__.constructor.name;
     const metaObjectName = (ifcElement.Name && ifcElement.Name.value !== "") ? ifcElement.Name.value : metaObjectType;
 
-    ctx.xktModel.createMetaObject({metaObjectId, propertySetId, metaObjectType, metaObjectName, parentMetaObjectId});
+    ctx.xktModel.createMetaObject({metaObjectId, propertySetIds, metaObjectType, metaObjectName, parentMetaObjectId});
     ctx.stats.numMetaObjects++;
 }
 

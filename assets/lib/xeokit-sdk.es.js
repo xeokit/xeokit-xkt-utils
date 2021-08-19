@@ -8736,7 +8736,6 @@ class PerformanceNode {
 }
 
 const tempVec3a$$ = math.vec3();
-math.AABB3();
 
 /**
  * Given a view matrix and a relative-to-center (RTC) coordinate origin, returns a view matrix
@@ -8769,6 +8768,7 @@ const createRTCViewMat = (function () {
  * Given a double-precision World-space position, returns a double-precision relative-to-center (RTC) center pos
  * and a single-precision offset fom that center.
  *
+ * @private
  * @param {Float64Array} worldPos The World-space position.
  * @param {Float64Array} rtcCenter Double-precision relative-to-center (RTC) center pos.
  * @param {Float32Array} rtcPos Single-precision offset fom that center.
@@ -8802,6 +8802,7 @@ function worldToRTCPos(worldPos, rtcCenter, rtcPos) {
  * When computing the RTC position, this function uses a modulus operation to ensure that, whenever possible,
  * identical RTC positions are reused for different positions arrays.
  *
+ * @private
  * @param {Float64Array} worldPositions Flat array of World-space 3D positions.
  * @param {Float64Array} rtcPositions Outputs the computed flat array of 3D RTC positions.
  * @param {Float64Array} rtcCenter Outputs the computed double-precision relative-to-center (RTC) center pos.
@@ -8837,6 +8838,7 @@ function worldToRTCPositions(worldPositions, rtcPositions, rtcCenter, cellSize =
  * Given a 3D plane defined by distance from origin and direction, and an RTC center position,
  * return a plane position that is relative to the RTC center.
  *
+ * @private
  * @param dist
  * @param dir
  * @param rtcCenter
@@ -45166,6 +45168,9 @@ class TrianglesBatchingRenderers {
 
 const cachdRenderers = {};
 
+/**
+ * @private
+ */
 function getBatchingRenderers$1(scene) {
     const sceneId = scene.id;
     let batchingRenderers = cachdRenderers[sceneId];
@@ -45221,6 +45226,9 @@ class TrianglesBatchingBuffer {
 const translate = math.mat4();
 const scale = math.mat4();
 
+/**
+ * @private
+ */
 function quantizePositions(positions, aabb, positionsDecodeMatrix) { // http://cg.postech.ac.kr/research/mesh_comp_mobile/mesh_comp_mobile_conference.pdf
     const lenPositions = positions.length;
     const quantizedPositions = new Uint16Array(lenPositions);
@@ -45230,15 +45238,15 @@ function quantizePositions(positions, aabb, positionsDecodeMatrix) { // http://c
     const xwid = aabb[3] - xmin;
     const ywid = aabb[4] - ymin;
     const zwid = aabb[5] - zmin;
-    // const maxInt = 2000000;
     const maxInt = 65525;
     const xMultiplier = maxInt / xwid;
     const yMultiplier = maxInt / ywid;
     const zMultiplier = maxInt / zwid;
+    const verify = (num) => num >= 0 ? num : 0;
     for (let i = 0; i < lenPositions; i += 3) {
-        quantizedPositions[i + 0] = Math.floor((positions[i + 0] - xmin) * xMultiplier);
-        quantizedPositions[i + 1] = Math.floor((positions[i + 1] - ymin) * yMultiplier);
-        quantizedPositions[i + 2] = Math.floor((positions[i + 2] - zmin) * zMultiplier);
+        quantizedPositions[i + 0] = Math.floor(verify(positions[i + 0] - xmin) * xMultiplier);
+        quantizedPositions[i + 1] = Math.floor(verify(positions[i + 1] - ymin) * yMultiplier);
+        quantizedPositions[i + 2] = Math.floor(verify(positions[i + 2] - zmin) * zMultiplier);
     }
     math.identityMat4(translate);
     math.translationMat4v(aabb, translate);
@@ -45248,6 +45256,9 @@ function quantizePositions(positions, aabb, positionsDecodeMatrix) { // http://c
     return quantizedPositions;
 }
 
+/**
+ * @private
+ */
 function transformAndOctEncodeNormals(worldNormalMatrix, normals, lenNormals, compressedNormals, lenCompressedNormals) {
     // http://jcgt.org/published/0003/02/01/
     let oct, dec, best, currentCos, bestCos;
@@ -45295,7 +45306,9 @@ function transformAndOctEncodeNormals(worldNormalMatrix, normals, lenNormals, co
     return lenCompressedNormals;
 }
 
-
+/**
+ * @private
+ */
 function octEncodeNormals(normals) { // http://jcgt.org/published/0003/02/01/
     const lenNormals = normals.length;
     const compressedNormals = new Int8Array(lenNormals);
@@ -45333,6 +45346,9 @@ function octEncodeNormals(normals) { // http://jcgt.org/published/0003/02/01/
     return new Int8Array(compressedNormals)
 }
 
+/**
+ * @private
+ */
 function octEncodeVec3(p, xfunc, yfunc) { // Oct-encode single normal vector in 2 bytes
     let x = p[0] / (Math.abs(p[0]) + Math.abs(p[1]) + Math.abs(p[2]));
     let y = p[1] / (Math.abs(p[0]) + Math.abs(p[1]) + Math.abs(p[2]));
@@ -45368,6 +45384,9 @@ function octEncodeNormal(array, i, xfunc, yfunc) { // Oct-encode single normal v
     ]);
 }
 
+/**
+ * @private
+ */
 function octDecodeVec2(oct) { // Decode an oct-encoded normal
     let x = oct[0];
     let y = oct[1];
@@ -45386,6 +45405,9 @@ function octDecodeVec2(oct) { // Decode an oct-encoded normal
     ];
 }
 
+/**
+ * @private
+ */
 function dot(p, vec3) { // Dot product of a normal in an array against a candidate decoding
     return p[0] * vec3[0] + p[1] * vec3[1] + p[2] * vec3[2];
 }
@@ -52411,6 +52433,9 @@ class TrianglesInstancingRenderers {
 
 const cachedRenderers$4 = {};
 
+/**
+ * @private
+ */
 function getInstancingRenderers$1(scene) {
     const sceneId = scene.id;
     let instancingRenderers = cachedRenderers$4[sceneId];
@@ -54183,6 +54208,9 @@ class LinesBatchingRenderers {
 
 const cachedRenderers$3 = {};
 
+/**
+ * @private
+ */
 function getBatchingRenderers(scene) {
     const sceneId = scene.id;
     let batchingRenderers = cachedRenderers$3[sceneId];
@@ -55706,6 +55734,9 @@ class LinesInstancingRenderers {
 
 const cachedRenderers$2 = {};
 
+/**
+ * @private
+ */
 function getInstancingRenderers(scene) {
     const sceneId = scene.id;
     let instancingRenderers = cachedRenderers$2[sceneId];
@@ -58164,6 +58195,9 @@ class PointsBatchingRenderers {
 
 const cachedRenderers$1 = {};
 
+/**
+ * @private
+ */
 function getPointsBatchingRenderers(scene) {
     const sceneId = scene.id;
     let renderers = cachedRenderers$1[sceneId];
@@ -61620,6 +61654,9 @@ class PointsInstancingRenderers {
 
 const cachedRenderers = {};
 
+/**
+ * @private
+ */
 function getPointsInstancingRenderers(scene) {
     const sceneId = scene.id;
     let instancingRenderers = cachedRenderers[sceneId];
@@ -79081,6 +79118,9 @@ class ObjectCullStates {
 
 const sceneObjectCullStates = {};
 
+/**
+ * @private
+ */
 function getObjectCullStates(scene) {
     const sceneId = scene.id;
     let objectCullStates = sceneObjectCullStates[sceneId];
@@ -92948,7 +92988,7 @@ class XML3DLoaderPlugin extends Plugin {
 /**
  * @desc Localization service for a {@link Viewer}.
  *
- * * A LocaleService is a container of string translations for various locales.
+ * * A LocaleService is a container of string translations ("messages") for various locales.
  * * A {@link Viewer} has its own default LocaleService at {@link Viewer#localeService}.
  * * We can replace that with our own LocaleService, or a custom subclass, via the Viewer's constructor.
  * * Viewer plugins that need localized translations will attempt to them for the currently active locale from the LocaleService.
@@ -94719,7 +94759,6 @@ class CameraPathAnimation extends Component {
                     t = this._playingToT;
                     this.state = CameraPathAnimation.SCRUBBING;
                     this.fire("stopped");
-                    return;
                 }
                 this._t = t;
                 cameraPath.loadFrame(this._t);
@@ -102850,7 +102889,7 @@ class MetaModel {
     /**
      * @private
      */
-    constructor(metaScene, id, projectId, revisionId, author, createdAt, creatingApplication, schema, rootMetaObject) {
+    constructor(metaScene, id, projectId, revisionId, author, createdAt, creatingApplication, schema, propertySets, rootMetaObject) {
 
         /**
          * Globally-unique ID.
@@ -102930,6 +102969,14 @@ class MetaModel {
         this.metaScene = metaScene;
 
         /**
+         * The {@link  PropertySet}s in this MetaModel.
+         *
+         * @property propertySets
+         * @type {{String:PropertySet}}
+         */
+        this.propertySets = propertySets;
+
+        /**
          * The root {@link MetaObject} in this MetaModel's composition structure hierarchy.
          *
          * @property rootMetaObject
@@ -102991,7 +103038,7 @@ class MetaModel {
  */
 class MetaObject {
 
-    constructor(metaModel, id, originalSystemId, name, type, properties, parent, children, external) {
+    constructor(metaModel, id, originalSystemId, name, type, propertySetId, parent, children, external) {
 
         /**
          * Model metadata.
@@ -103035,18 +103082,13 @@ class MetaObject {
          */
         this.type = type;
 
-        if (properties) {
-
-            /**
-             * Arbitrary metadata properties.
-             *
-             * Undefined when no metadata properties are represented.
-             *
-             * @property properties
-             * @type {*}
-             */
-            this.properties = properties;
-        }
+        /**
+         * Optional ID of a {@link PropertySet} in {@link MetaModel#propertySets} and {@link MetaScene#propertySets}.
+         *
+         * @property propertySetId
+         * @type {String}
+         */
+        this.propertySetId = propertySetId;
 
         if (parent !== undefined && parent !== null) {
 
@@ -103188,6 +103230,78 @@ class MetaObject {
 }
 
 /**
+ * @desc Metadata corresponding to an {@link Entity} that represents an object.
+ *
+ * An {@link Entity} represents an object when {@link Entity#isObject} is ````true````
+ *
+ * A PropertySet corresponds to an {@link Entity} by having the same {@link PropertySet#id} as the {@link Entity#id}.
+ *
+ * A PropertySet is created within {@link MetaScene#createMetaModel} and belongs to a {@link MetaModel}.
+ *
+ * Each PropertySet is registered by {@link PropertySet#id} in {@link MetaScene#propertySets}.
+ *
+ * A {@link MetaModel} represents its object structure with a tree of PropertySets, with {@link MetaModel#rootPropertySet} referencing
+ * the root PropertySet.
+ *
+ * @class PropertySet
+ */
+class PropertySet {
+
+    constructor(metaModel, id, originalSystemId, name, type, properties) {
+
+        /**
+         * Model metadata.
+         *
+         * @property metaModel
+         * @type {MetaModel}
+         */
+        this.metaModel = metaModel;
+
+        /**
+         * Globally-unique ID.
+         *
+         * PropertySet instances are registered by this ID in {@link MetaScene#propertySets}.
+         *
+         * @property id
+         * @type {String|Number}
+         */
+        this.id = id;
+
+        /**
+         * ID of the corresponding object within the originating system, if any.
+         *
+         * @type {String}
+         * @abstract
+         */
+        this.originalSystemId = originalSystemId;
+
+        /**
+         * Human-readable name.
+         *
+         * @property name
+         * @type {String}
+         */
+        this.name = name;
+
+        /**
+         * Type.
+         *
+         * @property type
+         * @type {String}
+         */
+        this.type = type;
+
+        /**
+         * Arbitrary properties.
+         *
+         * @property properties
+         * @type {*}
+         */
+        this.properties = properties || [];
+    }
+}
+
+/**
  * @desc Metadata corresponding to a {@link Scene}.
  *
  * * Located in {@link Viewer#metaScene}.
@@ -103222,6 +103336,13 @@ class MetaScene {
          * @type {{String:MetaModel}}
          */
         this.metaModels = {};
+
+        /**
+         * The {@link PropertySet}s belonging to this MetaScene, each mapped to its {@link PropertySet#id}.
+         *
+         * @type {{String:PropertySet}}
+         */
+        this.propertySets = {};
 
         /**
          * The {@link MetaObject}s belonging to this MetaScene, each mapped to its {@link MetaObject#id}.
@@ -103312,7 +103433,8 @@ class MetaScene {
 
         const projectId = metaModelData.projectId || "none";
         const revisionId = metaModelData.revisionId || "none";
-        const newObjects = metaModelData.metaObjects;
+        const newPropertySets = metaModelData.propertySets || [];
+        const newObjects = metaModelData.metaObjects || [];
         const author = metaModelData.author;
         const createdAt = metaModelData.createdAt;
         const creatingApplication = metaModelData.creatingApplication;
@@ -103324,9 +103446,17 @@ class MetaScene {
         //     }
         // }
 
-        const metaModel = new MetaModel(this, modelId, projectId, revisionId, author, createdAt, creatingApplication, schema, null);
+        const metaModel = new MetaModel(this, modelId, projectId, revisionId, author, createdAt, creatingApplication, schema, [], null);
 
         this.metaModels[modelId] = metaModel;
+
+        for (let i = 0, len = newPropertySets.length; i < len; i++) {
+            const propertySetCfg = newPropertySets[i];
+            const propertySetId = propertySetCfg.id;
+            const propertySet = new PropertySet(metaModel, propertySetId, propertySetCfg.originalSystemId, propertySetCfg.name, propertySetCfg.type, propertySetCfg.properties);
+            metaModel.propertySets[propertySetId] = propertySet;
+            this.propertySets[propertySetId] = propertySet;
+        }
 
         const rootMetaObjects = [];
 
@@ -103371,11 +103501,11 @@ class MetaScene {
             const objectId = options.globalizeObjectIds ? math.globalizeObjectId(modelId, newObject.id) : newObject.id;
             const originalSystemId = newObject.id;
             const name = newObject.name;
-            const properties = newObject.properties;
+            const propertySetId = newObject.propertySetId;
             const parent = null;
             const children = null;
             const external = newObject.external;
-            const metaObject = new MetaObject(metaModel, objectId, originalSystemId, name, type, properties, parent, children, external);
+            const metaObject = new MetaObject(metaModel, objectId, originalSystemId, name, type, propertySetId, parent, children, external);
             this.metaObjects[objectId] = metaObject;
             (this.metaObjectsByType[type] || (this.metaObjectsByType[type] = {}))[objectId] = metaObject;
             if (this._typeCounts[type] === undefined) {
@@ -103447,6 +103577,11 @@ class MetaScene {
             }
         };
         visit(metaModel.rootMetaObject);
+        for (let propertySetId in metaModel.propertySets) {
+            if (metaModel.propertySets.hasOwnProperty(propertySetId)) {
+                delete this.propertySets[propertySetId];
+            }
+        }
         delete this.metaModels[metaModel.id];
     }
 
