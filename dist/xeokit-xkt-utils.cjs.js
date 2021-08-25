@@ -52362,14 +52362,21 @@ function parsePropertySets(ctx) {
                 const properties = [];
                 for (let i = 0, len = props.length; i < len; i++) {
                     const prop = props[i];
+                    const name = prop.Name;
                     const nominalValue = prop.NominalValue;
-                    if (nominalValue) {
-                        properties.push({
-                            name: nominalValue.label,
+                    if (name && nominalValue) {
+                        const property = {
+                            name: name.value,
                             type: nominalValue.type,
                             value: nominalValue.value,
                             valueType: nominalValue.valueType
-                        });
+                        };
+                        if (prop.Description) {
+                            property.description = prop.Description.value;
+                        } else if (nominalValue.description) {
+                            property.description = nominalValue.description;
+                        }
+                        properties.push(property);
                     }
                 }
                 ctx.xktModel.createPropertySet({propertySetId, propertySetType, propertySetName, properties});
