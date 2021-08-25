@@ -1,3 +1,112 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:a294dc363762e900c07755bb7ae6dfe809bdaa33dbc2780a8201753a121787c1
-size 2461
+{
+    "CityObjects": {
+        "id-1": {
+            "geometry": [
+                {
+                    "boundaries": [
+                        [
+                            [
+                                0,
+                                1,
+                                2,
+                                3
+                            ]
+                        ],
+                        [
+                            [
+                                7,
+                                4,
+                                0,
+                                3
+                            ]
+                        ],
+                        [
+                            [
+                                4,
+                                5,
+                                1,
+                                0
+                            ]
+                        ],
+                        [
+                            [
+                                5,
+                                6,
+                                2,
+                                1
+                            ]
+                        ],
+                        [
+                            [
+                                6,
+                                5,
+                                4,
+                                7
+                            ]
+                        ]
+                    ],
+                    "lod": 1,
+                    "type": "MultiSurface"
+                }
+            ],
+            "attributes": {
+                "function": "something"
+            },
+            "type": "GenericCityObject"
+        }
+    },
+    "type": "CityJSON",
+    "version": "1.0",
+    "vertices": [
+        [
+            1.0,
+            0.0,
+            1.0
+        ],
+        [
+            0.0,
+            1.0,
+            1.0
+        ],
+        [
+            -1.0,
+            0.0,
+            1.0
+        ],
+        [
+            0.0,
+            -1.0,
+            1.0
+        ],
+        [
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            1.0,
+            0.0
+        ],
+        [
+            -1.0,
+            0.0,
+            0.0
+        ],
+        [
+            0.0,
+            -1.0,
+            0.0
+        ]
+    ],
+    "metadata": {
+        "geographicalExtent": [
+            -1.0,
+            -1.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0
+        ]
+    }
+}

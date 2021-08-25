@@ -1,3 +1,69 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6c7fc8c0490e11ebaad74752b6690e8cba187b21e84a34fa606f0dfe622c9799
-size 1685
+{
+    "CityObjects": {
+        "id-1": {
+            "geometry": [
+                {
+                    "boundaries": [
+                        [
+                            [
+                                [
+                                    0,
+                                    1,
+                                    2
+                                ]
+                            ],
+                            [
+                                [
+                                    0,
+                                    2,
+                                    3
+                                ]
+                            ],
+                            [
+                                [
+                                    2,
+                                    1,
+                                    3
+                                ]
+                            ],
+                            [
+                                [
+                                    0,
+                                    3,
+                                    1
+                                ]
+                            ]
+                        ]
+                    ],
+                    "lod": 1,
+                    "type": "Solid"
+                }
+            ],
+            "type": "GenericCityObject"
+        }
+    },
+    "type": "CityJSON",
+    "version": "1.0",
+    "vertices": [
+        [
+            0.0,
+            0.0,
+            0.0
+        ],
+        [
+            1.0,
+            1.0,
+            0.0
+        ],
+        [
+            1.0,
+            0.0,
+            0.0
+        ],
+        [
+            1.0,
+            0.0,
+            1.0
+        ]
+    ]
+}
