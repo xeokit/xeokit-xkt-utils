@@ -10,6 +10,9 @@ Use **xeokit-xkt-utils** to:
 * Generate XKT files with JavaScript
   <BR><BR>
 
+> Caution: This tools IFC->XKT option uses the third-party [web-ifc](https://github.com/tomvandig/web-ifc) library, which is still at alpha 
+> status. Although it works great, that option should not yet be considered production-ready.
+
 [![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)
 
 * [[View this XKT model](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)]
