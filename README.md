@@ -4,9 +4,9 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
-> ##Deprecated!
+> ## Deprecated!
 > 
-> This tool has been replaced by [xeokit-convert](https://github.com/xeokit/xeokit-convert)
+> This toolkit has been replaced by [xeokit-convert](https://github.com/xeokit/xeokit-convert)
 
 Use **xeokit-xkt-utils** to:
 
