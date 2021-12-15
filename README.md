@@ -4,14 +4,15 @@
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/73524691/xeokit-xkt-utils)
 [![npm version](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils.svg)](https://badge.fury.io/js/%40xeokit%2Fxeokit-xkt-utils)
 
+> ##Deprecated!
+> 
+> This tool has been replaced by [xeokit-convert](https://github.com/xeokit/xeokit-convert)
+
 Use **xeokit-xkt-utils** to:
 
 * Convert BIM and AEC models into XKT files for super fast loading into [xeokit](https://xeokit.io)
 * Generate XKT files with JavaScript
   <BR><BR>
-
-> Caution: This tools IFC->XKT option uses the third-party [web-ifc](https://github.com/tomvandig/web-ifc) library, which is still at alpha 
-> status. Although it works great, that option should not yet be considered production-ready.
 
 [![Schependomlaan](https://xeokit.github.io/xeokit-ifc-to-xkt/assets/rac_advanced_sample_project.png)](https://xeokit.github.io/xeokit-ifc-to-xkt/tests/loadXKT.html?xkt_src=models/xkt/rac_advanced_sample_project.xkt)
 
